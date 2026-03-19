@@ -8,7 +8,7 @@
   @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Josefin+Sans:wght@200;300;400&display=swap');
   * { margin:0; padding:0; box-sizing:border-box; }
   :root {
-    --bg:#0a0a0f; --surface:#111118; --surface2:#18181f; --surface3:#1e1e28;
+    --bg:#000000; --surface:#111118; --surface2:#18181f; --surface3:#1e1e28;
     --border:rgba(201,169,110,0.2); --border2:rgba(201,169,110,0.4);
     --gold:#c9a96e; --rose2:#b05070; --teal2:#3aa08a; --purple2:#7a5aaa;
     --text:#e8e0f0; --text2:#a090b8; --text3:#6a5a7a;
@@ -21,13 +21,19 @@
   .header { background:linear-gradient(180deg,#0d0a14 0%,var(--bg) 100%); border-bottom:1px solid rgba(201,169,110,0.2); padding:1.5rem 2rem 0; position:relative; overflow:hidden; }
   .header::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; background:linear-gradient(90deg,transparent,var(--gold),var(--rose2),var(--purple2),transparent); }
   .header-top { display:flex; align-items:center; justify-content:space-between; margin-bottom:1.5rem; }
-  .logo { font-family:'Cormorant Garamond',serif; font-size:2.2rem; font-weight:300; letter-spacing:0.2em; color:var(--gold); text-transform:uppercase; }
+
+  /* LOGO + WORDMARK */
+  .logo-group { display:flex; align-items:center; gap:0.9rem; }
+  .logo-img { width:52px; height:52px; object-fit:contain; opacity:0.95; flex-shrink:0; }
+  .logo { font-family:'Cormorant Garamond',serif; font-size:2.2rem; font-weight:300; letter-spacing:0.15em; color:var(--gold); text-transform:uppercase; padding-right:0.15em; }
   .logo span { color:var(--text3); font-size:0.9rem; display:block; letter-spacing:0.4em; font-family:'Josefin Sans',sans-serif; font-weight:200; margin-top:-4px; }
+
   .live-badge { display:flex; align-items:center; gap:10px; background:var(--live-dim); border:1px solid rgba(58,170,106,0.3); border-radius:40px; padding:0.5rem 1.2rem; }
   .live-dot { width:8px; height:8px; border-radius:50%; background:var(--live); animation:pulse 2s infinite; }
   @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(0.8)} }
   .live-count { font-size:1.6rem; font-weight:400; color:var(--live); font-family:'Cormorant Garamond',serif; }
   .live-label { font-size:0.62rem; color:var(--text2); letter-spacing:0.15em; text-transform:uppercase; line-height:1.3; }
+
   .tabs { display:flex; gap:0; }
   .tab { padding:0.8rem 1.5rem; font-size:0.7rem; letter-spacing:0.2em; text-transform:uppercase; color:var(--text3); cursor:pointer; border-bottom:2px solid transparent; transition:all 0.2s; background:none; border-top:none; border-left:none; border-right:none; font-family:'Josefin Sans',sans-serif; font-weight:300; }
   .tab:hover { color:var(--text2); }
@@ -59,7 +65,7 @@
   .hub-card:hover .hub-arrow { color:var(--gold); }
   .hub-footer { font-size:0.55rem; letter-spacing:0.2em; color:var(--text3); margin-top:2rem; text-transform:uppercase; }
 
-  /* STAT CARDS — all gold */
+  /* STAT CARDS */
   .stat-grid { display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:2rem; }
   .stat-card { background:var(--surface); border:1px solid rgba(201,169,110,0.25); border-radius:12px; padding:1.2rem; position:relative; overflow:hidden; }
   .stat-card::before { content:''; position:absolute; top:0; left:0; right:0; height:1px; background:linear-gradient(90deg,transparent,var(--gold),transparent); }
@@ -72,7 +78,6 @@
   .btn-sm { background:none; border:1px solid rgba(201,169,110,0.3); color:var(--gold); padding:0.4rem 1rem; border-radius:20px; font-size:0.6rem; letter-spacing:0.15em; text-transform:uppercase; cursor:pointer; font-family:'Josefin Sans',sans-serif; transition:all 0.2s; }
   .btn-sm:hover { border-color:var(--gold); background:rgba(201,169,110,0.08); }
 
-  /* HUB TRIGGER — all gold */
   .hub-trigger { width:100%; background:rgba(201,169,110,0.06); border:1px solid rgba(201,169,110,0.25); border-radius:12px; padding:1rem 1.5rem; display:flex; align-items:center; justify-content:space-between; gap:1rem; cursor:pointer; transition:all 0.2s; margin-bottom:1.5rem; text-align:left; position:relative; overflow:hidden; }
   .hub-trigger::before { content:''; position:absolute; top:0; left:0; right:0; height:1px; background:linear-gradient(90deg,transparent,var(--gold),transparent); }
   .hub-trigger:hover { background:rgba(201,169,110,0.12); border-color:rgba(201,169,110,0.45); }
@@ -82,7 +87,6 @@
   .hub-trigger-arrow { color:var(--text3); font-size:1rem; transition:color 0.2s; }
   .hub-trigger:hover .hub-trigger-arrow { color:var(--gold); }
 
-  /* HOST ROWS — gold border */
   .host-list { display:flex; flex-direction:column; gap:0.75rem; }
   .host-row { display:flex; align-items:center; justify-content:space-between; background:var(--surface); border:1px solid rgba(201,169,110,0.2); border-radius:8px; padding:0.9rem 1.2rem; }
   .host-info { display:flex; align-items:center; gap:12px; }
@@ -110,7 +114,8 @@
     .stat-grid { grid-template-columns:1fr 1fr; }
     .header { padding:1rem; }
     .panel { padding:1rem; }
-    .logo { font-size:1.6rem; }
+    .logo { font-size:1.5rem; letter-spacing:0.1em; }
+    .logo-img { width:40px; height:40px; }
     .games-grid { grid-template-columns:1fr 1fr; }
   }
 </style>
@@ -119,7 +124,10 @@
 
 <div class="header">
   <div class="header-top">
-    <div class="logo">Belladonna<span>Headquarters</span></div>
+    <div class="logo-group">
+      <img src="logo.png" alt="Belladonna" class="logo-img">
+      <div class="logo">Belladonna<span>Headquarters</span></div>
+    </div>
     <div class="live-badge">
       <div class="live-dot"></div>
       <div>
