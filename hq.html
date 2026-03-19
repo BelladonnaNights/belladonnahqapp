@@ -37,7 +37,6 @@
 
   .panel{display:none;padding:1.5rem;}
   .panel.active{display:block;}
-
   .subtabs{display:flex;gap:0.4rem;margin-bottom:1.2rem;flex-wrap:wrap;}
   .subtab{padding:0.4rem 1rem;font-size:0.6rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--text3);cursor:pointer;border:1px solid var(--border);border-radius:20px;background:none;font-family:'Josefin Sans',sans-serif;transition:all 0.2s;}
   .subtab:hover{border-color:var(--border2);color:var(--text2);}
@@ -45,8 +44,6 @@
   .subpanel{display:none;}
   .subpanel.active{display:block;}
 
-  .card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1.2rem;position:relative;overflow:hidden;}
-  .card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);}
   .section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;}
   .section-title{font-size:0.6rem;letter-spacing:0.28em;text-transform:uppercase;color:var(--text3);}
   .btn-sm{background:none;border:1px solid var(--border2);color:var(--purple-btn);padding:0.38rem 0.9rem;border-radius:20px;font-size:0.58rem;letter-spacing:0.14em;text-transform:uppercase;cursor:pointer;font-family:'Josefin Sans',sans-serif;transition:all 0.2s;}
@@ -54,6 +51,7 @@
   .btn-gold{background:rgba(201,169,110,0.1);border:1px solid rgba(201,169,110,0.35);color:var(--gold);}
   .btn-gold:hover{background:rgba(201,169,110,0.2);}
 
+  /* STAT CARDS */
   .stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:0.8rem;margin-bottom:1.2rem;}
   .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1rem;position:relative;overflow:hidden;}
   .stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);}
@@ -61,13 +59,14 @@
   .stat-value{font-family:'Cormorant Garamond',serif;font-size:2.4rem;font-weight:300;line-height:1;color:var(--gold);}
   .stat-sub{font-size:0.58rem;color:var(--text3);margin-top:0.2rem;}
 
+  /* HUB TRIGGER */
   .hub-trigger{width:100%;background:rgba(201,169,110,0.06);border:1px solid var(--border);border-radius:10px;padding:0.9rem 1.2rem;display:flex;align-items:center;justify-content:space-between;cursor:pointer;transition:all 0.2s;margin-bottom:1rem;text-align:left;position:relative;overflow:hidden;}
   .hub-trigger::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);}
   .hub-trigger:hover{background:rgba(201,169,110,0.12);border-color:var(--border2);}
   .hub-trigger-title{font-size:0.68rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--gold);margin-bottom:0.15rem;}
   .hub-trigger-desc{font-size:0.6rem;color:var(--text3);}
-  .hub-arrow{color:var(--text3);font-size:1rem;}
 
+  /* HOST LIST */
   .host-list{display:flex;flex-direction:column;gap:0.6rem;}
   .host-row{display:flex;align-items:center;justify-content:space-between;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:0.8rem 1rem;}
   .host-info{display:flex;align-items:center;gap:10px;}
@@ -78,6 +77,15 @@
   .empty-state{text-align:center;padding:2rem;color:var(--text3);font-size:0.7rem;letter-spacing:0.1em;line-height:1.8;}
   .error-msg{background:rgba(176,80,112,0.1);border:1px solid rgba(176,80,112,0.25);border-radius:8px;padding:0.75rem 1rem;font-size:0.68rem;color:var(--rose2);margin-bottom:1rem;display:none;line-height:1.6;}
 
+  /* ROSTER SEARCH */
+  .roster-search{display:flex;gap:0.5rem;margin-bottom:1rem;flex-wrap:wrap;}
+  .roster-search-input{flex:1;min-width:120px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:0.55rem 0.85rem;font-size:0.75rem;font-family:'Josefin Sans',sans-serif;outline:none;transition:border-color 0.2s;letter-spacing:0.04em;}
+  .roster-search-input:focus{border-color:var(--gold);}
+  .roster-search-input::placeholder{color:var(--text3);}
+  .roster-filter-select{background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text2);padding:0.55rem 0.85rem;font-size:0.72rem;font-family:'Josefin Sans',sans-serif;outline:none;cursor:pointer;-webkit-appearance:none;min-width:110px;}
+  .roster-filter-select option{background:var(--surface2);}
+
+  /* ROSTER CARDS */
   .roster-grid{display:flex;flex-direction:column;gap:0.6rem;}
   .roster-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1rem 1.2rem;}
   .roster-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:0.6rem;}
@@ -87,7 +95,9 @@
   .skill-tag{font-size:0.56rem;letter-spacing:0.12em;text-transform:uppercase;padding:0.2rem 0.6rem;border-radius:20px;background:rgba(201,169,110,0.1);color:var(--gold);border:1px solid rgba(201,169,110,0.25);}
   .venue-tags{display:flex;flex-wrap:wrap;gap:0.35rem;}
   .venue-tag{font-size:0.56rem;letter-spacing:0.08em;padding:0.2rem 0.6rem;border-radius:20px;background:rgba(180,140,200,0.08);color:var(--purple-btn);border:1px solid rgba(180,140,200,0.2);}
+  .no-results{text-align:center;padding:1.5rem;color:var(--text3);font-size:0.7rem;letter-spacing:0.1em;}
 
+  /* GAMES */
   .games-list{display:flex;flex-direction:column;gap:0.5rem;}
   .game-item{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;transition:border-color 0.2s;}
   .game-item.drag-over{border-color:var(--gold);}
@@ -96,8 +106,8 @@
   .game-header-text{flex:1;min-width:0;}
   .game-name{font-size:0.8rem;color:var(--text);letter-spacing:0.04em;}
   .game-header-actions{display:flex;gap:0.35rem;flex-shrink:0;}
-  .fav-btn{background:none;border:none;font-size:0.85rem;cursor:pointer;opacity:0.35;transition:opacity 0.2s;padding:2px;}
-  .fav-btn.active{opacity:1;color:var(--gold);}
+  .fav-btn{background:none;border:none;font-size:0.85rem;cursor:pointer;opacity:0.35;transition:opacity 0.2s;padding:2px;color:var(--gold);}
+  .fav-btn.active{opacity:1;}
   .action-btn{background:none;border:1px solid var(--border);color:var(--text3);width:26px;height:26px;border-radius:6px;cursor:pointer;font-size:0.65rem;display:flex;align-items:center;justify-content:center;transition:all 0.2s;}
   .action-btn.edit:hover{border-color:var(--gold);color:var(--gold);}
   .action-btn.delete:hover{border-color:var(--rose2);color:var(--rose2);}
@@ -108,15 +118,23 @@
   .bingo-link:hover{color:var(--gold);}
   .fav-label{font-size:0.56rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);margin-bottom:0.4rem;padding-left:0.2rem;}
 
-  .venue-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1.1rem 1.2rem;margin-bottom:0.7rem;position:relative;overflow:hidden;}
-  .venue-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);}
-  .venue-name{font-family:'Cormorant Garamond',serif;font-size:1.1rem;color:var(--gold);margin-bottom:0.6rem;letter-spacing:0.08em;}
+  /* VENUES */
+  .venue-manage-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1rem 1.2rem;margin-bottom:0.7rem;position:relative;overflow:hidden;}
+  .venue-manage-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);}
+  .venue-manage-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:0.5rem;}
+  .venue-manage-name{font-family:'Cormorant Garamond',serif;font-size:1.15rem;color:var(--gold);letter-spacing:0.08em;}
+  .venue-gig-tags{display:flex;flex-wrap:wrap;gap:0.35rem;}
+  .venue-gig-tag{font-size:0.56rem;letter-spacing:0.1em;text-transform:uppercase;padding:0.2rem 0.6rem;border-radius:20px;background:rgba(58,160,138,0.1);color:var(--teal2);border:1px solid rgba(58,160,138,0.25);}
+  .venue-perf-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1.1rem 1.2rem;margin-bottom:0.7rem;position:relative;overflow:hidden;}
+  .venue-perf-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);}
+  .venue-perf-name{font-family:'Cormorant Garamond',serif;font-size:1.1rem;color:var(--gold);margin-bottom:0.6rem;letter-spacing:0.08em;}
   .venue-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0.6rem;margin-bottom:0.6rem;}
   .venue-stat{text-align:center;background:var(--surface2);border-radius:8px;padding:0.6rem 0.3rem;}
   .venue-stat-val{font-family:'Cormorant Garamond',serif;font-size:1.4rem;color:var(--gold);line-height:1;}
   .venue-stat-label{font-size:0.54rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--text3);margin-top:0.2rem;}
 
-  .stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:0.8rem;margin-bottom:1.2rem;}
+  /* STATS */
+  .stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:0.8rem;}
   .insight-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1rem;position:relative;overflow:hidden;}
   .insight-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);}
   .insight-title{font-size:0.56rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--text3);margin-bottom:0.5rem;}
@@ -125,9 +143,11 @@
   .insight-name{color:var(--text2);}
   .insight-val{color:var(--gold);font-family:'Cormorant Garamond',serif;font-size:1rem;}
 
+  /* SHIFT HISTORY */
   .history-search{display:flex;gap:0.5rem;margin-bottom:1rem;flex-wrap:wrap;}
   .history-input{flex:1;min-width:140px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:0.6rem 0.9rem;font-size:0.78rem;font-family:'Josefin Sans',sans-serif;outline:none;transition:border-color 0.2s;letter-spacing:0.04em;}
   .history-input:focus{border-color:var(--gold);}
+  .history-input::placeholder{color:var(--text3);}
   .history-select{background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:0.6rem 0.9rem;font-size:0.78rem;font-family:'Josefin Sans',sans-serif;outline:none;cursor:pointer;-webkit-appearance:none;min-width:120px;}
   .history-select option{background:var(--surface2);}
   .history-btn{background:rgba(201,169,110,0.1);border:1px solid var(--border2);color:var(--gold);padding:0.6rem 1rem;border-radius:8px;font-size:0.65rem;letter-spacing:0.15em;cursor:pointer;font-family:'Josefin Sans',sans-serif;white-space:nowrap;}
@@ -137,32 +157,36 @@
   .log-table tr:last-child td{border-bottom:none;}
   .log-table tr:hover td{background:var(--surface2);}
 
-  .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:200;display:none;align-items:center;justify-content:center;padding:1rem;}
+  /* MODAL */
+  .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:200;display:none;align-items:center;justify-content:center;padding:1rem;}
   .modal-bg.open{display:flex;}
-  .modal{background:var(--surface);border:1px solid var(--border2);border-radius:14px;padding:1.6rem;width:100%;max-width:460px;position:relative;max-height:90vh;overflow-y:auto;}
+  .modal{background:var(--surface);border:1px solid var(--border2);border-radius:14px;padding:1.6rem;width:100%;max-width:480px;position:relative;max-height:92vh;overflow-y:auto;}
   .modal::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);border-radius:14px 14px 0 0;}
   .modal-title{font-size:0.62rem;letter-spacing:0.28em;text-transform:uppercase;color:var(--text3);margin-bottom:1.1rem;}
   .form-group{margin-bottom:0.9rem;}
-  .form-label{font-size:0.56rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--text3);display:block;margin-bottom:0.35rem;}
-  .form-input,.form-select,.form-textarea{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:7px;color:var(--text);padding:0.6rem 0.85rem;font-size:0.78rem;font-family:'Josefin Sans',sans-serif;letter-spacing:0.04em;outline:none;transition:border-color 0.2s;-webkit-appearance:none;}
-  .form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--gold);}
-  .form-select option{background:var(--surface2);}
+  .form-label{font-size:0.56rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--text3);display:block;margin-bottom:0.4rem;}
+  .form-input,.form-textarea{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:7px;color:var(--text);padding:0.6rem 0.85rem;font-size:0.78rem;font-family:'Josefin Sans',sans-serif;letter-spacing:0.04em;outline:none;transition:border-color 0.2s;}
+  .form-input:focus,.form-textarea:focus{border-color:var(--gold);}
+  .form-input::placeholder,.form-textarea::placeholder{color:var(--text3);}
   .form-textarea{resize:vertical;min-height:90px;line-height:1.6;}
-  .checkbox-grid{display:grid;grid-template-columns:1fr 1fr;gap:0.4rem;}
-  .checkbox-item{display:flex;align-items:center;gap:0.5rem;background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:0.5rem 0.75rem;cursor:pointer;transition:all 0.2s;}
-  .checkbox-item.checked{border-color:var(--gold);background:rgba(201,169,110,0.08);}
-  .checkbox-item input{display:none;}
-  .checkbox-label{font-size:0.65rem;color:var(--text2);letter-spacing:0.06em;cursor:pointer;}
-  .checkbox-item.checked .checkbox-label{color:var(--gold);}
+
+  /* CLICKABLE CHIP GRID */
+  .chip-grid{display:flex;flex-wrap:wrap;gap:0.4rem;}
+  .chip{font-size:0.62rem;letter-spacing:0.1em;padding:0.35rem 0.85rem;border-radius:20px;cursor:pointer;transition:all 0.2s;border:1px solid var(--border);background:var(--surface2);color:var(--text3);font-family:'Josefin Sans',sans-serif;}
+  .chip:hover{border-color:var(--border2);color:var(--text2);}
+  .chip.selected-skill{border-color:var(--gold);color:var(--gold);background:rgba(201,169,110,0.1);}
+  .chip.selected-venue{border-color:var(--purple2);color:var(--purple-btn);background:rgba(122,90,170,0.1);}
+
   .modal-actions{display:flex;gap:0.5rem;margin-top:1.1rem;}
   .modal-save{flex:1;background:rgba(201,169,110,0.1);border:1px solid var(--gold);color:var(--purple-btn);padding:0.65rem;border-radius:20px;font-size:0.62rem;letter-spacing:0.18em;text-transform:uppercase;cursor:pointer;font-family:'Josefin Sans',sans-serif;transition:all 0.2s;}
   .modal-save:hover{background:rgba(201,169,110,0.2);color:var(--text);}
   .modal-cancel{background:none;border:1px solid var(--border);color:var(--text3);padding:0.65rem 1.1rem;border-radius:20px;font-size:0.62rem;letter-spacing:0.18em;text-transform:uppercase;cursor:pointer;font-family:'Josefin Sans',sans-serif;}
   .modal-cancel:hover{border-color:var(--rose2);color:var(--rose2);}
 
+  /* HUB OVERLAY */
   .hub-overlay{position:fixed;inset:0;background:#000;z-index:100;display:none;overflow-y:auto;}
   .hub-overlay.visible{display:block;}
-  .hub-back{position:fixed;top:1rem;left:1rem;background:rgba(201,169,110,0.08);border:1px solid rgba(201,169,110,0.3);color:var(--gold);font-size:0.6rem;letter-spacing:0.18em;text-transform:uppercase;font-family:'Josefin Sans',sans-serif;padding:0.45rem 0.9rem;border-radius:20px;cursor:pointer;z-index:101;transition:all 0.2s;}
+  .hub-back{position:fixed;top:1rem;left:1rem;background:rgba(201,169,110,0.08);border:1px solid rgba(201,169,110,0.3);color:var(--gold);font-size:0.6rem;letter-spacing:0.18em;text-transform:uppercase;font-family:'Josefin Sans',sans-serif;padding:0.45rem 0.9rem;border-radius:20px;cursor:pointer;z-index:101;}
   .hub-back:hover{background:rgba(201,169,110,0.15);}
   .hub-inner{max-width:400px;margin:0 auto;padding:4.5rem 1.5rem 2.5rem;text-align:center;}
   .hub-brand{font-family:'Cormorant Garamond',serif;font-size:2.6rem;font-weight:300;color:var(--gold);letter-spacing:0.28em;text-transform:uppercase;}
@@ -186,7 +210,6 @@
     .panel{padding:1rem;}
     .logo{font-size:1.5rem;letter-spacing:0.1em;}
     .logo-img{width:36px;height:36px;}
-    .checkbox-grid{grid-template-columns:1fr;}
     .venue-stats{grid-template-columns:1fr 1fr 1fr;}
   }
 </style>
@@ -222,11 +245,13 @@
     <button class="subtab" onclick="showSub('hosts','roster',this)">Host Roster</button>
     <button class="subtab" onclick="showSub('hosts','history',this)">Shift History</button>
   </div>
+
+  <!-- LIVE FEED -->
   <div class="subpanel active" id="sub-hosts-live">
     <div id="homeError" class="error-msg"></div>
     <button class="hub-trigger" onclick="openHub()">
       <div><div class="hub-trigger-title">Host Hub</div><div class="hub-trigger-desc">Check-in, check-out & tools for hosts</div></div>
-      <div class="hub-arrow">›</div>
+      <div style="color:var(--text3);font-size:1rem;">›</div>
     </button>
     <div class="stat-grid">
       <div class="stat-card"><div class="stat-label">On Shift Now</div><div class="stat-value" id="statOn">—</div><div class="stat-sub">active</div></div>
@@ -240,13 +265,27 @@
     </div>
     <div class="host-list" id="hostList"><div class="empty-state">Connecting to Google Sheets...</div></div>
   </div>
+
+  <!-- HOST ROSTER -->
   <div class="subpanel" id="sub-hosts-roster">
     <div class="section-header">
       <div class="section-title">Host Roster <span class="save-dot" id="rosterSave">Saved ✓</span></div>
       <button class="btn-sm btn-gold" onclick="openRosterModal()">+ Add Host</button>
     </div>
+    <!-- SEARCH & FILTERS -->
+    <div class="roster-search">
+      <input type="text" class="roster-search-input" id="rosterSearchName" placeholder="Search by name..." oninput="filterRoster()">
+      <select class="roster-filter-select" id="rosterFilterSkill" onchange="filterRoster()">
+        <option value="">All Skills</option>
+      </select>
+      <select class="roster-filter-select" id="rosterFilterVenue" onchange="filterRoster()">
+        <option value="">All Venues</option>
+      </select>
+    </div>
     <div class="roster-grid" id="rosterList"></div>
   </div>
+
+  <!-- SHIFT HISTORY -->
   <div class="subpanel" id="sub-hosts-history">
     <div class="section-title" style="margin-bottom:1rem;">Shift History</div>
     <div class="history-search">
@@ -284,11 +323,24 @@
 
 <!-- VENUES -->
 <div class="panel" id="panel-venues">
-  <div class="section-header" style="margin-bottom:1.2rem;">
-    <div class="section-title">Venue Performance</div>
-    <button class="btn-sm" onclick="loadVenueStats()">↻ Refresh</button>
+  <div class="subtabs">
+    <button class="subtab active" onclick="showSub('venues','manage',this)">Our Venues</button>
+    <button class="subtab" onclick="showSub('venues','perf',this);loadVenueStats()">Performance</button>
   </div>
-  <div id="venuesList"><div class="empty-state">Loading venue data from checkout reports...</div></div>
+  <div class="subpanel active" id="sub-venues-manage">
+    <div class="section-header">
+      <div class="section-title">Venues <span class="save-dot" id="venuesSave">Saved ✓</span></div>
+      <button class="btn-sm btn-gold" onclick="openVenueModal()">+ Add Venue</button>
+    </div>
+    <div id="venueManageList"></div>
+  </div>
+  <div class="subpanel" id="sub-venues-perf">
+    <div class="section-header">
+      <div class="section-title">Venue Performance</div>
+      <button class="btn-sm" onclick="loadVenueStats()">↻ Refresh</button>
+    </div>
+    <div id="venuesList"><div class="empty-state">Loading from checkout data...</div></div>
+  </div>
 </div>
 
 <!-- STATS -->
@@ -297,7 +349,7 @@
     <div class="section-title">Insights & Stats</div>
     <button class="btn-sm" onclick="loadStats()">↻ Refresh</button>
   </div>
-  <div class="stats-grid" id="statsGrid"><div class="empty-state" style="grid-column:1/-1">Loading stats from checkout data...</div></div>
+  <div class="stats-grid" id="statsGrid"><div class="empty-state" style="grid-column:1/-1">Loading stats...</div></div>
 </div>
 
 <!-- HUB OVERLAY -->
@@ -338,11 +390,34 @@
   <div class="modal">
     <div class="modal-title" id="rosterModalTitle">Add Host</div>
     <div class="form-group"><label class="form-label">Host Name</label><input type="text" class="form-input" id="rmName" placeholder="Full name"></div>
-    <div class="form-group"><label class="form-label">Skills / Training</label><div class="checkbox-grid" id="skillsGrid"></div></div>
-    <div class="form-group"><label class="form-label">Trained Venues</label><input type="text" class="form-input" id="rmVenues" placeholder="e.g. The Coaster, The Forum"></div>
+    <div class="form-group">
+      <label class="form-label">Skills / Training</label>
+      <div class="chip-grid" id="skillChips"></div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Trained Venues</label>
+      <div class="chip-grid" id="venueChips"></div>
+    </div>
     <div class="modal-actions">
       <button class="modal-cancel" onclick="closeRosterModal()">Cancel</button>
       <button class="modal-save" onclick="saveRoster()">Save Host</button>
+    </div>
+  </div>
+</div>
+
+<!-- VENUE MODAL -->
+<div class="modal-bg" id="venueModal">
+  <div class="modal">
+    <div class="modal-title" id="venueModalTitle">Add Venue</div>
+    <div class="form-group"><label class="form-label">Venue Name</label><input type="text" class="form-input" id="vmName" placeholder="Venue name"></div>
+    <div class="form-group">
+      <label class="form-label">Type of Gig / What We Do There</label>
+      <div class="chip-grid" id="gigChips"></div>
+    </div>
+    <div class="form-group"><label class="form-label">Notes (optional)</label><textarea class="form-textarea" id="vmNotes" placeholder="Any notes about this venue..." style="min-height:60px;"></textarea></div>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="closeVenueModal()">Cancel</button>
+      <button class="modal-save" onclick="saveVenue()">Save Venue</button>
     </div>
   </div>
 </div>
@@ -354,9 +429,9 @@ const SHEETS_KEY="AIzaSyACMjXQCXjVo75hbMXtag_JctR4SoX70So";
 const SHEET_ID="1-MkZoNKkPqjAoJggahKiUsDUgjUhMTkoQ8rUBG4W-w0";
 firebase.initializeApp({apiKey:"AIzaSyCIfAE1JGHsUGzzVH2pz1Vyj5b5OhA0tDQ",authDomain:"belladonna-hq.firebaseapp.com",projectId:"belladonna-hq",storageBucket:"belladonna-hq.firebasestorage.app",messagingSenderId:"1021873183587",appId:"1:1021873183587:web:def283bb7b5ca48e4f9156"});
 
-const SKILLS=['Karaoke','Bingo','Trivia','Events'];
+const SKILLS=['Karaoke','Bingo','Trivia','Events','Private Events'];
 const DEFAULT_MINI=[
-  {id:'m1',name:'Messy Caroling',desc:'"Your Man is a Bum" sung to the tune of "Little Drummer Boy" — hosts lead the crowd in a chaotic caroling version where classic holiday lyrics get swapped for Belladonna originals.',favs:false},
+  {id:'m1',name:'Messy Caroling',desc:'"Your Man is a Bum" sung to "Little Drummer Boy" — hosts lead the crowd in a chaotic caroling version where classic holiday lyrics get swapped for Belladonna originals.',favs:false},
   {id:'m2',name:'Guess the Remix',desc:'Play a remixed version of a well-known song and have guests guess the original.',favs:false},
   {id:'m3',name:'One Word Titles',desc:'Guests must name a song using only one word from the title — others guess the full song.',favs:false},
   {id:'m4',name:'Name That Intro',desc:'Play only the first few seconds of a song intro and see who can name it first.',favs:false},
@@ -379,25 +454,33 @@ const DEFAULT_ROSTER=[
   {id:'h3',name:'Miguel',skills:['Karaoke'],venues:['The Coaster']},
   {id:'h4',name:'Corissa',skills:['Karaoke'],venues:['The Coaster']},
 ];
+const DEFAULT_VENUES=[
+  {id:'v1',name:'The Coaster',gigs:['Karaoke'],notes:''},
+  {id:'v2',name:'Action Bar & Grill',gigs:['Karaoke'],notes:''},
+  {id:'v3',name:'McMillins Farm',gigs:['Events','Private Events'],notes:''},
+  {id:'v4',name:'The Forum',gigs:['Karaoke'],notes:''},
+];
 
-let miniGames=[...DEFAULT_MINI],specialtyEvents=[...DEFAULT_SPECIALTY],roster=[...DEFAULT_ROSTER];
-let editGameTab=null,editGameId=null,editRosterId=null,dragSrc=null,dragTabId=null;
-let checkoutData=[];
+let miniGames=[...DEFAULT_MINI],specialtyEvents=[...DEFAULT_SPECIALTY],roster=[...DEFAULT_ROSTER],venues=[...DEFAULT_VENUES];
+let editGameTab=null,editGameId=null,editRosterId=null,editVenueId=null;
+let dragSrc=null,dragTabId=null,checkoutData=[];
 
+// ── STORAGE ──
 async function loadStorage(){
   try{const m=await window.storage.get('games-mini');if(m)miniGames=JSON.parse(m.value);}catch(e){}
   try{const s=await window.storage.get('games-specialty');if(s)specialtyEvents=JSON.parse(s.value);}catch(e){}
   try{const r=await window.storage.get('host-roster');if(r)roster=JSON.parse(r.value);}catch(e){}
+  try{const v=await window.storage.get('venues-list');if(v)venues=JSON.parse(v.value);}catch(e){}
 }
 async function persist(key,val,dotId){
   try{await window.storage.set(key,JSON.stringify(val));if(dotId){const d=document.getElementById(dotId);d.classList.add('show');setTimeout(()=>d.classList.remove('show'),2000);}}catch(e){}
 }
 
+// ── NAV ──
 function showTab(id,el){
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   document.getElementById('panel-'+id).classList.add('active');el.classList.add('active');
-  if(id==='venues')loadVenueStats();
   if(id==='stats')loadStats();
 }
 function showSub(tab,id,el){
@@ -408,13 +491,12 @@ function showSub(tab,id,el){
 function openHub(){document.getElementById('hubOverlay').classList.add('visible');document.body.style.overflow='hidden';}
 function closeHub(){document.getElementById('hubOverlay').classList.remove('visible');document.body.style.overflow='';}
 
+// ── SHEETS ──
 async function fetchSheetData(){
   try{
     const res=await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/Sheet1?key=${SHEETS_KEY}`);
-    const data=await res.json();
-    if(data.error)throw new Error(data.error.message);
-    const rows=data.values||[];
-    if(rows.length<2){renderHosts([]);return;}
+    const data=await res.json();if(data.error)throw new Error(data.error.message);
+    const rows=data.values||[];if(rows.length<2){renderHosts([]);return;}
     const h=rows[0].map(x=>x.toLowerCase().trim());
     const ni=h.indexOf('host_name'),si=h.indexOf('status'),ti=h.indexOf('sign_in_time'),pi=h.indexOf('paid');
     renderHosts(rows.slice(1).map(r=>({name:r[ni]||'',status:(r[si]||'').toUpperCase(),signIn:r[ti]||'',paid:(r[pi]||'').toUpperCase()})));
@@ -427,18 +509,18 @@ async function fetchSheetData(){
 }
 function renderHosts(hosts){
   const on=hosts.filter(h=>h.status==='ON');
-  const unpaid=hosts.filter(h=>h.paid==='FALSE'&&h.status==='OFF');
   const today=new Date().toISOString().slice(0,10);
   document.getElementById('liveCount').textContent=on.length;
   document.getElementById('statOn').textContent=on.length;
   document.getElementById('statTotal').textContent=hosts.length;
   document.getElementById('statToday').textContent=hosts.filter(h=>h.signIn&&h.signIn.startsWith(today)).length;
-  document.getElementById('statUnpaid').textContent=unpaid.length;
+  document.getElementById('statUnpaid').textContent=hosts.filter(h=>h.paid==='FALSE'&&h.status==='OFF').length;
   const list=document.getElementById('hostList');
   if(!on.length){list.innerHTML='<div class="empty-state">No hosts currently on shift.</div>';return;}
   list.innerHTML=on.map(h=>`<div class="host-row"><div class="host-info"><div class="host-avatar">${h.name.charAt(0).toUpperCase()}</div><div><div class="host-name-text">${h.name}</div><div class="host-time">${h.signIn?'Since '+h.signIn:'—'}</div></div></div><div class="status-pill">On Shift</div></div>`).join('');
 }
 
+// ── CHECKOUT DATA ──
 async function fetchCheckoutData(){
   try{
     const res=await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent('belladonna host check out')}?key=${SHEETS_KEY}`);
@@ -449,16 +531,103 @@ async function fetchCheckoutData(){
   }catch(e){checkoutData=[];}
 }
 
+// ── ROSTER ──
+function getVenueNames(){return venues.map(v=>v.name);}
+function populateRosterFilters(){
+  const sf=document.getElementById('rosterFilterSkill');
+  const vf=document.getElementById('rosterFilterVenue');
+  sf.innerHTML='<option value="">All Skills</option>'+SKILLS.map(s=>`<option value="${s}">${s}</option>`).join('');
+  vf.innerHTML='<option value="">All Venues</option>'+getVenueNames().map(v=>`<option value="${v}">${v}</option>`).join('');
+}
+function filterRoster(){
+  const name=document.getElementById('rosterSearchName').value.trim().toLowerCase();
+  const skill=document.getElementById('rosterFilterSkill').value;
+  const venue=document.getElementById('rosterFilterVenue').value;
+  const filtered=roster.filter(h=>{
+    const matchName=!name||h.name.toLowerCase().includes(name);
+    const matchSkill=!skill||(h.skills||[]).includes(skill);
+    const matchVenue=!venue||(h.venues||[]).includes(venue);
+    return matchName&&matchSkill&&matchVenue;
+  });
+  renderRosterCards(filtered);
+}
+function renderRoster(){renderRosterCards(roster);}
+function renderRosterCards(list){
+  const el=document.getElementById('rosterList');
+  if(!list.length){el.innerHTML='<div class="no-results">No hosts match your search.</div>';return;}
+  el.innerHTML=list.map(h=>`<div class="roster-card"><div class="roster-header"><div class="roster-name">${h.name}</div><div class="roster-actions"><button class="action-btn edit" onclick="openRosterModal('${h.id}')">✎</button><button class="action-btn delete" onclick="deleteHost('${h.id}')">✕</button></div></div><div class="skill-tags">${(h.skills||[]).map(s=>`<span class="skill-tag">${s}</span>`).join('')||'<span style="font-size:0.62rem;color:var(--text3)">No skills added</span>'}</div><div class="venue-tags" style="margin-top:0.35rem;">${(h.venues||[]).map(v=>`<span class="venue-tag">${v}</span>`).join('')||'<span style="font-size:0.62rem;color:var(--text3)">No venues added</span>'}</div></div>`).join('');
+}
+function openRosterModal(id=null){
+  editRosterId=id;const host=id?roster.find(h=>h.id===id):null;
+  document.getElementById('rosterModalTitle').textContent=id?'Edit Host':'Add Host';
+  document.getElementById('rmName').value=host?host.name:'';
+  const vnames=getVenueNames();
+  document.getElementById('skillChips').innerHTML=SKILLS.map(s=>{
+    const sel=host&&(host.skills||[]).includes(s);
+    return`<div class="chip${sel?' selected-skill':''}" onclick="toggleChip(this,'skill')">${s}</div>`;
+  }).join('');
+  document.getElementById('venueChips').innerHTML=vnames.map(v=>{
+    const sel=host&&(host.venues||[]).includes(v);
+    return`<div class="chip${sel?' selected-venue':''}" onclick="toggleChip(this,'venue')">${v}</div>`;
+  }).join('');
+  document.getElementById('rosterModal').classList.add('open');
+}
+function toggleChip(el,type){
+  const cls=type==='skill'?'selected-skill':'selected-venue';
+  el.classList.toggle(cls);
+}
+function closeRosterModal(){document.getElementById('rosterModal').classList.remove('open');editRosterId=null;}
+function saveRoster(){
+  const name=document.getElementById('rmName').value.trim();if(!name)return;
+  const skills=[...document.querySelectorAll('#skillChips .selected-skill')].map(el=>el.textContent);
+  const vs=[...document.querySelectorAll('#venueChips .selected-venue')].map(el=>el.textContent);
+  if(editRosterId){const h=roster.find(x=>x.id===editRosterId);if(h){h.name=name;h.skills=skills;h.venues=vs;}}
+  else roster.push({id:Date.now().toString(),name,skills,venues:vs});
+  persist('host-roster',roster,'rosterSave');
+  renderRoster();filterRoster();populateHistoryDropdown();closeRosterModal();
+}
+function deleteHost(id){if(!confirm('Remove this host?'))return;roster=roster.filter(h=>h.id!==id);persist('host-roster',roster,'rosterSave');renderRoster();}
+
+// ── VENUES MANAGEMENT ──
+function renderVenueManage(){
+  const el=document.getElementById('venueManageList');
+  if(!venues.length){el.innerHTML='<div class="empty-state">No venues yet. Add one above.</div>';return;}
+  el.innerHTML=venues.map(v=>`<div class="venue-manage-card"><div class="venue-manage-header"><div class="venue-manage-name">${v.name}</div><div style="display:flex;gap:0.4rem;"><button class="action-btn edit" onclick="openVenueModal('${v.id}')">✎</button><button class="action-btn delete" onclick="deleteVenue('${v.id}')">✕</button></div></div><div class="venue-gig-tags">${(v.gigs||[]).map(g=>`<span class="venue-gig-tag">${g}</span>`).join('')}</div>${v.notes?`<div style="font-size:0.62rem;color:var(--text3);margin-top:0.5rem;">${v.notes}</div>`:''}</div>`).join('');
+}
+function openVenueModal(id=null){
+  editVenueId=id;const venue=id?venues.find(v=>v.id===id):null;
+  document.getElementById('venueModalTitle').textContent=id?'Edit Venue':'Add Venue';
+  document.getElementById('vmName').value=venue?venue.name:'';
+  document.getElementById('vmNotes').value=venue?venue.notes||'':'';
+  document.getElementById('gigChips').innerHTML=['Karaoke','Bingo','Trivia','Events','Private Events'].map(g=>{
+    const sel=venue&&(venue.gigs||[]).includes(g);
+    return`<div class="chip${sel?' selected-skill':''}" onclick="toggleChip(this,'skill')">${g}</div>`;
+  }).join('');
+  document.getElementById('venueModal').classList.add('open');
+}
+function closeVenueModal(){document.getElementById('venueModal').classList.remove('open');editVenueId=null;}
+function saveVenue(){
+  const name=document.getElementById('vmName').value.trim();if(!name)return;
+  const gigs=[...document.querySelectorAll('#gigChips .selected-skill')].map(el=>el.textContent);
+  const notes=document.getElementById('vmNotes').value.trim();
+  if(editVenueId){const v=venues.find(x=>x.id===editVenueId);if(v){v.name=name;v.gigs=gigs;v.notes=notes;}}
+  else venues.push({id:Date.now().toString(),name,gigs,notes});
+  persist('venues-list',venues,'venuesSave');
+  renderVenueManage();populateRosterFilters();closeVenueModal();
+}
+function deleteVenue(id){if(!confirm('Remove this venue?'))return;venues=venues.filter(v=>v.id!==id);persist('venues-list',venues,'venuesSave');renderVenueManage();populateRosterFilters();}
+
+// ── VENUE PERFORMANCE ──
 async function loadVenueStats(){
   await fetchCheckoutData();
   const el=document.getElementById('venuesList');
-  if(!checkoutData.length){el.innerHTML='<div class="empty-state">No checkout data yet. Venues will populate as hosts submit checkout reports.</div>';return;}
+  if(!checkoutData.length){el.innerHTML='<div class="empty-state">No checkout data yet. Performance data will populate as hosts submit reports.</div>';return;}
   const vm={};
   checkoutData.forEach(r=>{
     const v=r.venue||'Unknown';
     if(!vm[v])vm[v]={shifts:0,crowdTotal:0,crowdCount:0,energyTotal:0,energyCount:0,tips:[],paid:0};
     vm[v].shifts++;
-    const crowd=r.crowd_size||'';const m=crowd.match(/(\d+)/);if(m){vm[v].crowdTotal+=parseInt(m[1]);vm[v].crowdCount++;}
+    const m=(r.crowd_size||'').match(/(\d+)/);if(m){vm[v].crowdTotal+=parseInt(m[1]);vm[v].crowdCount++;}
     const em=(r.energy||'').match(/(\d)/);if(em){vm[v].energyTotal+=parseInt(em[1]);vm[v].energyCount++;}
     const tip=r.tip_scale||'';if(tip&&tip!=='Not specified'&&tip!=='No tips')vm[v].tips.push(tip);
     if((r.got_paid||'').toLowerCase()==='yes')vm[v].paid++;
@@ -467,10 +636,11 @@ async function loadVenueStats(){
     const avgCrowd=d.crowdCount?Math.round(d.crowdTotal/d.crowdCount):0;
     const avgEnergy=d.energyCount?(d.energyTotal/d.energyCount).toFixed(1):0;
     const topTip=d.tips.length?d.tips.sort((a,b)=>d.tips.filter(v=>v===b).length-d.tips.filter(v=>v===a).length)[0]:'—';
-    return`<div class="venue-card"><div class="venue-name">${name}</div><div class="venue-stats"><div class="venue-stat"><div class="venue-stat-val">${d.shifts}</div><div class="venue-stat-label">Shifts</div></div><div class="venue-stat"><div class="venue-stat-val">${avgCrowd||'—'}</div><div class="venue-stat-label">Avg Crowd</div></div><div class="venue-stat"><div class="venue-stat-val">${avgEnergy||'—'}${avgEnergy?'★':''}</div><div class="venue-stat-label">Energy</div></div></div><div style="font-size:0.62rem;color:var(--text3);">Top tips: <span style="color:var(--gold)">${topTip}</span> &nbsp;·&nbsp; Paid: <span style="color:var(--teal2)">${d.paid}/${d.shifts}</span></div></div>`;
+    return`<div class="venue-perf-card"><div class="venue-perf-name">${name}</div><div class="venue-stats"><div class="venue-stat"><div class="venue-stat-val">${d.shifts}</div><div class="venue-stat-label">Shifts</div></div><div class="venue-stat"><div class="venue-stat-val">${avgCrowd||'—'}</div><div class="venue-stat-label">Avg Crowd</div></div><div class="venue-stat"><div class="venue-stat-val">${avgEnergy||'—'}${avgEnergy?'★':''}</div><div class="venue-stat-label">Energy</div></div></div><div style="font-size:0.62rem;color:var(--text3);">Top tips: <span style="color:var(--gold)">${topTip}</span> &nbsp;·&nbsp; Paid: <span style="color:var(--teal2)">${d.paid}/${d.shifts}</span></div></div>`;
   }).join('');
 }
 
+// ── STATS ──
 async function loadStats(){
   await fetchCheckoutData();
   const grid=document.getElementById('statsGrid');
@@ -482,17 +652,17 @@ async function loadStats(){
     if(r.date){const d=new Date(r.date);if(!isNaN(d)){const day=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d.getDay()];dc[day]=(dc[day]||0)+1;}}
   });
   const paid=checkoutData.filter(r=>(r.got_paid||'').toLowerCase()==='yes').length;
-  const payRate=Math.round(paid/checkoutData.length*100);
   const topH=Object.entries(hc).sort((a,b)=>b[1]-a[1]).slice(0,5);
   const topV=Object.entries(vc).sort((a,b)=>b[1]-a[1]).slice(0,5);
   const topD=Object.entries(dc).sort((a,b)=>b[1]-a[1]).slice(0,5);
   grid.innerHTML=`
     <div class="insight-card"><div class="insight-title">Most Active Hosts</div>${topH.map(([n,c])=>`<div class="insight-row"><span class="insight-name">${n}</span><span class="insight-val">${c}</span></div>`).join('')}</div>
     <div class="insight-card"><div class="insight-title">Top Venues</div>${topV.map(([n,c])=>`<div class="insight-row"><span class="insight-name">${n}</span><span class="insight-val">${c}</span></div>`).join('')}</div>
-    <div class="insight-card"><div class="insight-title">Busiest Nights</div>${topD.map(([d,c])=>`<div class="insight-row"><span class="insight-name">${d}</span><span class="insight-val">${c}</span></div>`).join('')}</div>
-    <div class="insight-card"><div class="insight-title">Pay & Tips</div><div class="insight-row"><span class="insight-name">Pay rate</span><span class="insight-val">${payRate}%</span></div><div class="insight-row"><span class="insight-name">Total shifts</span><span class="insight-val">${checkoutData.length}</span></div><div class="insight-row"><span class="insight-name">Paid on time</span><span class="insight-val">${paid}</span></div></div>`;
+    <div class="insight-card"><div class="insight-title">Busiest Nights</div>${topD.length?topD.map(([d,c])=>`<div class="insight-row"><span class="insight-name">${d}</span><span class="insight-val">${c} shifts</span></div>`).join(''):'<div class="insight-row"><span class="insight-name">Not enough data</span></div>'}</div>
+    <div class="insight-card"><div class="insight-title">Pay & Tips</div><div class="insight-row"><span class="insight-name">Pay rate</span><span class="insight-val">${Math.round(paid/checkoutData.length*100)}%</span></div><div class="insight-row"><span class="insight-name">Total shifts</span><span class="insight-val">${checkoutData.length}</span></div><div class="insight-row"><span class="insight-name">Paid on time</span><span class="insight-val">${paid}</span></div></div>`;
 }
 
+// ── SHIFT HISTORY ──
 async function loadHistory(){
   const typed=document.getElementById('historySearch').value.trim().toLowerCase();
   const picked=document.getElementById('historyPick').value.toLowerCase();
@@ -510,31 +680,7 @@ function populateHistoryDropdown(){
   roster.forEach(h=>{const o=document.createElement('option');o.value=h.name.toLowerCase();o.textContent=h.name;sel.appendChild(o);});
 }
 
-function renderRoster(){
-  const el=document.getElementById('rosterList');
-  if(!roster.length){el.innerHTML='<div class="empty-state">No hosts yet.</div>';return;}
-  el.innerHTML=roster.map(h=>`<div class="roster-card"><div class="roster-header"><div class="roster-name">${h.name}</div><div class="roster-actions"><button class="action-btn edit" onclick="openRosterModal('${h.id}')">✎</button><button class="action-btn delete" onclick="deleteHost('${h.id}')">✕</button></div></div><div class="skill-tags">${(h.skills||[]).map(s=>`<span class="skill-tag">${s}</span>`).join('')}</div><div class="venue-tags">${(h.venues||[]).map(v=>`<span class="venue-tag">${v}</span>`).join('')}</div></div>`).join('');
-}
-function openRosterModal(id=null){
-  editRosterId=id;const host=id?roster.find(h=>h.id===id):null;
-  document.getElementById('rosterModalTitle').textContent=id?'Edit Host':'Add Host';
-  document.getElementById('rmName').value=host?host.name:'';
-  document.getElementById('rmVenues').value=host?(host.venues||[]).join(', '):'';
-  document.getElementById('skillsGrid').innerHTML=SKILLS.map(s=>{const checked=host&&(host.skills||[]).includes(s);return`<div class="checkbox-item${checked?' checked':''}" onclick="toggleSkill(this)"><input type="checkbox" ${checked?'checked':''} value="${s}"><span class="checkbox-label">${s}</span></div>`;}).join('');
-  document.getElementById('rosterModal').classList.add('open');
-}
-function toggleSkill(el){el.classList.toggle('checked');el.querySelector('input').checked=el.classList.contains('checked');}
-function closeRosterModal(){document.getElementById('rosterModal').classList.remove('open');editRosterId=null;}
-function saveRoster(){
-  const name=document.getElementById('rmName').value.trim();if(!name)return;
-  const skills=[...document.querySelectorAll('#skillsGrid .checkbox-item.checked')].map(el=>el.querySelector('input').value);
-  const venues=document.getElementById('rmVenues').value.split(',').map(v=>v.trim()).filter(Boolean);
-  if(editRosterId){const h=roster.find(x=>x.id===editRosterId);if(h){h.name=name;h.skills=skills;h.venues=venues;}}
-  else roster.push({id:Date.now().toString(),name,skills,venues});
-  persist('host-roster',roster,'rosterSave');renderRoster();populateHistoryDropdown();closeRosterModal();
-}
-function deleteHost(id){if(!confirm('Remove this host?'))return;roster=roster.filter(h=>h.id!==id);persist('host-roster',roster,'rosterSave');renderRoster();}
-
+// ── GAMES ──
 function renderGames(){renderGameList('mini',miniGames);renderGameList('specialty',specialtyEvents);}
 function renderGameList(tab,games){
   const favs=games.filter(g=>g.favs),rest=games.filter(g=>!g.favs);
@@ -543,12 +689,12 @@ function renderGameList(tab,games){
   attachDrag(tab);
 }
 function renderGameItems(tab,games){
-  return games.map(g=>`<div class="game-item" draggable="${!g.isLink}" data-id="${g.id}" data-tab="${tab}"><div class="game-header" onclick="toggleExpand('${g.id}')"><div class="drag-handle">⠿</div><div class="game-header-text"><div class="game-name">${g.name}</div></div><div class="game-header-actions"><button class="fav-btn${g.favs?' active':''}" onclick="event.stopPropagation();toggleFav('${tab}','${g.id}')">★</button>${!g.isLink?`<button class="action-btn edit" onclick="event.stopPropagation();openGameModal('${tab}','${g.id}')">✎</button>`:''}  <button class="action-btn delete" onclick="event.stopPropagation();deleteGame('${tab}','${g.id}')">✕</button></div></div><div class="game-expand" id="expand-${g.id}"><div class="game-desc-text">${g.desc||'No description yet.'}</div>${g.isLink?`<a href="${g.link}" target="_blank" class="bingo-link">↗ Open Bingo App</a>`:''}</div></div>`).join('');
+  return games.map(g=>`<div class="game-item" draggable="${!g.isLink}" data-id="${g.id}" data-tab="${tab}"><div class="game-header" onclick="toggleExpand('${g.id}')"><div class="drag-handle">⠿</div><div class="game-header-text"><div class="game-name">${g.name}</div></div><div class="game-header-actions"><button class="fav-btn${g.favs?' active':''}" onclick="event.stopPropagation();toggleFav('${tab}','${g.id}')">★</button>${!g.isLink?`<button class="action-btn edit" onclick="event.stopPropagation();openGameModal('${tab}','${g.id}')">✎</button>`:''}<button class="action-btn delete" onclick="event.stopPropagation();deleteGame('${tab}','${g.id}')">✕</button></div></div><div class="game-expand" id="expand-${g.id}"><div class="game-desc-text">${g.desc||'No description yet.'}</div>${g.isLink?`<a href="${g.link}" target="_blank" class="bingo-link">↗ Open Bingo App</a>`:''}</div></div>`).join('');
 }
 function toggleExpand(id){document.getElementById('expand-'+id).classList.toggle('open');}
 function toggleFav(tab,id){const games=tab==='mini'?miniGames:specialtyEvents;const g=games.find(x=>x.id===id);if(g)g.favs=!g.favs;persist(tab==='mini'?'games-mini':'games-specialty',games,tab==='mini'?'miniSave':'specialtySave');renderGameList(tab,games);}
 function attachDrag(tab){
-  document.querySelectorAll(`#list-${tab} .game-item[draggable="true"], #fav-${tab}-section .game-item[draggable="true"]`).forEach(el=>{
+  document.querySelectorAll(`#list-${tab} .game-item[draggable="true"]`).forEach(el=>{
     el.addEventListener('dragstart',e=>{dragSrc=el.dataset.id;dragTabId=tab;el.style.opacity='0.4';e.dataTransfer.effectAllowed='move';});
     el.addEventListener('dragend',e=>{el.style.opacity='1';document.querySelectorAll('.game-item').forEach(x=>x.classList.remove('drag-over'));});
     el.addEventListener('dragover',e=>{e.preventDefault();el.classList.add('drag-over');});
@@ -583,15 +729,16 @@ function saveGame(){
 function deleteGame(tab,id){
   if(!confirm('Delete this game?'))return;
   if(tab==='mini')miniGames=miniGames.filter(g=>g.id!==id);else specialtyEvents=specialtyEvents.filter(g=>g.id!==id);
-  const games=tab==='mini'?miniGames:specialtyEvents;
-  persist(tab==='mini'?'games-mini':'games-specialty',games,tab==='mini'?'miniSave':'specialtySave');
-  renderGameList(tab,games);
+  persist(tab==='mini'?'games-mini':'games-specialty',tab==='mini'?miniGames:specialtyEvents,tab==='mini'?'miniSave':'specialtySave');
+  renderGameList(tab,tab==='mini'?miniGames:specialtyEvents);
 }
 
+// ── INIT ──
 async function init(){
   await loadStorage();
   fetchSheetData();setInterval(fetchSheetData,60000);
-  renderRoster();renderGames();populateHistoryDropdown();
+  renderRoster();renderGames();renderVenueManage();
+  populateHistoryDropdown();populateRosterFilters();
 }
 init();
 </script>
