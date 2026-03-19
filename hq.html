@@ -250,13 +250,34 @@
   .cal-more{font-size:0.58rem;color:var(--text3);padding:0.1rem 0.3rem;cursor:pointer;letter-spacing:0.05em;}
   .cal-more:hover{color:var(--gold);}
   .cal-legend{display:flex;gap:1rem;flex-wrap:wrap;margin-top:1rem;}
-  .cal-month-notes{margin-top:0.8rem;margin-bottom:2.5rem;position:relative;}
-  .cal-month-notes-label{font-size:0.62rem;letter-spacing:0.22em;text-transform:uppercase;color:var(--text3);margin-bottom:0.4rem;}
-  .cal-month-notes-area{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--text2);padding:0.75rem 1rem;font-size:0.82rem;font-family:'Josefin Sans',sans-serif;letter-spacing:0.03em;outline:none;resize:none;line-height:1.6;min-height:70px;transition:border-color 0.2s;box-sizing:border-box;}
-  .cal-month-notes-area:focus{border-color:var(--gold);}
-  .cal-month-notes-area::placeholder{color:var(--text3);}
-  .cal-notes-saved{font-size:0.58rem;color:var(--teal2);letter-spacing:0.08em;opacity:0;transition:opacity 0.3s;margin-left:0.5rem;}
+  .cal-month-notes{margin-top:1rem;margin-bottom:2.5rem;}
+  .cal-notes-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0.75rem;}
+  .cal-note-section{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;position:relative;}
+  .cal-note-header{display:flex;align-items:center;justify-content:space-between;padding:0.6rem 0.8rem;border-bottom:1px solid var(--border);gap:0.4rem;}
+  .cal-note-title-input{flex:1;background:none;border:none;color:var(--gold);font-size:0.72rem;letter-spacing:0.12em;text-transform:uppercase;font-family:'Josefin Sans',sans-serif;outline:none;padding:0;min-width:0;}
+  .cal-note-title-input::placeholder{color:var(--text3);}
+  .cal-note-expand-btn{background:none;border:1px solid var(--border);color:var(--text3);width:22px;height:22px;border-radius:5px;cursor:pointer;font-size:0.65rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all 0.2s;}
+  .cal-note-expand-btn:hover{border-color:var(--gold);color:var(--gold);}
+  .cal-note-body{padding:0.6rem 0.8rem;}
+  .cal-note-area{width:100%;background:none;border:none;color:var(--text2);font-size:0.78rem;font-family:'Josefin Sans',sans-serif;letter-spacing:0.03em;outline:none;resize:none;line-height:1.7;overflow:hidden;box-sizing:border-box;min-height:60px;}
+  .cal-note-area::placeholder{color:var(--text3);}
+  .cal-notes-saved{font-size:0.56rem;color:var(--teal2);letter-spacing:0.08em;opacity:0;transition:opacity 0.3s;}
   .cal-notes-saved.show{opacity:1;}
+
+  /* NOTE EXPAND MODAL */
+  .note-expand-modal{position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:300;display:none;align-items:center;justify-content:center;padding:1.5rem;}
+  .note-expand-modal.open{display:flex;}
+  .note-expand-inner{background:var(--surface);border:1px solid var(--border2);border-radius:14px;width:100%;max-width:560px;max-height:80vh;display:flex;flex-direction:column;position:relative;overflow:hidden;}
+  .note-expand-inner::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);}
+  .note-expand-header{display:flex;align-items:center;justify-content:space-between;padding:1rem 1.2rem;border-bottom:1px solid var(--border);}
+  .note-expand-title{font-size:0.72rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);}
+  .note-expand-close{background:none;border:1px solid var(--border);color:var(--text3);width:28px;height:28px;border-radius:6px;cursor:pointer;font-size:0.8rem;display:flex;align-items:center;justify-content:center;transition:all 0.2s;}
+  .note-expand-close:hover{border-color:var(--rose2);color:var(--rose2);}
+  .note-expand-body{padding:1.2rem;flex:1;overflow-y:auto;}
+  .note-expand-area{width:100%;background:none;border:none;color:var(--text2);font-size:0.88rem;font-family:'Josefin Sans',sans-serif;letter-spacing:0.03em;outline:none;resize:none;line-height:1.8;min-height:300px;box-sizing:border-box;}
+  .note-expand-area::placeholder{color:var(--text3);}
+
+  @media(max-width:600px){.cal-notes-grid{grid-template-columns:1fr;}}
   .cal-legend-item{display:flex;align-items:center;gap:0.4rem;font-size:0.68rem;color:var(--text3);letter-spacing:0.05em;}
   .cal-legend-dot{width:10px;height:10px;border-radius:2px;flex-shrink:0;}
 
@@ -455,6 +476,18 @@
   </div>
 </div>
 
+<!-- NOTE EXPAND MODAL -->
+<div class="note-expand-modal" id="noteExpandModal">
+  <div class="note-expand-inner">
+    <div class="note-expand-header">
+      <div class="note-expand-title" id="noteExpandTitle"></div>
+      <button class="note-expand-close" onclick="closeNoteExpand()">✕</button>
+    </div>
+    <div class="note-expand-body">
+      <textarea class="note-expand-area" id="noteExpandArea" placeholder="Notes..." oninput="syncExpandedNote()"></textarea>
+    </div>
+  </div>
+</div>
 <!-- ADD/EDIT ENTRY MODAL -->
 <div class="modal-bg" id="entryModal">
   <div class="modal">
@@ -888,22 +921,68 @@ async function saveCalEntries(){
 
 // ── MONTH NOTES ──
 let monthNotes = {};
+let expandNoteKey = null;
+
 async function loadMonthNotes(){
-  try{const n=await window.storage.get('cal-month-notes');if(n)monthNotes=JSON.parse(n.value);}catch(e){}
+  try{const n=await window.storage.get('cal-month-notes-v2');if(n)monthNotes=JSON.parse(n.value);}catch(e){}
 }
-async function saveMonthNote(yr, mo){
-  const key = yr+'-'+mo;
-  const el = document.getElementById('note-'+yr+'-'+mo);
-  if(!el) return;
-  monthNotes[key] = el.value;
-  try{
-    await window.storage.set('cal-month-notes', JSON.stringify(monthNotes));
-    const saved = document.getElementById('noteSaved-'+yr+'-'+mo);
-    if(saved){ saved.classList.add('show'); setTimeout(()=>saved.classList.remove('show'),2000); }
-  }catch(e){}
+async function persistNotes(){
+  try{await window.storage.set('cal-month-notes-v2',JSON.stringify(monthNotes));}catch(e){}
 }
-function getMonthNote(yr, mo){
-  return monthNotes[yr+'-'+mo] || '';
+async function saveMonthNote(yr,mo,si){
+  const key=yr+'-'+mo+'-'+si;
+  const el=document.getElementById('note-'+yr+'-'+mo+'-'+si);
+  if(!el)return;
+  monthNotes[key]=el.value;
+  // sync expanded modal if open
+  if(expandNoteKey===key){
+    const exp=document.getElementById('noteExpandArea');
+    if(exp)exp.value=el.value;
+  }
+  await persistNotes();
+  const saved=document.getElementById('noteSaved-'+yr+'-'+mo+'-'+si);
+  if(saved){saved.classList.add('show');setTimeout(()=>saved.classList.remove('show'),1500);}
+}
+async function saveNoteTitle(yr,mo,si){
+  const key='title-'+yr+'-'+mo+'-'+si;
+  const el=document.getElementById('notetitle-'+yr+'-'+mo+'-'+si);
+  if(!el)return;
+  monthNotes[key]=el.value;
+  await persistNotes();
+}
+function getMonthNote(yr,mo,si){return monthNotes[yr+'-'+mo+'-'+si]||'';}
+function getNoteTitle(yr,mo,si){return monthNotes['title-'+yr+'-'+mo+'-'+si]||'';}
+
+function autoGrow(el){
+  el.style.height='auto';
+  el.style.height=el.scrollHeight+'px';
+}
+
+function expandNote(yr,mo,si){
+  expandNoteKey=yr+'-'+mo+'-'+si;
+  const title=monthNotes['title-'+yr+'-'+mo+'-'+si]||(MONTHS[mo]+' '+yr+' — Section '+(si+1));
+  const body=getMonthNote(yr,mo,si);
+  document.getElementById('noteExpandTitle').textContent=title;
+  const area=document.getElementById('noteExpandArea');
+  area.value=body;
+  area.dataset.yr=yr;area.dataset.mo=mo;area.dataset.si=si;
+  document.getElementById('noteExpandModal').classList.add('open');
+  area.focus();
+}
+async function syncExpandedNote(){
+  const area=document.getElementById('noteExpandArea');
+  const yr=area.dataset.yr,mo=area.dataset.mo,si=area.dataset.si;
+  const key=yr+'-'+mo+'-'+si;
+  monthNotes[key]=area.value;
+  // sync back to inline textarea
+  const inline=document.getElementById('note-'+yr+'-'+mo+'-'+si);
+  if(inline){inline.value=area.value;autoGrow(inline);}
+  await persistNotes();
+}
+function closeNoteExpand(){
+  syncExpandedNote();
+  document.getElementById('noteExpandModal').classList.remove('open');
+  expandNoteKey=null;
 }
 
 function renderCalendar(){
@@ -947,12 +1026,32 @@ function renderCalendar(){
     }
     html += `</div>
       <div class="cal-month-notes">
-        <div class="cal-month-notes-label">${MONTHS[mo]} Notes <span class="cal-notes-saved" id="noteSaved-${yr}-${mo}">Saved ✓</span></div>
-        <textarea class="cal-month-notes-area" id="note-${yr}-${mo}" placeholder="Jot anything about ${MONTHS[mo]}..." onblur="saveMonthNote(${yr},${mo})">${getMonthNote(yr,mo)}</textarea>
+        <div class="cal-notes-grid">
+          ${[0,1,2].map(si => `
+            <div class="cal-note-section">
+              <div class="cal-note-header">
+                <input type="text" class="cal-note-title-input" id="notetitle-${yr}-${mo}-${si}"
+                  value="${getNoteTitle(yr,mo,si)}"
+                  placeholder="Section title..."
+                  onblur="saveNoteTitle(${yr},${mo},${si})"
+                  onclick="event.stopPropagation()">
+                <span class="cal-notes-saved" id="noteSaved-${yr}-${mo}-${si}">✓</span>
+                <button class="cal-note-expand-btn" onclick="expandNote(${yr},${mo},${si})" title="Expand">⤢</button>
+              </div>
+              <div class="cal-note-body">
+                <textarea class="cal-note-area" id="note-${yr}-${mo}-${si}"
+                  placeholder="Notes..."
+                  oninput="autoGrow(this)"
+                  onblur="saveMonthNote(${yr},${mo},${si})">${getMonthNote(yr,mo,si)}</textarea>
+              </div>
+            </div>`).join('')}
+        </div>
       </div>
     </div>`;
   }
   scroll.innerHTML = html;
+  // Auto-grow all textareas after render
+  setTimeout(()=>{document.querySelectorAll('.cal-note-area').forEach(el=>autoGrow(el));},50);
 }
 
 function calPrev(){ renderCalendar(); }
