@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Belladonna Check-Out</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300&family=Josefin+Sans:wght@200;300;400&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --bg: #0a0a0f; --surface: #111118; --surface2: #18181f;
+    --border: rgba(180,140,200,0.15); --border2: rgba(180,140,200,0.3);
+    --gold: #c9a96e; --rose2: #b05070; --teal2: #3aa08a;
+    --text: #e8e0f0; --text3: #9a8aaa;
+    --live: #3aaa6a; --live-dim: rgba(58,170,106,0.15);
+    --purple-btn: #d4c0e8;
+  }
+  body { background: var(--bg); color: var(--text); font-family: 'Josefin Sans', sans-serif; font-weight: 300; min-height: 100vh; padding: 2rem 1rem; letter-spacing: 0.04em; }
+  .form-wrap { max-width: 480px; margin: 0 auto; }
+  .form-header { text-align: center; margin-bottom: 2.5rem; position: relative; padding-bottom: 1.5rem; }
+  .form-header::after { content: ''; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 80px; height: 1px; background: linear-gradient(90deg, transparent, var(--rose2), transparent); }
+  .brand { font-family: 'Cormorant Garamond', serif; font-size: 2rem; font-weight: 300; color: var(--gold); letter-spacing: 0.25em; text-transform: uppercase; }
+  .form-subtitle { font-size: 0.65rem; letter-spacing: 0.4em; text-transform: uppercase; color: var(--text3); margin-top: 0.3rem; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 2rem; position: relative; overflow: hidden; margin-bottom: 1rem; }
+  .card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, var(--rose2), var(--gold), transparent); }
+  .card-title { font-size: 0.6rem; letter-spacing: 0.3em; text-transform: uppercase; color: var(--text3); margin-bottom: 1.2rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--border); }
+  .field { margin-bottom: 1.4rem; }
+  .field-label { font-size: 0.6rem; letter-spacing: 0.25em; text-transform: uppercase; color: var(--text3); display: block; margin-bottom: 0.5rem; }
+  .field-input, .field-select, .field-textarea { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); padding: 0.75rem 1rem; font-size: 0.82rem; font-family: 'Josefin Sans', sans-serif; font-weight: 300; letter-spacing: 0.05em; outline: none; transition: border-color 0.2s; -webkit-appearance: none; }
+  .field-input:focus, .field-select:focus, .field-textarea:focus { border-color: var(--gold); }
+  .field-input::placeholder, .field-textarea::placeholder { color: var(--text3); }
+  .field-select { cursor: pointer; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%239a8aaa' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 1rem center; padding-right: 2.5rem; }
+  .field-select option { background: #18181f; color: var(--text); }
+  .field-textarea { resize: vertical; min-height: 90px; line-height: 1.6; }
+  .venue-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
+  .venue-chip { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 0.7rem 0.8rem; font-size: 0.72rem; color: var(--purple-btn); cursor: pointer; text-align: center; transition: all 0.2s; letter-spacing: 0.05em; font-family: 'Josefin Sans', sans-serif; line-height: 1.3; }
+  .venue-chip:hover { border-color: var(--border2); color: var(--text); }
+  .venue-chip.selected { border-color: var(--gold); color: var(--gold); background: rgba(201,169,110,0.08); }
+  .add-venue-row { display: flex; gap: 0.5rem; margin-top: 0.5rem; }
+  .add-venue-input { flex: 1; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); padding: 0.6rem 0.9rem; font-size: 0.75rem; font-family: 'Josefin Sans', sans-serif; outline: none; transition: border-color 0.2s; letter-spacing: 0.05em; }
+  .add-venue-input:focus { border-color: var(--gold); }
+  .add-venue-input::placeholder { color: var(--text3); }
+  .add-btn { background: rgba(201,169,110,0.15); border: 1px solid var(--gold); color: var(--purple-btn); border-radius: 8px; padding: 0.6rem 1rem; font-size: 0.7rem; cursor: pointer; font-family: 'Josefin Sans', sans-serif; font-weight: 400; letter-spacing: 0.1em; transition: all 0.2s; white-space: nowrap; }
+  .add-btn:hover { background: rgba(201,169,110,0.25); color: var(--text); }
+  .time-now-btn { display: inline-block; margin-top: 0.5rem; font-size: 0.65rem; font-family: 'Josefin Sans', sans-serif; font-weight: 400; letter-spacing: 0.15em; text-transform: uppercase; color: var(--purple-btn); background: rgba(180,140,200,0.12); border: 1px solid rgba(180,140,200,0.35); border-radius: 20px; padding: 0.4rem 1rem; cursor: pointer; transition: all 0.2s; }
+  .time-now-btn:hover { background: rgba(180,140,200,0.22); color: var(--text); }
+  .crowd-options { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.4rem; }
+  .crowd-chip { background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 0.6rem 0.2rem; font-size: 0.62rem; color: var(--purple-btn); cursor: pointer; text-align: center; transition: all 0.2s; font-family: 'Josefin Sans', sans-serif; font-weight: 400; }
+  .crowd-chip:hover { border-color: var(--teal2); color: var(--text); }
+  .crowd-chip.selected { border-color: var(--teal2); color: var(--purple-btn); background: rgba(58,160,138,0.15); }
+  .stars { display: flex; gap: 8px; }
+  .star { font-size: 1.8rem; cursor: pointer; color: #3a2a4a; transition: color 0.15s; line-height: 1; }
+  .star.lit { color: var(--gold); }
+  .star:hover { color: var(--gold); }
+  .yn-toggle { display: flex; gap: 0.5rem; }
+  .yn-btn { flex: 1; padding: 0.8rem; border-radius: 8px; font-size: 0.7rem; font-weight: 400; letter-spacing: 0.2em; text-transform: uppercase; cursor: pointer; font-family: 'Josefin Sans', sans-serif; transition: all 0.2s; border: 1px solid rgba(180,140,200,0.3); background: var(--surface2); color: var(--purple-btn); }
+  .yn-btn:hover { color: var(--text); border-color: rgba(180,140,200,0.5); }
+  .yn-btn.yes-sel { border-color: var(--live); color: var(--purple-btn); background: rgba(58,170,106,0.15); }
+  .yn-btn.no-sel { border-color: var(--rose2); color: var(--purple-btn); background: rgba(176,80,112,0.15); }
+  .status-toggle { display: flex; gap: 0.5rem; }
+  .status-btn { flex: 1; padding: 0.8rem; border-radius: 8px; font-size: 0.7rem; font-weight: 400; letter-spacing: 0.2em; text-transform: uppercase; cursor: pointer; font-family: 'Josefin Sans', sans-serif; transition: all 0.2s; border: 1px solid rgba(180,140,200,0.3); background: var(--surface2); color: var(--purple-btn); }
+  .status-btn:hover { color: var(--text); border-color: rgba(180,140,200,0.5); }
+  .status-btn.active-sel { border-color: var(--live); color: var(--purple-btn); background: rgba(58,170,106,0.15); }
+  .status-btn.inactive-sel { border-color: var(--rose2); color: var(--purple-btn); background: rgba(176,80,112,0.15); }
+  .photo-upload { border: 1px dashed var(--border2); border-radius: 8px; padding: 1.2rem; text-align: center; cursor: pointer; transition: all 0.2s; position: relative; }
+  .photo-upload:hover { border-color: var(--gold); }
+  .photo-upload input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; }
+  .photo-label { font-size: 0.65rem; color: var(--purple-btn); letter-spacing: 0.1em; }
+  .photo-label span { color: var(--gold); }
+  .photo-name { font-size: 0.7rem; color: var(--teal2); margin-top: 0.3rem; }
+  .submit-btn { width: 100%; background: rgba(176,80,112,0.1); border: 1px solid var(--rose2); color: var(--purple-btn); padding: 1rem; border-radius: 40px; font-size: 0.72rem; font-weight: 400; letter-spacing: 0.35em; text-transform: uppercase; cursor: pointer; font-family: 'Josefin Sans', sans-serif; transition: all 0.25s; margin-top: 0.5rem; }
+  .submit-btn:hover { background: rgba(176,80,112,0.2); color: var(--text); }
+  .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .required { color: var(--rose2); margin-left: 2px; }
+  .msg { border-radius: 8px; padding: 0.9rem 1rem; font-size: 0.75rem; letter-spacing: 0.05em; margin-top: 1rem; display: none; line-height: 1.5; }
+  .msg-success { background: var(--live-dim); border: 1px solid rgba(58,170,106,0.3); color: #6edd9a; }
+  .msg-error { background: rgba(176,80,112,0.12); border: 1px solid rgba(176,80,112,0.3); color: #d07090; }
+</style>
+</head>
+<body>
+<div class="form-wrap">
+  <div class="form-header">
+    <div class="brand">Belladonna</div>
+    <div class="form-subtitle">Host Check-Out</div>
+  </div>
+  <div class="card">
+    <div class="card-title">Shift Details</div>
+    <div class="field">
+      <label class="field-label">Host Name <span class="required">*</span></label>
+      <input type="text" class="field-input" id="host" placeholder="Your name">
+    </div>
+    <div class="field">
+      <label class="field-label">Venue <span class="required">*</span></label>
+      <div class="venue-grid" id="venueGrid">
+        <div class="venue-chip" onclick="selectVenue(this)">The Coaster</div>
+        <div class="venue-chip" onclick="selectVenue(this)">Action Bar & Grill</div>
+        <div class="venue-chip" onclick="selectVenue(this)">McMillins Farm</div>
+        <div class="venue-chip" onclick="selectVenue(this)">The Forum</div>
+      </div>
+      <div class="add-venue-row">
+        <input type="text" class="add-venue-input" id="newVenueInput" placeholder="Add a venue...">
+        <button class="add-btn" onclick="addVenue()">+ Add</button>
+      </div>
+    </div>
+    <div class="field">
+      <label class="field-label">Date <span class="required">*</span></label>
+      <input type="date" class="field-input" id="date">
+    </div>
+    <div class="field">
+      <label class="field-label">Check-Out Time <span class="required">*</span></label>
+      <input type="time" class="field-input" id="checkoutTime">
+      <button class="time-now-btn" onclick="setNow()">↑ Use Current Time</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Shift Intel</div>
+    <div class="field">
+      <label class="field-label">Crowd Size</label>
+      <div class="crowd-options">
+        <div class="crowd-chip" onclick="selectCrowd(this)">0–10</div>
+        <div class="crowd-chip" onclick="selectCrowd(this)">10–20</div>
+        <div class="crowd-chip" onclick="selectCrowd(this)">20–30</div>
+        <div class="crowd-chip" onclick="selectCrowd(this)">30–40</div>
+        <div class="crowd-chip" onclick="selectCrowd(this)">50+</div>
+      </div>
+    </div>
+    <div class="field">
+      <label class="field-label">How Many Singers Were There?</label>
+      <input type="number" class="field-input" id="singers" placeholder="0" min="0">
+    </div>
+    <div class="field">
+      <label class="field-label">Energy Level</label>
+      <div class="stars">
+        <span class="star" onclick="setStar(1)">★</span>
+        <span class="star" onclick="setStar(2)">★</span>
+        <span class="star" onclick="setStar(3)">★</span>
+        <span class="star" onclick="setStar(4)">★</span>
+        <span class="star" onclick="setStar(5)">★</span>
+      </div>
+    </div>
+    <div class="field">
+      <label class="field-label">Was the Venue Busy / Full Most of the Night?</label>
+      <div class="yn-toggle">
+        <button class="yn-btn" id="busyYes" onclick="setYN('busy','Yes')">Yes</button>
+        <button class="yn-btn" id="busyNo" onclick="setYN('busy','No')">No</button>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Pay & Tips</div>
+    <div class="field">
+      <label class="field-label">Did You Get Your Pay?</label>
+      <div class="yn-toggle">
+        <button class="yn-btn" id="paidYes" onclick="setYN('paid','Yes')">Yes</button>
+        <button class="yn-btn" id="paidNo" onclick="setYN('paid','No')">No</button>
+      </div>
+    </div>
+    <div class="field">
+      <label class="field-label">Did You Get Tipped Well?</label>
+      <select class="field-select" id="tipScale">
+        <option value="">Select tip range...</option>
+        <option value="No tips">No tips</option>
+        <option value="Under $10">Under $10</option>
+        <option value="$10–$25">$10–$25</option>
+        <option value="$25–$50">$25–$50</option>
+        <option value="$50–$75">$50–$75</option>
+        <option value="$75–$100">$75–$100</option>
+        <option value="$100+">$100+</option>
+      </select>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Notes & Wrap-Up</div>
+    <div class="field">
+      <label class="field-label">Issues</label>
+      <textarea class="field-textarea" id="issues" placeholder="Any issues during your shift..."></textarea>
+    </div>
+    <div class="field">
+      <label class="field-label">Notes</label>
+      <textarea class="field-textarea" id="notes" placeholder="General notes or observations..."></textarea>
+    </div>
+    <div class="field">
+      <label class="field-label">Status</label>
+      <div class="status-toggle">
+        <button class="status-btn active-sel" id="statusActive" onclick="setStatus('Active')">Active</button>
+        <button class="status-btn" id="statusInactive" onclick="setStatus('Inactive')">Inactive</button>
+      </div>
+    </div>
+    <div class="field">
+      <label class="field-label">Photo</label>
+      <div class="photo-upload">
+        <input type="file" accept="image/*" id="photoFile" onchange="handlePhoto(this)">
+        <div style="font-size:1.2rem;margin-bottom:0.4rem;">📎</div>
+        <div class="photo-label">Tap to attach — <span>browse files</span></div>
+        <div class="photo-name" id="photoName"></div>
+      </div>
+    </div>
+    <button class="submit-btn" id="submitBtn" onclick="submitForm()">Check Out</button>
+    <div class="msg msg-success" id="successMsg">Shift recorded. Thank you for a beautiful night. 🖤</div>
+    <div class="msg msg-error" id="errorMsg"></div>
+  </div>
+</div>
+<script>
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbye_Vv3kGcmPhforDf73jQ-7NIOaLbg4jwTPI9_VTspEIU4nNK_NxTY14KYyQsUDe2GYQ/exec';
+let selectedVenue='',selectedCrowd='',starRating=0,venueBusy='',gotPaid='',currentStatus='Active',photoURL='';
+document.getElementById('date').value=new Date().toISOString().split('T')[0];
+function setNow(){const n=new Date();document.getElementById('checkoutTime').value=String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0');}
+function selectVenue(el){document.querySelectorAll('.venue-chip').forEach(c=>c.classList.remove('selected'));el.classList.add('selected');selectedVenue=el.textContent.trim();}
+function addVenue(){const input=document.getElementById('newVenueInput');const val=input.value.trim();if(!val)return;const chip=document.createElement('div');chip.className='venue-chip';chip.textContent=val;chip.onclick=function(){selectVenue(this);};document.getElementById('venueGrid').appendChild(chip);selectVenue(chip);input.value='';}
+function selectCrowd(el){document.querySelectorAll('.crowd-chip').forEach(c=>c.classList.remove('selected'));el.classList.add('selected');selectedCrowd=el.textContent.trim();}
+function setStar(n){starRating=n;document.querySelectorAll('.star').forEach((s,i)=>s.classList.toggle('lit',i<n));}
+function setYN(field,val){if(field==='busy'){venueBusy=val;document.getElementById('busyYes').className='yn-btn'+(val==='Yes'?' yes-sel':'');document.getElementById('busyNo').className='yn-btn'+(val==='No'?' no-sel':'');}else{gotPaid=val;document.getElementById('paidYes').className='yn-btn'+(val==='Yes'?' yes-sel':'');document.getElementById('paidNo').className='yn-btn'+(val==='No'?' no-sel':'');}}
+function setStatus(s){currentStatus=s;document.getElementById('statusActive').className='status-btn'+(s==='Active'?' active-sel':'');document.getElementById('statusInactive').className='status-btn'+(s==='Inactive'?' inactive-sel':'');}
+function handlePhoto(input){if(input.files&&input.files[0]){photoURL=input.files[0].name;document.getElementById('photoName').textContent='✓ '+photoURL;}}
+async function submitForm(){
+  const host=document.getElementById('host').value.trim();
+  const date=document.getElementById('date').value;
+  const time=document.getElementById('checkoutTime').value;
+  if(!host){showError('Please enter your host name.');return;}
+  if(!selectedVenue){showError('Please select or add a venue.');return;}
+  if(!date||!time){showError('Please fill in date and check-out time.');return;}
+  const btn=document.getElementById('submitBtn');
+  btn.disabled=true;btn.textContent='Submitting...';
+  document.getElementById('errorMsg').style.display='none';
+  try{
+    await fetch(SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({form_type:'checkout',host,venue:selectedVenue,date,checkout_time:time,crowd_size:selectedCrowd||'Not specified',singers:document.getElementById('singers').value||'0',energy:starRating+' / 5',venue_busy:venueBusy||'Not answered',got_paid:gotPaid||'Not answered',tip_scale:document.getElementById('tipScale').value||'Not specified',issues:document.getElementById('issues').value.trim(),notes:document.getElementById('notes').value.trim(),status:currentStatus,photo_url:photoURL})});
+    document.getElementById('successMsg').style.display='block';btn.textContent='Checked Out ✓';
+  }catch(e){showError('Submission failed. Please try again.');btn.disabled=false;btn.textContent='Check Out';}
+}
+function showError(msg){const el=document.getElementById('errorMsg');el.textContent=msg;el.style.display='block';}
+</script>
+</body>
+</html>

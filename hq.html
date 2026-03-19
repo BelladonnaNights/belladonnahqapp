@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Belladonna HQ</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Josefin+Sans:wght@200;300;400&display=swap');
+  * { margin:0; padding:0; box-sizing:border-box; }
+  :root {
+    --bg:#0a0a0f; --surface:#111118; --surface2:#18181f; --surface3:#1e1e28;
+    --border:rgba(180,140,200,0.15); --border2:rgba(180,140,200,0.28);
+    --gold:#c9a96e; --gold2:#e8c98a; --rose:#8b3a5a; --rose2:#b05070;
+    --teal:#2a7a6a; --teal2:#3aa08a; --purple:#5a3a8a; --purple2:#7a5aaa;
+    --text:#e8e0f0; --text2:#a090b8; --text3:#6a5a7a;
+    --live:#3aaa6a; --live-dim:rgba(58,170,106,0.12);
+    --purple-btn:#d4c0e8;
+  }
+  body { background:var(--bg); color:var(--text); font-family:'Josefin Sans',sans-serif; font-weight:300; min-height:100vh; letter-spacing:0.04em; overflow-x:hidden; }
+  .header { background:linear-gradient(180deg,#0d0a14 0%,var(--bg) 100%); border-bottom:1px solid var(--border); padding:1.5rem 2rem 0; position:relative; overflow:hidden; }
+  .header::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; background:linear-gradient(90deg,transparent,var(--gold),var(--rose2),var(--purple2),transparent); }
+  .header-top { display:flex; align-items:center; justify-content:space-between; margin-bottom:1.5rem; }
+  .logo { font-family:'Cormorant Garamond',serif; font-size:2.2rem; font-weight:300; letter-spacing:0.2em; color:var(--gold); text-transform:uppercase; }
+  .logo span { color:var(--text3); font-size:0.9rem; display:block; letter-spacing:0.4em; font-family:'Josefin Sans',sans-serif; font-weight:200; margin-top:-4px; }
+  .live-badge { display:flex; align-items:center; gap:10px; background:var(--live-dim); border:1px solid rgba(58,170,106,0.3); border-radius:40px; padding:0.5rem 1.2rem; }
+  .live-dot { width:8px; height:8px; border-radius:50%; background:var(--live); animation:pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(0.8)} }
+  .live-count { font-size:1.6rem; font-weight:400; color:var(--live); font-family:'Cormorant Garamond',serif; }
+  .live-label { font-size:0.62rem; color:var(--text2); letter-spacing:0.15em; text-transform:uppercase; line-height:1.3; }
+  .tabs { display:flex; gap:0; }
+  .tab { padding:0.8rem 1.5rem; font-size:0.7rem; letter-spacing:0.2em; text-transform:uppercase; color:var(--text3); cursor:pointer; border-bottom:2px solid transparent; transition:all 0.2s; background:none; border-top:none; border-left:none; border-right:none; font-family:'Josefin Sans',sans-serif; font-weight:300; }
+  .tab:hover { color:var(--text2); }
+  .tab.active { color:var(--gold); border-bottom-color:var(--gold); }
+  .panel { display:none; padding:2rem; }
+  .panel.active { display:block; }
+
+  /* HOST HUB OVERLAY */
+  .hub-overlay { position:fixed; inset:0; background:var(--bg); z-index:100; display:none; overflow-y:auto; }
+  .hub-overlay.visible { display:block; }
+  .hub-back { position:fixed; top:1.2rem; left:1.2rem; background:rgba(180,140,200,0.1); border:1px solid var(--border2); color:var(--purple-btn); font-size:0.62rem; letter-spacing:0.2em; text-transform:uppercase; font-family:'Josefin Sans',sans-serif; padding:0.5rem 1rem; border-radius:20px; cursor:pointer; z-index:101; transition:all 0.2s; }
+  .hub-back:hover { background:rgba(180,140,200,0.2); color:var(--text); }
+  .hub-inner { max-width:420px; margin:0 auto; padding:5rem 1.5rem 3rem; text-align:center; }
+  .hub-brand { font-family:'Cormorant Garamond',serif; font-size:2.8rem; font-weight:300; color:var(--gold); letter-spacing:0.3em; text-transform:uppercase; }
+  .hub-sub { font-size:0.58rem; letter-spacing:0.55em; text-transform:uppercase; color:var(--text3); margin-top:0.3rem; }
+  .hub-ornament { color:#3a2a4a; font-family:'Cormorant Garamond',serif; font-size:1rem; letter-spacing:0.4em; margin:1rem 0 2.5rem; }
+  .hub-section-label { font-size:0.55rem; letter-spacing:0.4em; text-transform:uppercase; color:var(--text3); margin-bottom:0.9rem; text-align:left; }
+  .hub-links { display:flex; flex-direction:column; gap:0.75rem; margin-bottom:2rem; }
+  .hub-card { display:block; background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:1.2rem 1.5rem; text-decoration:none; transition:all 0.25s; position:relative; overflow:hidden; text-align:left; }
+  .hub-card::before { content:''; position:absolute; top:0; left:0; right:0; height:1px; }
+  .hub-card.gold::before { background:linear-gradient(90deg,transparent,var(--gold),transparent); }
+  .hub-card.rose::before { background:linear-gradient(90deg,transparent,var(--rose2),transparent); }
+  .hub-card.teal::before { background:linear-gradient(90deg,transparent,var(--teal2),transparent); }
+  .hub-card:hover { border-color:var(--border2); transform:translateY(-2px); }
+  .hub-card-inner { display:flex; align-items:center; gap:1rem; }
+  .hub-icon { width:36px; height:36px; border-radius:8px; display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:1rem; }
+  .hub-icon.gold { background:rgba(201,169,110,0.12); }
+  .hub-icon.rose { background:rgba(176,80,112,0.12); }
+  .hub-icon.teal { background:rgba(58,160,138,0.12); }
+  .hub-card-text { flex:1; }
+  .hub-card-title { font-size:0.72rem; letter-spacing:0.18em; text-transform:uppercase; margin-bottom:0.2rem; }
+  .hub-card.gold .hub-card-title { color:var(--gold); }
+  .hub-card.rose .hub-card-title { color:var(--rose2); }
+  .hub-card.teal .hub-card-title { color:var(--teal2); }
+  .hub-card-desc { font-size:0.62rem; color:var(--text3); letter-spacing:0.04em; line-height:1.4; }
+  .hub-arrow { color:var(--text3); font-size:0.8rem; flex-shrink:0; }
+  .hub-footer { font-size:0.55rem; letter-spacing:0.2em; color:var(--text3); margin-top:2rem; text-transform:uppercase; }
+
+  /* STATS */
+  .stat-grid { display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:2rem; }
+  .stat-card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:1.2rem; position:relative; overflow:hidden; }
+  .stat-card::before { content:''; position:absolute; top:0; left:0; right:0; height:1px; }
+  .stat-card.gold::before { background:linear-gradient(90deg,transparent,var(--gold),transparent); }
+  .stat-card.rose::before { background:linear-gradient(90deg,transparent,var(--rose2),transparent); }
+  .stat-card.teal::before { background:linear-gradient(90deg,transparent,var(--teal2),transparent); }
+  .stat-card.purple::before { background:linear-gradient(90deg,transparent,var(--purple2),transparent); }
+  .stat-label { font-size:0.58rem; letter-spacing:0.2em; text-transform:uppercase; color:var(--text3); margin-bottom:0.4rem; }
+  .stat-value { font-family:'Cormorant Garamond',serif; font-size:2.8rem; font-weight:300; line-height:1; }
+  .stat-card.gold .stat-value { color:var(--gold); }
+  .stat-card.rose .stat-value { color:var(--rose2); }
+  .stat-card.teal .stat-value { color:var(--teal2); }
+  .stat-card.purple .stat-value { color:var(--purple2); }
+  .stat-sub { font-size:0.6rem; color:var(--text3); margin-top:0.2rem; }
+
+  .section-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem; }
+  .section-title { font-size:0.62rem; letter-spacing:0.3em; text-transform:uppercase; color:var(--text3); }
+  .btn-sm { background:none; border:1px solid var(--border2); color:var(--purple-btn); padding:0.4rem 1rem; border-radius:20px; font-size:0.6rem; letter-spacing:0.15em; text-transform:uppercase; cursor:pointer; font-family:'Josefin Sans',sans-serif; transition:all 0.2s; }
+  .btn-sm:hover { border-color:var(--gold); color:var(--gold); }
+
+  .hub-trigger { width:100%; background:rgba(180,140,200,0.08); border:1px solid var(--border2); border-radius:12px; padding:1rem 1.5rem; display:flex; align-items:center; gap:1rem; cursor:pointer; transition:all 0.2s; margin-bottom:1.5rem; text-align:left; }
+  .hub-trigger:hover { background:rgba(180,140,200,0.15); border-color:rgba(180,140,200,0.4); }
+  .hub-trigger-icon { font-size:1.2rem; }
+  .hub-trigger-text { flex:1; }
+  .hub-trigger-title { font-size:0.72rem; letter-spacing:0.2em; text-transform:uppercase; color:var(--purple-btn); margin-bottom:0.2rem; }
+  .hub-trigger-desc { font-size:0.62rem; color:var(--text3); letter-spacing:0.04em; }
+  .hub-trigger-arrow { color:var(--text3); font-size:1rem; }
+
+  .host-list { display:flex; flex-direction:column; gap:0.75rem; }
+  .host-row { display:flex; align-items:center; justify-content:space-between; background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:0.9rem 1.2rem; }
+  .host-info { display:flex; align-items:center; gap:12px; }
+  .host-avatar { width:36px; height:36px; border-radius:50%; background:var(--surface3); border:1px solid var(--border2); display:flex; align-items:center; justify-content:center; font-family:'Cormorant Garamond',serif; font-size:1rem; color:var(--gold); }
+  .host-name { font-size:0.85rem; color:var(--text); }
+  .host-time { font-size:0.68rem; color:var(--text3); margin-top:2px; }
+  .status-pill { font-size:0.58rem; letter-spacing:0.12em; text-transform:uppercase; padding:0.25rem 0.7rem; border-radius:20px; background:var(--live-dim); color:var(--live); border:1px solid rgba(58,170,106,0.3); }
+  .empty-state { text-align:center; padding:2.5rem; color:var(--text3); font-size:0.72rem; letter-spacing:0.1em; line-height:1.8; }
+  .error-msg { background:rgba(176,80,112,0.1); border:1px solid rgba(176,80,112,0.25); border-radius:8px; padding:0.8rem 1rem; font-size:0.7rem; color:var(--rose2); margin-bottom:1rem; display:none; line-height:1.6; }
+
+  /* GAMES */
+  .subtabs { display:flex; gap:0.5rem; margin-bottom:1.5rem; }
+  .subtab { padding:0.5rem 1.2rem; font-size:0.63rem; letter-spacing:0.2em; text-transform:uppercase; color:var(--text3); cursor:pointer; border:1px solid var(--border); border-radius:20px; background:none; font-family:'Josefin Sans',sans-serif; transition:all 0.2s; }
+  .subtab:hover { border-color:var(--border2); color:var(--text2); }
+  .subtab.active { border-color:var(--gold); color:var(--gold); background:rgba(201,169,110,0.08); }
+  .games-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:1rem; }
+  .game-card { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:1.2rem; transition:all 0.2s; }
+  .game-card:hover { border-color:var(--border2); transform:translateY(-2px); }
+  .game-icon { font-size:1.4rem; margin-bottom:0.6rem; }
+  .game-name { font-size:0.78rem; color:var(--text); letter-spacing:0.05em; margin-bottom:0.25rem; }
+  .game-desc { font-size:0.63rem; color:var(--text3); line-height:1.5; }
+  .game-players { font-size:0.58rem; color:var(--text3); margin-top:0.6rem; padding-top:0.5rem; border-top:1px solid var(--border); letter-spacing:0.08em; }
+
+  /* SHEPHERD */
+  .shepherd-grid { display:grid; grid-template-columns:1fr 1.5fr; gap:1.5rem; }
+  .form-card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:1.5rem; }
+  .form-group { margin-bottom:1rem; }
+  .form-label { font-size:0.58rem; letter-spacing:0.2em; text-transform:uppercase; color:var(--text3); display:block; margin-bottom:0.4rem; }
+  .form-input,.form-select,.form-textarea { width:100%; background:var(--surface2); border:1px solid var(--border); border-radius:6px; color:var(--text); padding:0.6rem 0.9rem; font-size:0.78rem; font-family:'Josefin Sans',sans-serif; letter-spacing:0.04em; outline:none; transition:border-color 0.2s; -webkit-appearance:none; }
+  .form-input:focus,.form-select:focus,.form-textarea:focus { border-color:var(--gold); }
+  .form-select { background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%236a5a7a' stroke-width='1.2' fill='none'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 0.8rem center; padding-right:2rem; cursor:pointer; }
+  .form-select option { background:var(--surface2); }
+  .form-textarea { resize:vertical; min-height:80px; line-height:1.6; }
+  .form-btn { background:none; border:1px solid var(--gold); color:var(--purple-btn); padding:0.6rem 1.2rem; border-radius:20px; font-size:0.62rem; letter-spacing:0.18em; text-transform:uppercase; cursor:pointer; font-family:'Josefin Sans',sans-serif; transition:all 0.2s; width:100%; margin-top:0.4rem; }
+  .form-btn:hover { background:rgba(201,169,110,0.1); color:var(--text); }
+  .form-btn.rose { border-color:var(--rose2); }
+  .form-btn.rose:hover { background:rgba(176,80,112,0.1); }
+  .log-table { width:100%; border-collapse:collapse; font-size:0.7rem; }
+  .log-table th { font-size:0.56rem; letter-spacing:0.18em; text-transform:uppercase; color:var(--text3); text-align:left; padding:0.5rem 0.75rem; border-bottom:1px solid var(--border); font-weight:300; }
+  .log-table td { padding:0.7rem 0.75rem; border-bottom:1px solid var(--border); color:var(--text2); }
+  .log-table tr:last-child td { border-bottom:none; }
+  .log-table tr:hover td { background:var(--surface2); }
+  .paid-yes { color:var(--teal2); }
+  .paid-no { color:var(--rose2); }
+  .success-msg { background:var(--live-dim); border:1px solid rgba(58,170,106,0.3); border-radius:8px; padding:0.7rem 1rem; font-size:0.7rem; color:var(--live); margin-bottom:0.8rem; display:none; letter-spacing:0.04em; }
+
+  @media(max-width:700px) {
+    .stat-grid { grid-template-columns:1fr 1fr; }
+    .shepherd-grid { grid-template-columns:1fr; }
+    .header { padding:1rem; }
+    .panel { padding:1rem; }
+    .logo { font-size:1.6rem; }
+    .games-grid { grid-template-columns:1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-top">
+    <div class="logo">Belladonna<span>Headquarters</span></div>
+    <div class="live-badge">
+      <div class="live-dot"></div>
+      <div>
+        <div class="live-count" id="liveCount">—</div>
+        <div class="live-label">On Shift<br>Right Now</div>
+      </div>
+    </div>
+  </div>
+  <div class="tabs">
+    <button class="tab active" onclick="showTab('hosts',this)">Hosts</button>
+    <button class="tab" onclick="showTab('games',this)">Game Library</button>
+    <button class="tab" onclick="showTab('shepherd',this)">Shepherd</button>
+  </div>
+</div>
+
+<!-- HOSTS -->
+<div class="panel active" id="panel-hosts">
+  <div id="homeError" class="error-msg"></div>
+  <button class="hub-trigger" onclick="openHub()">
+    <div class="hub-trigger-icon">🏠</div>
+    <div class="hub-trigger-text">
+      <div class="hub-trigger-title">Host Hub</div>
+      <div class="hub-trigger-desc">Check-in, check-out & tools for hosts</div>
+    </div>
+    <div class="hub-trigger-arrow">›</div>
+  </button>
+  <div class="stat-grid">
+    <div class="stat-card gold"><div class="stat-label">On Shift Now</div><div class="stat-value" id="statOn">—</div><div class="stat-sub">active hosts</div></div>
+    <div class="stat-card rose"><div class="stat-label">Total Roster</div><div class="stat-value" id="statTotal">—</div><div class="stat-sub">all hosts</div></div>
+    <div class="stat-card teal"><div class="stat-label">Shifts Today</div><div class="stat-value" id="statToday">—</div><div class="stat-sub">completed</div></div>
+    <div class="stat-card purple"><div class="stat-label">Unpaid</div><div class="stat-value" id="statUnpaid">—</div><div class="stat-sub">pending payment</div></div>
+  </div>
+  <div class="section-header">
+    <div class="section-title">Currently On Shift</div>
+    <button class="btn-sm" onclick="fetchSheetData()">↻ Refresh</button>
+  </div>
+  <div class="host-list" id="hostList"><div class="empty-state">Connecting to Google Sheets...</div></div>
+</div>
+
+<!-- GAMES -->
+<div class="panel" id="panel-games">
+  <div class="subtabs">
+    <button class="subtab active" onclick="showSubtab('mini',this)">Mini Games</button>
+    <button class="subtab" onclick="showSubtab('specialty',this)">Specialty Events</button>
+  </div>
+  <div id="subtab-mini" class="games-grid"></div>
+  <div id="subtab-specialty" class="games-grid" style="display:none"></div>
+</div>
+
+<!-- SHEPHERD -->
+<div class="panel" id="panel-shepherd">
+  <div class="shepherd-grid">
+    <div>
+      <div class="form-card" style="margin-bottom:1rem;">
+        <div class="section-title" style="margin-bottom:1rem;">Sign In / Sign Out</div>
+        <div class="success-msg" id="siSuccess">Entry saved. 🖤</div>
+        <div class="error-msg" id="siError"></div>
+        <div class="form-group"><label class="form-label">Host Name</label><input type="text" class="form-input" id="sHost" placeholder="Host name"></div>
+        <div class="form-group"><label class="form-label">Action</label><select class="form-select" id="sAction"><option value="signin">Sign In</option><option value="signout">Sign Out</option></select></div>
+        <div class="form-group"><label class="form-label">Gig / Venue</label><input type="text" class="form-input" id="sGig" placeholder="Event or venue"></div>
+        <button class="form-btn" onclick="handleSignAction()">Record Entry</button>
+      </div>
+      <div class="form-card">
+        <div class="section-title" style="margin-bottom:1rem;">End of Shift Report</div>
+        <div class="success-msg" id="srSuccess">Report saved. 🖤</div>
+        <div class="form-group"><label class="form-label">Host Name</label><input type="text" class="form-input" id="qHost" placeholder="Host name"></div>
+        <div class="form-group"><label class="form-label">Shift Notes</label><textarea class="form-textarea" id="qNotes" placeholder="Questionnaire answers go here..."></textarea></div>
+        <div class="form-group"><label class="form-label">Payment Status</label><select class="form-select" id="qPaid"><option value="false">Unpaid</option><option value="true">Paid</option></select></div>
+        <button class="form-btn rose" onclick="handleShiftSubmit()">Submit Shift Report</button>
+      </div>
+    </div>
+    <div class="form-card">
+      <div class="section-title" style="margin-bottom:1rem;">Host Log</div>
+      <div id="logContent"><div class="empty-state">Loading host log...</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- HOST HUB OVERLAY -->
+<div class="hub-overlay" id="hubOverlay">
+  <button class="hub-back" onclick="closeHub()">← Back to Hosts</button>
+  <div class="hub-inner">
+    <div class="hub-brand">Belladonna</div>
+    <div class="hub-sub">Host Hub</div>
+    <div class="hub-ornament">✦ ✦ ✦</div>
+    <div class="hub-section-label">Your Shift</div>
+    <div class="hub-links">
+      <a href="checkin.html" class="hub-card gold" target="_blank">
+        <div class="hub-card-inner">
+          <div class="hub-icon gold">🌙</div>
+          <div class="hub-card-text"><div class="hub-card-title">Check-In</div><div class="hub-card-desc">Sign in at the start of your shift</div></div>
+          <div class="hub-arrow">›</div>
+        </div>
+      </a>
+      <a href="checkout.html" class="hub-card rose" target="_blank">
+        <div class="hub-card-inner">
+          <div class="hub-icon rose"><svg width="16" height="16" viewBox="0 0 18 18" fill="none"><path d="M9 1L11.5 7.5H17L12.5 11.5L14.5 18L9 14L3.5 18L5.5 11.5L1 7.5H6.5L9 1Z" fill="#d06090" opacity="0.9"/></svg></div>
+          <div class="hub-card-text"><div class="hub-card-title">Check-Out</div><div class="hub-card-desc">Complete your end of shift report</div></div>
+          <div class="hub-arrow">›</div>
+        </div>
+      </a>
+    </div>
+    <div class="hub-section-label">Tools & Games</div>
+    <div class="hub-links">
+      <a href="https://belladonnanights.github.io/bingo/index.html" class="hub-card teal" target="_blank">
+        <div class="hub-card-inner">
+          <div class="hub-icon teal">🎵</div>
+          <div class="hub-card-text"><div class="hub-card-title">Music Bingo</div><div class="hub-card-desc">Launch the Belladonna Bingo experience</div></div>
+          <div class="hub-arrow">›</div>
+        </div>
+      </a>
+    </div>
+    <div class="hub-footer">Belladonna Audio Alchemies &nbsp;✦&nbsp; Host Hub</div>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+<script>
+const FIREBASE_CONFIG={apiKey:"AIzaSyCIfAE1JGHsUGzzVH2pz1Vyj5b5OhA0tDQ",authDomain:"belladonna-hq.firebaseapp.com",projectId:"belladonna-hq",storageBucket:"belladonna-hq.firebasestorage.app",messagingSenderId:"1021873183587",appId:"1:1021873183587:web:def283bb7b5ca48e4f9156"};
+const SHEETS_API_KEY="AIzaSyACMjXQCXjVo75hbMXtag_JctR4SoX70So";
+const SHEET_ID="1-MkZoNKkPqjAoJggahKiUsDUgjUhMTkoQ8rUBG4W-w0";
+firebase.initializeApp(FIREBASE_CONFIG);
+const db=firebase.firestore();
+
+function showTab(id,el){document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));document.getElementById('panel-'+id).classList.add('active');el.classList.add('active');if(id==='shepherd')loadLog();}
+function showSubtab(id,el){document.getElementById('subtab-mini').style.display='none';document.getElementById('subtab-specialty').style.display='none';document.querySelectorAll('.subtab').forEach(t=>t.classList.remove('active'));document.getElementById('subtab-'+id).style.display='grid';el.classList.add('active');}
+function openHub(){document.getElementById('hubOverlay').classList.add('visible');document.body.style.overflow='hidden';}
+function closeHub(){document.getElementById('hubOverlay').classList.remove('visible');document.body.style.overflow='';}
+
+async function fetchSheetData(){
+  const url=`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/Sheet1?key=${SHEETS_API_KEY}`;
+  try{
+    const res=await fetch(url);const data=await res.json();
+    if(data.error)throw new Error(data.error.message);
+    const rows=data.values||[];
+    if(rows.length<2){renderHosts([]);return;}
+    const h=rows[0].map(x=>x.toLowerCase().trim());
+    const ni=h.indexOf('host_name'),si=h.indexOf('status'),ti=h.indexOf('sign_in_time'),pi=h.indexOf('paid');
+    const hosts=rows.slice(1).map(r=>({name:r[ni]||'',status:(r[si]||'').toUpperCase(),signIn:r[ti]||'',paid:(r[pi]||'').toUpperCase()}));
+    renderHosts(hosts);
+    document.getElementById('homeError').style.display='none';
+  }catch(e){
+    const err=document.getElementById('homeError');err.style.display='block';
+    err.textContent='Could not load Google Sheet: '+e.message+'. Make sure Sheet1 exists with columns: host_name, status, sign_in_time, paid — and the sheet is shared publicly.';
+    ['liveCount','statOn','statTotal','statToday','statUnpaid'].forEach(id=>document.getElementById(id).textContent='0');
+    document.getElementById('hostList').innerHTML='<div class="empty-state">No data loaded.</div>';
+  }
+}
+
+function renderHosts(hosts){
+  const on=hosts.filter(h=>h.status==='ON');
+  const unpaid=hosts.filter(h=>h.paid==='FALSE'&&h.status==='OFF');
+  const today=new Date().toISOString().slice(0,10);
+  const todayCount=hosts.filter(h=>h.signIn&&h.signIn.startsWith(today)).length;
+  document.getElementById('liveCount').textContent=on.length;
+  document.getElementById('statOn').textContent=on.length;
+  document.getElementById('statTotal').textContent=hosts.length;
+  document.getElementById('statToday').textContent=todayCount;
+  document.getElementById('statUnpaid').textContent=unpaid.length;
+  const list=document.getElementById('hostList');
+  if(!on.length){list.innerHTML='<div class="empty-state">No hosts currently on shift.</div>';return;}
+  list.innerHTML=on.map(h=>`<div class="host-row"><div class="host-info"><div class="host-avatar">${h.name.charAt(0).toUpperCase()}</div><div><div class="host-name">${h.name}</div><div class="host-time">${h.signIn?'Since '+h.signIn:'Time not recorded'}</div></div></div><div class="status-pill">On Shift</div></div>`).join('');
+}
+
+const miniGames=[{icon:'🎯',name:'Two Truths & A Lie',desc:'Classic icebreaker — guests guess the lie.',players:'3–20 players'},{icon:'🃏',name:'Most Likely To',desc:'Fun voting game — who in the room would...?',players:'4–15 players'},{icon:'🎲',name:'Never Have I Ever',desc:'Light & fun social revelations.',players:'4–20 players'},{icon:'🧠',name:'Trivia Sprint',desc:'Quick-fire trivia rounds with categories.',players:'2–30 players'},{icon:'🎭',name:'Charades',desc:'Act it out — no words allowed.',players:'4–16 players'},{icon:'📝',name:'Name That Guest',desc:'Guess the mystery guest from clues.',players:'5–20 players'}];
+const specialtyEvents=[{icon:'💍',name:'Bachelorette Experience',desc:'Curated games and moments for the bride-to-be.',players:'6–20 guests'},{icon:'🥂',name:'VIP Dinner Party',desc:'Elevated hosting format for seated dinner events.',players:'8–30 guests'},{icon:'🎂',name:'Birthday Takeover',desc:'Custom spotlight moments for the birthday guest.',players:'10–50 guests'},{icon:'🌙',name:'Midnight Mixer',desc:'Late night social energy format.',players:'15–60 guests'},{icon:'🏆',name:'Competition Night',desc:'Tournament bracket with prizes and announcements.',players:'10–40 guests'},{icon:'🎤',name:'Open Mic Social',desc:'Hosted storytelling and social spotlight.',players:'10–35 guests'}];
+
+function renderGames(){
+  document.getElementById('subtab-mini').innerHTML=miniGames.map(g=>`<div class="game-card"><div class="game-icon">${g.icon}</div><div class="game-name">${g.name}</div><div class="game-desc">${g.desc}</div><div class="game-players">${g.players}</div></div>`).join('');
+  document.getElementById('subtab-specialty').innerHTML=specialtyEvents.map(g=>`<div class="game-card"><div class="game-icon">${g.icon}</div><div class="game-name">${g.name}</div><div class="game-desc">${g.desc}</div><div class="game-players">${g.players}</div></div>`).join('');
+}
+
+async function handleSignAction(){
+  const name=document.getElementById('sHost').value.trim();
+  const action=document.getElementById('sAction').value;
+  const gig=document.getElementById('sGig').value.trim();
+  if(!name){showSiError('Please enter a host name.');return;}
+  try{
+    await db.collection('host_logs').add({host_name:name,action,gig,timestamp:new Date().toISOString(),paid:false,notes:''});
+    document.getElementById('sHost').value='';document.getElementById('sGig').value='';
+    document.getElementById('siSuccess').style.display='block';
+    setTimeout(()=>document.getElementById('siSuccess').style.display='none',3000);
+    loadLog();
+  }catch(e){showSiError('Firebase error: '+e.message);}
+}
+
+async function handleShiftSubmit(){
+  const name=document.getElementById('qHost').value.trim();if(!name)return;
+  try{
+    await db.collection('shift_reports').add({host_name:name,notes:document.getElementById('qNotes').value.trim(),paid:document.getElementById('qPaid').value==='true',submitted_at:new Date().toISOString()});
+    document.getElementById('qHost').value='';document.getElementById('qNotes').value='';
+    document.getElementById('srSuccess').style.display='block';
+    setTimeout(()=>document.getElementById('srSuccess').style.display='none',3000);
+    loadLog();
+  }catch(e){}
+}
+
+async function loadLog(){
+  const el=document.getElementById('logContent');
+  try{
+    const snap=await db.collection('host_logs').orderBy('timestamp','desc').limit(25).get();
+    if(snap.empty){el.innerHTML='<div class="empty-state">No entries yet.</div>';return;}
+    const rows=snap.docs.map(doc=>{const d=doc.data();const ts=d.timestamp?new Date(d.timestamp).toLocaleString():'—';const action=d.action==='signin'?`<span style="color:var(--live)">Sign In</span>`:`<span style="color:var(--rose2)">Sign Out</span>`;return`<tr><td>${d.host_name||'—'}</td><td>${action}</td><td>${d.gig||'—'}</td><td style="font-size:0.65rem">${ts}</td><td class="${d.paid?'paid-yes':'paid-no'}">${d.paid?'Paid':'Unpaid'}</td></tr>`;}).join('');
+    el.innerHTML=`<table class="log-table"><thead><tr><th>Host</th><th>Action</th><th>Gig</th><th>Time</th><th>Pay</th></tr></thead><tbody>${rows}</tbody></table>`;
+  }catch(e){el.innerHTML=`<div class="error-msg" style="display:block">Could not load log: ${e.message}. Enable Firestore in Firebase.</div>`;}
+}
+
+function showSiError(msg){const el=document.getElementById('siError');el.textContent=msg;el.style.display='block';setTimeout(()=>el.style.display='none',4000);}
+
+fetchSheetData();
+setInterval(fetchSheetData,60000);
+renderGames();
+</script>
+</body>
+</html>
