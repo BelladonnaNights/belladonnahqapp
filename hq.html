@@ -10,13 +10,14 @@
   :root {
     --bg:#0a0a0f; --surface:#111118; --surface2:#18181f; --surface3:#1e1e28;
     --border:rgba(180,140,200,0.15); --border2:rgba(180,140,200,0.28);
-    --gold:#c9a96e; --gold2:#e8c98a; --rose:#8b3a5a; --rose2:#b05070;
-    --teal:#2a7a6a; --teal2:#3aa08a; --purple:#5a3a8a; --purple2:#7a5aaa;
+    --gold:#c9a96e; --rose2:#b05070; --teal2:#3aa08a; --purple2:#7a5aaa;
     --text:#e8e0f0; --text2:#a090b8; --text3:#6a5a7a;
     --live:#3aaa6a; --live-dim:rgba(58,170,106,0.12);
     --purple-btn:#d4c0e8;
   }
   body { background:var(--bg); color:var(--text); font-family:'Josefin Sans',sans-serif; font-weight:300; min-height:100vh; letter-spacing:0.04em; overflow-x:hidden; }
+
+  /* HEADER */
   .header { background:linear-gradient(180deg,#0d0a14 0%,var(--bg) 100%); border-bottom:1px solid var(--border); padding:1.5rem 2rem 0; position:relative; overflow:hidden; }
   .header::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; background:linear-gradient(90deg,transparent,var(--gold),var(--rose2),var(--purple2),transparent); }
   .header-top { display:flex; align-items:center; justify-content:space-between; margin-bottom:1.5rem; }
@@ -31,6 +32,8 @@
   .tab { padding:0.8rem 1.5rem; font-size:0.7rem; letter-spacing:0.2em; text-transform:uppercase; color:var(--text3); cursor:pointer; border-bottom:2px solid transparent; transition:all 0.2s; background:none; border-top:none; border-left:none; border-right:none; font-family:'Josefin Sans',sans-serif; font-weight:300; }
   .tab:hover { color:var(--text2); }
   .tab.active { color:var(--gold); border-bottom-color:var(--gold); }
+
+  /* PANELS */
   .panel { display:none; padding:2rem; }
   .panel.active { display:block; }
 
@@ -98,11 +101,11 @@
   .host-row { display:flex; align-items:center; justify-content:space-between; background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:0.9rem 1.2rem; }
   .host-info { display:flex; align-items:center; gap:12px; }
   .host-avatar { width:36px; height:36px; border-radius:50%; background:var(--surface3); border:1px solid var(--border2); display:flex; align-items:center; justify-content:center; font-family:'Cormorant Garamond',serif; font-size:1rem; color:var(--gold); }
-  .host-name { font-size:0.85rem; color:var(--text); }
+  .host-name-text { font-size:0.85rem; color:var(--text); }
   .host-time { font-size:0.68rem; color:var(--text3); margin-top:2px; }
   .status-pill { font-size:0.58rem; letter-spacing:0.12em; text-transform:uppercase; padding:0.25rem 0.7rem; border-radius:20px; background:var(--live-dim); color:var(--live); border:1px solid rgba(58,170,106,0.3); }
   .empty-state { text-align:center; padding:2.5rem; color:var(--text3); font-size:0.72rem; letter-spacing:0.1em; line-height:1.8; }
-  .error-msg { background:rgba(176,80,112,0.1); border:1px solid rgba(176,80,112,0.25); border-radius:8px; padding:0.8rem 1rem; font-size:0.7rem; color:var(--rose2); margin-bottom:1rem; display:none; line-height:1.6; }
+  .error-msg { background:rgba(176,80,112,0.1); border:1px solid rgba(176,80,112,0.25); border-radius:8px; padding:0.8rem 1rem; font-size:0.7rem; color:var(--rose2); margin-bottom:1rem; display:none; line-height:1.6; letter-spacing:0.03em; }
 
   /* GAMES */
   .subtabs { display:flex; gap:0.5rem; margin-bottom:1.5rem; }
@@ -117,32 +120,8 @@
   .game-desc { font-size:0.63rem; color:var(--text3); line-height:1.5; }
   .game-players { font-size:0.58rem; color:var(--text3); margin-top:0.6rem; padding-top:0.5rem; border-top:1px solid var(--border); letter-spacing:0.08em; }
 
-  /* SHEPHERD */
-  .shepherd-grid { display:grid; grid-template-columns:1fr 1.5fr; gap:1.5rem; }
-  .form-card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:1.5rem; }
-  .form-group { margin-bottom:1rem; }
-  .form-label { font-size:0.58rem; letter-spacing:0.2em; text-transform:uppercase; color:var(--text3); display:block; margin-bottom:0.4rem; }
-  .form-input,.form-select,.form-textarea { width:100%; background:var(--surface2); border:1px solid var(--border); border-radius:6px; color:var(--text); padding:0.6rem 0.9rem; font-size:0.78rem; font-family:'Josefin Sans',sans-serif; letter-spacing:0.04em; outline:none; transition:border-color 0.2s; -webkit-appearance:none; }
-  .form-input:focus,.form-select:focus,.form-textarea:focus { border-color:var(--gold); }
-  .form-select { background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%236a5a7a' stroke-width='1.2' fill='none'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 0.8rem center; padding-right:2rem; cursor:pointer; }
-  .form-select option { background:var(--surface2); }
-  .form-textarea { resize:vertical; min-height:80px; line-height:1.6; }
-  .form-btn { background:none; border:1px solid var(--gold); color:var(--purple-btn); padding:0.6rem 1.2rem; border-radius:20px; font-size:0.62rem; letter-spacing:0.18em; text-transform:uppercase; cursor:pointer; font-family:'Josefin Sans',sans-serif; transition:all 0.2s; width:100%; margin-top:0.4rem; }
-  .form-btn:hover { background:rgba(201,169,110,0.1); color:var(--text); }
-  .form-btn.rose { border-color:var(--rose2); }
-  .form-btn.rose:hover { background:rgba(176,80,112,0.1); }
-  .log-table { width:100%; border-collapse:collapse; font-size:0.7rem; }
-  .log-table th { font-size:0.56rem; letter-spacing:0.18em; text-transform:uppercase; color:var(--text3); text-align:left; padding:0.5rem 0.75rem; border-bottom:1px solid var(--border); font-weight:300; }
-  .log-table td { padding:0.7rem 0.75rem; border-bottom:1px solid var(--border); color:var(--text2); }
-  .log-table tr:last-child td { border-bottom:none; }
-  .log-table tr:hover td { background:var(--surface2); }
-  .paid-yes { color:var(--teal2); }
-  .paid-no { color:var(--rose2); }
-  .success-msg { background:var(--live-dim); border:1px solid rgba(58,170,106,0.3); border-radius:8px; padding:0.7rem 1rem; font-size:0.7rem; color:var(--live); margin-bottom:0.8rem; display:none; letter-spacing:0.04em; }
-
   @media(max-width:700px) {
     .stat-grid { grid-template-columns:1fr 1fr; }
-    .shepherd-grid { grid-template-columns:1fr; }
     .header { padding:1rem; }
     .panel { padding:1rem; }
     .logo { font-size:1.6rem; }
@@ -166,11 +145,10 @@
   <div class="tabs">
     <button class="tab active" onclick="showTab('hosts',this)">Hosts</button>
     <button class="tab" onclick="showTab('games',this)">Game Library</button>
-    <button class="tab" onclick="showTab('shepherd',this)">Shepherd</button>
   </div>
 </div>
 
-<!-- HOSTS -->
+<!-- HOSTS PANEL -->
 <div class="panel active" id="panel-hosts">
   <div id="homeError" class="error-msg"></div>
   <button class="hub-trigger" onclick="openHub()">
@@ -191,10 +169,12 @@
     <div class="section-title">Currently On Shift</div>
     <button class="btn-sm" onclick="fetchSheetData()">↻ Refresh</button>
   </div>
-  <div class="host-list" id="hostList"><div class="empty-state">Connecting to Google Sheets...</div></div>
+  <div class="host-list" id="hostList">
+    <div class="empty-state">Connecting to Google Sheets...</div>
+  </div>
 </div>
 
-<!-- GAMES -->
+<!-- GAMES PANEL -->
 <div class="panel" id="panel-games">
   <div class="subtabs">
     <button class="subtab active" onclick="showSubtab('mini',this)">Mini Games</button>
@@ -202,35 +182,6 @@
   </div>
   <div id="subtab-mini" class="games-grid"></div>
   <div id="subtab-specialty" class="games-grid" style="display:none"></div>
-</div>
-
-<!-- SHEPHERD -->
-<div class="panel" id="panel-shepherd">
-  <div class="shepherd-grid">
-    <div>
-      <div class="form-card" style="margin-bottom:1rem;">
-        <div class="section-title" style="margin-bottom:1rem;">Sign In / Sign Out</div>
-        <div class="success-msg" id="siSuccess">Entry saved. 🖤</div>
-        <div class="error-msg" id="siError"></div>
-        <div class="form-group"><label class="form-label">Host Name</label><input type="text" class="form-input" id="sHost" placeholder="Host name"></div>
-        <div class="form-group"><label class="form-label">Action</label><select class="form-select" id="sAction"><option value="signin">Sign In</option><option value="signout">Sign Out</option></select></div>
-        <div class="form-group"><label class="form-label">Gig / Venue</label><input type="text" class="form-input" id="sGig" placeholder="Event or venue"></div>
-        <button class="form-btn" onclick="handleSignAction()">Record Entry</button>
-      </div>
-      <div class="form-card">
-        <div class="section-title" style="margin-bottom:1rem;">End of Shift Report</div>
-        <div class="success-msg" id="srSuccess">Report saved. 🖤</div>
-        <div class="form-group"><label class="form-label">Host Name</label><input type="text" class="form-input" id="qHost" placeholder="Host name"></div>
-        <div class="form-group"><label class="form-label">Shift Notes</label><textarea class="form-textarea" id="qNotes" placeholder="Questionnaire answers go here..."></textarea></div>
-        <div class="form-group"><label class="form-label">Payment Status</label><select class="form-select" id="qPaid"><option value="false">Unpaid</option><option value="true">Paid</option></select></div>
-        <button class="form-btn rose" onclick="handleShiftSubmit()">Submit Shift Report</button>
-      </div>
-    </div>
-    <div class="form-card">
-      <div class="section-title" style="margin-bottom:1rem;">Host Log</div>
-      <div id="logContent"><div class="empty-state">Loading host log...</div></div>
-    </div>
-  </div>
 </div>
 
 <!-- HOST HUB OVERLAY -->
@@ -245,14 +196,22 @@
       <a href="checkin.html" class="hub-card gold" target="_blank">
         <div class="hub-card-inner">
           <div class="hub-icon gold">🌙</div>
-          <div class="hub-card-text"><div class="hub-card-title">Check-In</div><div class="hub-card-desc">Sign in at the start of your shift</div></div>
+          <div class="hub-card-text">
+            <div class="hub-card-title">Check-In</div>
+            <div class="hub-card-desc">Sign in at the start of your shift</div>
+          </div>
           <div class="hub-arrow">›</div>
         </div>
       </a>
       <a href="checkout.html" class="hub-card rose" target="_blank">
         <div class="hub-card-inner">
-          <div class="hub-icon rose"><svg width="16" height="16" viewBox="0 0 18 18" fill="none"><path d="M9 1L11.5 7.5H17L12.5 11.5L14.5 18L9 14L3.5 18L5.5 11.5L1 7.5H6.5L9 1Z" fill="#d06090" opacity="0.9"/></svg></div>
-          <div class="hub-card-text"><div class="hub-card-title">Check-Out</div><div class="hub-card-desc">Complete your end of shift report</div></div>
+          <div class="hub-icon rose">
+            <svg width="16" height="16" viewBox="0 0 18 18" fill="none"><path d="M9 1L11.5 7.5H17L12.5 11.5L14.5 18L9 14L3.5 18L5.5 11.5L1 7.5H6.5L9 1Z" fill="#d06090" opacity="0.9"/></svg>
+          </div>
+          <div class="hub-card-text">
+            <div class="hub-card-title">Check-Out</div>
+            <div class="hub-card-desc">Complete your end of shift report</div>
+          </div>
           <div class="hub-arrow">›</div>
         </div>
       </a>
@@ -262,7 +221,10 @@
       <a href="https://belladonnanights.github.io/bingo/index.html" class="hub-card teal" target="_blank">
         <div class="hub-card-inner">
           <div class="hub-icon teal">🎵</div>
-          <div class="hub-card-text"><div class="hub-card-title">Music Bingo</div><div class="hub-card-desc">Launch the Belladonna Bingo experience</div></div>
+          <div class="hub-card-text">
+            <div class="hub-card-title">Music Bingo</div>
+            <div class="hub-card-desc">Launch the Belladonna Bingo experience</div>
+          </div>
           <div class="hub-arrow">›</div>
         </div>
       </a>
@@ -271,24 +233,33 @@
   </div>
 </div>
 
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 <script>
-const FIREBASE_CONFIG={apiKey:"AIzaSyCIfAE1JGHsUGzzVH2pz1Vyj5b5OhA0tDQ",authDomain:"belladonna-hq.firebaseapp.com",projectId:"belladonna-hq",storageBucket:"belladonna-hq.firebasestorage.app",messagingSenderId:"1021873183587",appId:"1:1021873183587:web:def283bb7b5ca48e4f9156"};
 const SHEETS_API_KEY="AIzaSyACMjXQCXjVo75hbMXtag_JctR4SoX70So";
 const SHEET_ID="1-MkZoNKkPqjAoJggahKiUsDUgjUhMTkoQ8rUBG4W-w0";
-firebase.initializeApp(FIREBASE_CONFIG);
-const db=firebase.firestore();
 
-function showTab(id,el){document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));document.getElementById('panel-'+id).classList.add('active');el.classList.add('active');if(id==='shepherd')loadLog();}
-function showSubtab(id,el){document.getElementById('subtab-mini').style.display='none';document.getElementById('subtab-specialty').style.display='none';document.querySelectorAll('.subtab').forEach(t=>t.classList.remove('active'));document.getElementById('subtab-'+id).style.display='grid';el.classList.add('active');}
+function showTab(id,el){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('panel-'+id).classList.add('active');
+  el.classList.add('active');
+}
+
+function showSubtab(id,el){
+  document.getElementById('subtab-mini').style.display='none';
+  document.getElementById('subtab-specialty').style.display='none';
+  document.querySelectorAll('.subtab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('subtab-'+id).style.display='grid';
+  el.classList.add('active');
+}
+
 function openHub(){document.getElementById('hubOverlay').classList.add('visible');document.body.style.overflow='hidden';}
 function closeHub(){document.getElementById('hubOverlay').classList.remove('visible');document.body.style.overflow='';}
 
 async function fetchSheetData(){
   const url=`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/Sheet1?key=${SHEETS_API_KEY}`;
   try{
-    const res=await fetch(url);const data=await res.json();
+    const res=await fetch(url);
+    const data=await res.json();
     if(data.error)throw new Error(data.error.message);
     const rows=data.values||[];
     if(rows.length<2){renderHosts([]);return;}
@@ -298,8 +269,9 @@ async function fetchSheetData(){
     renderHosts(hosts);
     document.getElementById('homeError').style.display='none';
   }catch(e){
-    const err=document.getElementById('homeError');err.style.display='block';
-    err.textContent='Could not load Google Sheet: '+e.message+'. Make sure Sheet1 exists with columns: host_name, status, sign_in_time, paid — and the sheet is shared publicly.';
+    const err=document.getElementById('homeError');
+    err.style.display='block';
+    err.textContent='Could not load Google Sheet: '+e.message+'. Make sure Sheet1 exists with columns: host_name, status, sign_in_time, paid — and the sheet is shared publicly (Anyone with link → Viewer).';
     ['liveCount','statOn','statTotal','statToday','statUnpaid'].forEach(id=>document.getElementById(id).textContent='0');
     document.getElementById('hostList').innerHTML='<div class="empty-state">No data loaded.</div>';
   }
@@ -317,53 +289,40 @@ function renderHosts(hosts){
   document.getElementById('statUnpaid').textContent=unpaid.length;
   const list=document.getElementById('hostList');
   if(!on.length){list.innerHTML='<div class="empty-state">No hosts currently on shift.</div>';return;}
-  list.innerHTML=on.map(h=>`<div class="host-row"><div class="host-info"><div class="host-avatar">${h.name.charAt(0).toUpperCase()}</div><div><div class="host-name">${h.name}</div><div class="host-time">${h.signIn?'Since '+h.signIn:'Time not recorded'}</div></div></div><div class="status-pill">On Shift</div></div>`).join('');
+  list.innerHTML=on.map(h=>`
+    <div class="host-row">
+      <div class="host-info">
+        <div class="host-avatar">${h.name.charAt(0).toUpperCase()}</div>
+        <div>
+          <div class="host-name-text">${h.name}</div>
+          <div class="host-time">${h.signIn?'Since '+h.signIn:'Time not recorded'}</div>
+        </div>
+      </div>
+      <div class="status-pill">On Shift</div>
+    </div>`).join('');
 }
 
-const miniGames=[{icon:'🎯',name:'Two Truths & A Lie',desc:'Classic icebreaker — guests guess the lie.',players:'3–20 players'},{icon:'🃏',name:'Most Likely To',desc:'Fun voting game — who in the room would...?',players:'4–15 players'},{icon:'🎲',name:'Never Have I Ever',desc:'Light & fun social revelations.',players:'4–20 players'},{icon:'🧠',name:'Trivia Sprint',desc:'Quick-fire trivia rounds with categories.',players:'2–30 players'},{icon:'🎭',name:'Charades',desc:'Act it out — no words allowed.',players:'4–16 players'},{icon:'📝',name:'Name That Guest',desc:'Guess the mystery guest from clues.',players:'5–20 players'}];
-const specialtyEvents=[{icon:'💍',name:'Bachelorette Experience',desc:'Curated games and moments for the bride-to-be.',players:'6–20 guests'},{icon:'🥂',name:'VIP Dinner Party',desc:'Elevated hosting format for seated dinner events.',players:'8–30 guests'},{icon:'🎂',name:'Birthday Takeover',desc:'Custom spotlight moments for the birthday guest.',players:'10–50 guests'},{icon:'🌙',name:'Midnight Mixer',desc:'Late night social energy format.',players:'15–60 guests'},{icon:'🏆',name:'Competition Night',desc:'Tournament bracket with prizes and announcements.',players:'10–40 guests'},{icon:'🎤',name:'Open Mic Social',desc:'Hosted storytelling and social spotlight.',players:'10–35 guests'}];
+const miniGames=[
+  {icon:'🎯',name:'Two Truths & A Lie',desc:'Classic icebreaker — guests guess the lie.',players:'3–20 players'},
+  {icon:'🃏',name:'Most Likely To',desc:'Fun voting game — who in the room would...?',players:'4–15 players'},
+  {icon:'🎲',name:'Never Have I Ever',desc:'Light & fun social revelations.',players:'4–20 players'},
+  {icon:'🧠',name:'Trivia Sprint',desc:'Quick-fire trivia rounds with categories.',players:'2–30 players'},
+  {icon:'🎭',name:'Charades',desc:'Act it out — no words allowed.',players:'4–16 players'},
+  {icon:'📝',name:'Name That Guest',desc:'Guess the mystery guest from clues.',players:'5–20 players'},
+];
+const specialtyEvents=[
+  {icon:'💍',name:'Bachelorette Experience',desc:'Curated games and moments for the bride-to-be.',players:'6–20 guests'},
+  {icon:'🥂',name:'VIP Dinner Party',desc:'Elevated hosting format for seated dinner events.',players:'8–30 guests'},
+  {icon:'🎂',name:'Birthday Takeover',desc:'Custom spotlight moments for the birthday guest.',players:'10–50 guests'},
+  {icon:'🌙',name:'Midnight Mixer',desc:'Late night social energy format.',players:'15–60 guests'},
+  {icon:'🏆',name:'Competition Night',desc:'Tournament bracket with prizes and announcements.',players:'10–40 guests'},
+  {icon:'🎤',name:'Open Mic Social',desc:'Hosted storytelling and social spotlight.',players:'10–35 guests'},
+];
 
 function renderGames(){
   document.getElementById('subtab-mini').innerHTML=miniGames.map(g=>`<div class="game-card"><div class="game-icon">${g.icon}</div><div class="game-name">${g.name}</div><div class="game-desc">${g.desc}</div><div class="game-players">${g.players}</div></div>`).join('');
   document.getElementById('subtab-specialty').innerHTML=specialtyEvents.map(g=>`<div class="game-card"><div class="game-icon">${g.icon}</div><div class="game-name">${g.name}</div><div class="game-desc">${g.desc}</div><div class="game-players">${g.players}</div></div>`).join('');
 }
-
-async function handleSignAction(){
-  const name=document.getElementById('sHost').value.trim();
-  const action=document.getElementById('sAction').value;
-  const gig=document.getElementById('sGig').value.trim();
-  if(!name){showSiError('Please enter a host name.');return;}
-  try{
-    await db.collection('host_logs').add({host_name:name,action,gig,timestamp:new Date().toISOString(),paid:false,notes:''});
-    document.getElementById('sHost').value='';document.getElementById('sGig').value='';
-    document.getElementById('siSuccess').style.display='block';
-    setTimeout(()=>document.getElementById('siSuccess').style.display='none',3000);
-    loadLog();
-  }catch(e){showSiError('Firebase error: '+e.message);}
-}
-
-async function handleShiftSubmit(){
-  const name=document.getElementById('qHost').value.trim();if(!name)return;
-  try{
-    await db.collection('shift_reports').add({host_name:name,notes:document.getElementById('qNotes').value.trim(),paid:document.getElementById('qPaid').value==='true',submitted_at:new Date().toISOString()});
-    document.getElementById('qHost').value='';document.getElementById('qNotes').value='';
-    document.getElementById('srSuccess').style.display='block';
-    setTimeout(()=>document.getElementById('srSuccess').style.display='none',3000);
-    loadLog();
-  }catch(e){}
-}
-
-async function loadLog(){
-  const el=document.getElementById('logContent');
-  try{
-    const snap=await db.collection('host_logs').orderBy('timestamp','desc').limit(25).get();
-    if(snap.empty){el.innerHTML='<div class="empty-state">No entries yet.</div>';return;}
-    const rows=snap.docs.map(doc=>{const d=doc.data();const ts=d.timestamp?new Date(d.timestamp).toLocaleString():'—';const action=d.action==='signin'?`<span style="color:var(--live)">Sign In</span>`:`<span style="color:var(--rose2)">Sign Out</span>`;return`<tr><td>${d.host_name||'—'}</td><td>${action}</td><td>${d.gig||'—'}</td><td style="font-size:0.65rem">${ts}</td><td class="${d.paid?'paid-yes':'paid-no'}">${d.paid?'Paid':'Unpaid'}</td></tr>`;}).join('');
-    el.innerHTML=`<table class="log-table"><thead><tr><th>Host</th><th>Action</th><th>Gig</th><th>Time</th><th>Pay</th></tr></thead><tbody>${rows}</tbody></table>`;
-  }catch(e){el.innerHTML=`<div class="error-msg" style="display:block">Could not load log: ${e.message}. Enable Firestore in Firebase.</div>`;}
-}
-
-function showSiError(msg){const el=document.getElementById('siError');el.textContent=msg;el.style.display='block';setTimeout(()=>el.style.display='none',4000);}
 
 fetchSheetData();
 setInterval(fetchSheetData,60000);
