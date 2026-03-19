@@ -913,10 +913,16 @@ let detailEntryId = null;
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
 async function loadCalEntries(){
-  try{const c=await window.storage.get('cal-entries');if(c)calEntries=JSON.parse(c.value);}catch(e){}
+  try{
+    const snap = await db.collection('cal_entries').orderBy('date').get();
+    calEntries = snap.docs.map(d=>({id:d.id,...d.data()}));
+  }catch(e){
+    // fallback to local
+    try{const c=await window.storage.get('cal-entries');if(c)calEntries=JSON.parse(c.value);}catch(e2){}
+  }
 }
 async function saveCalEntries(){
-  try{await window.storage.set('cal-entries',JSON.stringify(calEntries));}catch(e){}
+  // handled per-entry in saveEntry/deleteEntry
 }
 
 // ── MONTH NOTES ──
@@ -924,10 +930,19 @@ let monthNotes = {};
 let expandNoteKey = null;
 
 async function loadMonthNotes(){
-  try{const n=await window.storage.get('cal-month-notes-v2');if(n)monthNotes=JSON.parse(n.value);}catch(e){}
+  try{
+    const snap = await db.collection('cal_notes').doc('all_notes').get();
+    if(snap.exists) monthNotes = snap.data();
+  }catch(e){
+    try{const n=await window.storage.get('cal-month-notes-v2');if(n)monthNotes=JSON.parse(n.value);}catch(e2){}
+  }
 }
 async function persistNotes(){
-  try{await window.storage.set('cal-month-notes-v2',JSON.stringify(monthNotes));}catch(e){}
+  try{
+    await db.collection('cal_notes').doc('all_notes').set(monthNotes, {merge:true});
+  }catch(e){
+    try{await window.storage.set('cal-month-notes-v2',JSON.stringify(monthNotes));}catch(e2){}
+  }
 }
 async function saveMonthNote(yr,mo,si){
   const key=yr+'-'+mo+'-'+si;
@@ -1102,18 +1117,26 @@ function openEntryModalOnDate(date){
 
 function closeEntryModal(){ document.getElementById('entryModal').classList.remove('open'); editingEntryId=null; }
 
-function saveEntry(){
+async function saveEntry(){
   const title = document.getElementById('entryTitle').value.trim();
   const date = document.getElementById('entryDate').value;
   const notes = document.getElementById('entryNotes').value.trim();
   if(!title||!date) return;
-  if(editingEntryId){
-    const e = calEntries.find(x=>x.id===editingEntryId);
-    if(e){e.title=title;e.date=date;e.type=currentEntryType;e.notes=notes;}
-  } else {
-    calEntries.push({id:Date.now().toString(),title,date,type:currentEntryType,notes});
+  const payload = {title, date, type:currentEntryType, notes};
+  try{
+    if(editingEntryId){
+      await db.collection('cal_entries').doc(editingEntryId).set(payload, {merge:true});
+      const e = calEntries.find(x=>x.id===editingEntryId);
+      if(e){Object.assign(e, payload);}
+    } else {
+      const ref = await db.collection('cal_entries').add(payload);
+      calEntries.push({id:ref.id, ...payload});
+    }
+  }catch(e){
+    // fallback local
+    if(editingEntryId){const en=calEntries.find(x=>x.id===editingEntryId);if(en)Object.assign(en,payload);}
+    else calEntries.push({id:Date.now().toString(),...payload});
   }
-  saveCalEntries();
   renderCalendar();
   closeEntryModal();
 }
@@ -1142,10 +1165,11 @@ function editEntryFromDetail(){
   openEntryModal(id);
 }
 
-function deleteEntryFromDetail(){
+async function deleteEntryFromDetail(){
   if(!confirm('Delete this entry?')) return;
-  calEntries = calEntries.filter(e=>e.id!==detailEntryId);
-  saveCalEntries();
+  const id = detailEntryId;
+  try{ await db.collection('cal_entries').doc(id).delete(); }catch(e){}
+  calEntries = calEntries.filter(e=>e.id!==id);
   renderCalendar();
   closeEntryDetail();
 }
