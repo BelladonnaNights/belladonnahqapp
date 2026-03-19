@@ -9,7 +9,7 @@
   * { margin:0; padding:0; box-sizing:border-box; }
   :root {
     --bg:#0a0a0f; --surface:#111118; --surface2:#18181f; --surface3:#1e1e28;
-    --border:rgba(180,140,200,0.15); --border2:rgba(180,140,200,0.28);
+    --border:rgba(201,169,110,0.2); --border2:rgba(201,169,110,0.4);
     --gold:#c9a96e; --rose2:#b05070; --teal2:#3aa08a; --purple2:#7a5aaa;
     --text:#e8e0f0; --text2:#a090b8; --text3:#6a5a7a;
     --live:#3aaa6a; --live-dim:rgba(58,170,106,0.12);
@@ -18,7 +18,7 @@
   body { background:var(--bg); color:var(--text); font-family:'Josefin Sans',sans-serif; font-weight:300; min-height:100vh; letter-spacing:0.04em; overflow-x:hidden; }
 
   /* HEADER */
-  .header { background:linear-gradient(180deg,#0d0a14 0%,var(--bg) 100%); border-bottom:1px solid var(--border); padding:1.5rem 2rem 0; position:relative; overflow:hidden; }
+  .header { background:linear-gradient(180deg,#0d0a14 0%,var(--bg) 100%); border-bottom:1px solid rgba(201,169,110,0.2); padding:1.5rem 2rem 0; position:relative; overflow:hidden; }
   .header::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; background:linear-gradient(90deg,transparent,var(--gold),var(--rose2),var(--purple2),transparent); }
   .header-top { display:flex; align-items:center; justify-content:space-between; margin-bottom:1.5rem; }
   .logo { font-family:'Cormorant Garamond',serif; font-size:2.2rem; font-weight:300; letter-spacing:0.2em; color:var(--gold); text-transform:uppercase; }
@@ -40,16 +40,14 @@
   /* HOST HUB OVERLAY */
   .hub-overlay { position:fixed; inset:0; background:var(--bg); z-index:100; display:none; overflow-y:auto; }
   .hub-overlay.visible { display:block; }
-  .hub-back { position:fixed; top:1.2rem; left:1.2rem; background:rgba(180,140,200,0.1); border:1px solid var(--border2); color:var(--purple-btn); font-size:0.62rem; letter-spacing:0.2em; text-transform:uppercase; font-family:'Josefin Sans',sans-serif; padding:0.5rem 1rem; border-radius:20px; cursor:pointer; z-index:101; transition:all 0.2s; }
-  .hub-back:hover { background:rgba(180,140,200,0.2); color:var(--text); }
+  .hub-back { position:fixed; top:1.2rem; left:1.2rem; background:rgba(201,169,110,0.08); border:1px solid rgba(201,169,110,0.3); color:var(--gold); font-size:0.62rem; letter-spacing:0.2em; text-transform:uppercase; font-family:'Josefin Sans',sans-serif; padding:0.5rem 1rem; border-radius:20px; cursor:pointer; z-index:101; transition:all 0.2s; }
+  .hub-back:hover { background:rgba(201,169,110,0.15); }
   .hub-inner { max-width:420px; margin:0 auto; padding:5rem 1.5rem 3rem; text-align:center; }
   .hub-brand { font-family:'Cormorant Garamond',serif; font-size:2.8rem; font-weight:300; color:var(--gold); letter-spacing:0.3em; text-transform:uppercase; }
   .hub-sub { font-size:0.58rem; letter-spacing:0.55em; text-transform:uppercase; color:var(--text3); margin-top:0.3rem; }
   .hub-ornament { color:#3a2a4a; font-family:'Cormorant Garamond',serif; font-size:1rem; letter-spacing:0.4em; margin:1rem 0 2.5rem; }
   .hub-section-label { font-size:0.55rem; letter-spacing:0.4em; text-transform:uppercase; color:var(--text3); margin-bottom:0.9rem; text-align:left; }
   .hub-links { display:flex; flex-direction:column; gap:0.75rem; margin-bottom:2rem; }
-
-  /* ALL GOLD — no icons */
   .hub-card { display:block; background:var(--surface); border:1px solid rgba(201,169,110,0.25); border-radius:12px; padding:1.2rem 1.5rem; text-decoration:none; transition:all 0.25s; position:relative; overflow:hidden; text-align:left; }
   .hub-card::before { content:''; position:absolute; top:0; left:0; right:0; height:1px; background:linear-gradient(90deg,transparent,var(--gold),transparent); }
   .hub-card:hover { border-color:rgba(201,169,110,0.5); transform:translateY(-2px); background:rgba(201,169,110,0.04); }
@@ -61,29 +59,22 @@
   .hub-card:hover .hub-arrow { color:var(--gold); }
   .hub-footer { font-size:0.55rem; letter-spacing:0.2em; color:var(--text3); margin-top:2rem; text-transform:uppercase; }
 
-  /* STATS */
+  /* STAT CARDS — all gold */
   .stat-grid { display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:2rem; }
-  .stat-card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:1.2rem; position:relative; overflow:hidden; }
-  .stat-card::before { content:''; position:absolute; top:0; left:0; right:0; height:1px; }
-  .stat-card.gold::before { background:linear-gradient(90deg,transparent,var(--gold),transparent); }
-  .stat-card.rose::before { background:linear-gradient(90deg,transparent,var(--rose2),transparent); }
-  .stat-card.teal::before { background:linear-gradient(90deg,transparent,var(--teal2),transparent); }
-  .stat-card.purple::before { background:linear-gradient(90deg,transparent,var(--purple2),transparent); }
+  .stat-card { background:var(--surface); border:1px solid rgba(201,169,110,0.25); border-radius:12px; padding:1.2rem; position:relative; overflow:hidden; }
+  .stat-card::before { content:''; position:absolute; top:0; left:0; right:0; height:1px; background:linear-gradient(90deg,transparent,var(--gold),transparent); }
   .stat-label { font-size:0.58rem; letter-spacing:0.2em; text-transform:uppercase; color:var(--text3); margin-bottom:0.4rem; }
-  .stat-value { font-family:'Cormorant Garamond',serif; font-size:2.8rem; font-weight:300; line-height:1; }
-  .stat-card.gold .stat-value { color:var(--gold); }
-  .stat-card.rose .stat-value { color:var(--rose2); }
-  .stat-card.teal .stat-value { color:var(--teal2); }
-  .stat-card.purple .stat-value { color:var(--purple2); }
+  .stat-value { font-family:'Cormorant Garamond',serif; font-size:2.8rem; font-weight:300; line-height:1; color:var(--gold); }
   .stat-sub { font-size:0.6rem; color:var(--text3); margin-top:0.2rem; }
 
   .section-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem; }
   .section-title { font-size:0.62rem; letter-spacing:0.3em; text-transform:uppercase; color:var(--text3); }
-  .btn-sm { background:none; border:1px solid var(--border2); color:var(--purple-btn); padding:0.4rem 1rem; border-radius:20px; font-size:0.6rem; letter-spacing:0.15em; text-transform:uppercase; cursor:pointer; font-family:'Josefin Sans',sans-serif; transition:all 0.2s; }
-  .btn-sm:hover { border-color:var(--gold); color:var(--gold); }
+  .btn-sm { background:none; border:1px solid rgba(201,169,110,0.3); color:var(--gold); padding:0.4rem 1rem; border-radius:20px; font-size:0.6rem; letter-spacing:0.15em; text-transform:uppercase; cursor:pointer; font-family:'Josefin Sans',sans-serif; transition:all 0.2s; }
+  .btn-sm:hover { border-color:var(--gold); background:rgba(201,169,110,0.08); }
 
-  /* HUB TRIGGER — no house icon */
-  .hub-trigger { width:100%; background:rgba(201,169,110,0.06); border:1px solid rgba(201,169,110,0.25); border-radius:12px; padding:1rem 1.5rem; display:flex; align-items:center; justify-content:space-between; gap:1rem; cursor:pointer; transition:all 0.2s; margin-bottom:1.5rem; text-align:left; }
+  /* HUB TRIGGER — all gold */
+  .hub-trigger { width:100%; background:rgba(201,169,110,0.06); border:1px solid rgba(201,169,110,0.25); border-radius:12px; padding:1rem 1.5rem; display:flex; align-items:center; justify-content:space-between; gap:1rem; cursor:pointer; transition:all 0.2s; margin-bottom:1.5rem; text-align:left; position:relative; overflow:hidden; }
+  .hub-trigger::before { content:''; position:absolute; top:0; left:0; right:0; height:1px; background:linear-gradient(90deg,transparent,var(--gold),transparent); }
   .hub-trigger:hover { background:rgba(201,169,110,0.12); border-color:rgba(201,169,110,0.45); }
   .hub-trigger-text { flex:1; }
   .hub-trigger-title { font-size:0.72rem; letter-spacing:0.2em; text-transform:uppercase; color:var(--gold); margin-bottom:0.2rem; }
@@ -91,10 +82,11 @@
   .hub-trigger-arrow { color:var(--text3); font-size:1rem; transition:color 0.2s; }
   .hub-trigger:hover .hub-trigger-arrow { color:var(--gold); }
 
+  /* HOST ROWS — gold border */
   .host-list { display:flex; flex-direction:column; gap:0.75rem; }
-  .host-row { display:flex; align-items:center; justify-content:space-between; background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:0.9rem 1.2rem; }
+  .host-row { display:flex; align-items:center; justify-content:space-between; background:var(--surface); border:1px solid rgba(201,169,110,0.2); border-radius:8px; padding:0.9rem 1.2rem; }
   .host-info { display:flex; align-items:center; gap:12px; }
-  .host-avatar { width:36px; height:36px; border-radius:50%; background:var(--surface3); border:1px solid var(--border2); display:flex; align-items:center; justify-content:center; font-family:'Cormorant Garamond',serif; font-size:1rem; color:var(--gold); }
+  .host-avatar { width:36px; height:36px; border-radius:50%; background:var(--surface3); border:1px solid rgba(201,169,110,0.3); display:flex; align-items:center; justify-content:center; font-family:'Cormorant Garamond',serif; font-size:1rem; color:var(--gold); }
   .host-name-text { font-size:0.85rem; color:var(--text); }
   .host-time { font-size:0.68rem; color:var(--text3); margin-top:2px; }
   .status-pill { font-size:0.58rem; letter-spacing:0.12em; text-transform:uppercase; padding:0.25rem 0.7rem; border-radius:20px; background:var(--live-dim); color:var(--live); border:1px solid rgba(58,170,106,0.3); }
@@ -103,16 +95,16 @@
 
   /* GAMES */
   .subtabs { display:flex; gap:0.5rem; margin-bottom:1.5rem; }
-  .subtab { padding:0.5rem 1.2rem; font-size:0.63rem; letter-spacing:0.2em; text-transform:uppercase; color:var(--text3); cursor:pointer; border:1px solid var(--border); border-radius:20px; background:none; font-family:'Josefin Sans',sans-serif; transition:all 0.2s; }
-  .subtab:hover { border-color:var(--border2); color:var(--text2); }
+  .subtab { padding:0.5rem 1.2rem; font-size:0.63rem; letter-spacing:0.2em; text-transform:uppercase; color:var(--text3); cursor:pointer; border:1px solid rgba(201,169,110,0.2); border-radius:20px; background:none; font-family:'Josefin Sans',sans-serif; transition:all 0.2s; }
+  .subtab:hover { border-color:rgba(201,169,110,0.4); color:var(--text2); }
   .subtab.active { border-color:var(--gold); color:var(--gold); background:rgba(201,169,110,0.08); }
   .games-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:1rem; }
-  .game-card { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:1.2rem; transition:all 0.2s; }
-  .game-card:hover { border-color:var(--border2); transform:translateY(-2px); }
+  .game-card { background:var(--surface); border:1px solid rgba(201,169,110,0.2); border-radius:10px; padding:1.2rem; transition:all 0.2s; }
+  .game-card:hover { border-color:rgba(201,169,110,0.45); transform:translateY(-2px); }
   .game-icon { font-size:1.4rem; margin-bottom:0.6rem; }
   .game-name { font-size:0.78rem; color:var(--text); letter-spacing:0.05em; margin-bottom:0.25rem; }
   .game-desc { font-size:0.63rem; color:var(--text3); line-height:1.5; }
-  .game-players { font-size:0.58rem; color:var(--text3); margin-top:0.6rem; padding-top:0.5rem; border-top:1px solid var(--border); letter-spacing:0.08em; }
+  .game-players { font-size:0.58rem; color:var(--text3); margin-top:0.6rem; padding-top:0.5rem; border-top:1px solid rgba(201,169,110,0.15); letter-spacing:0.08em; }
 
   @media(max-width:700px) {
     .stat-grid { grid-template-columns:1fr 1fr; }
@@ -145,8 +137,6 @@
 <!-- HOSTS PANEL -->
 <div class="panel active" id="panel-hosts">
   <div id="homeError" class="error-msg"></div>
-
-  <!-- HUB TRIGGER — text only, no icon -->
   <button class="hub-trigger" onclick="openHub()">
     <div class="hub-trigger-text">
       <div class="hub-trigger-title">Host Hub</div>
@@ -154,14 +144,12 @@
     </div>
     <div class="hub-trigger-arrow">›</div>
   </button>
-
   <div class="stat-grid">
-    <div class="stat-card gold"><div class="stat-label">On Shift Now</div><div class="stat-value" id="statOn">—</div><div class="stat-sub">active hosts</div></div>
-    <div class="stat-card rose"><div class="stat-label">Total Roster</div><div class="stat-value" id="statTotal">—</div><div class="stat-sub">all hosts</div></div>
-    <div class="stat-card teal"><div class="stat-label">Shifts Today</div><div class="stat-value" id="statToday">—</div><div class="stat-sub">completed</div></div>
-    <div class="stat-card purple"><div class="stat-label">Unpaid</div><div class="stat-value" id="statUnpaid">—</div><div class="stat-sub">pending payment</div></div>
+    <div class="stat-card"><div class="stat-label">On Shift Now</div><div class="stat-value" id="statOn">—</div><div class="stat-sub">active hosts</div></div>
+    <div class="stat-card"><div class="stat-label">Total Roster</div><div class="stat-value" id="statTotal">—</div><div class="stat-sub">all hosts</div></div>
+    <div class="stat-card"><div class="stat-label">Shifts Today</div><div class="stat-value" id="statToday">—</div><div class="stat-sub">completed</div></div>
+    <div class="stat-card"><div class="stat-label">Unpaid</div><div class="stat-value" id="statUnpaid">—</div><div class="stat-sub">pending payment</div></div>
   </div>
-
   <div class="section-header">
     <div class="section-title">Currently On Shift</div>
     <button class="btn-sm" onclick="fetchSheetData()">↻ Refresh</button>
@@ -181,49 +169,37 @@
   <div id="subtab-specialty" class="games-grid" style="display:none"></div>
 </div>
 
-<!-- HOST HUB OVERLAY — all gold, no icons -->
+<!-- HOST HUB OVERLAY -->
 <div class="hub-overlay" id="hubOverlay">
   <button class="hub-back" onclick="closeHub()">← Back to Hosts</button>
   <div class="hub-inner">
     <div class="hub-brand">Belladonna</div>
     <div class="hub-sub">Host Hub</div>
     <div class="hub-ornament">✦ ✦ ✦</div>
-
     <div class="hub-section-label">Your Shift</div>
     <div class="hub-links">
       <a href="checkin.html" class="hub-card" target="_blank">
         <div class="hub-card-inner">
-          <div class="hub-card-text">
-            <div class="hub-card-title">Check-In</div>
-            <div class="hub-card-desc">Sign in at the start of your shift</div>
-          </div>
+          <div class="hub-card-text"><div class="hub-card-title">Check-In</div><div class="hub-card-desc">Sign in at the start of your shift</div></div>
           <div class="hub-arrow">›</div>
         </div>
       </a>
       <a href="checkout.html" class="hub-card" target="_blank">
         <div class="hub-card-inner">
-          <div class="hub-card-text">
-            <div class="hub-card-title">Check-Out</div>
-            <div class="hub-card-desc">Complete your end of shift report</div>
-          </div>
+          <div class="hub-card-text"><div class="hub-card-title">Check-Out</div><div class="hub-card-desc">Complete your end of shift report</div></div>
           <div class="hub-arrow">›</div>
         </div>
       </a>
     </div>
-
     <div class="hub-section-label">Tools & Games</div>
     <div class="hub-links">
       <a href="https://belladonnanights.github.io/bingo/index.html" class="hub-card" target="_blank">
         <div class="hub-card-inner">
-          <div class="hub-card-text">
-            <div class="hub-card-title">Music Bingo</div>
-            <div class="hub-card-desc">Launch the Belladonna Bingo experience</div>
-          </div>
+          <div class="hub-card-text"><div class="hub-card-title">Music Bingo</div><div class="hub-card-desc">Launch the Belladonna Bingo experience</div></div>
           <div class="hub-arrow">›</div>
         </div>
       </a>
     </div>
-
     <div class="hub-footer">Belladonna Audio Alchemies &nbsp;✦&nbsp; Host Hub</div>
   </div>
 </div>
