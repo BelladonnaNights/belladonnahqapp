@@ -98,20 +98,21 @@
   .no-results{text-align:center;padding:1.5rem;color:var(--text3);font-size:0.7rem;letter-spacing:0.1em;}
 
   /* GAMES */
-  .games-list{display:flex;flex-direction:column;gap:0.5rem;}
-  .game-item{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;transition:border-color 0.2s;}
-  .game-item.drag-over{border-color:var(--gold);}
-  .game-header{display:flex;align-items:center;gap:0.7rem;padding:0.85rem 1rem;cursor:pointer;}
-  .drag-handle{color:var(--text3);font-size:0.85rem;cursor:grab;flex-shrink:0;letter-spacing:-1px;line-height:1;}
-  .game-header-text{flex:1;min-width:0;}
-  .game-name{font-size:0.8rem;color:var(--text);letter-spacing:0.04em;}
-  .game-header-actions{display:flex;gap:0.35rem;flex-shrink:0;}
-  .fav-btn{background:none;border:none;font-size:0.85rem;cursor:pointer;opacity:0.35;transition:opacity 0.2s;padding:2px;color:var(--gold);}
+  .games-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:0.75rem;}
+  .game-item{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;transition:all 0.2s;display:flex;flex-direction:column;}
+  .game-item.drag-over{border-color:var(--gold);transform:scale(1.02);}
+  .game-item:hover{border-color:var(--border2);}
+  .game-header{display:flex;flex-direction:column;padding:1rem;cursor:pointer;flex:1;}
+  .drag-handle{color:var(--text3);font-size:0.7rem;cursor:grab;letter-spacing:-1px;line-height:1;margin-bottom:0.5rem;opacity:0.5;}
+  .game-header-text{flex:1;}
+  .game-name{font-size:0.75rem;color:var(--text);letter-spacing:0.04em;line-height:1.4;margin-bottom:0.5rem;}
+  .game-header-actions{display:flex;gap:0.3rem;padding-top:0.5rem;border-top:1px solid var(--border);}
+  .fav-btn{background:none;border:none;font-size:0.8rem;cursor:pointer;opacity:0.35;transition:opacity 0.2s;padding:1px;color:var(--gold);}
   .fav-btn.active{opacity:1;}
   .action-btn{background:none;border:1px solid var(--border);color:var(--text3);width:26px;height:26px;border-radius:6px;cursor:pointer;font-size:0.65rem;display:flex;align-items:center;justify-content:center;transition:all 0.2s;}
   .action-btn.edit:hover{border-color:var(--gold);color:var(--gold);}
   .action-btn.delete:hover{border-color:var(--rose2);color:var(--rose2);}
-  .game-expand{display:none;padding:0 1rem 1rem 2.5rem;border-top:1px solid var(--border);}
+  .game-expand{display:none;padding:0 1rem 1rem 1rem;border-top:1px solid var(--border);}
   .game-expand.open{display:block;}
   .game-desc-text{font-size:0.65rem;color:var(--text2);line-height:1.7;padding-top:0.75rem;}
   .bingo-link{display:inline-block;margin-top:0.5rem;font-size:0.62rem;color:var(--teal2);letter-spacing:0.08em;text-decoration:none;}
@@ -684,12 +685,29 @@ function populateHistoryDropdown(){
 function renderGames(){renderGameList('mini',miniGames);renderGameList('specialty',specialtyEvents);}
 function renderGameList(tab,games){
   const favs=games.filter(g=>g.favs),rest=games.filter(g=>!g.favs);
-  document.getElementById('fav-'+tab+'-section').innerHTML=favs.length?`<div class="fav-label">★ Pinned</div><div class="games-list">${renderGameItems(tab,favs)}</div>`:'';
-  document.getElementById('list-'+tab).innerHTML=rest.length?renderGameItems(tab,rest):'<div class="empty-state">No games yet. Add one above.</div>';
+  document.getElementById('fav-'+tab+'-section').innerHTML=favs.length?`<div class="fav-label" style="margin-bottom:0.6rem;">★ Pinned</div><div class="games-list">${renderGameItems(tab,favs)}</div>`:'';
+  const listEl=document.getElementById('list-'+tab);listEl.innerHTML=rest.length?renderGameItems(tab,rest):'<div class="empty-state" style="grid-column:1/-1">No games yet. Add one above.</div>';
   attachDrag(tab);
 }
 function renderGameItems(tab,games){
-  return games.map(g=>`<div class="game-item" draggable="${!g.isLink}" data-id="${g.id}" data-tab="${tab}"><div class="game-header" onclick="toggleExpand('${g.id}')"><div class="drag-handle">⠿</div><div class="game-header-text"><div class="game-name">${g.name}</div></div><div class="game-header-actions"><button class="fav-btn${g.favs?' active':''}" onclick="event.stopPropagation();toggleFav('${tab}','${g.id}')">★</button>${!g.isLink?`<button class="action-btn edit" onclick="event.stopPropagation();openGameModal('${tab}','${g.id}')">✎</button>`:''}<button class="action-btn delete" onclick="event.stopPropagation();deleteGame('${tab}','${g.id}')">✕</button></div></div><div class="game-expand" id="expand-${g.id}"><div class="game-desc-text">${g.desc||'No description yet.'}</div>${g.isLink?`<a href="${g.link}" target="_blank" class="bingo-link">↗ Open Bingo App</a>`:''}</div></div>`).join('');
+  return games.map(g=>`
+    <div class="game-item" draggable="${!g.isLink}" data-id="${g.id}" data-tab="${tab}">
+      <div class="game-header" onclick="toggleExpand('${g.id}')">
+        <div class="drag-handle">⠿</div>
+        <div class="game-header-text">
+          <div class="game-name">${g.name}</div>
+        </div>
+        <div class="game-header-actions">
+          <button class="fav-btn${g.favs?' active':''}" onclick="event.stopPropagation();toggleFav('${tab}','${g.id}')" title="Pin">★</button>
+          ${!g.isLink?`<button class="action-btn edit" onclick="event.stopPropagation();openGameModal('${tab}','${g.id}')" title="Edit">✎</button>`:''}
+          <button class="action-btn delete" onclick="event.stopPropagation();deleteGame('${tab}','${g.id}')" title="Delete">✕</button>
+        </div>
+      </div>
+      <div class="game-expand" id="expand-${g.id}">
+        <div class="game-desc-text">${g.desc||'No description yet.'}</div>
+        ${g.isLink?`<a href="${g.link}" target="_blank" class="bingo-link">↗ Open Bingo App</a>`:''}
+      </div>
+    </div>`).join('');
 }
 function toggleExpand(id){document.getElementById('expand-'+id).classList.toggle('open');}
 function toggleFav(tab,id){const games=tab==='mini'?miniGames:specialtyEvents;const g=games.find(x=>x.id===id);if(g)g.favs=!g.favs;persist(tab==='mini'?'games-mini':'games-specialty',games,tab==='mini'?'miniSave':'specialtySave');renderGameList(tab,games);}
