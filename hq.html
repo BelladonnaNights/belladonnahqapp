@@ -324,6 +324,18 @@
   .tracker-cat-nav-btn.active{background:var(--surface2);}
   .tracker-add-q-btn{background:none;border:1px dashed var(--border2);color:var(--text3);width:100%;padding:0.6rem;border-radius:8px;font-size:0.72rem;letter-spacing:0.15em;text-transform:uppercase;cursor:pointer;font-family:'Josefin Sans',sans-serif;margin-top:0.8rem;transition:all 0.2s;}
   .tracker-add-q-btn:hover{border-color:var(--gold);color:var(--gold);}
+  .tracker-glance-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:0.6rem;margin-bottom:1.4rem;}
+  .tracker-glance-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:0.8rem;position:relative;overflow:hidden;cursor:pointer;transition:all 0.2s;}
+  .tracker-glance-card:hover{border-color:var(--border2);transform:translateY(-1px);}
+  .tracker-glance-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;border-radius:10px 10px 0 0;}
+  .tracker-glance-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:0.5rem;}
+  .tracker-glance-name{font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--text2);}
+  .tracker-glance-pct{font-family:'Cormorant Garamond',serif;font-size:1.2rem;font-weight:300;}
+  .tracker-glance-items{display:flex;flex-direction:column;gap:0.25rem;}
+  .tracker-glance-item{display:flex;align-items:baseline;gap:0.35rem;font-size:0.62rem;color:var(--text3);line-height:1.4;letter-spacing:0.02em;}
+  .tracker-glance-item-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;margin-top:2px;}
+  .tracker-glance-all-done{font-size:0.65rem;color:var(--teal2);letter-spacing:0.08em;}
+  .tracker-glance-empty{font-size:0.62rem;color:var(--text3);font-style:italic;}
 
 </style>
 </head>
@@ -1398,7 +1410,31 @@ function renderTracker(){
   const msg=overall>=80?msgs[0]:overall>=50?msgs[1]:msgs[2];
   const ordered=getOrderedCategories();
 
-  el.innerHTML=`
+  // build glance row html
+  const glanceHtml = `<div class="tracker-glance-row">
+    ${getOrderedCategories().map(cat=>{
+      const pct=trackerCalcPct(cat);
+      const color=cat.color;
+      const notDone=cat.items.filter(item=>trackerAnswers[cat.id+'_'+item.id]==='no');
+      const inProg=cat.items.filter(item=>trackerAnswers[cat.id+'_'+item.id]==='partial');
+      const allDone=notDone.length===0&&inProg.length===0;
+      const itemsHtml = allDone
+        ? '<div class="tracker-glance-all-done">✅ All complete</div>'
+        : [...inProg.map(i=>`<div class="tracker-glance-item"><div class="tracker-glance-item-dot" style="background:#c9a96e;"></div><span style="color:var(--gold)">${i.label}</span></div>`),
+           ...notDone.map(i=>`<div class="tracker-glance-item"><div class="tracker-glance-item-dot" style="background:var(--rose2);"></div><span>${i.label}</span></div>`)
+          ].join('');
+      return `<div class="tracker-glance-card" onclick="trackerPhase='quiz';trackerCatIdx=${TRACKER_CATEGORIES.indexOf(cat)};renderTracker()" style="border-color:${color}33;">
+        <div style="position:absolute;top:0;left:0;right:0;height:2px;background:${color};border-radius:10px 10px 0 0;"></div>
+        <div class="tracker-glance-header">
+          <div class="tracker-glance-name">${cat.icon} ${cat.name.split(' ')[0]}</div>
+          <div class="tracker-glance-pct" style="color:${color}">${pct}%</div>
+        </div>
+        <div class="tracker-glance-items">${itemsHtml}</div>
+      </div>`;
+    }).join('')}
+  </div>`;
+
+  el.innerHTML = glanceHtml + `
     <div class="tracker-overall">
       <div class="tracker-overall-label">Overall Score</div>
       <div class="tracker-big-pct" style="color:${overallColor}">${overall}%</div>
