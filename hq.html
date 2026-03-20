@@ -51,7 +51,6 @@
   .btn-gold{background:rgba(201,169,110,0.1);border:1px solid rgba(201,169,110,0.35);color:var(--gold);}
   .btn-gold:hover{background:rgba(201,169,110,0.2);}
 
-  /* STAT CARDS */
   .stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:0.8rem;margin-bottom:1.2rem;}
   .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1rem;position:relative;overflow:hidden;}
   .stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);}
@@ -59,14 +58,12 @@
   .stat-value{font-family:'Cormorant Garamond',serif;font-size:3rem;font-weight:300;line-height:1;color:var(--gold);}
   .stat-sub{font-size:0.98rem;color:var(--text3);margin-top:0.2rem;}
 
-  /* HUB TRIGGER */
   .hub-trigger{width:100%;background:rgba(201,169,110,0.06);border:1px solid var(--border);border-radius:10px;padding:0.9rem 1.2rem;display:flex;align-items:center;justify-content:space-between;cursor:pointer;transition:all 0.2s;margin-bottom:1rem;text-align:left;position:relative;overflow:hidden;}
   .hub-trigger::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);}
   .hub-trigger:hover{background:rgba(201,169,110,0.12);border-color:var(--border2);}
   .hub-trigger-title{font-size:0.88rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--gold);margin-bottom:0.15rem;}
   .hub-trigger-desc{font-size:1.01rem;color:var(--text3);}
 
-  /* HOST LIST */
   .host-list{display:flex;flex-direction:column;gap:0.6rem;}
   .host-row{display:flex;align-items:center;justify-content:space-between;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:0.8rem 1rem;}
   .host-info{display:flex;align-items:center;gap:10px;}
@@ -77,7 +74,6 @@
   .empty-state{text-align:center;padding:2rem;color:var(--text3);font-size:0.91rem;letter-spacing:0.1em;line-height:1.8;}
   .error-msg{background:rgba(176,80,112,0.1);border:1px solid rgba(176,80,112,0.25);border-radius:8px;padding:0.75rem 1rem;font-size:0.88rem;color:var(--rose2);margin-bottom:1rem;display:none;line-height:1.6;}
 
-  /* ROSTER SEARCH */
   .roster-search{display:flex;gap:0.5rem;margin-bottom:1rem;flex-wrap:wrap;}
   .roster-search-input{flex:1;min-width:120px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:0.55rem 0.85rem;font-size:0.98rem;font-family:'Josefin Sans',sans-serif;outline:none;transition:border-color 0.2s;letter-spacing:0.04em;}
   .roster-search-input:focus{border-color:var(--gold);}
@@ -85,7 +81,6 @@
   .roster-filter-select{background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text2);padding:0.55rem 0.85rem;font-size:0.94rem;font-family:'Josefin Sans',sans-serif;outline:none;cursor:pointer;-webkit-appearance:none;min-width:110px;}
   .roster-filter-select option{background:var(--surface2);}
 
-  /* ROSTER CARDS */
   .roster-grid{display:flex;flex-direction:column;gap:0.6rem;}
   .roster-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1rem 1.2rem;}
   .roster-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:0.6rem;}
@@ -97,7 +92,6 @@
   .venue-tag{font-size:0.73rem;letter-spacing:0.08em;padding:0.2rem 0.6rem;border-radius:20px;background:rgba(180,140,200,0.08);color:var(--purple-btn);border:1px solid rgba(180,140,200,0.2);}
   .no-results{text-align:center;padding:1.5rem;color:var(--text3);font-size:0.91rem;letter-spacing:0.1em;}
 
-  /* GAMES */
   .games-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:0.75rem;}
   .game-item{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;transition:all 0.2s;display:flex;flex-direction:column;}
   .game-item.drag-over{border-color:var(--gold);transform:scale(1.02);}
@@ -119,7 +113,6 @@
   .bingo-link:hover{color:var(--gold);}
   .fav-label{font-size:0.73rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);margin-bottom:0.4rem;padding-left:0.2rem;}
 
-  /* VENUES */
   .venue-manage-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1rem 1.2rem;margin-bottom:0.7rem;position:relative;overflow:hidden;}
   .venue-manage-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);}
   .venue-manage-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:0.5rem;}
@@ -134,7 +127,6 @@
   .venue-stat-val{font-family:'Cormorant Garamond',serif;font-size:1.4rem;color:var(--gold);line-height:1;}
   .venue-stat-label{font-size:0.70rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--text3);margin-top:0.2rem;}
 
-  /* STATS */
   .stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:0.8rem;}
   .insight-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1rem;position:relative;overflow:hidden;}
   .insight-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);}
@@ -144,7 +136,6 @@
   .insight-name{color:var(--text2);}
   .insight-val{color:var(--gold);font-family:'Cormorant Garamond',serif;font-size:1.3rem;}
 
-  /* SHIFT HISTORY */
   .history-search{display:flex;gap:0.5rem;margin-bottom:1rem;flex-wrap:wrap;}
   .history-input{flex:1;min-width:140px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:0.6rem 0.9rem;font-size:1.01rem;font-family:'Josefin Sans',sans-serif;outline:none;transition:border-color 0.2s;letter-spacing:0.04em;}
   .history-input:focus{border-color:var(--gold);}
@@ -158,7 +149,6 @@
   .log-table tr:last-child td{border-bottom:none;}
   .log-table tr:hover td{background:var(--surface2);}
 
-  /* MODAL */
   .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:200;display:none;align-items:center;justify-content:center;padding:1rem;}
   .modal-bg.open{display:flex;}
   .modal{background:var(--surface);border:1px solid var(--border2);border-radius:14px;padding:1.6rem;width:100%;max-width:480px;position:relative;max-height:92vh;overflow-y:auto;}
@@ -171,7 +161,6 @@
   .form-input::placeholder,.form-textarea::placeholder{color:var(--text3);}
   .form-textarea{resize:vertical;min-height:90px;line-height:1.6;}
 
-  /* CLICKABLE CHIP GRID */
   .chip-grid{display:flex;flex-wrap:wrap;gap:0.4rem;}
   .chip{font-size:0.81rem;letter-spacing:0.1em;padding:0.35rem 0.85rem;border-radius:20px;cursor:pointer;transition:all 0.2s;border:1px solid var(--border);background:var(--surface2);color:var(--text3);font-family:'Josefin Sans',sans-serif;}
   .chip:hover{border-color:var(--border2);color:var(--text2);}
@@ -184,7 +173,6 @@
   .modal-cancel{background:none;border:1px solid var(--border);color:var(--text3);padding:0.65rem 1.1rem;border-radius:20px;font-size:0.81rem;letter-spacing:0.18em;text-transform:uppercase;cursor:pointer;font-family:'Josefin Sans',sans-serif;}
   .modal-cancel:hover{border-color:var(--rose2);color:var(--rose2);}
 
-  /* HUB OVERLAY */
   .hub-overlay{position:fixed;inset:0;background:#000;z-index:100;display:none;overflow-y:auto;}
   .hub-overlay.visible{display:block;}
   .hub-back{position:fixed;top:1rem;left:1rem;background:rgba(201,169,110,0.08);border:1px solid rgba(201,169,110,0.3);color:var(--gold);font-size:1.01rem;letter-spacing:0.18em;text-transform:uppercase;font-family:'Josefin Sans',sans-serif;padding:0.45rem 0.9rem;border-radius:20px;cursor:pointer;z-index:101;}
@@ -219,10 +207,6 @@
   .cal-month-block{margin-bottom:2.5rem;}
   .cal-month-heading{font-family:'Cormorant Garamond',serif;font-size:1.6rem;font-weight:300;color:var(--gold);letter-spacing:0.2em;margin-bottom:0.7rem;padding-bottom:0.5rem;border-bottom:1px solid var(--border);}
   .cal-month-heading.is-today-month{color:var(--gold);border-bottom-color:rgba(201,169,110,0.5);}
-  .cal-nav{display:flex;align-items:center;gap:0.8rem;}
-  .cal-nav-btn{background:none;border:1px solid var(--border2);color:var(--purple-btn);width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:0.85rem;display:flex;align-items:center;justify-content:center;transition:all 0.2s;font-family:'Josefin Sans',sans-serif;}
-  .cal-nav-btn:hover{border-color:var(--gold);color:var(--gold);}
-
   .cal-toolbar-right{display:flex;align-items:center;gap:0.6rem;}
   .cal-toggle{display:flex;align-items:center;gap:0.5rem;font-size:0.75rem;color:var(--text3);cursor:pointer;letter-spacing:0.08em;}
   .cal-toggle-switch{width:36px;height:20px;border-radius:10px;background:var(--surface2);border:1px solid var(--border);position:relative;cursor:pointer;transition:background 0.2s;flex-shrink:0;}
@@ -234,7 +218,7 @@
   .cal-grid-header{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:2px;}
   .cal-day-name{text-align:center;font-size:0.68rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--text3);padding:0.4rem 0;}
   .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;}
-  .cal-cell{background:var(--surface);border:1px solid var(--border);border-radius:6px;min-height:90px;padding:0.4rem;position:relative;transition:border-color 0.2s;vertical-align:top;}
+  .cal-cell{background:var(--surface);border:1px solid var(--border);border-radius:6px;min-height:90px;padding:0.4rem;position:relative;transition:border-color 0.2s;vertical-align:top;cursor:pointer;}
   .cal-cell:hover{border-color:var(--border2);}
   .cal-cell.today{border-color:rgba(201,169,110,0.5);background:rgba(201,169,110,0.04);}
   .cal-cell.other-month{opacity:0.35;}
@@ -243,16 +227,16 @@
   .cal-entries{display:flex;flex-direction:column;gap:2px;}
   .cal-event{background:rgba(201,169,110,0.18);border:1px solid rgba(201,169,110,0.4);border-radius:4px;padding:0.18rem 0.4rem;font-size:0.64rem;color:var(--gold);letter-spacing:0.03em;cursor:pointer;line-height:1.3;transition:background 0.15s;font-weight:400;}
   .cal-event:hover{background:rgba(201,169,110,0.3);}
-  .cal-task-social{background:rgba(122,90,170,0.15);border:1px solid rgba(122,90,170,0.35);border-radius:4px;padding:0.15rem 0.4rem;font-size:0.6rem;color:var(--purple-btn);letter-spacing:0.03em;cursor:pointer;line-height:1.3;transition:background 0.15s;}
+  .cal-task-social{background:rgba(122,90,170,0.15);border:1px solid rgba(122,90,170,0.35);border-radius:4px;padding:0.15rem 0.4rem;font-size:0.6rem;color:var(--purple-btn);letter-spacing:0.03em;cursor:pointer;line-height:1.3;}
   .cal-task-social:hover{background:rgba(122,90,170,0.25);}
-  .cal-task-marketing{background:rgba(58,160,138,0.12);border:1px solid rgba(58,160,138,0.3);border-radius:4px;padding:0.15rem 0.4rem;font-size:0.6rem;color:var(--teal2);letter-spacing:0.03em;cursor:pointer;line-height:1.3;transition:background 0.15s;}
+  .cal-task-marketing{background:rgba(58,160,138,0.12);border:1px solid rgba(58,160,138,0.3);border-radius:4px;padding:0.15rem 0.4rem;font-size:0.6rem;color:var(--teal2);letter-spacing:0.03em;cursor:pointer;line-height:1.3;}
   .cal-task-marketing:hover{background:rgba(58,160,138,0.22);}
-  .cal-more{font-size:0.58rem;color:var(--text3);padding:0.1rem 0.3rem;cursor:pointer;letter-spacing:0.05em;}
-  .cal-more:hover{color:var(--gold);}
   .cal-legend{display:flex;gap:1rem;flex-wrap:wrap;margin-top:1rem;}
+  .cal-legend-item{display:flex;align-items:center;gap:0.4rem;font-size:0.68rem;color:var(--text3);letter-spacing:0.05em;}
+  .cal-legend-dot{width:10px;height:10px;border-radius:2px;flex-shrink:0;}
   .cal-month-notes{margin-top:1rem;margin-bottom:2.5rem;}
   .cal-notes-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0.75rem;}
-  .cal-note-section{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;position:relative;}
+  .cal-note-section{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;}
   .cal-note-header{display:flex;align-items:center;justify-content:space-between;padding:0.6rem 0.8rem;border-bottom:1px solid var(--border);gap:0.4rem;}
   .cal-note-title-input{flex:1;background:none;border:none;color:var(--gold);font-size:0.72rem;letter-spacing:0.12em;text-transform:uppercase;font-family:'Josefin Sans',sans-serif;outline:none;padding:0;min-width:0;}
   .cal-note-title-input::placeholder{color:var(--text3);}
@@ -263,8 +247,6 @@
   .cal-note-area::placeholder{color:var(--text3);}
   .cal-notes-saved{font-size:0.56rem;color:var(--teal2);letter-spacing:0.08em;opacity:0;transition:opacity 0.3s;}
   .cal-notes-saved.show{opacity:1;}
-
-  /* NOTE EXPAND MODAL */
   .note-expand-modal{position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:300;display:none;align-items:center;justify-content:center;padding:1.5rem;}
   .note-expand-modal.open{display:flex;}
   .note-expand-inner{background:var(--surface);border:1px solid var(--border2);border-radius:14px;width:100%;max-width:560px;max-height:80vh;display:flex;flex-direction:column;position:relative;overflow:hidden;}
@@ -276,25 +258,17 @@
   .note-expand-body{padding:1.2rem;flex:1;overflow-y:auto;}
   .note-expand-area{width:100%;background:none;border:none;color:var(--text2);font-size:0.88rem;font-family:'Josefin Sans',sans-serif;letter-spacing:0.03em;outline:none;resize:none;line-height:1.8;min-height:300px;box-sizing:border-box;}
   .note-expand-area::placeholder{color:var(--text3);}
-
   @media(max-width:600px){.cal-notes-grid{grid-template-columns:1fr;}}
-  .cal-legend-item{display:flex;align-items:center;gap:0.4rem;font-size:0.68rem;color:var(--text3);letter-spacing:0.05em;}
-  .cal-legend-dot{width:10px;height:10px;border-radius:2px;flex-shrink:0;}
-
-  /* ENTRY MODAL */
   .entry-type-chips{display:flex;gap:0.4rem;flex-wrap:wrap;}
   .entry-chip{font-size:0.72rem;letter-spacing:0.08em;padding:0.35rem 0.85rem;border-radius:20px;cursor:pointer;border:1px solid var(--border);background:var(--surface2);color:var(--text3);font-family:'Josefin Sans',sans-serif;transition:all 0.2s;}
   .entry-chip.sel-event{border-color:var(--gold);color:var(--gold);background:rgba(201,169,110,0.1);}
   .entry-chip.sel-social{border-color:var(--purple2);color:var(--purple-btn);background:rgba(122,90,170,0.1);}
   .entry-chip.sel-marketing{border-color:var(--teal2);color:var(--teal2);background:rgba(58,160,138,0.1);}
-
-  /* ENTRY DETAIL MODAL */
   .entry-detail{padding:0.5rem 0;}
   .entry-detail-type{font-size:0.65rem;letter-spacing:0.2em;text-transform:uppercase;margin-bottom:0.5rem;}
   .entry-detail-title{font-family:'Cormorant Garamond',serif;font-size:1.5rem;color:var(--gold);margin-bottom:0.4rem;}
   .entry-detail-date{font-size:0.72rem;color:var(--text3);margin-bottom:0.8rem;}
   .entry-detail-notes{font-size:0.78rem;color:var(--text2);line-height:1.6;}
-
 </style>
 </head>
 <body>
@@ -329,12 +303,10 @@
     <button class="subtab" onclick="showSub('hosts','roster',this)">Host Roster</button>
     <button class="subtab" onclick="showSub('hosts','history',this)">Shift History</button>
   </div>
-
-  <!-- LIVE FEED -->
   <div class="subpanel active" id="sub-hosts-live">
     <div id="homeError" class="error-msg"></div>
     <button class="hub-trigger" onclick="openHub()">
-      <div><div class="hub-trigger-title">Host Hub</div><div class="hub-trigger-desc">Check-in, check-out & tools for hosts</div></div>
+      <div><div class="hub-trigger-title">Host Hub</div><div class="hub-trigger-desc">Check-in, check-out &amp; tools for hosts</div></div>
       <div style="color:var(--text3);font-size:1rem;">›</div>
     </button>
     <div class="stat-grid">
@@ -349,27 +321,18 @@
     </div>
     <div class="host-list" id="hostList"><div class="empty-state">Connecting to Google Sheets...</div></div>
   </div>
-
-  <!-- HOST ROSTER -->
   <div class="subpanel" id="sub-hosts-roster">
     <div class="section-header">
       <div class="section-title">Host Roster <span class="save-dot" id="rosterSave">Saved ✓</span></div>
       <button class="btn-sm btn-gold" onclick="openRosterModal()">+ Add Host</button>
     </div>
-    <!-- SEARCH & FILTERS -->
     <div class="roster-search">
       <input type="text" class="roster-search-input" id="rosterSearchName" placeholder="Search by name..." oninput="filterRoster()">
-      <select class="roster-filter-select" id="rosterFilterSkill" onchange="filterRoster()">
-        <option value="">All Skills</option>
-      </select>
-      <select class="roster-filter-select" id="rosterFilterVenue" onchange="filterRoster()">
-        <option value="">All Venues</option>
-      </select>
+      <select class="roster-filter-select" id="rosterFilterSkill" onchange="filterRoster()"><option value="">All Skills</option></select>
+      <select class="roster-filter-select" id="rosterFilterVenue" onchange="filterRoster()"><option value="">All Venues</option></select>
     </div>
     <div class="roster-grid" id="rosterList"></div>
   </div>
-
-  <!-- SHIFT HISTORY -->
   <div class="subpanel" id="sub-hosts-history">
     <div class="section-title" style="margin-bottom:1rem;">Shift History</div>
     <div class="history-search">
@@ -430,7 +393,7 @@
 <!-- STATS -->
 <div class="panel" id="panel-stats">
   <div class="section-header" style="margin-bottom:1.2rem;">
-    <div class="section-title">Insights & Stats</div>
+    <div class="section-title">Insights &amp; Stats</div>
     <button class="btn-sm" onclick="loadStats()">↻ Refresh</button>
   </div>
   <div class="stats-grid" id="statsGrid"><div class="empty-state" style="grid-column:1/-1">Loading stats...</div></div>
@@ -448,14 +411,13 @@
       <a href="checkin.html" class="hub-card" target="_blank"><div class="hub-card-inner"><div><div class="hub-card-title">Check-In</div><div class="hub-card-desc">Sign in at the start of your shift</div></div><span style="color:var(--text3)">›</span></div></a>
       <a href="checkout.html" class="hub-card" target="_blank"><div class="hub-card-inner"><div><div class="hub-card-title">Check-Out</div><div class="hub-card-desc">Complete your end of shift report</div></div><span style="color:var(--text3)">›</span></div></a>
     </div>
-    <div class="hub-section-label">Tools & Games</div>
+    <div class="hub-section-label">Tools &amp; Games</div>
     <div class="hub-links">
       <a href="https://belladonnanights.github.io/bingo/index.html" class="hub-card" target="_blank"><div class="hub-card-inner"><div><div class="hub-card-title">Music Bingo</div><div class="hub-card-desc">Launch the Belladonna Bingo experience</div></div><span style="color:var(--text3)">›</span></div></a>
     </div>
     <div class="hub-footer">Belladonna Audio Alchemies ✦ Host Hub</div>
   </div>
 </div>
-
 
 <!-- CALENDAR -->
 <div class="panel" id="panel-calendar">
@@ -488,7 +450,8 @@
     </div>
   </div>
 </div>
-<!-- ADD/EDIT ENTRY MODAL -->
+
+<!-- ENTRY MODAL -->
 <div class="modal-bg" id="entryModal">
   <div class="modal">
     <div class="modal-title" id="entryModalTitle">Add Entry</div>
@@ -516,8 +479,8 @@
     <div id="entryDetailContent"></div>
     <div class="modal-actions" style="margin-top:1rem;">
       <button class="modal-cancel" onclick="closeEntryDetail()">Close</button>
-      <button class="modal-save" id="entryDetailEdit" onclick="editEntryFromDetail()">Edit</button>
-      <button class="modal-cancel" id="entryDetailDelete" onclick="deleteEntryFromDetail()" style="border-color:var(--rose2);color:var(--rose2);">Delete</button>
+      <button class="modal-save" onclick="editEntryFromDetail()">Edit</button>
+      <button class="modal-cancel" onclick="deleteEntryFromDetail()" style="border-color:var(--rose2);color:var(--rose2);">Delete</button>
     </div>
   </div>
 </div>
@@ -540,14 +503,8 @@
   <div class="modal">
     <div class="modal-title" id="rosterModalTitle">Add Host</div>
     <div class="form-group"><label class="form-label">Host Name</label><input type="text" class="form-input" id="rmName" placeholder="Full name"></div>
-    <div class="form-group">
-      <label class="form-label">Skills / Training</label>
-      <div class="chip-grid" id="skillChips"></div>
-    </div>
-    <div class="form-group">
-      <label class="form-label">Trained Venues</label>
-      <div class="chip-grid" id="venueChips"></div>
-    </div>
+    <div class="form-group"><label class="form-label">Skills / Training</label><div class="chip-grid" id="skillChips"></div></div>
+    <div class="form-group"><label class="form-label">Trained Venues</label><div class="chip-grid" id="venueChips"></div></div>
     <div class="modal-actions">
       <button class="modal-cancel" onclick="closeRosterModal()">Cancel</button>
       <button class="modal-save" onclick="saveRoster()">Save Host</button>
@@ -560,10 +517,7 @@
   <div class="modal">
     <div class="modal-title" id="venueModalTitle">Add Venue</div>
     <div class="form-group"><label class="form-label">Venue Name</label><input type="text" class="form-input" id="vmName" placeholder="Venue name"></div>
-    <div class="form-group">
-      <label class="form-label">Type of Gig / What We Do There</label>
-      <div class="chip-grid" id="gigChips"></div>
-    </div>
+    <div class="form-group"><label class="form-label">Type of Gig / What We Do There</label><div class="chip-grid" id="gigChips"></div></div>
     <div class="form-group"><label class="form-label">Notes (optional)</label><textarea class="form-textarea" id="vmNotes" placeholder="Any notes about this venue..." style="min-height:60px;"></textarea></div>
     <div class="modal-actions">
       <button class="modal-cancel" onclick="closeVenueModal()">Cancel</button>
@@ -577,7 +531,17 @@
 <script>
 const SHEETS_KEY="AIzaSyACMjXQCXjVo75hbMXtag_JctR4SoX70So";
 const SHEET_ID="1-MkZoNKkPqjAoJggahKiUsDUgjUhMTkoQ8rUBG4W-w0";
-firebase.initializeApp({apiKey:"AIzaSyCIfAE1JGHsUGzzVH2pz1Vyj5b5OhA0tDQ",authDomain:"belladonna-hq.firebaseapp.com",projectId:"belladonna-hq",storageBucket:"belladonna-hq.firebasestorage.app",messagingSenderId:"1021873183587",appId:"1:1021873183587:web:def283bb7b5ca48e4f9156"});
+let db=null;
+try{
+  firebase.initializeApp({apiKey:"AIzaSyCIfAE1JGHsUGzzVH2pz1Vyj5b5OhA0tDQ",authDomain:"belladonna-hq.firebaseapp.com",projectId:"belladonna-hq",storageBucket:"belladonna-hq.firebasestorage.app",messagingSenderId:"1021873183587",appId:"1:1021873183587:web:def283bb7b5ca48e4f9156"});
+  db=firebase.firestore();
+}catch(e){console.warn('Firebase init failed:',e);}
+
+// localStorage helpers
+const LS={
+  get:(k)=>{try{return localStorage.getItem(k);}catch(e){return null;}},
+  set:(k,v)=>{try{localStorage.setItem(k,v);}catch(e){}}
+};
 
 const SKILLS=['Karaoke','Bingo','Trivia','Events','Private Events'];
 const DEFAULT_MINI=[
@@ -615,15 +579,17 @@ let miniGames=[...DEFAULT_MINI],specialtyEvents=[...DEFAULT_SPECIALTY],roster=[.
 let editGameTab=null,editGameId=null,editRosterId=null,editVenueId=null;
 let dragSrc=null,dragTabId=null,checkoutData=[];
 
-// ── STORAGE ──
-async function loadStorage(){
-  try{const m=await window.storage.get('games-mini');if(m)miniGames=JSON.parse(m.value);}catch(e){}
-  try{const s=await window.storage.get('games-specialty');if(s)specialtyEvents=JSON.parse(s.value);}catch(e){}
-  try{const r=await window.storage.get('host-roster');if(r)roster=JSON.parse(r.value);}catch(e){}
-  try{const v=await window.storage.get('venues-list');if(v)venues=JSON.parse(v.value);}catch(e){}
+// ── STORAGE ── uses localStorage, Firebase syncs in background
+function loadStorage(){
+  try{const m=LS.get('games-mini');if(m)miniGames=JSON.parse(m);}catch(e){}
+  try{const s=LS.get('games-specialty');if(s)specialtyEvents=JSON.parse(s);}catch(e){}
+  try{const r=LS.get('host-roster');if(r)roster=JSON.parse(r);}catch(e){}
+  try{const v=LS.get('venues-list');if(v)venues=JSON.parse(v);}catch(e){}
 }
-async function persist(key,val,dotId){
-  try{await window.storage.set(key,JSON.stringify(val));if(dotId){const d=document.getElementById(dotId);d.classList.add('show');setTimeout(()=>d.classList.remove('show'),2000);}}catch(e){}
+function persist(key,val,dotId){
+  LS.set(key,JSON.stringify(val));
+  if(db){try{db.collection('hq_data').doc(key).set({value:JSON.stringify(val)});}catch(e){}}
+  if(dotId){const d=document.getElementById(dotId);if(d){d.classList.add('show');setTimeout(()=>d.classList.remove('show'),2000);}}
 }
 
 // ── NAV ──
@@ -632,6 +598,7 @@ function showTab(id,el){
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   document.getElementById('panel-'+id).classList.add('active');el.classList.add('active');
   if(id==='stats')loadStats();
+  if(id==='calendar')renderCalendar();
 }
 function showSub(tab,id,el){
   document.querySelectorAll(`#panel-${tab} .subpanel`).forEach(p=>p.classList.remove('active'));
@@ -670,7 +637,6 @@ function renderHosts(hosts){
   list.innerHTML=on.map(h=>`<div class="host-row"><div class="host-info"><div class="host-avatar">${h.name.charAt(0).toUpperCase()}</div><div><div class="host-name-text">${h.name}</div><div class="host-time">${h.signIn?'Since '+h.signIn:'—'}</div></div></div><div class="status-pill">On Shift</div></div>`).join('');
 }
 
-// ── CHECKOUT DATA ──
 async function fetchCheckoutData(){
   try{
     const res=await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent('belladonna host check out')}?key=${SHEETS_KEY}`);
@@ -712,20 +678,11 @@ function openRosterModal(id=null){
   document.getElementById('rosterModalTitle').textContent=id?'Edit Host':'Add Host';
   document.getElementById('rmName').value=host?host.name:'';
   const vnames=getVenueNames();
-  document.getElementById('skillChips').innerHTML=SKILLS.map(s=>{
-    const sel=host&&(host.skills||[]).includes(s);
-    return`<div class="chip${sel?' selected-skill':''}" onclick="toggleChip(this,'skill')">${s}</div>`;
-  }).join('');
-  document.getElementById('venueChips').innerHTML=vnames.map(v=>{
-    const sel=host&&(host.venues||[]).includes(v);
-    return`<div class="chip${sel?' selected-venue':''}" onclick="toggleChip(this,'venue')">${v}</div>`;
-  }).join('');
+  document.getElementById('skillChips').innerHTML=SKILLS.map(s=>{const sel=host&&(host.skills||[]).includes(s);return`<div class="chip${sel?' selected-skill':''}" onclick="toggleChip(this,'skill')">${s}</div>`;}).join('');
+  document.getElementById('venueChips').innerHTML=vnames.map(v=>{const sel=host&&(host.venues||[]).includes(v);return`<div class="chip${sel?' selected-venue':''}" onclick="toggleChip(this,'venue')">${v}</div>`;}).join('');
   document.getElementById('rosterModal').classList.add('open');
 }
-function toggleChip(el,type){
-  const cls=type==='skill'?'selected-skill':'selected-venue';
-  el.classList.toggle(cls);
-}
+function toggleChip(el,type){el.classList.toggle(type==='skill'?'selected-skill':'selected-venue');}
 function closeRosterModal(){document.getElementById('rosterModal').classList.remove('open');editRosterId=null;}
 function saveRoster(){
   const name=document.getElementById('rmName').value.trim();if(!name)return;
@@ -738,10 +695,10 @@ function saveRoster(){
 }
 function deleteHost(id){if(!confirm('Remove this host?'))return;roster=roster.filter(h=>h.id!==id);persist('host-roster',roster,'rosterSave');renderRoster();}
 
-// ── VENUES MANAGEMENT ──
+// ── VENUES ──
 function renderVenueManage(){
   const el=document.getElementById('venueManageList');
-  if(!venues.length){el.innerHTML='<div class="empty-state">No venues yet. Add one above.</div>';return;}
+  if(!venues.length){el.innerHTML='<div class="empty-state">No venues yet.</div>';return;}
   el.innerHTML=venues.map(v=>`<div class="venue-manage-card"><div class="venue-manage-header"><div class="venue-manage-name">${v.name}</div><div style="display:flex;gap:0.4rem;"><button class="action-btn edit" onclick="openVenueModal('${v.id}')">✎</button><button class="action-btn delete" onclick="deleteVenue('${v.id}')">✕</button></div></div><div class="venue-gig-tags">${(v.gigs||[]).map(g=>`<span class="venue-gig-tag">${g}</span>`).join('')}</div>${v.notes?`<div style="font-size:0.81rem;color:var(--text3);margin-top:0.5rem;">${v.notes}</div>`:''}</div>`).join('');
 }
 function openVenueModal(id=null){
@@ -749,10 +706,7 @@ function openVenueModal(id=null){
   document.getElementById('venueModalTitle').textContent=id?'Edit Venue':'Add Venue';
   document.getElementById('vmName').value=venue?venue.name:'';
   document.getElementById('vmNotes').value=venue?venue.notes||'':'';
-  document.getElementById('gigChips').innerHTML=['Karaoke','Bingo','Trivia','Events','Private Events'].map(g=>{
-    const sel=venue&&(venue.gigs||[]).includes(g);
-    return`<div class="chip${sel?' selected-skill':''}" onclick="toggleChip(this,'skill')">${g}</div>`;
-  }).join('');
+  document.getElementById('gigChips').innerHTML=['Karaoke','Bingo','Trivia','Events','Private Events'].map(g=>{const sel=venue&&(venue.gigs||[]).includes(g);return`<div class="chip${sel?' selected-skill':''}" onclick="toggleChip(this,'skill')">${g}</div>`;}).join('');
   document.getElementById('venueModal').classList.add('open');
 }
 function closeVenueModal(){document.getElementById('venueModal').classList.remove('open');editVenueId=null;}
@@ -767,11 +721,10 @@ function saveVenue(){
 }
 function deleteVenue(id){if(!confirm('Remove this venue?'))return;venues=venues.filter(v=>v.id!==id);persist('venues-list',venues,'venuesSave');renderVenueManage();populateRosterFilters();}
 
-// ── VENUE PERFORMANCE ──
 async function loadVenueStats(){
   await fetchCheckoutData();
   const el=document.getElementById('venuesList');
-  if(!checkoutData.length){el.innerHTML='<div class="empty-state">No checkout data yet. Performance data will populate as hosts submit reports.</div>';return;}
+  if(!checkoutData.length){el.innerHTML='<div class="empty-state">No checkout data yet.</div>';return;}
   const vm={};
   checkoutData.forEach(r=>{
     const v=r.venue||'Unknown';
@@ -790,7 +743,6 @@ async function loadVenueStats(){
   }).join('');
 }
 
-// ── STATS ──
 async function loadStats(){
   await fetchCheckoutData();
   const grid=document.getElementById('statsGrid');
@@ -809,10 +761,9 @@ async function loadStats(){
     <div class="insight-card"><div class="insight-title">Most Active Hosts</div>${topH.map(([n,c])=>`<div class="insight-row"><span class="insight-name">${n}</span><span class="insight-val">${c}</span></div>`).join('')}</div>
     <div class="insight-card"><div class="insight-title">Top Venues</div>${topV.map(([n,c])=>`<div class="insight-row"><span class="insight-name">${n}</span><span class="insight-val">${c}</span></div>`).join('')}</div>
     <div class="insight-card"><div class="insight-title">Busiest Nights</div>${topD.length?topD.map(([d,c])=>`<div class="insight-row"><span class="insight-name">${d}</span><span class="insight-val">${c} shifts</span></div>`).join(''):'<div class="insight-row"><span class="insight-name">Not enough data</span></div>'}</div>
-    <div class="insight-card"><div class="insight-title">Pay & Tips</div><div class="insight-row"><span class="insight-name">Pay rate</span><span class="insight-val">${Math.round(paid/checkoutData.length*100)}%</span></div><div class="insight-row"><span class="insight-name">Total shifts</span><span class="insight-val">${checkoutData.length}</span></div><div class="insight-row"><span class="insight-name">Paid on time</span><span class="insight-val">${paid}</span></div></div>`;
+    <div class="insight-card"><div class="insight-title">Pay &amp; Tips</div><div class="insight-row"><span class="insight-name">Pay rate</span><span class="insight-val">${Math.round(paid/checkoutData.length*100)}%</span></div><div class="insight-row"><span class="insight-name">Total shifts</span><span class="insight-val">${checkoutData.length}</span></div><div class="insight-row"><span class="insight-name">Paid on time</span><span class="insight-val">${paid}</span></div></div>`;
 }
 
-// ── SHIFT HISTORY ──
 async function loadHistory(){
   const typed=document.getElementById('historySearch').value.trim().toLowerCase();
   const picked=document.getElementById('historyPick').value.toLowerCase();
@@ -843,13 +794,11 @@ function renderGameItems(tab,games){
     <div class="game-item" draggable="${!g.isLink}" data-id="${g.id}" data-tab="${tab}">
       <div class="game-header" onclick="toggleExpand('${g.id}')">
         <div class="drag-handle">⠿</div>
-        <div class="game-header-text">
-          <div class="game-name">${g.name}</div>
-        </div>
+        <div class="game-header-text"><div class="game-name">${g.name}</div></div>
         <div class="game-header-actions">
-          <button class="fav-btn${g.favs?' active':''}" onclick="event.stopPropagation();toggleFav('${tab}','${g.id}')" title="Pin">★</button>
-          ${!g.isLink?`<button class="action-btn edit" onclick="event.stopPropagation();openGameModal('${tab}','${g.id}')" title="Edit">✎</button>`:''}
-          <button class="action-btn delete" onclick="event.stopPropagation();deleteGame('${tab}','${g.id}')" title="Delete">✕</button>
+          <button class="fav-btn${g.favs?' active':''}" onclick="event.stopPropagation();toggleFav('${tab}','${g.id}')">★</button>
+          ${!g.isLink?`<button class="action-btn edit" onclick="event.stopPropagation();openGameModal('${tab}','${g.id}')">✎</button>`:''}
+          <button class="action-btn delete" onclick="event.stopPropagation();deleteGame('${tab}','${g.id}')">✕</button>
         </div>
       </div>
       <div class="game-expand" id="expand-${g.id}">
@@ -900,99 +849,76 @@ function deleteGame(tab,id){
   renderGameList(tab,tab==='mini'?miniGames:specialtyEvents);
 }
 
-
 // ── CALENDAR ──
-let calYear = new Date().getFullYear();
-let calMonth = new Date().getMonth();
-let calEntries = [];
-let showTasks = true;
-let currentEntryType = 'event';
-let editingEntryId = null;
-let detailEntryId = null;
+let calEntries=[];
+let showTasks=true;
+let currentEntryType='event';
+let editingEntryId=null;
+let detailEntryId=null;
+const MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
 
-const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-
-async function loadCalEntries(){
-  try{
-    const snap = await db.collection('cal_entries').orderBy('date').get();
-    calEntries = snap.docs.map(d=>({id:d.id,...d.data()}));
-  }catch(e){
-    // fallback to local
-    try{const c=await window.storage.get('cal-entries');if(c)calEntries=JSON.parse(c.value);}catch(e2){}
-  }
+function loadCalEntries(){
+  try{const c=LS.get('cal-entries');if(c)calEntries=JSON.parse(c);}catch(e){}
+  // load from Firebase in background
+  if(db){db.collection('cal_entries').get().then(snap=>{if(!snap.empty){calEntries=snap.docs.map(d=>({id:d.id,...d.data()}));renderCalendar();}}).catch(()=>{});}
 }
-async function saveCalEntries(){
-  // handled per-entry in saveEntry/deleteEntry
+function saveCalEntry(entry,isDelete=false){
+  LS.set('cal-entries',JSON.stringify(calEntries));
+  if(!db)return;
+  try{
+    if(isDelete){db.collection('cal_entries').doc(entry.id).delete();}
+    else{db.collection('cal_entries').doc(entry.id).set({title:entry.title,date:entry.date,type:entry.type,notes:entry.notes||''});}
+  }catch(e){}
 }
 
 // ── MONTH NOTES ──
-let monthNotes = {};
-let expandNoteKey = null;
+let monthNotes={};
+let expandNoteKey=null;
 
-async function loadMonthNotes(){
-  try{
-    const snap = await db.collection('cal_notes').doc('all_notes').get();
-    if(snap.exists) monthNotes = snap.data();
-  }catch(e){
-    try{const n=await window.storage.get('cal-month-notes-v2');if(n)monthNotes=JSON.parse(n.value);}catch(e2){}
-  }
+function loadMonthNotes(){
+  try{const n=LS.get('cal-month-notes-v2');if(n)monthNotes=JSON.parse(n);}catch(e){}
+  if(db){db.collection('cal_notes').doc('all_notes').get().then(snap=>{if(snap.exists){monthNotes={...monthNotes,...snap.data()};document.querySelectorAll('.cal-note-area').forEach(el=>{const parts=el.id.replace('note-','').split('-');if(parts.length===3)el.value=getMonthNote(parts[0],parts[1],parts[2]);autoGrow(el);});}}).catch(()=>{});}
 }
-async function persistNotes(){
-  try{
-    await db.collection('cal_notes').doc('all_notes').set(monthNotes, {merge:true});
-  }catch(e){
-    try{await window.storage.set('cal-month-notes-v2',JSON.stringify(monthNotes));}catch(e2){}
-  }
+function persistNotes(){
+  LS.set('cal-month-notes-v2',JSON.stringify(monthNotes));
+  if(db){try{db.collection('cal_notes').doc('all_notes').set(monthNotes,{merge:true});}catch(e){}}
 }
-async function saveMonthNote(yr,mo,si){
+function saveMonthNote(yr,mo,si){
   const key=yr+'-'+mo+'-'+si;
   const el=document.getElementById('note-'+yr+'-'+mo+'-'+si);
   if(!el)return;
   monthNotes[key]=el.value;
-  // sync expanded modal if open
-  if(expandNoteKey===key){
-    const exp=document.getElementById('noteExpandArea');
-    if(exp)exp.value=el.value;
-  }
-  await persistNotes();
+  if(expandNoteKey===key){const exp=document.getElementById('noteExpandArea');if(exp)exp.value=el.value;}
+  persistNotes();
   const saved=document.getElementById('noteSaved-'+yr+'-'+mo+'-'+si);
   if(saved){saved.classList.add('show');setTimeout(()=>saved.classList.remove('show'),1500);}
 }
-async function saveNoteTitle(yr,mo,si){
-  const key='title-'+yr+'-'+mo+'-'+si;
+function saveNoteTitle(yr,mo,si){
   const el=document.getElementById('notetitle-'+yr+'-'+mo+'-'+si);
   if(!el)return;
-  monthNotes[key]=el.value;
-  await persistNotes();
+  monthNotes['title-'+yr+'-'+mo+'-'+si]=el.value;
+  persistNotes();
 }
 function getMonthNote(yr,mo,si){return monthNotes[yr+'-'+mo+'-'+si]||'';}
 function getNoteTitle(yr,mo,si){return monthNotes['title-'+yr+'-'+mo+'-'+si]||'';}
-
-function autoGrow(el){
-  el.style.height='auto';
-  el.style.height=el.scrollHeight+'px';
-}
-
+function autoGrow(el){el.style.height='auto';el.style.height=el.scrollHeight+'px';}
 function expandNote(yr,mo,si){
   expandNoteKey=yr+'-'+mo+'-'+si;
   const title=monthNotes['title-'+yr+'-'+mo+'-'+si]||(MONTHS[mo]+' '+yr+' — Section '+(si+1));
-  const body=getMonthNote(yr,mo,si);
   document.getElementById('noteExpandTitle').textContent=title;
   const area=document.getElementById('noteExpandArea');
-  area.value=body;
+  area.value=getMonthNote(yr,mo,si);
   area.dataset.yr=yr;area.dataset.mo=mo;area.dataset.si=si;
   document.getElementById('noteExpandModal').classList.add('open');
   area.focus();
 }
-async function syncExpandedNote(){
+function syncExpandedNote(){
   const area=document.getElementById('noteExpandArea');
   const yr=area.dataset.yr,mo=area.dataset.mo,si=area.dataset.si;
-  const key=yr+'-'+mo+'-'+si;
-  monthNotes[key]=area.value;
-  // sync back to inline textarea
+  monthNotes[yr+'-'+mo+'-'+si]=area.value;
   const inline=document.getElementById('note-'+yr+'-'+mo+'-'+si);
   if(inline){inline.value=area.value;autoGrow(inline);}
-  await persistNotes();
+  persistNotes();
 }
 function closeNoteExpand(){
   syncExpandedNote();
@@ -1001,193 +927,145 @@ function closeNoteExpand(){
 }
 
 function renderCalendar(){
-  const scroll = document.getElementById('calScroll');
-  const today = new Date();
-  const startYear = today.getFullYear();
-  const startMonth = today.getMonth();
-  let html = '';
-
-  for(let m = 0; m < 12; m++){
-    let yr = startYear, mo = startMonth + m;
-    if(mo > 11){ mo -= 12; yr++; }
-    const isCurrentMonth = (mo === today.getMonth() && yr === today.getFullYear());
-    const firstDay = new Date(yr, mo, 1).getDay();
-    const daysInMonth = new Date(yr, mo+1, 0).getDate();
-    const daysInPrev = new Date(yr, mo, 0).getDate();
-    const totalCells = Math.ceil((firstDay + daysInMonth) / 7) * 7;
-
-    html += `<div class="cal-month-block">
+  const scroll=document.getElementById('calScroll');
+  if(!scroll)return;
+  const today=new Date();
+  const startYear=today.getFullYear();
+  const startMonth=today.getMonth();
+  let html='';
+  for(let m=0;m<12;m++){
+    let yr=startYear,mo=startMonth+m;
+    if(mo>11){mo-=12;yr++;}
+    const isCurrentMonth=(mo===today.getMonth()&&yr===today.getFullYear());
+    const firstDay=new Date(yr,mo,1).getDay();
+    const daysInMonth=new Date(yr,mo+1,0).getDate();
+    const daysInPrev=new Date(yr,mo,0).getDate();
+    const totalCells=Math.ceil((firstDay+daysInMonth)/7)*7;
+    html+=`<div class="cal-month-block">
       <div class="cal-month-heading${isCurrentMonth?' is-today-month':''}">${MONTHS[mo]} ${yr}</div>
       <div class="cal-grid-header">
         <div class="cal-day-name">Sun</div><div class="cal-day-name">Mon</div><div class="cal-day-name">Tue</div>
         <div class="cal-day-name">Wed</div><div class="cal-day-name">Thu</div><div class="cal-day-name">Fri</div><div class="cal-day-name">Sat</div>
       </div>
       <div class="cal-grid">`;
-
-    for(let i = 0; i < totalCells; i++){
-      let day, otherMonth = false, cellMo = mo, cellYr = yr;
-      if(i < firstDay){ day = daysInPrev - firstDay + i + 1; otherMonth = true; cellMo = mo-1; if(cellMo<0){cellMo=11;cellYr--;} }
-      else if(i >= firstDay + daysInMonth){ day = i - firstDay - daysInMonth + 1; otherMonth = true; cellMo = mo+1; if(cellMo>11){cellMo=0;cellYr++;} }
-      else{ day = i - firstDay + 1; }
-      const dateStr = cellYr+'-'+String(cellMo+1).padStart(2,'0')+'-'+String(day).padStart(2,'0');
-      const isToday = !otherMonth && day===today.getDate() && mo===today.getMonth() && yr===today.getFullYear();
-      const dayEntries = calEntries.filter(e=>e.date===dateStr);
-      const events = dayEntries.filter(e=>e.type==='event');
-      const tasks = dayEntries.filter(e=>e.type!=='event');
-      let entriesHtml = '';
-      events.forEach(e=>{ entriesHtml+=`<div class="cal-event" onclick="event.stopPropagation();openEntryDetail('${e.id}')">${e.title}</div>`; });
-      if(showTasks){ tasks.forEach(e=>{ const cls=e.type==='social'?'cal-task-social':'cal-task-marketing'; entriesHtml+=`<div class="${cls}" onclick="event.stopPropagation();openEntryDetail('${e.id}')">${e.title}</div>`; }); }
-      html += `<div class="cal-cell${otherMonth?' other-month':''}${isToday?' today':''}" onclick="openEntryModalOnDate('${dateStr}')"><div class="cal-date-num">${day}</div><div class="cal-entries">${entriesHtml}</div></div>`;
+    for(let i=0;i<totalCells;i++){
+      let day,otherMonth=false,cellMo=mo,cellYr=yr;
+      if(i<firstDay){day=daysInPrev-firstDay+i+1;otherMonth=true;cellMo=mo-1;if(cellMo<0){cellMo=11;cellYr--;}}
+      else if(i>=firstDay+daysInMonth){day=i-firstDay-daysInMonth+1;otherMonth=true;cellMo=mo+1;if(cellMo>11){cellMo=0;cellYr++;}}
+      else{day=i-firstDay+1;}
+      const dateStr=cellYr+'-'+String(cellMo+1).padStart(2,'0')+'-'+String(day).padStart(2,'0');
+      const isToday=!otherMonth&&day===today.getDate()&&mo===today.getMonth()&&yr===today.getFullYear();
+      const dayEntries=calEntries.filter(e=>e.date===dateStr);
+      const events=dayEntries.filter(e=>e.type==='event');
+      const tasks=dayEntries.filter(e=>e.type!=='event');
+      let entriesHtml='';
+      events.forEach(e=>{entriesHtml+=`<div class="cal-event" onclick="event.stopPropagation();openEntryDetail('${e.id}')">${e.title}</div>`;});
+      if(showTasks){tasks.forEach(e=>{const cls=e.type==='social'?'cal-task-social':'cal-task-marketing';entriesHtml+=`<div class="${cls}" onclick="event.stopPropagation();openEntryDetail('${e.id}')">${e.title}</div>`;});}
+      html+=`<div class="cal-cell${otherMonth?' other-month':''}${isToday?' today':''}" onclick="openEntryModalOnDate('${dateStr}')"><div class="cal-date-num">${day}</div><div class="cal-entries">${entriesHtml}</div></div>`;
     }
-    html += `</div>
+    html+=`</div>
       <div class="cal-month-notes">
         <div class="cal-notes-grid">
-          ${[0,1,2].map(si => `
+          ${[0,1,2].map(si=>`
             <div class="cal-note-section">
               <div class="cal-note-header">
-                <input type="text" class="cal-note-title-input" id="notetitle-${yr}-${mo}-${si}"
-                  value="${getNoteTitle(yr,mo,si)}"
-                  placeholder="Section title..."
-                  onblur="saveNoteTitle(${yr},${mo},${si})"
-                  onclick="event.stopPropagation()">
+                <input type="text" class="cal-note-title-input" id="notetitle-${yr}-${mo}-${si}" value="${getNoteTitle(yr,mo,si)}" placeholder="Section title..." onblur="saveNoteTitle(${yr},${mo},${si})" onclick="event.stopPropagation()">
                 <span class="cal-notes-saved" id="noteSaved-${yr}-${mo}-${si}">✓</span>
-                <button class="cal-note-expand-btn" onclick="expandNote(${yr},${mo},${si})" title="Expand">⤢</button>
+                <button class="cal-note-expand-btn" onclick="expandNote(${yr},${mo},${si})">⤢</button>
               </div>
               <div class="cal-note-body">
-                <textarea class="cal-note-area" id="note-${yr}-${mo}-${si}"
-                  placeholder="Notes..."
-                  oninput="autoGrow(this)"
-                  onblur="saveMonthNote(${yr},${mo},${si})">${getMonthNote(yr,mo,si)}</textarea>
+                <textarea class="cal-note-area" id="note-${yr}-${mo}-${si}" placeholder="Notes..." oninput="autoGrow(this)" onblur="saveMonthNote(${yr},${mo},${si})">${getMonthNote(yr,mo,si)}</textarea>
               </div>
             </div>`).join('')}
         </div>
       </div>
     </div>`;
   }
-  scroll.innerHTML = html;
-  // Auto-grow all textareas after render
+  scroll.innerHTML=html;
   setTimeout(()=>{document.querySelectorAll('.cal-note-area').forEach(el=>autoGrow(el));},50);
 }
 
-function calPrev(){ renderCalendar(); }
-function calNext(){ renderCalendar(); }
-
 function toggleTasks(){
-  showTasks = !showTasks;
-  const sw = document.getElementById('taskToggle');
-  const lbl = document.getElementById('taskToggleLabel');
-  sw.classList.toggle('on', showTasks);
-  lbl.textContent = showTasks ? 'Show Tasks' : 'Tasks Hidden';
+  showTasks=!showTasks;
+  const sw=document.getElementById('taskToggle');
+  sw.classList.toggle('on',showTasks);
+  document.getElementById('taskToggleLabel').textContent=showTasks?'Show Tasks':'Tasks Hidden';
   renderCalendar();
 }
-
-function selectEntryType(type, el){
-  currentEntryType = type;
-  document.querySelectorAll('.entry-chip').forEach(c => c.className = 'entry-chip');
-  el.classList.add('sel-' + type);
+function selectEntryType(type,el){
+  currentEntryType=type;
+  document.querySelectorAll('.entry-chip').forEach(c=>c.className='entry-chip');
+  el.classList.add('sel-'+type);
 }
-
 function openEntryModal(id=null){
-  editingEntryId = id;
-  const entry = id ? calEntries.find(e=>e.id===id) : null;
-  document.getElementById('entryModalTitle').textContent = id ? 'Edit Entry' : 'Add Entry';
-  document.getElementById('entryTitle').value = entry ? entry.title : '';
-  document.getElementById('entryDate').value = entry ? entry.date : '';
-  document.getElementById('entryNotes').value = entry ? entry.notes||'' : '';
-  currentEntryType = entry ? entry.type : 'event';
-  document.querySelectorAll('.entry-chip').forEach(c => {
-    c.className = 'entry-chip';
-    if(c.textContent.toLowerCase().includes(currentEntryType==='event'?'event':currentEntryType==='social'?'social':'marketing'))
-      c.classList.add('sel-'+currentEntryType);
-  });
-  // Set correct chip
-  const chips = document.querySelectorAll('.entry-chip');
+  editingEntryId=id;
+  const entry=id?calEntries.find(e=>e.id===id):null;
+  document.getElementById('entryModalTitle').textContent=id?'Edit Entry':'Add Entry';
+  document.getElementById('entryTitle').value=entry?entry.title:'';
+  document.getElementById('entryDate').value=entry?entry.date:'';
+  document.getElementById('entryNotes').value=entry?entry.notes||'':'';
+  currentEntryType=entry?entry.type:'event';
+  const chips=document.querySelectorAll('.entry-chip');
   chips.forEach(c=>c.className='entry-chip');
-  if(currentEntryType==='event') chips[0].classList.add('sel-event');
-  else if(currentEntryType==='social') chips[1].classList.add('sel-social');
+  if(currentEntryType==='event')chips[0].classList.add('sel-event');
+  else if(currentEntryType==='social')chips[1].classList.add('sel-social');
   else chips[2].classList.add('sel-marketing');
   document.getElementById('entryModal').classList.add('open');
   document.getElementById('entryTitle').focus();
 }
-
-function openEntryModalOnDate(date){
-  openEntryModal();
-  document.getElementById('entryDate').value = date;
-}
-
-function closeEntryModal(){ document.getElementById('entryModal').classList.remove('open'); editingEntryId=null; }
-
-async function saveEntry(){
-  const title = document.getElementById('entryTitle').value.trim();
-  const date = document.getElementById('entryDate').value;
-  const notes = document.getElementById('entryNotes').value.trim();
-  if(!title||!date) return;
-  const payload = {title, date, type:currentEntryType, notes};
-  try{
-    if(editingEntryId){
-      await db.collection('cal_entries').doc(editingEntryId).set(payload, {merge:true});
-      const e = calEntries.find(x=>x.id===editingEntryId);
-      if(e){Object.assign(e, payload);}
-    } else {
-      const ref = await db.collection('cal_entries').add(payload);
-      calEntries.push({id:ref.id, ...payload});
-    }
-  }catch(e){
-    // fallback local
-    if(editingEntryId){const en=calEntries.find(x=>x.id===editingEntryId);if(en)Object.assign(en,payload);}
-    else calEntries.push({id:Date.now().toString(),...payload});
+function openEntryModalOnDate(date){openEntryModal();document.getElementById('entryDate').value=date;}
+function closeEntryModal(){document.getElementById('entryModal').classList.remove('open');editingEntryId=null;}
+function saveEntry(){
+  const title=document.getElementById('entryTitle').value.trim();
+  const date=document.getElementById('entryDate').value;
+  const notes=document.getElementById('entryNotes').value.trim();
+  if(!title||!date)return;
+  const payload={title,date,type:currentEntryType,notes};
+  if(editingEntryId){
+    const e=calEntries.find(x=>x.id===editingEntryId);
+    if(e)Object.assign(e,payload);
+    saveCalEntry({id:editingEntryId,...payload});
+  }else{
+    const id=Date.now().toString();
+    const entry={id,...payload};
+    calEntries.push(entry);
+    saveCalEntry(entry);
   }
-  renderCalendar();
-  closeEntryModal();
+  renderCalendar();closeEntryModal();
 }
-
 function openEntryDetail(id){
-  detailEntryId = id;
-  const e = calEntries.find(x=>x.id===id);
-  if(!e) return;
-  const typeLabel = e.type==='event'?'Event / Gig':e.type==='social'?'Social Media Post':'Marketing / Promo';
-  const typeColor = e.type==='event'?'var(--gold)':e.type==='social'?'var(--purple-btn)':'var(--teal2)';
-  document.getElementById('entryDetailContent').innerHTML = `
-    <div class="entry-detail">
-      <div class="entry-detail-type" style="color:${typeColor}">${typeLabel}</div>
-      <div class="entry-detail-title">${e.title}</div>
-      <div class="entry-detail-date">${formatDate(e.date)}</div>
-      ${e.notes?`<div class="entry-detail-notes">${e.notes}</div>`:''}
-    </div>`;
+  detailEntryId=id;
+  const e=calEntries.find(x=>x.id===id);if(!e)return;
+  const typeLabel=e.type==='event'?'Event / Gig':e.type==='social'?'Social Media Post':'Marketing / Promo';
+  const typeColor=e.type==='event'?'var(--gold)':e.type==='social'?'var(--purple-btn)':'var(--teal2)';
+  document.getElementById('entryDetailContent').innerHTML=`<div class="entry-detail"><div class="entry-detail-type" style="color:${typeColor}">${typeLabel}</div><div class="entry-detail-title">${e.title}</div><div class="entry-detail-date">${formatDate(e.date)}</div>${e.notes?`<div class="entry-detail-notes">${e.notes}</div>`:''}</div>`;
   document.getElementById('entryDetailModal').classList.add('open');
 }
-
-function closeEntryDetail(){ document.getElementById('entryDetailModal').classList.remove('open'); detailEntryId=null; }
-
-function editEntryFromDetail(){
-  const id = detailEntryId;
-  closeEntryDetail();
-  openEntryModal(id);
+function closeEntryDetail(){document.getElementById('entryDetailModal').classList.remove('open');detailEntryId=null;}
+function editEntryFromDetail(){const id=detailEntryId;closeEntryDetail();openEntryModal(id);}
+function deleteEntryFromDetail(){
+  if(!confirm('Delete this entry?'))return;
+  const entry=calEntries.find(e=>e.id===detailEntryId);
+  calEntries=calEntries.filter(e=>e.id!==detailEntryId);
+  if(entry)saveCalEntry(entry,true);
+  LS.set('cal-entries',JSON.stringify(calEntries));
+  renderCalendar();closeEntryDetail();
 }
+function formatDate(str){const d=new Date(str+'T12:00:00');return d.toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});}
 
-async function deleteEntryFromDetail(){
-  if(!confirm('Delete this entry?')) return;
-  const id = detailEntryId;
-  try{ await db.collection('cal_entries').doc(id).delete(); }catch(e){}
-  calEntries = calEntries.filter(e=>e.id!==id);
+// ── INIT ── renders immediately, Firebase syncs in background
+function init(){
+  loadStorage();
+  loadCalEntries();
+  loadMonthNotes();
+  renderRoster();
+  renderGames();
+  renderVenueManage();
+  populateHistoryDropdown();
+  populateRosterFilters();
   renderCalendar();
-  closeEntryDetail();
-}
-
-function formatDate(str){
-  const d = new Date(str+'T12:00:00');
-  return d.toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
-}
-
-// ── INIT ──
-async function init(){
-  await loadStorage();
-  await loadCalEntries();
-  await loadMonthNotes();
-  renderCalendar();
-  fetchSheetData();setInterval(fetchSheetData,60000);
-  renderRoster();renderGames();renderVenueManage();
-  populateHistoryDropdown();populateRosterFilters();
+  fetchSheetData();
+  setInterval(fetchSheetData,60000);
 }
 init();
 </script>
