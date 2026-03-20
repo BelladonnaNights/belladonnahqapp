@@ -1721,6 +1721,21 @@ function renderTracker(){
         </div>`;
       }).join('')}
     </div>`;
+
+  const overallHtml = `<div class="tracker-overall">
+      <div class="tracker-overall-label">Overall Score</div>
+      <div class="tracker-big-pct" style="color:${overallColor}">${overall}%</div>
+      <div class="tracker-meter-wrap" style="max-width:300px;margin:0.75rem auto;">
+        <div class="tracker-meter-fill" style="width:${overall}%;background:${overallColor};"></div>
+      </div>
+      <div class="tracker-overall-msg">${msg}</div>
+      <div style="display:flex;gap:0.5rem;justify-content:center;margin-top:1rem;flex-wrap:wrap;">
+        <button class="tracker-retake-btn" onclick="trackerPhase=&apos;quiz&apos;;trackerCatIdx=0;renderTracker()">Edit / Retake Quiz</button>
+        <button class="tracker-retake-btn" onclick="trackerReset()">Reset All</button>
+      </div>
+    </div>`;
+
+  el.innerHTML = glanceHtml + resultsGridHtml + overallHtml;
 }
 
 // ── TRACKER DRAG ──
