@@ -318,6 +318,12 @@
   .tracker-todo-item:last-child{border-bottom:none;}
   .tracker-save-dot{font-size:0.6rem;color:var(--teal2);opacity:0;transition:opacity 0.3s;margin-left:0.4rem;}
   .tracker-save-dot.show{opacity:1;}
+  .tracker-cat-nav{display:flex;flex-wrap:wrap;gap:0.4rem;margin-bottom:1rem;}
+  .tracker-cat-nav-btn{background:none;border:2px solid transparent;border-radius:8px;width:36px;height:36px;font-size:1.1rem;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;justify-content:center;}
+  .tracker-cat-nav-btn:hover{background:var(--surface2);}
+  .tracker-cat-nav-btn.active{background:var(--surface2);}
+  .tracker-add-q-btn{background:none;border:1px dashed var(--border2);color:var(--text3);width:100%;padding:0.6rem;border-radius:8px;font-size:0.72rem;letter-spacing:0.15em;text-transform:uppercase;cursor:pointer;font-family:'Josefin Sans',sans-serif;margin-top:0.8rem;transition:all 0.2s;}
+  .tracker-add-q-btn:hover{border-color:var(--gold);color:var(--gold);}
 
 </style>
 </head>
@@ -1113,7 +1119,7 @@ function formatDate(str){const d=new Date(str+'T12:00:00');return d.toLocaleDate
 
 
 // ── GROWTH TRACKER ──
-const TRACKER_CATEGORIES=[
+const DEFAULT_TRACKER_CATEGORIES=[
   {id:"operations",name:"Operations & Event Execution",icon:"🎤",color:"#c9a96e",items:[
     {id:"pa",label:"PA system / audio gear owned or reliably rented"},
     {id:"mics",label:"Microphones (at least 2 working mics for karaoke)"},
@@ -1216,31 +1222,63 @@ const TRACKER_CATEGORIES=[
   ]},
 ];
 
-let trackerPhase='intro';
-let trackerCatIdx=0;
-let trackerAnswers={};
-let trackerExpandedCat=null;
+let TRACKER_CATEGORIES = DEFAULT_TRACKER_CATEGORIES.map(c=>({...c,items:[...c.items]}));
+let trackerPhase = 'results'; // start on results - show intro only if never taken
+let trackerCatIdx = 0;
+let trackerAnswers = {};
+let trackerCatOrder = null; // custom drag order (array of ids)
+let trackerExpandedCat = null;
+let trackerEditingQ = null; // {catId, itemId} or null
+let trackerDragSrc = null;
 
 function loadTrackerAnswers(){
   try{const t=LS.get('tracker-answers');if(t)trackerAnswers=JSON.parse(t);}catch(e){}
-  if(db){db.collection('tracker_answers').doc('answers').get().then(snap=>{if(snap.exists){trackerAnswers={...trackerAnswers,...snap.data()};renderTracker();}}).catch(()=>{});}
+  try{const c=LS.get('tracker-categories');if(c)TRACKER_CATEGORIES=JSON.parse(c);}catch(e){}
+  try{const o=LS.get('tracker-order');if(o)trackerCatOrder=JSON.parse(o);}catch(e){}
+  // if never taken, show intro
+  if(Object.keys(trackerAnswers).length===0) trackerPhase='intro';
+  // sync from Firebase in background
+  if(db){
+    db.collection('tracker_data').doc('state').get().then(snap=>{
+      if(snap.exists){
+        const d=snap.data();
+        if(d.answers) trackerAnswers=d.answers;
+        if(d.categories) TRACKER_CATEGORIES=d.categories;
+        if(d.order) trackerCatOrder=d.order;
+        if(Object.keys(trackerAnswers).length===0) trackerPhase='intro';
+        renderTracker();
+      }
+    }).catch(()=>{});
+  }
 }
-function saveTrackerAnswers(){
+
+function saveTrackerState(){
   LS.set('tracker-answers',JSON.stringify(trackerAnswers));
-  if(db){try{db.collection('tracker_answers').doc('answers').set(trackerAnswers,{merge:true});}catch(e){}}
+  LS.set('tracker-categories',JSON.stringify(TRACKER_CATEGORIES));
+  if(trackerCatOrder) LS.set('tracker-order',JSON.stringify(trackerCatOrder));
+  if(db){try{db.collection('tracker_data').doc('state').set({answers:trackerAnswers,categories:TRACKER_CATEGORIES,order:trackerCatOrder||null},{merge:true});}catch(e){}}
   const dot=document.getElementById('trackerSaveDot');
   if(dot){dot.classList.add('show');setTimeout(()=>dot.classList.remove('show'),1500);}
 }
+
 function setTrackerAnswer(catId,itemId,val){
   trackerAnswers[catId+'_'+itemId]=val;
-  saveTrackerAnswers();
+  saveTrackerState();
   renderTracker();
 }
+
 function getTrackerAnswer(catId,itemId){return trackerAnswers[catId+'_'+itemId]||null;}
+
+function getOrderedCategories(){
+  if(!trackerCatOrder) return TRACKER_CATEGORIES;
+  return [...trackerCatOrder.map(id=>TRACKER_CATEGORIES.find(c=>c.id===id)).filter(Boolean),
+    ...TRACKER_CATEGORIES.filter(c=>!trackerCatOrder.includes(c.id))];
+}
+
 function trackerCalcPct(cat){
   let score=0;
   cat.items.forEach(item=>{const a=trackerAnswers[cat.id+'_'+item.id];if(a==='yes')score+=1;else if(a==='partial')score+=0.5;});
-  return Math.round((score/cat.items.length)*100);
+  return cat.items.length?Math.round((score/cat.items.length)*100):0;
 }
 function trackerOverallPct(){
   let total=0;
@@ -1252,12 +1290,44 @@ function trackerScoreColor(pct){
   if(pct>=50)return'var(--gold)';
   return'var(--rose2)';
 }
-
 function trackerAdvance(){
-  const isLast = trackerCatIdx === TRACKER_CATEGORIES.length - 1;
-  if(isLast){ trackerPhase='results'; } else { trackerCatIdx++; }
+  const isLast=trackerCatIdx===TRACKER_CATEGORIES.length-1;
+  if(isLast){trackerPhase='results';}else{trackerCatIdx++;}
   renderTracker();
 }
+
+// ── QUESTION EDITING ──
+function trackerAddQuestion(catId){
+  const label=prompt('Enter new question:');
+  if(!label||!label.trim())return;
+  const cat=TRACKER_CATEGORIES.find(c=>c.id===catId);
+  if(!cat)return;
+  cat.items.push({id:'q'+Date.now(),label:label.trim()});
+  saveTrackerState();
+  renderTracker();
+}
+function trackerEditQuestion(catId,itemId){
+  const cat=TRACKER_CATEGORIES.find(c=>c.id===catId);
+  if(!cat)return;
+  const item=cat.items.find(i=>i.id===itemId);
+  if(!item)return;
+  const label=prompt('Edit question:',item.label);
+  if(label===null)return;
+  if(!label.trim()){trackerDeleteQuestion(catId,itemId);return;}
+  item.label=label.trim();
+  saveTrackerState();
+  renderTracker();
+}
+function trackerDeleteQuestion(catId,itemId){
+  if(!confirm('Delete this question?'))return;
+  const cat=TRACKER_CATEGORIES.find(c=>c.id===catId);
+  if(!cat)return;
+  cat.items=cat.items.filter(i=>i.id!==itemId);
+  delete trackerAnswers[catId+'_'+itemId];
+  saveTrackerState();
+  renderTracker();
+}
+
 function renderTracker(){
   const el=document.getElementById('trackerView');
   if(!el)return;
@@ -1266,7 +1336,7 @@ function renderTracker(){
     el.innerHTML=`<div class="tracker-intro">
       <div class="tracker-intro-icon">🎤</div>
       <div class="tracker-intro-title">How Built-Out Is Your Business?</div>
-      <div class="tracker-intro-body">We'll go through 10 categories — Operations, Venues, Talent, Marketing, and more — to calculate your real completion percentage. See exactly what's done, what's in progress, and what still needs attention.</div>
+      <div class="tracker-intro-body">Go through 10 categories to calculate your real completion percentage. See exactly what is done, what is in progress, and what still needs attention.</div>
       <button class="tracker-start-btn" onclick="trackerPhase='quiz';trackerCatIdx=0;renderTracker()">Let's Go →</button>
     </div>`;
     return;
@@ -1277,41 +1347,57 @@ function renderTracker(){
     const pct=trackerCalcPct(cat);
     const allDone=cat.items.every(item=>trackerAnswers[cat.id+'_'+item.id]);
     const isLast=trackerCatIdx===TRACKER_CATEGORIES.length-1;
-    el.innerHTML=`<div class="tracker-quiz-card">
-      <div class="tracker-cat-header">
-        <span class="tracker-cat-icon">${cat.icon}</span>
-        <span class="tracker-cat-name" style="color:${cat.color}">${cat.name}</span>
-        <span class="tracker-save-dot" id="trackerSaveDot">✓</span>
-      </div>
-      <div class="tracker-cat-sub">Answer honestly — partial credit counts!</div>
-      <div class="tracker-meter-label"><span>Completion</span><span style="color:${cat.color};font-weight:400">${pct}%</span></div>
-      <div class="tracker-meter-wrap"><div class="tracker-meter-fill" style="width:${pct}%;background:${cat.color};"></div></div>
-      ${cat.items.map((item,i)=>{
-        const ans=getTrackerAnswer(cat.id,item.id);
-        return`<div class="tracker-q-row">
-          <div class="tracker-q-label">${i+1}. ${item.label}</div>
-          <div class="tracker-btn-group">
-            <button class="tracker-ans-btn" onclick="setTrackerAnswer('${cat.id}','${item.id}','yes')" style="${ans==='yes'?'border-color:'+cat.color+';color:'+cat.color+';background:'+cat.color+'22;':''}">Yes ✅</button>
-            <button class="tracker-ans-btn" onclick="setTrackerAnswer('${cat.id}','${item.id}','partial')" style="${ans==='partial'?'border-color:'+cat.color+';color:'+cat.color+';background:'+cat.color+'22;':''}">In Progress 🔄</button>
-            <button class="tracker-ans-btn" onclick="setTrackerAnswer('${cat.id}','${item.id}','no')" style="${ans==='no'?'border-color:var(--rose2);color:var(--rose2);background:rgba(176,80,112,0.15);':''}">Not Yet ❌</button>
-          </div>
-        </div>`;
-      }).join('')}
-      <div class="tracker-nav">
-        <button class="tracker-nav-prev" onclick="trackerCatIdx--;renderTracker()" ${trackerCatIdx===0?'disabled':''}>← Back</button>
-        <span class="tracker-nav-count">${trackerCatIdx+1} / ${TRACKER_CATEGORIES.length}</span>
-        <button class="tracker-nav-next" onclick="${isLast?"trackerPhase='results';renderTracker()":"trackerCatIdx++;renderTracker()"}" ${!allDone?'disabled':''}>
-          ${isLast?'See Results ✦':'Next →'}
-        </button>
-      </div>
-    </div>`;
+
+    // category nav bar
+    const catNav=TRACKER_CATEGORIES.map((c,i)=>`<button class="tracker-cat-nav-btn${i===trackerCatIdx?' active':''}" onclick="trackerCatIdx=${i};renderTracker()" style="border-color:${i===trackerCatIdx?c.color:'transparent'};color:${i===trackerCatIdx?c.color:'var(--text3)'};">${c.icon}</button>`).join('');
+
+    el.innerHTML=`
+      <div class="tracker-cat-nav">${catNav}</div>
+      <div class="tracker-quiz-card">
+        <div class="tracker-cat-header">
+          <span class="tracker-cat-icon">${cat.icon}</span>
+          <span class="tracker-cat-name" style="color:${cat.color}">${cat.name}</span>
+          <span class="tracker-save-dot" id="trackerSaveDot">✓</span>
+        </div>
+        <div class="tracker-cat-sub">Answer honestly — partial credit counts!</div>
+        <div class="tracker-meter-label"><span>Completion</span><span style="color:${cat.color};font-weight:400">${pct}%</span></div>
+        <div class="tracker-meter-wrap"><div class="tracker-meter-fill" style="width:${pct}%;background:${cat.color};"></div></div>
+        ${cat.items.map((item,i)=>{
+          const ans=getTrackerAnswer(cat.id,item.id);
+          return`<div class="tracker-q-row">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:0.5rem;margin-bottom:0.5rem;">
+              <div class="tracker-q-label" style="margin-bottom:0">${i+1}. ${item.label}</div>
+              <div style="display:flex;gap:0.25rem;flex-shrink:0;">
+                <button class="action-btn edit" onclick="trackerEditQuestion('${cat.id}','${item.id}')" title="Edit">✎</button>
+                <button class="action-btn delete" onclick="trackerDeleteQuestion('${cat.id}','${item.id}')" title="Delete">✕</button>
+              </div>
+            </div>
+            <div class="tracker-btn-group">
+              <button class="tracker-ans-btn" onclick="setTrackerAnswer('${cat.id}','${item.id}','yes')" style="${ans==='yes'?'border-color:'+cat.color+';color:'+cat.color+';background:'+cat.color+'22;':''}">Yes ✅</button>
+              <button class="tracker-ans-btn" onclick="setTrackerAnswer('${cat.id}','${item.id}','partial')" style="${ans==='partial'?'border-color:'+cat.color+';color:'+cat.color+';background:'+cat.color+'22;':''}">In Progress 🔄</button>
+              <button class="tracker-ans-btn" onclick="setTrackerAnswer('${cat.id}','${item.id}','no')" style="${ans==='no'?'border-color:var(--rose2);color:var(--rose2);background:rgba(176,80,112,0.15);':''}">Not Yet ❌</button>
+            </div>
+          </div>`;
+        }).join('')}
+        <button class="tracker-add-q-btn" onclick="trackerAddQuestion('${cat.id}')">+ Add Question</button>
+        <div class="tracker-nav">
+          <button class="tracker-nav-prev" onclick="trackerCatIdx--;renderTracker()" ${trackerCatIdx===0?'disabled':''}>← Back</button>
+          <span class="tracker-nav-count">${trackerCatIdx+1} / ${TRACKER_CATEGORIES.length}</span>
+          <button class="tracker-nav-next" onclick="trackerAdvance()" ${!allDone?'disabled':''}>
+            ${isLast?'See Results ✦':'Next →'}
+          </button>
+        </div>
+      </div>`;
     return;
   }
 
   // RESULTS
   const overall=trackerOverallPct();
   const overallColor=trackerScoreColor(overall);
-  const msg=overall>=80?'Your foundation is strong. Time to scale.':overall>=50?'Solid progress — fill in the gaps and you will be firing on all cylinders.':'Lots of opportunity to build. Each item you check off makes Belladonna more resilient.';
+  const msgs=['Your foundation is strong. Time to scale.','Solid progress — fill in the gaps and you will be firing on all cylinders.','Lots of opportunity to build. Each item you check off makes Belladonna more resilient.'];
+  const msg=overall>=80?msgs[0]:overall>=50?msgs[1]:msgs[2];
+  const ordered=getOrderedCategories();
+
   el.innerHTML=`
     <div class="tracker-overall">
       <div class="tracker-overall-label">Overall Score</div>
@@ -1320,14 +1406,23 @@ function renderTracker(){
         <div class="tracker-meter-fill" style="width:${overall}%;background:${overallColor};"></div>
       </div>
       <div class="tracker-overall-msg">${msg}</div>
-      <button class="tracker-retake-btn" onclick="trackerPhase='quiz';trackerCatIdx=0;renderTracker()">Retake Quiz</button>
+      <div style="display:flex;gap:0.5rem;justify-content:center;margin-top:1rem;flex-wrap:wrap;">
+        <button class="tracker-retake-btn" onclick="trackerPhase='quiz';trackerCatIdx=0;renderTracker()">Edit / Retake Quiz</button>
+        <button class="tracker-retake-btn" onclick="trackerReset()">Reset All</button>
+      </div>
     </div>
-    <div class="tracker-results-grid">
-      ${TRACKER_CATEGORIES.map(cat=>{
+    <div style="font-size:0.65rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--text3);margin-bottom:0.6rem;">Drag cards to reorder</div>
+    <div class="tracker-results-grid" id="trackerResultsGrid">
+      ${ordered.map(cat=>{
         const pct=trackerCalcPct(cat);
         const isOpen=trackerExpandedCat===cat.id;
         const notDone=cat.items.filter(item=>{const a=trackerAnswers[cat.id+'_'+item.id];return a==='no'||a==='partial';});
-        return`<div class="tracker-result-card" style="border-color:${cat.color}33" onclick="trackerExpandedCat=trackerExpandedCat==='${cat.id}'?null:'${cat.id}';renderTracker()">
+        return`<div class="tracker-result-card" draggable="true" data-catid="${cat.id}" style="border-color:${cat.color}44"
+          ondragstart="trackerDragStart(event,this)"
+          ondragover="trackerDragOver(event,this)"
+          ondrop="trackerDrop(event,this)"
+          ondragend="trackerDragEnd()"
+          onclick="trackerExpandedCat=trackerExpandedCat==='${cat.id}'?null:'${cat.id}';renderTracker()">
           <div class="tracker-result-card-header">
             <div class="tracker-result-cat-name">${cat.icon} ${cat.name}</div>
             <div class="tracker-result-pct" style="color:${cat.color}">${pct}%</div>
@@ -1338,6 +1433,42 @@ function renderTracker(){
         </div>`;
       }).join('')}
     </div>`;
+}
+
+// ── TRACKER DRAG ──
+function trackerDragStart(e,el){
+  trackerDragSrc=el.dataset.catid;
+  el.style.opacity='0.4';
+  e.dataTransfer.effectAllowed='move';
+}
+function trackerDragOver(e,el){
+  e.preventDefault();
+  el.style.outline='2px solid var(--gold)';
+}
+function trackerDrop(e,el){
+  e.preventDefault();
+  const targetId=el.dataset.catid;
+  if(trackerDragSrc===targetId)return;
+  const ordered=getOrderedCategories();
+  const ids=ordered.map(c=>c.id);
+  const fi=ids.indexOf(trackerDragSrc);
+  const ti=ids.indexOf(targetId);
+  if(fi>-1&&ti>-1){const[m]=ids.splice(fi,1);ids.splice(ti,0,m);}
+  trackerCatOrder=ids;
+  saveTrackerState();
+  renderTracker();
+}
+function trackerDragEnd(){
+  document.querySelectorAll('.tracker-result-card').forEach(el=>{el.style.opacity='1';el.style.outline='none';});
+}
+function trackerReset(){
+  if(!confirm('Reset all answers? This cannot be undone.'))return;
+  trackerAnswers={};
+  trackerCatOrder=null;
+  TRACKER_CATEGORIES=DEFAULT_TRACKER_CATEGORIES.map(c=>({...c,items:[...c.items]}));
+  trackerPhase='intro';
+  saveTrackerState();
+  renderTracker();
 }
 
 
