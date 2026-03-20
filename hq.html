@@ -1538,16 +1538,25 @@ function formatDate(str){
 }
 
 // ── INIT ──
-async function init(){
-  await loadStorage();
-  renderRoster();renderGames();renderVenueManage();
-  populateHistoryDropdown();populateRosterFilters();
-  renderTracker();renderCalendar();
-  fetchSheetData();setInterval(fetchSheetData,60000);
-  // Load Firebase data and re-render
-  await Promise.all([loadTrackerAnswers(),loadCalEntries(),loadMonthNotes()]);
-  renderTracker();renderCalendar();
-  setupCalListener();setupNotesListener();
+function init(){
+  // Load local data and render immediately - NEVER await Firebase
+  loadStorage().then(()=>{
+    renderRoster();renderGames();renderVenueManage();
+    populateHistoryDropdown();populateRosterFilters();
+    renderTracker();renderCalendar();
+  });
+  fetchSheetData();
+  setInterval(fetchSheetData,60000);
+  // Firebase loads silently in background with hard timeout
+  setTimeout(()=>{
+    Promise.race([
+      Promise.all([loadTrackerAnswers(),loadCalEntries(),loadMonthNotes()]),
+      new Promise((_,reject)=>setTimeout(()=>reject('timeout'),5000))
+    ]).then(()=>{
+      renderTracker();renderCalendar();
+      setupCalListener();setupNotesListener();
+    }).catch(()=>console.log('Firebase not ready, running on local storage'));
+  },100);
 }
 init();
 </script>
