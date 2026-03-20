@@ -96,6 +96,14 @@
   .game-item{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;transition:all 0.2s;display:flex;flex-direction:column;}
   .game-item.drag-over{border-color:var(--gold);transform:scale(1.02);}
   .game-item:hover{border-color:var(--border2);}
+  .game-item.glow-gold{border-color:rgba(201,169,110,0.5);box-shadow:0 0 12px rgba(201,169,110,0.15);}
+  .game-item.glow-gold:hover{border-color:rgba(201,169,110,0.8);box-shadow:0 0 18px rgba(201,169,110,0.25);}
+  .game-item.glow-rose{border-color:rgba(176,80,112,0.5);box-shadow:0 0 12px rgba(176,80,112,0.15);}
+  .game-item.glow-rose:hover{border-color:rgba(176,80,112,0.8);box-shadow:0 0 18px rgba(176,80,112,0.25);}
+  .game-item.glow-teal{border-color:rgba(58,160,138,0.5);box-shadow:0 0 12px rgba(58,160,138,0.15);}
+  .game-item.glow-teal:hover{border-color:rgba(58,160,138,0.8);box-shadow:0 0 18px rgba(58,160,138,0.25);}
+  .game-item.glow-purple{border-color:rgba(122,90,170,0.5);box-shadow:0 0 12px rgba(122,90,170,0.15);}
+  .game-item.glow-purple:hover{border-color:rgba(122,90,170,0.8);box-shadow:0 0 18px rgba(122,90,170,0.25);}
   .game-header{display:flex;flex-direction:column;padding:1rem;cursor:pointer;flex:1;}
   .drag-handle{color:var(--text3);font-size:0.91rem;cursor:grab;letter-spacing:-1px;line-height:1;margin-bottom:0.5rem;opacity:0.5;}
   .game-header-text{flex:1;}
@@ -119,6 +127,11 @@
   .venue-manage-name{font-family:'Cormorant Garamond',serif;font-size:1.4rem;color:var(--gold);letter-spacing:0.08em;}
   .venue-gig-tags{display:flex;flex-wrap:wrap;gap:0.35rem;}
   .venue-gig-tag{font-size:0.73rem;letter-spacing:0.1em;text-transform:uppercase;padding:0.2rem 0.6rem;border-radius:20px;background:rgba(58,160,138,0.1);color:var(--teal2);border:1px solid rgba(58,160,138,0.25);}
+  .gig-karaoke{background:rgba(201,169,110,0.12);color:var(--gold);border-color:rgba(201,169,110,0.35);}
+  .gig-bingo{background:rgba(58,160,138,0.12);color:var(--teal2);border-color:rgba(58,160,138,0.3);}
+  .gig-trivia{background:rgba(122,90,170,0.12);color:var(--purple-btn);border-color:rgba(122,90,170,0.3);}
+  .gig-events{background:rgba(176,80,112,0.12);color:var(--rose2);border-color:rgba(176,80,112,0.3);}
+  .gig-private{background:rgba(180,100,220,0.12);color:#c090ee;border-color:rgba(180,100,220,0.3);}
   .venue-perf-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1.1rem 1.2rem;margin-bottom:0.7rem;position:relative;overflow:hidden;}
   .venue-perf-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);}
   .venue-perf-name{font-family:'Cormorant Garamond',serif;font-size:1.1rem;color:var(--gold);margin-bottom:0.6rem;letter-spacing:0.08em;}
@@ -1030,7 +1043,8 @@ function deleteHost(id){if(!confirm('Remove this host?'))return;roster=roster.fi
 function renderVenueManage(){
   const el=document.getElementById('venueManageList');
   if(!venues.length){el.innerHTML='<div class="empty-state">No venues yet.</div>';return;}
-  el.innerHTML=venues.map(v=>`<div class="venue-manage-card"><div class="venue-manage-header"><div class="venue-manage-name">${v.name}</div><div style="display:flex;gap:0.4rem;"><button class="action-btn edit" onclick="openVenueModal('${v.id}')">✎</button><button class="action-btn delete" onclick="deleteVenue('${v.id}')">✕</button></div></div><div class="venue-gig-tags">${(v.gigs||[]).map(g=>`<span class="venue-gig-tag">${g}</span>`).join('')}</div>${v.notes?`<div style="font-size:0.81rem;color:var(--text3);margin-top:0.5rem;">${v.notes}</div>`:''}</div>`).join('');
+  function gigClass(g){const m={'Karaoke':'gig-karaoke','Bingo':'gig-bingo','Trivia':'gig-trivia','Events':'gig-events','Private Events':'gig-private'};return m[g]||'';}
+  el.innerHTML=venues.map(v=>`<div class="venue-manage-card"><div class="venue-manage-header"><div class="venue-manage-name">${v.name}</div><div style="display:flex;gap:0.4rem;"><button class="action-btn edit" onclick="openVenueModal('${v.id}')">✎</button><button class="action-btn delete" onclick="deleteVenue('${v.id}')">✕</button></div></div><div class="venue-gig-tags">${(v.gigs||[]).map(g=>`<span class="venue-gig-tag ${gigClass(g)}">${g}</span>`).join('')}</div>${v.notes?`<div style="font-size:0.81rem;color:var(--text3);margin-top:0.5rem;">${v.notes}</div>`:''}</div>`).join('');
 }
 function openVenueModal(id=null){
   editVenueId=id;const venue=id?venues.find(v=>v.id===id):null;
@@ -1121,8 +1135,9 @@ function renderGameList(tab,games){
   attachDrag(tab);
 }
 function renderGameItems(tab,games){
-  return games.map(g=>`
-    <div class="game-item" draggable="${!g.isLink}" data-id="${g.id}" data-tab="${tab}">
+  const glowClasses=['glow-gold','glow-rose','glow-teal','glow-purple'];
+  return games.map((g,i)=>`
+    <div class="game-item ${glowClasses[i % 4]}" draggable="${!g.isLink}" data-id="${g.id}" data-tab="${tab}">
       <div class="game-header" onclick="toggleExpand('${g.id}')">
         <div class="drag-handle">⠿</div>
         <div class="game-header-text"><div class="game-name">${g.name}</div></div>
@@ -1502,20 +1517,20 @@ function loadTrackerAnswers(){
   try{const t=LS.get('tracker-answers');if(t)trackerAnswers=JSON.parse(t);}catch(e){}
   try{const c=LS.get('tracker-categories');if(c)TRACKER_CATEGORIES=JSON.parse(c);}catch(e){}
   try{const o=LS.get('tracker-order');if(o)trackerCatOrder=JSON.parse(o);}catch(e){}
-  // if never taken, show intro
   if(Object.keys(trackerAnswers).length===0) trackerPhase='intro';
-  // sync from Firebase in background
+  // set up real-time listener so all devices stay in sync
   if(db){
-    db.collection('tracker_data').doc('state').get().then(snap=>{
+    db.collection('tracker_data').doc('state').onSnapshot(snap=>{
       if(snap.exists){
         const d=snap.data();
-        if(d.answers) trackerAnswers=d.answers;
-        if(d.categories) TRACKER_CATEGORIES=d.categories;
-        if(d.order) trackerCatOrder=d.order;
+        if(d.answers){trackerAnswers=d.answers;LS.set('tracker-answers',JSON.stringify(d.answers));}
+        if(d.categories){TRACKER_CATEGORIES=d.categories;LS.set('tracker-categories',JSON.stringify(d.categories));}
+        if(d.order!==undefined){trackerCatOrder=d.order;if(d.order)LS.set('tracker-order',JSON.stringify(d.order));}
         if(Object.keys(trackerAnswers).length===0) trackerPhase='intro';
+        else if(trackerPhase==='intro') trackerPhase='results';
         renderTracker();
       }
-    }).catch(()=>{});
+    },()=>{});
   }
 }
 
@@ -1523,7 +1538,16 @@ function saveTrackerState(){
   LS.set('tracker-answers',JSON.stringify(trackerAnswers));
   LS.set('tracker-categories',JSON.stringify(TRACKER_CATEGORIES));
   if(trackerCatOrder) LS.set('tracker-order',JSON.stringify(trackerCatOrder));
-  if(db){try{db.collection('tracker_data').doc('state').set({answers:trackerAnswers,categories:TRACKER_CATEGORIES,order:trackerCatOrder||null},{merge:true});}catch(e){}}
+  if(db){
+    try{
+      db.collection('tracker_data').doc('state').set({
+        answers:trackerAnswers,
+        categories:TRACKER_CATEGORIES,
+        order:trackerCatOrder||null,
+        updatedAt:Date.now()
+      });
+    }catch(e){}
+  }
   const dot=document.getElementById('trackerSaveDot');
   if(dot){dot.classList.add('show');setTimeout(()=>dot.classList.remove('show'),1500);}
 }
