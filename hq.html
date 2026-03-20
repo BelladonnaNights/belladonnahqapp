@@ -269,6 +269,56 @@
   .entry-detail-title{font-family:'Cormorant Garamond',serif;font-size:1.5rem;color:var(--gold);margin-bottom:0.4rem;}
   .entry-detail-date{font-size:0.72rem;color:var(--text3);margin-bottom:0.8rem;}
   .entry-detail-notes{font-size:0.78rem;color:var(--text2);line-height:1.6;}
+
+  /* GROWTH TRACKER */
+  .tracker-intro{text-align:center;padding:3rem 1rem;}
+  .tracker-intro-icon{font-size:2.5rem;margin-bottom:1rem;}
+  .tracker-intro-title{font-family:'Cormorant Garamond',serif;font-size:2.2rem;font-weight:300;color:var(--gold);letter-spacing:0.15em;margin-bottom:0.75rem;}
+  .tracker-intro-body{font-size:0.88rem;color:var(--text3);max-width:420px;margin:0 auto 2rem;line-height:1.8;letter-spacing:0.03em;}
+  .tracker-start-btn{background:rgba(201,169,110,0.1);border:1px solid var(--gold);color:var(--gold);padding:0.9rem 2.5rem;border-radius:40px;font-size:0.78rem;letter-spacing:0.25em;text-transform:uppercase;cursor:pointer;font-family:'Josefin Sans',sans-serif;transition:all 0.2s;}
+  .tracker-start-btn:hover{background:rgba(201,169,110,0.2);}
+  .tracker-quiz-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1.8rem;position:relative;overflow:hidden;margin-bottom:1rem;}
+  .tracker-quiz-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);}
+  .tracker-cat-header{display:flex;align-items:center;gap:0.75rem;margin-bottom:0.4rem;}
+  .tracker-cat-icon{font-size:1.3rem;}
+  .tracker-cat-name{font-family:'Cormorant Garamond',serif;font-size:1.4rem;font-weight:300;letter-spacing:0.1em;}
+  .tracker-cat-sub{font-size:0.72rem;color:var(--text3);margin-bottom:1.2rem;letter-spacing:0.05em;}
+  .tracker-meter-wrap{height:6px;background:var(--surface2);border-radius:100px;overflow:hidden;margin:0.5rem 0 1.5rem;}
+  .tracker-meter-fill{height:100%;border-radius:100px;transition:width 0.5s ease;}
+  .tracker-meter-label{display:flex;justify-content:space-between;font-size:0.65rem;color:var(--text3);letter-spacing:0.1em;}
+  .tracker-q-row{margin-bottom:1.2rem;padding-bottom:1.2rem;border-bottom:1px solid var(--border);}
+  .tracker-q-row:last-of-type{border-bottom:none;margin-bottom:0;padding-bottom:0;}
+  .tracker-q-label{font-size:0.82rem;color:var(--text2);margin-bottom:0.6rem;line-height:1.6;letter-spacing:0.03em;}
+  .tracker-btn-group{display:flex;gap:0.4rem;flex-wrap:wrap;}
+  .tracker-ans-btn{padding:0.4rem 0.9rem;border-radius:20px;border:1px solid var(--border);background:none;color:var(--text3);font-size:0.72rem;cursor:pointer;transition:all 0.2s;font-family:'Josefin Sans',sans-serif;letter-spacing:0.05em;white-space:nowrap;}
+  .tracker-nav{display:flex;justify-content:space-between;align-items:center;margin-top:1.5rem;gap:0.75rem;}
+  .tracker-nav-prev{background:none;border:1px solid var(--border);color:var(--text3);padding:0.6rem 1.2rem;border-radius:20px;font-size:0.72rem;cursor:pointer;font-family:'Josefin Sans',sans-serif;letter-spacing:0.1em;transition:all 0.2s;}
+  .tracker-nav-prev:hover{border-color:var(--border2);color:var(--text2);}
+  .tracker-nav-prev:disabled{opacity:0.3;cursor:not-allowed;}
+  .tracker-nav-next{background:rgba(201,169,110,0.1);border:1px solid var(--gold);color:var(--gold);padding:0.6rem 1.5rem;border-radius:20px;font-size:0.72rem;cursor:pointer;font-family:'Josefin Sans',sans-serif;letter-spacing:0.15em;text-transform:uppercase;transition:all 0.2s;}
+  .tracker-nav-next:hover{background:rgba(201,169,110,0.2);}
+  .tracker-nav-next:disabled{opacity:0.3;cursor:not-allowed;}
+  .tracker-nav-count{font-size:0.68rem;color:var(--text3);letter-spacing:0.1em;}
+  .tracker-overall{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1.8rem;text-align:center;margin-bottom:1.2rem;position:relative;overflow:hidden;}
+  .tracker-overall::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);}
+  .tracker-big-pct{font-family:'Cormorant Garamond',serif;font-size:5rem;font-weight:300;line-height:1;}
+  .tracker-overall-label{font-size:0.65rem;letter-spacing:0.25em;text-transform:uppercase;color:var(--text3);margin-bottom:0.5rem;}
+  .tracker-overall-msg{font-size:0.82rem;color:var(--text3);margin-top:0.75rem;line-height:1.6;max-width:380px;margin-left:auto;margin-right:auto;}
+  .tracker-retake-btn{background:none;border:1px solid var(--border2);color:var(--purple-btn);padding:0.5rem 1.2rem;border-radius:20px;font-size:0.68rem;letter-spacing:0.15em;text-transform:uppercase;cursor:pointer;font-family:'Josefin Sans',sans-serif;margin-top:1rem;transition:all 0.2s;}
+  .tracker-retake-btn:hover{border-color:var(--gold);color:var(--gold);}
+  .tracker-results-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:0.75rem;}
+  .tracker-result-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1.2rem;cursor:pointer;transition:all 0.2s;}
+  .tracker-result-card:hover{border-color:var(--border2);transform:translateY(-1px);}
+  .tracker-result-card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:0.6rem;}
+  .tracker-result-cat-name{font-size:0.82rem;color:var(--text);letter-spacing:0.05em;display:flex;align-items:center;gap:0.5rem;}
+  .tracker-result-pct{font-family:'Cormorant Garamond',serif;font-size:1.6rem;font-weight:300;}
+  .tracker-result-sub{font-size:0.65rem;color:var(--text3);margin-top:0.4rem;letter-spacing:0.05em;}
+  .tracker-todo-list{margin-top:0.8rem;padding-top:0.8rem;border-top:1px solid var(--border);}
+  .tracker-todo-item{display:flex;gap:0.5rem;font-size:0.72rem;color:var(--text2);padding:0.35rem 0;border-bottom:1px solid var(--border);line-height:1.5;}
+  .tracker-todo-item:last-child{border-bottom:none;}
+  .tracker-save-dot{font-size:0.6rem;color:var(--teal2);opacity:0;transition:opacity 0.3s;margin-left:0.4rem;}
+  .tracker-save-dot.show{opacity:1;}
+
 </style>
 </head>
 <body>
@@ -293,6 +343,7 @@
     <button class="tab" onclick="showTab('venues',this)">Venues</button>
     <button class="tab" onclick="showTab('stats',this)">Stats</button>
     <button class="tab" onclick="showTab('calendar',this)">Calendar</button>
+    <button class="tab" onclick="showTab('tracker',this)">Growth Tracker</button>
   </div>
 </div>
 
@@ -436,6 +487,12 @@
     <div class="cal-legend-item"><div class="cal-legend-dot" style="background:rgba(122,90,170,0.3);border:1px solid var(--purple2);"></div>Social Media Post</div>
     <div class="cal-legend-item"><div class="cal-legend-dot" style="background:rgba(58,160,138,0.25);border:1px solid var(--teal2);"></div>Marketing / Promo</div>
   </div>
+</div>
+
+
+<!-- GROWTH TRACKER -->
+<div class="panel" id="panel-tracker">
+  <div id="trackerView"></div>
 </div>
 
 <!-- NOTE EXPAND MODAL -->
@@ -599,6 +656,7 @@ function showTab(id,el){
   document.getElementById('panel-'+id).classList.add('active');el.classList.add('active');
   if(id==='stats')loadStats();
   if(id==='calendar')renderCalendar();
+  if(id==='tracker')renderTracker();
 }
 function showSub(tab,id,el){
   document.querySelectorAll(`#panel-${tab} .subpanel`).forEach(p=>p.classList.remove('active'));
@@ -1053,9 +1111,235 @@ function deleteEntryFromDetail(){
 }
 function formatDate(str){const d=new Date(str+'T12:00:00');return d.toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});}
 
+
+// ── GROWTH TRACKER ──
+const TRACKER_CATEGORIES=[
+  {id:"operations",name:"Operations & Event Execution",icon:"🎤",color:"#c9a96e",items:[
+    {id:"pa",label:"PA system / audio gear owned or reliably rented"},
+    {id:"mics",label:"Microphones (at least 2 working mics for karaoke)"},
+    {id:"screen",label:"Screen/display for lyrics or trivia visuals"},
+    {id:"lighting",label:"Basic stage lighting setup"},
+    {id:"software",label:"Karaoke/trivia software or platform set up"},
+    {id:"songlib",label:"Karaoke song library built out (500+ songs)"},
+    {id:"triviab",label:"Trivia question bank created (multiple categories)"},
+    {id:"bingo",label:"Musical bingo cards/system ready"},
+    {id:"backup",label:"Backup plan for tech failure at events"},
+    {id:"loadout",label:"Standard load-in/load-out routine established"},
+  ]},
+  {id:"venues",name:"Venue Relationships & Sales",icon:"🍺",color:"#b05070",items:[
+    {id:"firstv",label:"At least one paying venue partner signed"},
+    {id:"contract",label:"Venue contract/agreement template created"},
+    {id:"pricing",label:"Venue pricing/rate card defined"},
+    {id:"pitch",label:"Venue pitch deck or one-pager ready"},
+    {id:"followup",label:"System for following up with prospective venues"},
+    {id:"rebook",label:"Process to check in and keep existing venues happy"},
+    {id:"multiv",label:"3+ active venue partners"},
+    {id:"revshare",label:"Revenue share or flat fee model clearly defined"},
+  ]},
+  {id:"talent",name:"Talent & Team",icon:"🌟",color:"#7a5aaa",items:[
+    {id:"solo",label:"You can fully run a show solo without issues"},
+    {id:"sop",label:"Standard operating procedures written for running a show"},
+    {id:"hostapp",label:"Application/intake process for new hosts"},
+    {id:"training",label:"Host training process defined"},
+    {id:"secondhost",label:"At least one other trained host available"},
+    {id:"scheduling",label:"Scheduling system for hosts across venues"},
+    {id:"hostpay",label:"Host pay structure / contractor agreements in place"},
+  ]},
+  {id:"marketing",name:"Marketing & Audience Building",icon:"📣",color:"#3aa08a",items:[
+    {id:"insta",label:"Active Instagram account with regular posts"},
+    {id:"fb",label:"Active Facebook page"},
+    {id:"tiktok",label:"TikTok account with event content"},
+    {id:"emaillist",label:"Email list started (even small)"},
+    {id:"emailcampaign",label:"Regular email newsletter or updates sent"},
+    {id:"eventpromo",label:"Each event promoted on social before it happens"},
+    {id:"fanhub",label:"Fan Hub page on website active and updated"},
+    {id:"ugc",label:"Reposting fan/venue content regularly"},
+    {id:"branded",label:"Branded content templates for consistent look"},
+  ]},
+  {id:"booking",name:"Booking & Scheduling",icon:"📅",color:"#c9a96e",items:[
+    {id:"calendar",label:"Master calendar for all events maintained"},
+    {id:"bookingform",label:"Online booking inquiry form live (private events)"},
+    {id:"deposit",label:"Deposit policy defined for private bookings"},
+    {id:"confirmflow",label:"Confirmation process for new bookings"},
+    {id:"reminders",label:"Automated or manual reminders sent before events"},
+    {id:"cancelpolicy",label:"Cancellation/rescheduling policy documented"},
+    {id:"pubcal",label:"Public event calendar on website kept up to date"},
+  ]},
+  {id:"finance",name:"Finance & Pricing",icon:"💰",color:"#b05070",items:[
+    {id:"bizaccount",label:"Separate business bank account opened"},
+    {id:"invoicing",label:"Invoicing system in place (even simple)"},
+    {id:"tracking",label:"Income & expenses tracked monthly"},
+    {id:"taxset",label:"Setting aside money for taxes each month"},
+    {id:"pricing2",label:"Pricing covers all costs + profit margin"},
+    {id:"tipping",label:"Tip-a-host system working and promoted"},
+    {id:"profitloss",label:"Aware of profit/loss per event on average"},
+    {id:"accountant",label:"Accountant or tax software being used"},
+  ]},
+  {id:"legal",name:"Legal & Contracts",icon:"📋",color:"#7a5aaa",items:[
+    {id:"llc",label:"LLC formally registered and active"},
+    {id:"ein",label:"EIN obtained from IRS"},
+    {id:"liability",label:"General liability insurance active"},
+    {id:"vcontract",label:"Venue contracts used for every gig"},
+    {id:"icagreement",label:"Independent contractor agreements for hosts"},
+    {id:"tos",label:"Terms & Conditions on website"},
+    {id:"privacy",label:"Privacy policy on website"},
+    {id:"musiclicense",label:"Aware of / addressed music licensing (ASCAP/BMI)"},
+  ]},
+  {id:"tech",name:"Tech & Tools",icon:"💻",color:"#3aa08a",items:[
+    {id:"website",label:"Website live and up to date"},
+    {id:"bookingtech",label:"Online booking/inquiry form functional"},
+    {id:"payment",label:"Payment processing set up (Venmo, Stripe, Square, etc.)"},
+    {id:"email",label:"Professional email address (not just Gmail)"},
+    {id:"emailmkt",label:"Email marketing tool set up (Mailchimp, etc.)"},
+    {id:"socialschd",label:"Social media scheduling tool in use"},
+    {id:"crm",label:"Some form of CRM or contact tracking for venues/leads"},
+    {id:"cloud",label:"Files/assets backed up to cloud storage"},
+  ]},
+  {id:"brand",name:"Brand & Experience Design",icon:"✨",color:"#c9a96e",items:[
+    {id:"logo",label:"Professional logo finalized"},
+    {id:"colorkit",label:"Brand colors and fonts defined"},
+    {id:"vibe",label:"Consistent vibe/personality across all channels"},
+    {id:"themednight",label:"At least 2-3 themed night concepts developed"},
+    {id:"hostpersona",label:"Host persona/character defined (not just MC)"},
+    {id:"merch",label:"Merch or branded items available (even stickers)"},
+    {id:"testimonials",label:"Testimonials or reviews collected from venues/fans"},
+    {id:"signatureexp",label:"Signature moment or bit that makes every show memorable"},
+  ]},
+  {id:"growth",name:"Growth & Partnerships",icon:"🚀",color:"#b05070",items:[
+    {id:"growthgoal",label:"Written goal for # of gigs per month this year"},
+    {id:"newmarkets",label:"Researched expanding to new cities or areas"},
+    {id:"partnerships",label:"Partnership with at least one non-bar venue"},
+    {id:"corporate",label:"Corporate/private event offering defined"},
+    {id:"referral",label:"Referral system or incentive for venues to refer you"},
+    {id:"press",label:"Any local press, blog features, or media coverage"},
+    {id:"collab",label:"Collaborated with another local brand or entertainer"},
+  ]},
+];
+
+let trackerPhase='intro';
+let trackerCatIdx=0;
+let trackerAnswers={};
+let trackerExpandedCat=null;
+
+function loadTrackerAnswers(){
+  try{const t=LS.get('tracker-answers');if(t)trackerAnswers=JSON.parse(t);}catch(e){}
+  if(db){db.collection('tracker_answers').doc('answers').get().then(snap=>{if(snap.exists){trackerAnswers={...trackerAnswers,...snap.data()};renderTracker();}}).catch(()=>{});}
+}
+function saveTrackerAnswers(){
+  LS.set('tracker-answers',JSON.stringify(trackerAnswers));
+  if(db){try{db.collection('tracker_answers').doc('answers').set(trackerAnswers,{merge:true});}catch(e){}}
+  const dot=document.getElementById('trackerSaveDot');
+  if(dot){dot.classList.add('show');setTimeout(()=>dot.classList.remove('show'),1500);}
+}
+function setTrackerAnswer(catId,itemId,val){
+  trackerAnswers[catId+'_'+itemId]=val;
+  saveTrackerAnswers();
+  renderTracker();
+}
+function getTrackerAnswer(catId,itemId){return trackerAnswers[catId+'_'+itemId]||null;}
+function trackerCalcPct(cat){
+  let score=0;
+  cat.items.forEach(item=>{const a=trackerAnswers[cat.id+'_'+item.id];if(a==='yes')score+=1;else if(a==='partial')score+=0.5;});
+  return Math.round((score/cat.items.length)*100);
+}
+function trackerOverallPct(){
+  let total=0;
+  TRACKER_CATEGORIES.forEach(cat=>total+=trackerCalcPct(cat));
+  return Math.round(total/TRACKER_CATEGORIES.length);
+}
+function trackerScoreColor(pct){
+  if(pct>=80)return'var(--teal2)';
+  if(pct>=50)return'var(--gold)';
+  return'var(--rose2)';
+}
+
+function renderTracker(){
+  const el=document.getElementById('trackerView');
+  if(!el)return;
+
+  if(trackerPhase==='intro'){
+    el.innerHTML=`<div class="tracker-intro">
+      <div class="tracker-intro-icon">🎤</div>
+      <div class="tracker-intro-title">How Built-Out Is Your Business?</div>
+      <div class="tracker-intro-body">We'll go through 10 categories — Operations, Venues, Talent, Marketing, and more — to calculate your real completion percentage. See exactly what's done, what's in progress, and what still needs attention.</div>
+      <button class="tracker-start-btn" onclick="trackerPhase='quiz';trackerCatIdx=0;renderTracker()">Let's Go →</button>
+    </div>`;
+    return;
+  }
+
+  if(trackerPhase==='quiz'){
+    const cat=TRACKER_CATEGORIES[trackerCatIdx];
+    const pct=trackerCalcPct(cat);
+    const allDone=cat.items.every(item=>trackerAnswers[cat.id+'_'+item.id]);
+    const isLast=trackerCatIdx===TRACKER_CATEGORIES.length-1;
+    el.innerHTML=`<div class="tracker-quiz-card">
+      <div class="tracker-cat-header">
+        <span class="tracker-cat-icon">${cat.icon}</span>
+        <span class="tracker-cat-name" style="color:${cat.color}">${cat.name}</span>
+        <span class="tracker-save-dot" id="trackerSaveDot">✓</span>
+      </div>
+      <div class="tracker-cat-sub">Answer honestly — partial credit counts!</div>
+      <div class="tracker-meter-label"><span>Completion</span><span style="color:${cat.color};font-weight:400">${pct}%</span></div>
+      <div class="tracker-meter-wrap"><div class="tracker-meter-fill" style="width:${pct}%;background:${cat.color};"></div></div>
+      ${cat.items.map((item,i)=>{
+        const ans=getTrackerAnswer(cat.id,item.id);
+        return`<div class="tracker-q-row">
+          <div class="tracker-q-label">${i+1}. ${item.label}</div>
+          <div class="tracker-btn-group">
+            <button class="tracker-ans-btn" onclick="setTrackerAnswer('${cat.id}','${item.id}','yes')" style="${ans==='yes'?'border-color:'+cat.color+';color:'+cat.color+';background:'+cat.color+'22;':''}">Yes ✅</button>
+            <button class="tracker-ans-btn" onclick="setTrackerAnswer('${cat.id}','${item.id}','partial')" style="${ans==='partial'?'border-color:'+cat.color+';color:'+cat.color+';background:'+cat.color+'22;':''}">In Progress 🔄</button>
+            <button class="tracker-ans-btn" onclick="setTrackerAnswer('${cat.id}','${item.id}','no')" style="${ans==='no'?'border-color:var(--rose2);color:var(--rose2);background:rgba(176,80,112,0.15);':''}">Not Yet ❌</button>
+          </div>
+        </div>`;
+      }).join('')}
+      <div class="tracker-nav">
+        <button class="tracker-nav-prev" onclick="trackerCatIdx--;renderTracker()" ${trackerCatIdx===0?'disabled':''}>← Back</button>
+        <span class="tracker-nav-count">${trackerCatIdx+1} / ${TRACKER_CATEGORIES.length}</span>
+        <button class="tracker-nav-next" onclick="${isLast?"trackerPhase='results';renderTracker()":"trackerCatIdx++;renderTracker()"}" ${!allDone?'disabled':''}>
+          ${isLast?'See Results ✦':'Next →'}
+        </button>
+      </div>
+    </div>`;
+    return;
+  }
+
+  // RESULTS
+  const overall=trackerOverallPct();
+  const overallColor=trackerScoreColor(overall);
+  const msg=overall>=80?'Your foundation is strong. Time to scale.':overall>=50?'Solid progress — fill in the gaps and you'll be firing on all cylinders.':'Lots of opportunity to build. Each item you check off makes Belladonna more resilient.';
+  el.innerHTML=`
+    <div class="tracker-overall">
+      <div class="tracker-overall-label">Overall Score</div>
+      <div class="tracker-big-pct" style="color:${overallColor}">${overall}%</div>
+      <div class="tracker-meter-wrap" style="max-width:300px;margin:0.75rem auto;">
+        <div class="tracker-meter-fill" style="width:${overall}%;background:${overallColor};"></div>
+      </div>
+      <div class="tracker-overall-msg">${msg}</div>
+      <button class="tracker-retake-btn" onclick="trackerPhase='quiz';trackerCatIdx=0;renderTracker()">Retake Quiz</button>
+    </div>
+    <div class="tracker-results-grid">
+      ${TRACKER_CATEGORIES.map(cat=>{
+        const pct=trackerCalcPct(cat);
+        const isOpen=trackerExpandedCat===cat.id;
+        const notDone=cat.items.filter(item=>{const a=trackerAnswers[cat.id+'_'+item.id];return a==='no'||a==='partial';});
+        return`<div class="tracker-result-card" style="border-color:${cat.color}33" onclick="trackerExpandedCat=trackerExpandedCat==='${cat.id}'?null:'${cat.id}';renderTracker()">
+          <div class="tracker-result-card-header">
+            <div class="tracker-result-cat-name">${cat.icon} ${cat.name}</div>
+            <div class="tracker-result-pct" style="color:${cat.color}">${pct}%</div>
+          </div>
+          <div class="tracker-meter-wrap"><div class="tracker-meter-fill" style="width:${pct}%;background:${cat.color};"></div></div>
+          <div class="tracker-result-sub">${notDone.length===0?'✅ All items complete!':notDone.length+' item'+(notDone.length>1?'s':'')+' need attention · tap to expand'}</div>
+          ${isOpen&&notDone.length>0?`<div class="tracker-todo-list">${notDone.map(item=>{const a=trackerAnswers[cat.id+'_'+item.id];return`<div class="tracker-todo-item"><span>${a==='partial'?'🔄':'❌'}</span><span>${item.label}</span></div>`;}).join('')}</div>`:''}
+        </div>`;
+      }).join('')}
+    </div>`;
+}
+
+
 // ── INIT ── renders immediately, Firebase syncs in background
 function init(){
   loadStorage();
+  loadTrackerAnswers();
   loadCalEntries();
   loadMonthNotes();
   renderRoster();
