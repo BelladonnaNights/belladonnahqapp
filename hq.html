@@ -640,7 +640,13 @@
 <script>
 const SHEETS_KEY="AIzaSyACMjXQCXjVo75hbMXtag_JctR4SoX70So";
 const SHEET_ID="1-MkZoNKkPqjAoJggahKiUsDUgjUhMTkoQ8rUBG4W-w0";
-firebase.initializeApp({apiKey:"AIzaSyCIfAE1JGHsUGzzVH2pz1Vyj5b5OhA0tDQ",authDomain:"belladonna-hq.firebaseapp.com",projectId:"belladonna-hq",storageBucket:"belladonna-hq.firebasestorage.app",messagingSenderId:"1021873183587",appId:"1:1021873183587:web:def283bb7b5ca48e4f9156"});
+let db = null;
+try {
+  firebase.initializeApp({apiKey:"AIzaSyCIfAE1JGHsUGzzVH2pz1Vyj5b5OhA0tDQ",authDomain:"belladonna-hq.firebaseapp.com",projectId:"belladonna-hq",storageBucket:"belladonna-hq.firebasestorage.app",messagingSenderId:"1021873183587",appId:"1:1021873183587:web:def283bb7b5ca48e4f9156"});
+  db = firebase.firestore();
+  db.settings({experimentalForceLongPolling: false, ignoreUndefinedProperties: true});
+} catch(e) { console.warn('Firebase init failed, running without sync:', e); }
+function safeDb(){ return db; }
 
 const SKILLS=['Karaoke','Bingo','Trivia','Events','Private Events'];
 const DEFAULT_MINI=[
@@ -1077,7 +1083,7 @@ let trackerExpandedCat = null;
 
 async function loadTrackerAnswers(){
   try{
-    const snap = await db.collection('tracker_answers').doc('answers').get();
+    const snap = await (db||{collection:()=>({get:async()=>({empty:true,docs:[]}),orderBy:()=>({get:async()=>({empty:true,docs:[]})}),add:async()=>({id:'local_'+Date.now()}),doc:()=>({get:async()=>({exists:false,data:()=>({})}),set:async()=>{},delete:async()=>{}})})}).collection('tracker_answers').doc('answers').get();
     if(snap.exists) trackerAnswers = snap.data();
   }catch(e){
     try{const t=await window.storage.get('tracker-answers');if(t)trackerAnswers=JSON.parse(t.value);}catch(e2){}
@@ -1086,7 +1092,7 @@ async function loadTrackerAnswers(){
 
 async function saveTrackerAnswers(){
   try{
-    await db.collection('tracker_answers').doc('answers').set(trackerAnswers,{merge:true});
+    await (db||{collection:()=>({get:async()=>({empty:true,docs:[]}),orderBy:()=>({get:async()=>({empty:true,docs:[]})}),add:async()=>({id:'local_'+Date.now()}),doc:()=>({get:async()=>({exists:false,data:()=>({})}),set:async()=>{},delete:async()=>{}})})}).collection('tracker_answers').doc('answers').set(trackerAnswers,{merge:true});
     const dot = document.getElementById('trackerSaveDot');
     if(dot){dot.classList.add('show');setTimeout(()=>dot.classList.remove('show'),1500);}
   }catch(e){
@@ -1240,7 +1246,7 @@ const MONTHS = ['January','February','March','April','May','June','July','August
 
 async function loadCalEntries(){
   try{
-    const snap = await db.collection('cal_entries').get();
+    const snap = await (db||{collection:()=>({get:async()=>({empty:true,docs:[]}),orderBy:()=>({get:async()=>({empty:true,docs:[]})}),add:async()=>({id:'local_'+Date.now()}),doc:()=>({get:async()=>({exists:false,data:()=>({})}),set:async()=>{},delete:async()=>{}})})}).collection('cal_entries').get();
     if(!snap.empty){
       calEntries = snap.docs.map(d=>({id:d.id,...d.data()}));
     }
@@ -1253,7 +1259,7 @@ async function saveCalEntries(){
 }
 function setupCalListener(){
   try{
-    db.collection('cal_entries').onSnapshot(snap=>{
+    (db||{collection:()=>({get:async()=>({empty:true,docs:[]}),orderBy:()=>({get:async()=>({empty:true,docs:[]})}),onSnapshot:()=>{},add:async()=>({id:'local_'+Date.now()}),doc:()=>({get:async()=>({exists:false,data:()=>({})}),set:async()=>{},delete:async()=>{}})})}).collection('cal_entries').onSnapshot(snap=>{
       calEntries = snap.docs.map(d=>({id:d.id,...d.data()}));
       renderCalendar();
     });
@@ -1266,7 +1272,7 @@ let expandNoteKey = null;
 
 async function loadMonthNotes(){
   try{
-    const snap = await db.collection('cal_notes').doc('all_notes').get();
+    const snap = await (db||{collection:()=>({get:async()=>({empty:true,docs:[]}),orderBy:()=>({get:async()=>({empty:true,docs:[]})}),add:async()=>({id:'local_'+Date.now()}),doc:()=>({get:async()=>({exists:false,data:()=>({})}),set:async()=>{},delete:async()=>{}})})}).collection('cal_notes').doc('all_notes').get();
     if(snap.exists) monthNotes = snap.data()||{};
   }catch(e){
     console.warn('Month notes load failed:',e);
@@ -1274,7 +1280,7 @@ async function loadMonthNotes(){
 }
 function setupNotesListener(){
   try{
-    db.collection('cal_notes').doc('all_notes').onSnapshot(snap=>{
+    (db||{collection:()=>({get:async()=>({empty:true,docs:[]}),orderBy:()=>({get:async()=>({empty:true,docs:[]})}),onSnapshot:()=>{},add:async()=>({id:'local_'+Date.now()}),doc:()=>({get:async()=>({exists:false,data:()=>({})}),set:async()=>{},delete:async()=>{}})})}).collection('cal_notes').doc('all_notes').onSnapshot(snap=>{
       if(snap.exists){
         const fresh = snap.data()||{};
         // merge in — don't overwrite fields user is actively editing
@@ -1285,7 +1291,7 @@ function setupNotesListener(){
 }
 async function persistNotes(){
   try{
-    await db.collection('cal_notes').doc('all_notes').set(monthNotes, {merge:true});
+    await (db||{collection:()=>({get:async()=>({empty:true,docs:[]}),orderBy:()=>({get:async()=>({empty:true,docs:[]})}),add:async()=>({id:'local_'+Date.now()}),doc:()=>({get:async()=>({exists:false,data:()=>({})}),set:async()=>{},delete:async()=>{}})})}).collection('cal_notes').doc('all_notes').set(monthNotes, {merge:true});
   }catch(e){
     try{await window.storage.set('cal-month-notes-v2',JSON.stringify(monthNotes));}catch(e2){}
   }
@@ -1471,11 +1477,11 @@ async function saveEntry(){
   const payload = {title, date, type:currentEntryType, notes};
   try{
     if(editingEntryId){
-      await db.collection('cal_entries').doc(editingEntryId).set(payload, {merge:true});
+      await (db||{collection:()=>({get:async()=>({empty:true,docs:[]}),orderBy:()=>({get:async()=>({empty:true,docs:[]})}),add:async()=>({id:'local_'+Date.now()}),doc:()=>({get:async()=>({exists:false,data:()=>({})}),set:async()=>{},delete:async()=>{}})})}).collection('cal_entries').doc(editingEntryId).set(payload, {merge:true});
       const e = calEntries.find(x=>x.id===editingEntryId);
       if(e){Object.assign(e, payload);}
     } else {
-      const ref = await db.collection('cal_entries').add(payload);
+      const ref = await (db||{collection:()=>({get:async()=>({empty:true,docs:[]}),orderBy:()=>({get:async()=>({empty:true,docs:[]})}),add:async()=>({id:'local_'+Date.now()}),doc:()=>({get:async()=>({exists:false,data:()=>({})}),set:async()=>{},delete:async()=>{}})})}).collection('cal_entries').add(payload);
       calEntries.push({id:ref.id, ...payload});
     }
   }catch(e){
@@ -1514,7 +1520,7 @@ function editEntryFromDetail(){
 async function deleteEntryFromDetail(){
   if(!confirm('Delete this entry?')) return;
   const id = detailEntryId;
-  try{ await db.collection('cal_entries').doc(id).delete(); }catch(e){}
+  try{ await (db||{collection:()=>({get:async()=>({empty:true,docs:[]}),orderBy:()=>({get:async()=>({empty:true,docs:[]})}),add:async()=>({id:'local_'+Date.now()}),doc:()=>({get:async()=>({exists:false,data:()=>({})}),set:async()=>{},delete:async()=>{}})})}).collection('cal_entries').doc(id).delete(); }catch(e){}
   calEntries = calEntries.filter(e=>e.id!==id);
   renderCalendar();
   closeEntryDetail();
@@ -1527,15 +1533,26 @@ function formatDate(str){
 
 // ── INIT ──
 async function init(){
+  // Run UI immediately - don't wait for Firebase
   await loadStorage();
-  await loadTrackerAnswers();
-  await loadCalEntries();
-  await loadMonthNotes();
-  setupCalListener();
-  setupNotesListener();
+  renderRoster();
+  renderGames();
+  renderVenueManage();
+  populateHistoryDropdown();
+  populateRosterFilters();
+  renderTracker();
   renderCalendar();
-  fetchSheetData();setInterval(fetchSheetData,60000);
-  renderRoster();renderGames();renderVenueManage();
+  fetchSheetData();
+  setInterval(fetchSheetData, 60000);
+
+  // Load Firebase data in background - won't block UI
+  setTimeout(async()=>{
+    try{ await loadTrackerAnswers(); renderTracker(); }catch(e){}
+    try{ await loadCalEntries(); renderCalendar(); }catch(e){}
+    try{ await loadMonthNotes(); renderCalendar(); }catch(e){}
+    try{ setupCalListener(); }catch(e){}
+    try{ setupNotesListener(); }catch(e){}
+  }, 500);
   populateHistoryDropdown();populateRosterFilters();
   renderTracker();
 }
