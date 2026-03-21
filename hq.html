@@ -203,6 +203,11 @@
   .hub-card-title{font-size:0.88rem;letter-spacing:0.16em;text-transform:uppercase;color:var(--gold);margin-bottom:0.15rem;}
   .hub-card-desc{font-size:1.01rem;color:var(--text3);line-height:1.4;}
   .hub-footer{font-size:0.68rem;letter-spacing:0.18em;color:var(--text3);margin-top:1.5rem;text-transform:uppercase;}
+  .wotd-block{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1.1rem 1.4rem;margin-bottom:1.8rem;position:relative;overflow:hidden;text-align:center;}
+  .wotd-block::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);}
+  .wotd-label{font-size:0.52rem;letter-spacing:0.4em;text-transform:uppercase;color:var(--text3);margin-bottom:0.4rem;}
+  .wotd-word{font-family:'Cormorant Garamond',serif;font-size:3rem;font-weight:300;color:var(--gold);letter-spacing:0.25em;line-height:1;}
+  .wotd-sub{font-size:0.6rem;letter-spacing:0.15em;color:var(--text3);margin-top:0.35rem;text-transform:uppercase;}
   .save-dot{font-size:0.73rem;color:var(--teal2);letter-spacing:0.08em;opacity:0;transition:opacity 0.3s;margin-left:0.5rem;}
   .save-dot.show{opacity:1;}
 
@@ -547,6 +552,11 @@
 <div class="hub-overlay" id="hubOverlay">
   <button class="hub-back" onclick="closeHub()">← Back</button>
   <div class="hub-inner">
+    <div class="wotd-block" id="wotdBlock">
+      <div class="wotd-label">Word of the Day</div>
+      <div class="wotd-word" id="wotdWord">—</div>
+      <div class="wotd-sub" id="wotdSub"></div>
+    </div>
     <div class="hub-brand">Belladonna</div>
     <div class="hub-sub">Host Hub</div>
     <div class="hub-ornament">✦ ✦ ✦</div>
@@ -773,7 +783,7 @@ function showSub(tab,id,el){
   document.querySelectorAll(`#panel-${tab} .subtab`).forEach(t=>t.classList.remove('active'));
   document.getElementById(`sub-${tab}-${id}`).classList.add('active');el.classList.add('active');
 }
-function openHub(){document.getElementById('hubOverlay').classList.add('visible');document.body.style.overflow='hidden';}
+function openHub(){document.getElementById('hubOverlay').classList.add('visible');document.body.style.overflow='hidden';renderWOTD();}
 function closeHub(){document.getElementById('hubOverlay').classList.remove('visible');document.body.style.overflow='';}
 
 // ── SHEETS ──
@@ -1798,6 +1808,63 @@ function trackerReset(){
   renderTracker();
 }
 
+
+// ── WORD OF THE DAY ──
+const WOTD_LIST = [
+  {word:'CROW',hint:'dark & clever'},
+  {word:'ROOK',hint:'strategic power'},
+  {word:'VIBE',hint:'feel the room'},
+  {word:'SING',hint:'what we do'},
+  {word:'NOIR',hint:'dark & beautiful'},
+  {word:'LURE',hint:'draw them in'},
+  {word:'PULSE',hint:'keep the beat'},
+  {word:'GLOW',hint:'light it up'},
+  {word:'BOLD',hint:'own the stage'},
+  {word:'DUSK',hint:'magic hour'},
+  {word:'HUSH',hint:'command the room'},
+  {word:'SPARK',hint:'ignite the night'},
+  {word:'FLUX',hint:'always moving'},
+  {word:'THRALL',hint:'hold them captive'},
+  {word:'BLOOM',hint:'in full effect'},
+  {word:'HAUNT',hint:'unforgettable'},
+  {word:'GRAIL',hint:'the real thing'},
+  {word:'SWAY',hint:'move the crowd'},
+  {word:'RIFF',hint:'improvise freely'},
+  {word:'MUSE',hint:'your inspiration'},
+  {word:'CLOAK',hint:'mystery and allure'},
+  {word:'SURGE',hint:'build the energy'},
+  {word:'KEEN',hint:'sharp and ready'},
+  {word:'BLAZE',hint:'burn bright'},
+  {word:'LOFT',hint:'elevate everything'},
+  {word:'WAIL',hint:'let it out'},
+  {word:'PLUM',hint:'rich and deep'},
+  {word:'SHADE',hint:'cool under pressure'},
+  {word:'RAVE',hint:'they will talk'},
+  {word:'BROOD',hint:'depth behind the smile'},
+  {word:'CULT',hint:'build your following'},
+  {word:'SILK',hint:'smooth delivery'},
+  {word:'DAZE',hint:'leave them stunned'},
+  {word:'WILD',hint:'controlled chaos'},
+  {word:'SOUL',hint:'put it in everything'},
+];
+
+function getWOTD(){
+  // Use day of year as seed so it changes daily but is same for everyone that day
+  const now = new Date();
+  const start = new Date(now.getFullYear(), 0, 0);
+  const diff = now - start;
+  const dayOfYear = Math.floor(diff / (1000*60*60*24));
+  return WOTD_LIST[dayOfYear % WOTD_LIST.length];
+}
+
+function renderWOTD(){
+  const el = document.getElementById('wotdWord');
+  const sub = document.getElementById('wotdSub');
+  if(!el) return;
+  const w = getWOTD();
+  el.textContent = w.word;
+  if(sub) sub.textContent = w.hint;
+}
 
 // ── INIT ── renders immediately, Firebase syncs in background
 function init(){
