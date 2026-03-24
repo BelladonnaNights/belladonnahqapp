@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Belladonna Host Hub</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Josefin+Sans:wght@200;300;400&display=swap');
+  *{margin:0;padding:0;box-sizing:border-box;}
+  :root{
+    --bg:#000000;--surface:#111118;--surface2:#18181f;--surface3:#1e1e28;
+    --border:rgba(201,169,110,0.2);--border2:rgba(201,169,110,0.4);
+    --gold:#c9a96e;--rose2:#b05070;--teal2:#3aa08a;--purple2:#7a5aaa;
+    --text:#e8e0f0;--text2:#a090b8;--text3:#6a5a7a;
+    --live:#3aaa6a;--live-dim:rgba(58,170,106,0.12);
+    --purple-btn:#d4c0e8;
+  }
+  body{background:var(--bg);color:var(--text);font-family:'Josefin Sans',sans-serif;font-weight:300;min-height:100vh;letter-spacing:0.04em;overflow-x:hidden;}
+
+  /* ── PAGE WRAPPER ── */
+  .page{max-width:400px;margin:0 auto;padding:3rem 1.5rem 2.5rem;text-align:center;}
+
+  /* ── WOTD ── */
+  .wotd-block{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1.1rem 1.4rem;margin-bottom:1.8rem;position:relative;overflow:hidden;text-align:center;}
+  .wotd-block::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);}
+  .wotd-label{font-size:0.52rem;letter-spacing:0.4em;text-transform:uppercase;color:var(--text3);margin-bottom:0.4rem;}
+  .wotd-word{font-family:'Cormorant Garamond',serif;font-size:3rem;font-weight:300;color:var(--gold);letter-spacing:0.25em;line-height:1;}
+  .wotd-sub{font-size:0.6rem;letter-spacing:0.15em;color:var(--text3);margin-top:0.35rem;text-transform:uppercase;}
+
+  /* ── BRAND ── */
+  .hub-brand{font-family:'Cormorant Garamond',serif;font-size:2.6rem;font-weight:300;color:var(--gold);letter-spacing:0.28em;text-transform:uppercase;}
+  .hub-sub{font-size:0.73rem;letter-spacing:0.5em;text-transform:uppercase;color:var(--text3);margin-top:0.2rem;}
+  .hub-ornament{color:#2a1a2a;font-family:'Cormorant Garamond',serif;font-size:1.17rem;letter-spacing:0.4em;margin:0.8rem 0 2rem;}
+
+  /* ── SECTIONS ── */
+  .hub-section-label{font-size:0.68rem;letter-spacing:0.38em;text-transform:uppercase;color:var(--text3);margin-bottom:0.7rem;text-align:left;}
+  .hub-links{display:flex;flex-direction:column;gap:0.6rem;margin-bottom:1.5rem;}
+  .hub-card{display:block;background:var(--surface);border:1px solid rgba(201,169,110,0.22);border-radius:11px;padding:1rem 1.2rem;text-decoration:none;transition:all 0.22s;position:relative;overflow:hidden;text-align:left;}
+  .hub-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);}
+  .hub-card:hover{border-color:rgba(201,169,110,0.45);transform:translateY(-2px);}
+  .hub-card-inner{display:flex;align-items:center;justify-content:space-between;}
+  .hub-card-title{font-size:0.88rem;letter-spacing:0.16em;text-transform:uppercase;color:var(--gold);margin-bottom:0.15rem;}
+  .hub-card-desc{font-size:1.01rem;color:var(--text3);line-height:1.4;}
+  .hub-footer{font-size:0.68rem;letter-spacing:0.18em;color:var(--text3);margin-top:1.5rem;text-transform:uppercase;}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="wotd-block">
+    <div class="wotd-label">Word of the Day</div>
+    <div class="wotd-word" id="wotdWord">—</div>
+    <div class="wotd-sub" id="wotdSub"></div>
+  </div>
+
+  <div class="hub-brand">Belladonna</div>
+  <div class="hub-sub">Host Hub</div>
+  <div class="hub-ornament">✦ ✦ ✦</div>
+
+  <div class="hub-section-label">Your Shift</div>
+  <div class="hub-links">
+    <a href="checkin.html" class="hub-card" target="_blank">
+      <div class="hub-card-inner">
+        <div><div class="hub-card-title">Check-In</div><div class="hub-card-desc">Sign in at the start of your shift</div></div>
+        <span style="color:var(--text3)">›</span>
+      </div>
+    </a>
+    <a href="checkout.html" class="hub-card" target="_blank">
+      <div class="hub-card-inner">
+        <div><div class="hub-card-title">Check-Out</div><div class="hub-card-desc">Complete your end of shift report</div></div>
+        <span style="color:var(--text3)">›</span>
+      </div>
+    </a>
+  </div>
+
+  <div class="hub-section-label">Tools &amp; Games</div>
+  <div class="hub-links">
+    <a href="https://belladonnanights.github.io/bingo/index.html" class="hub-card" target="_blank">
+      <div class="hub-card-inner">
+        <div><div class="hub-card-title">Music Bingo</div><div class="hub-card-desc">Launch the Belladonna Bingo experience</div></div>
+        <span style="color:var(--text3)">›</span>
+      </div>
+    </a>
+  </div>
+
+  <div class="hub-footer">Belladonna Audio Alchemies ✦ Host Hub</div>
+</div>
+
+<script>
+  const SHEETS_KEY    = 'AIzaSyACMjXQCXjVo75hbMXtag_JctR4SoX70So';
+  const WOTD_SHEET_ID = '1HeSQXaLhwvmvhm_Z4SE_CFrFXoNT4Umd0Dtg-kqXWto';
+  const WOTD_TAB      = 'Sheet1';
+
+  async function renderWOTD() {
+    const el  = document.getElementById('wotdWord');
+    const sub = document.getElementById('wotdSub');
+    const now = new Date();
+    const mm  = String(now.getMonth()+1).padStart(2,'0');
+    const dd  = String(now.getDate()).padStart(2,'0');
+    const yyyy = now.getFullYear();
+    const today = `${mm}-${dd}-${yyyy}`;
+    try {
+      const url  = `https://sheets.googleapis.com/v4/spreadsheets/${WOTD_SHEET_ID}/values/${encodeURIComponent(WOTD_TAB)}?key=${SHEETS_KEY}`;
+      const res  = await fetch(url);
+      const data = await res.json();
+      if (data.error) throw new Error(data.error.message);
+      const rows  = data.values || [];
+      const match = rows.slice(1).find(r => (r[0]||'').trim() === today);
+      if (match) {
+        el.textContent  = (match[1] || '—').toUpperCase();
+        if (sub) sub.textContent = (match[2] || '').toLowerCase();
+      } else {
+        el.textContent = '—';
+        if (sub) sub.textContent = 'no word set for today';
+      }
+    } catch(e) {
+      el.textContent = '—';
+      if (sub) sub.textContent = 'could not load';
+    }
+  }
+
+  renderWOTD();
+</script>
+</body>
+</html>
