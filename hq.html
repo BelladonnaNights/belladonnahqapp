@@ -38,7 +38,7 @@
   .panel{display:none;padding:1.5rem;}
   .panel.active{display:block;}
   .subtabs{display:flex;gap:0.4rem;margin-bottom:1.2rem;flex-wrap:wrap;}
-  .subtab{padding:0.4rem 1rem;font-size:1.01rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--text3);cursor:pointer;border:1px solid var(--border);border-radius:20px;background:none;font-family:'Josefin Sans',sans-serif;transition:all 0.2s;}
+  .subtab{padding:0.3rem 0.8rem;font-size:0.78rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--text3);cursor:pointer;border:1px solid var(--border);border-radius:20px;background:none;font-family:'Josefin Sans',sans-serif;transition:all 0.2s;}
   .subtab:hover{border-color:var(--border2);color:var(--text2);}
   .subtab.active{border-color:var(--gold);color:var(--gold);background:rgba(201,169,110,0.08);}
   .subpanel{display:none;}
@@ -186,28 +186,8 @@
   .modal-cancel{background:none;border:1px solid var(--border);color:var(--text3);padding:0.65rem 1.1rem;border-radius:20px;font-size:0.81rem;letter-spacing:0.18em;text-transform:uppercase;cursor:pointer;font-family:'Josefin Sans',sans-serif;}
   .modal-cancel:hover{border-color:var(--rose2);color:var(--rose2);}
 
-  .hub-overlay{position:fixed;inset:0;background:#000;z-index:100;display:none;overflow-y:auto;}
-  .hub-overlay.visible{display:block;}
-  .hub-back{position:fixed;top:1rem;left:1rem;background:rgba(201,169,110,0.08);border:1px solid rgba(201,169,110,0.3);color:var(--gold);font-size:1.01rem;letter-spacing:0.18em;text-transform:uppercase;font-family:'Josefin Sans',sans-serif;padding:0.45rem 0.9rem;border-radius:20px;cursor:pointer;z-index:101;}
-  .hub-back:hover{background:rgba(201,169,110,0.15);}
-  .hub-inner{max-width:400px;margin:0 auto;padding:4.5rem 1.5rem 2.5rem;text-align:center;}
-  .hub-brand{font-family:'Cormorant Garamond',serif;font-size:2.6rem;font-weight:300;color:var(--gold);letter-spacing:0.28em;text-transform:uppercase;}
-  .hub-sub{font-size:0.73rem;letter-spacing:0.5em;text-transform:uppercase;color:var(--text3);margin-top:0.2rem;}
-  .hub-ornament{color:#2a1a2a;font-family:'Cormorant Garamond',serif;font-size:1.17rem;letter-spacing:0.4em;margin:0.8rem 0 2rem;}
-  .hub-section-label{font-size:0.68rem;letter-spacing:0.38em;text-transform:uppercase;color:var(--text3);margin-bottom:0.7rem;text-align:left;}
-  .hub-links{display:flex;flex-direction:column;gap:0.6rem;margin-bottom:1.5rem;}
-  .hub-card{display:block;background:var(--surface);border:1px solid rgba(201,169,110,0.22);border-radius:11px;padding:1rem 1.2rem;text-decoration:none;transition:all 0.22s;position:relative;overflow:hidden;text-align:left;}
-  .hub-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);}
-  .hub-card:hover{border-color:rgba(201,169,110,0.45);transform:translateY(-2px);}
-  .hub-card-inner{display:flex;align-items:center;justify-content:space-between;}
-  .hub-card-title{font-size:0.88rem;letter-spacing:0.16em;text-transform:uppercase;color:var(--gold);margin-bottom:0.15rem;}
-  .hub-card-desc{font-size:1.01rem;color:var(--text3);line-height:1.4;}
-  .hub-footer{font-size:0.68rem;letter-spacing:0.18em;color:var(--text3);margin-top:1.5rem;text-transform:uppercase;}
-  .wotd-block{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1.1rem 1.4rem;margin-bottom:1.8rem;position:relative;overflow:hidden;text-align:center;}
-  .wotd-block::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);}
-  .wotd-label{font-size:0.52rem;letter-spacing:0.4em;text-transform:uppercase;color:var(--text3);margin-bottom:0.4rem;}
-  .wotd-word{font-family:'Cormorant Garamond',serif;font-size:3rem;font-weight:300;color:var(--gold);letter-spacing:0.25em;line-height:1;}
-  .wotd-sub{font-size:0.6rem;letter-spacing:0.15em;color:var(--text3);margin-top:0.35rem;text-transform:uppercase;}
+
+
   .save-dot{font-size:0.73rem;color:var(--teal2);letter-spacing:0.08em;opacity:0;transition:opacity 0.3s;margin-left:0.5rem;}
   .save-dot.show{opacity:1;}
 
@@ -454,10 +434,10 @@
   </div>
   <div class="subpanel active" id="sub-hosts-live">
     <div id="homeError" class="error-msg"></div>
-    <button class="hub-trigger" onclick="openHub()">
+    <a href="host-hub.html" class="hub-trigger" target="_blank">
       <div><div class="hub-trigger-title">Host Hub</div><div class="hub-trigger-desc">Check-in, check-out &amp; tools for hosts</div></div>
       <div style="color:var(--text3);font-size:1rem;">›</div>
-    </button>
+    </a>
     <div class="stat-grid">
       <div class="stat-card"><div class="stat-label">On Shift Now</div><div class="stat-value" id="statOn">—</div><div class="stat-sub">active</div></div>
       <div class="stat-card"><div class="stat-label">Total Roster</div><div class="stat-value" id="statTotal">—</div><div class="stat-sub">hosts</div></div>
@@ -548,30 +528,7 @@
   <div class="stats-grid" id="statsGrid"><div class="empty-state" style="grid-column:1/-1">Loading stats...</div></div>
 </div>
 
-<!-- HUB OVERLAY -->
-<div class="hub-overlay" id="hubOverlay">
-  <button class="hub-back" onclick="closeHub()">← Back</button>
-  <div class="hub-inner">
-    <div class="wotd-block" id="wotdBlock">
-      <div class="wotd-label">Word of the Day</div>
-      <div class="wotd-word" id="wotdWord">—</div>
-      <div class="wotd-sub" id="wotdSub"></div>
-    </div>
-    <div class="hub-brand">Belladonna</div>
-    <div class="hub-sub">Host Hub</div>
-    <div class="hub-ornament">✦ ✦ ✦</div>
-    <div class="hub-section-label">Your Shift</div>
-    <div class="hub-links">
-      <a href="checkin.html" class="hub-card" target="_blank"><div class="hub-card-inner"><div><div class="hub-card-title">Check-In</div><div class="hub-card-desc">Sign in at the start of your shift</div></div><span style="color:var(--text3)">›</span></div></a>
-      <a href="checkout.html" class="hub-card" target="_blank"><div class="hub-card-inner"><div><div class="hub-card-title">Check-Out</div><div class="hub-card-desc">Complete your end of shift report</div></div><span style="color:var(--text3)">›</span></div></a>
-    </div>
-    <div class="hub-section-label">Tools &amp; Games</div>
-    <div class="hub-links">
-      <a href="https://belladonnanights.github.io/bingo/index.html" class="hub-card" target="_blank"><div class="hub-card-inner"><div><div class="hub-card-title">Music Bingo</div><div class="hub-card-desc">Launch the Belladonna Bingo experience</div></div><span style="color:var(--text3)">›</span></div></a>
-    </div>
-    <div class="hub-footer">Belladonna Audio Alchemies ✦ Host Hub</div>
-  </div>
-</div>
+
 
 <!-- CALENDAR -->
 <div class="panel" id="panel-calendar">
@@ -783,8 +740,6 @@ function showSub(tab,id,el){
   document.querySelectorAll(`#panel-${tab} .subtab`).forEach(t=>t.classList.remove('active'));
   document.getElementById(`sub-${tab}-${id}`).classList.add('active');el.classList.add('active');
 }
-function openHub(){document.getElementById('hubOverlay').classList.add('visible');document.body.style.overflow='hidden';renderWOTD();}
-function closeHub(){document.getElementById('hubOverlay').classList.remove('visible');document.body.style.overflow='';}
 
 // ── SHEETS ──
 async function fetchSheetData(){
@@ -793,7 +748,7 @@ async function fetchSheetData(){
     const data=await res.json();if(data.error)throw new Error(data.error.message);
     const rows=data.values||[];if(rows.length<2){renderHosts([]);return;}
     const h=rows[0].map(x=>x.toLowerCase().trim());
-    const ni=h.indexOf('host_name'),si=h.indexOf('status'),ti=h.indexOf('sign_in_time'),pi=h.indexOf('paid'),li=h.indexOf('location');
+    cconst ni=h.indexOf('host_name'),si=h.indexOf('status'),ti=h.indexOf('sign_in_time'),pi=h.indexOf('paid'),li=h.indexOf('location');
     renderHosts(rows.slice(1).map(r=>({name:r[ni]||'',status:(r[si]||'').toUpperCase(),signIn:r[ti]||'',paid:(r[pi]||'').toUpperCase()})));
     document.getElementById('homeError').style.display='none';
   }catch(e){
@@ -1808,63 +1763,6 @@ function trackerReset(){
   renderTracker();
 }
 
-
-// ── WORD OF THE DAY ──
-const WOTD_LIST = [
-  {word:'CROW',hint:'dark & clever'},
-  {word:'ROOK',hint:'strategic power'},
-  {word:'VIBE',hint:'feel the room'},
-  {word:'SING',hint:'what we do'},
-  {word:'NOIR',hint:'dark & beautiful'},
-  {word:'LURE',hint:'draw them in'},
-  {word:'PULSE',hint:'keep the beat'},
-  {word:'GLOW',hint:'light it up'},
-  {word:'BOLD',hint:'own the stage'},
-  {word:'DUSK',hint:'magic hour'},
-  {word:'HUSH',hint:'command the room'},
-  {word:'SPARK',hint:'ignite the night'},
-  {word:'FLUX',hint:'always moving'},
-  {word:'THRALL',hint:'hold them captive'},
-  {word:'BLOOM',hint:'in full effect'},
-  {word:'HAUNT',hint:'unforgettable'},
-  {word:'GRAIL',hint:'the real thing'},
-  {word:'SWAY',hint:'move the crowd'},
-  {word:'RIFF',hint:'improvise freely'},
-  {word:'MUSE',hint:'your inspiration'},
-  {word:'CLOAK',hint:'mystery and allure'},
-  {word:'SURGE',hint:'build the energy'},
-  {word:'KEEN',hint:'sharp and ready'},
-  {word:'BLAZE',hint:'burn bright'},
-  {word:'LOFT',hint:'elevate everything'},
-  {word:'WAIL',hint:'let it out'},
-  {word:'PLUM',hint:'rich and deep'},
-  {word:'SHADE',hint:'cool under pressure'},
-  {word:'RAVE',hint:'they will talk'},
-  {word:'BROOD',hint:'depth behind the smile'},
-  {word:'CULT',hint:'build your following'},
-  {word:'SILK',hint:'smooth delivery'},
-  {word:'DAZE',hint:'leave them stunned'},
-  {word:'WILD',hint:'controlled chaos'},
-  {word:'SOUL',hint:'put it in everything'},
-];
-
-function getWOTD(){
-  // Use day of year as seed so it changes daily but is same for everyone that day
-  const now = new Date();
-  const start = new Date(now.getFullYear(), 0, 0);
-  const diff = now - start;
-  const dayOfYear = Math.floor(diff / (1000*60*60*24));
-  return WOTD_LIST[dayOfYear % WOTD_LIST.length];
-}
-
-function renderWOTD(){
-  const el = document.getElementById('wotdWord');
-  const sub = document.getElementById('wotdSub');
-  if(!el) return;
-  const w = getWOTD();
-  el.textContent = w.word;
-  if(sub) sub.textContent = w.hint;
-}
 
 // ── INIT ── renders immediately, Firebase syncs in background
 function init(){
