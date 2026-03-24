@@ -793,7 +793,7 @@ async function fetchSheetData(){
     const data=await res.json();if(data.error)throw new Error(data.error.message);
     const rows=data.values||[];if(rows.length<2){renderHosts([]);return;}
     const h=rows[0].map(x=>x.toLowerCase().trim());
-    const ni=h.indexOf('host_name'),si=h.indexOf('status'),ti=h.indexOf('sign_in_time'),pi=h.indexOf('paid');
+    cconst ni=h.indexOf('host_name'),si=h.indexOf('status'),ti=h.indexOf('sign_in_time'),pi=h.indexOf('paid'),li=h.indexOf('location');
     renderHosts(rows.slice(1).map(r=>({name:r[ni]||'',status:(r[si]||'').toUpperCase(),signIn:r[ti]||'',paid:(r[pi]||'').toUpperCase()})));
     document.getElementById('homeError').style.display='none';
   }catch(e){
