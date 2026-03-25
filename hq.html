@@ -469,6 +469,14 @@
       <select class="history-select" id="historyPick"><option value="">— or pick a host —</option></select>
       <button class="history-btn" onclick="loadHistory()">Search</button>
     </div>
+    <div id="historySelBar" style="display:none;display:none;align-items:center;gap:0.75rem;margin-bottom:0.75rem;padding:0.5rem 0.75rem;background:var(--surface2);border:1px solid var(--border);border-radius:8px;font-size:0.81rem;color:var(--text2)">
+      <label style="display:flex;align-items:center;gap:0.4rem;cursor:pointer;color:var(--gold)">
+        <input type="checkbox" id="historySelectAll" onchange="historyToggleAll(this.checked)" style="accent-color:var(--gold);width:15px;height:15px">
+        Select all
+      </label>
+      <span id="historySelCount" style="color:var(--text3)">0 selected</span>
+      <button class="btn-sm" onclick="historyCopySelected()" style="margin-left:auto">Copy selected</button>
+    </div>
     <div id="historyResults"><div class="empty-state">Search by name or pick a host above.</div></div>
   </div>
 </div>
@@ -1079,11 +1087,59 @@ async function loadHistory(){
   const picked=document.getElementById('historyPick').value.toLowerCase();
   const search=typed||picked;
   const el=document.getElementById('historyResults');
-  if(!search){el.innerHTML='<div class="empty-state">Enter a name to search.</div>';return;}
+  const selBar=document.getElementById('historySelBar');
+  if(!search){el.innerHTML='<div class="empty-state">Enter a name to search.</div>';selBar.style.display='none';return;}
   await fetchCheckoutData();
   const results=checkoutData.filter(r=>(r.host||'').toLowerCase().includes(search)).reverse();
-  if(!results.length){el.innerHTML=`<div class="empty-state">No shift history found for "${search}".</div>`;return;}
-  el.innerHTML=`<table class="log-table"><thead><tr><th>Date</th><th>Venue</th><th>Crowd</th><th>Energy</th><th>Paid</th><th>Tips</th></tr></thead><tbody>${results.map(r=>`<tr><td>${r.date||'—'}</td><td>${r.venue||'—'}</td><td>${r.crowd_size||'—'}</td><td>${r.energy||'—'}</td><td style="color:${(r.got_paid||'').toLowerCase()==='yes'?'var(--teal2)':'var(--rose2)'}">${r.got_paid||'—'}</td><td style="font-size:0.81rem">${r.tip_scale||'—'}</td></tr>`).join('')}</tbody></table>`;
+  if(!results.length){el.innerHTML=`<div class="empty-state">No shift history found for "${search}".</div>`;selBar.style.display='none';return;}
+  selBar.style.display='flex';
+  document.getElementById('historySelectAll').checked=false;
+  document.getElementById('historySelCount').textContent='0 selected';
+  el.innerHTML=`<table class="log-table"><thead><tr>
+    <th style="width:28px"></th>
+    <th>Host</th><th>Date</th><th>Venue</th><th>Gig</th><th>Crowd</th><th>Energy</th><th>Paid</th><th>Tips</th>
+  </tr></thead><tbody>${results.map((r,i)=>{
+    const paid=(r.got_paid||'').toLowerCase()==='yes';
+    const gig=r.gig_type||r.gig||r.type||r.game_type||'—';
+    return `<tr>
+      <td><input type="checkbox" class="history-row-check" data-idx="${i}" onchange="historyUpdateSelCount()" style="accent-color:var(--gold);width:14px;height:14px;cursor:pointer"></td>
+      <td style="color:var(--text);font-weight:400">${r.host||'—'}</td>
+      <td>${r.date||'—'}</td>
+      <td>${r.venue||'—'}</td>
+      <td><span style="font-size:0.75rem;letter-spacing:0.08em;text-transform:uppercase;padding:0.15rem 0.5rem;border-radius:20px;background:rgba(58,160,138,0.1);color:var(--teal2);border:1px solid rgba(58,160,138,0.25)">${gig}</span></td>
+      <td>${r.crowd_size||'—'}</td>
+      <td>${r.energy||'—'}</td>
+      <td style="color:${paid?'var(--teal2)':'var(--rose2)'}">${r.got_paid||'—'}</td>
+      <td style="font-size:0.81rem">${r.tip_scale||'—'}</td>
+    </tr>`;
+  }).join('')}</tbody></table>`;
+}
+function historyToggleAll(checked){
+  document.querySelectorAll('.history-row-check').forEach(cb=>cb.checked=checked);
+  historyUpdateSelCount();
+}
+function historyUpdateSelCount(){
+  const all=document.querySelectorAll('.history-row-check');
+  const sel=document.querySelectorAll('.history-row-check:checked');
+  document.getElementById('historySelCount').textContent=sel.length+' selected';
+  document.getElementById('historySelectAll').checked=sel.length===all.length&&all.length>0;
+  document.getElementById('historySelectAll').indeterminate=sel.length>0&&sel.length<all.length;
+}
+function historyCopySelected(){
+  const rows=document.querySelectorAll('.history-row-check:checked');
+  if(!rows.length){return;}
+  const headers=['Host','Date','Venue','Gig','Crowd','Energy','Paid','Tips'];
+  const lines=[headers.join('\t')];
+  rows.forEach(cb=>{
+    const tr=cb.closest('tr');
+    const cells=Array.from(tr.querySelectorAll('td')).slice(1).map(td=>td.textContent.trim());
+    lines.push(cells.join('\t'));
+  });
+  navigator.clipboard.writeText(lines.join('\n')).then(()=>{
+    const btn=document.querySelector('#historySelBar button');
+    const orig=btn.textContent; btn.textContent='Copied!';
+    setTimeout(()=>btn.textContent=orig,1800);
+  });
 }
 function populateHistoryDropdown(){
   const sel=document.getElementById('historyPick');
