@@ -1090,7 +1090,8 @@ async function loadHistory(){
   const selBar=document.getElementById('historySelBar');
   if(!search){el.innerHTML='<div class="empty-state">Enter a name to search.</div>';selBar.style.display='none';return;}
   await fetchCheckoutData();
-  const results=checkoutData.filter(r=>(r.host||'').toLowerCase().includes(search)).reverse();
+  const allHosts=search==='__all__';
+  const results=checkoutData.filter(r=>allHosts||(r.host||'').toLowerCase().includes(search)).reverse();
   if(!results.length){el.innerHTML=`<div class="empty-state">No shift history found for "${search}".</div>`;selBar.style.display='none';return;}
   selBar.style.display='flex';
   document.getElementById('historySelectAll').checked=false;
@@ -1143,7 +1144,7 @@ function historyCopySelected(){
 }
 function populateHistoryDropdown(){
   const sel=document.getElementById('historyPick');
-  sel.innerHTML='<option value="">— or pick a host —</option>';
+  sel.innerHTML='<option value="">— or pick a host —</option><option value="__all__">★ All hosts</option>';
   roster.forEach(h=>{const o=document.createElement('option');o.value=h.name.toLowerCase();o.textContent=h.name;sel.appendChild(o);});
 }
 
