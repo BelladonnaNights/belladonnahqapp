@@ -21,6 +21,7 @@
 }
 body{background:var(--bg);color:var(--text);font-family:'Josefin Sans',sans-serif;font-weight:300;min-height:100vh;letter-spacing:0.04em;overflow-x:hidden;}
 
+/* HEADER */
 .header{background:linear-gradient(180deg,#060408 0%,var(--bg) 100%);border-bottom:2px solid rgba(155,106,191,0.25);padding:1.2rem 1.5rem;position:relative;}
 .header::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,var(--purple2),var(--gold),var(--purple),transparent);}
 .header-top{display:flex;align-items:center;justify-content:space-between;}
@@ -31,61 +32,76 @@ body{background:var(--bg);color:var(--text);font-family:'Josefin Sans',sans-seri
 .hq-link{display:flex;align-items:center;gap:6px;font-size:0.62rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--text3);text-decoration:none;border:1px solid var(--border);padding:0.4rem 0.9rem;transition:all 0.2s;}
 .hq-link:hover{border-color:var(--border-gold);color:var(--gold);}
 
+/* HOME BOARD */
 #homeScreen{display:flex;flex-direction:column;height:calc(100vh - 76px);overflow:hidden;}
-.home-greeting{padding:1rem 1.5rem 0.75rem;flex-shrink:0;}
+.home-top{padding:1rem 1.5rem 0.5rem;flex-shrink:0;display:flex;align-items:flex-end;justify-content:space-between;gap:1rem;}
 .home-greeting-text{font-family:'Cormorant Garamond',serif;font-size:1.5rem;font-weight:300;color:var(--gold);letter-spacing:0.12em;}
-.home-greeting-sub{font-size:0.58rem;letter-spacing:0.25em;text-transform:uppercase;color:var(--text3);margin-top:0.2rem;}
+.home-greeting-sub{font-size:0.58rem;letter-spacing:0.25em;text-transform:uppercase;color:var(--text3);margin-top:0.15rem;}
+.focus-badge{font-size:0.58rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--rose);border:1px solid rgba(160,56,88,0.35);padding:0.3rem 0.75rem;white-space:nowrap;flex-shrink:0;}
+.focus-badge span{color:var(--text2);}
 
-.board-scroll{flex:1;overflow-x:auto;overflow-y:hidden;padding:0 1rem 1rem;display:flex;gap:0.75rem;align-items:flex-start;-webkit-overflow-scrolling:touch;scrollbar-width:thin;scrollbar-color:rgba(155,106,191,0.2) transparent;}
+.board-scroll{flex:1;overflow-x:auto;overflow-y:hidden;padding:0.75rem 1rem 1rem;display:flex;gap:0.6rem;align-items:flex-start;-webkit-overflow-scrolling:touch;scrollbar-width:thin;scrollbar-color:rgba(155,106,191,0.2) transparent;}
 .board-scroll::-webkit-scrollbar{height:4px;}
 .board-scroll::-webkit-scrollbar-track{background:transparent;}
 .board-scroll::-webkit-scrollbar-thumb{background:rgba(155,106,191,0.25);}
 
-.pillar-col{background:var(--surface);border:1px solid var(--border);width:210px;min-width:210px;display:flex;flex-direction:column;max-height:100%;overflow:hidden;cursor:pointer;transition:border-color 0.2s,box-shadow 0.2s;flex-shrink:0;position:relative;}
+/* PILLAR COLUMNS */
+.pillar-col{background:var(--surface);border:1px solid var(--border);width:200px;min-width:200px;display:flex;flex-direction:column;max-height:100%;overflow:hidden;cursor:pointer;transition:border-color 0.25s,box-shadow 0.25s;flex-shrink:0;position:relative;}
 .pillar-col::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
-.pillar-col:hover{box-shadow:0 4px 24px rgba(0,0,0,0.6);}
-
-.pillar-col-header{padding:1rem 1rem 0.75rem;flex-shrink:0;}
-.pillar-col-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:0.75rem;}
-.pillar-col-name-wrap{flex:1;}
-.pillar-col-name{font-size:0.62rem;letter-spacing:0.25em;text-transform:uppercase;color:var(--text3);line-height:1.4;font-weight:400;}
-.pillar-col-pct{font-family:'Cormorant Garamond',serif;font-size:1.8rem;font-weight:300;line-height:1;margin-top:0.2rem;}
+.pillar-col:hover{box-shadow:0 4px 28px rgba(0,0,0,0.65);}
+.pillar-col.focus-col{border-color:rgba(160,56,88,0.5);box-shadow:0 0 0 1px rgba(160,56,88,0.2);}
+.pillar-col-header{padding:0.9rem 0.9rem 0.7rem;flex-shrink:0;}
+.pillar-col-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:0.65rem;}
+.pillar-col-name{font-size:0.6rem;letter-spacing:0.25em;text-transform:uppercase;color:var(--text3);line-height:1.4;font-weight:400;flex:1;}
+.pillar-col-pct{font-family:'Cormorant Garamond',serif;font-size:1.7rem;font-weight:300;line-height:1;}
 .pillar-col-bar{height:2px;background:rgba(255,255,255,0.05);overflow:hidden;}
 .pillar-col-bar-fill{height:100%;transition:width 0.5s ease;}
-
-.pillar-col-tasks{padding:0.6rem 0.75rem 0.5rem;flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:0.3rem;scrollbar-width:none;}
+.pillar-col-tasks{padding:0.5rem 0.7rem 0.4rem;flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:0.28rem;scrollbar-width:none;}
 .pillar-col-tasks::-webkit-scrollbar{display:none;}
-.pillar-task-chip{background:var(--surface2);border:1px solid rgba(155,106,191,0.1);padding:0.45rem 0.6rem;font-size:0.7rem;color:var(--text2);letter-spacing:0.02em;line-height:1.4;display:flex;align-items:flex-start;gap:0.45rem;}
-.pillar-task-chip.done{opacity:0.35;}
-.pillar-task-chip.done span{text-decoration:line-through;}
-.pillar-task-dot{width:5px;height:5px;flex-shrink:0;margin-top:5px;}
-.pillar-col-add{margin:0 0.75rem 0.5rem;border:1px dashed rgba(155,106,191,0.15);padding:0.4rem 0.6rem;font-size:0.6rem;letter-spacing:0.12em;color:var(--text4);text-align:center;flex-shrink:0;}
-.pillar-col-empty{font-size:0.65rem;color:var(--text4);text-align:center;padding:1rem 0.5rem;line-height:1.8;letter-spacing:0.04em;}
-.pillar-col-open{font-size:0.52rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--text4);padding:0.5rem 0.75rem;border-top:1px solid rgba(155,106,191,0.08);text-align:center;flex-shrink:0;transition:color 0.2s;}
+.pillar-task-chip{background:var(--surface2);border:1px solid rgba(155,106,191,0.08);padding:0.42rem 0.55rem;font-size:0.68rem;color:var(--text2);letter-spacing:0.02em;line-height:1.35;display:flex;align-items:flex-start;gap:0.4rem;}
+.pillar-task-chip.done{opacity:0.32;}
+.pillar-task-chip.done .chip-text{text-decoration:line-through;}
+.pillar-task-dot{width:4px;height:4px;flex-shrink:0;margin-top:5px;}
+.pillar-col-more{margin:0 0.7rem 0.4rem;border:1px dashed rgba(155,106,191,0.12);padding:0.35rem 0.55rem;font-size:0.58rem;letter-spacing:0.12em;color:var(--text4);text-align:center;flex-shrink:0;}
+.pillar-col-empty{font-size:0.62rem;color:var(--text4);text-align:center;padding:0.9rem 0.5rem;line-height:1.9;letter-spacing:0.04em;}
+.pillar-col-open{font-size:0.5rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--text4);padding:0.45rem 0.7rem;border-top:1px solid rgba(155,106,191,0.07);text-align:right;flex-shrink:0;transition:color 0.2s;}
 .pillar-col:hover .pillar-col-open{color:var(--text3);}
 
+/* PILLAR DETAIL SCREEN */
 #pillarScreen{display:none;}
 .pillar-header{background:var(--surface);border-bottom:2px solid var(--border);padding:1rem 1.5rem;display:flex;align-items:center;gap:1rem;position:sticky;top:0;z-index:50;position:relative;}
 .pillar-header::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
 .back-btn{background:none;border:1px solid var(--border);color:var(--text3);width:34px;height:34px;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all 0.2s;}
 .back-btn:hover{border-color:var(--gold);color:var(--gold);}
 .pillar-header-name{font-family:'Cormorant Garamond',serif;font-size:1.5rem;font-weight:300;letter-spacing:0.12em;color:var(--gold);flex:1;}
-.pillar-header-pct{font-family:'Cormorant Garamond',serif;font-size:2.2rem;font-weight:300;flex-shrink:0;}
+.pillar-header-right{display:flex;flex-direction:column;align-items:flex-end;gap:2px;flex-shrink:0;}
+.pillar-header-pct{font-family:'Cormorant Garamond',serif;font-size:2.2rem;font-weight:300;line-height:1;}
+.pillar-header-sub{font-size:0.52rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--text3);}
 .pillar-progress-bar{height:3px;background:var(--surface2);}
 .pillar-progress-fill{height:100%;transition:width 0.5s ease;}
 .pillar-body{padding:1.5rem;}
 
+/* TRACKER SYNC BADGE */
+.tracker-sync-bar{background:var(--surface2);border:1px solid var(--border);border-left:3px solid var(--purple);padding:0.75rem 1rem;margin-bottom:1.5rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;}
+.tracker-sync-label{font-size:0.6rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--text3);}
+.tracker-sync-pct{font-family:'Cormorant Garamond',serif;font-size:1.4rem;color:var(--purple);font-weight:300;}
+.tracker-sync-breakdown{font-size:0.6rem;color:var(--text3);margin-top:2px;letter-spacing:0.04em;}
+
+/* SHARED COMPONENTS */
 .section-label{font-size:0.58rem;letter-spacing:0.3em;text-transform:uppercase;color:var(--text3);margin-bottom:0.7rem;display:flex;align-items:center;gap:0.5rem;font-weight:400;}
 .section-label::after{content:'';flex:1;height:1px;background:rgba(155,106,191,0.15);}
 .btn-sm{background:none;border:1px solid var(--border2);color:var(--purple-btn);padding:0.35rem 0.85rem;font-size:0.6rem;letter-spacing:0.16em;text-transform:uppercase;cursor:pointer;font-family:'Josefin Sans',sans-serif;transition:all 0.2s;font-weight:400;}
 .btn-sm:hover{border-color:var(--border-gold);color:var(--gold);}
 .btn-gold{background:var(--gold-dim);border:1px solid var(--border-gold);color:var(--gold);}
 .btn-gold:hover{background:rgba(201,168,76,0.2);}
+.save-dot{font-size:0.58rem;color:var(--teal);letter-spacing:0.08em;opacity:0;transition:opacity 0.3s;margin-left:0.4rem;}
+.save-dot.show{opacity:1;}
 
+/* TASKS */
 .task-list{display:flex;flex-direction:column;gap:0.35rem;margin-bottom:1.2rem;}
 .task-row{display:flex;align-items:center;gap:0.75rem;padding:0.6rem 0.85rem;background:var(--surface);border:1px solid var(--border);transition:all 0.2s;cursor:pointer;}
 .task-row:hover{border-color:var(--border2);}
-.task-row.done{opacity:0.45;}
+.task-row.done{opacity:0.42;}
 .task-row.done .task-label{text-decoration:line-through;color:var(--text3);}
 .task-check{width:16px;height:16px;border:1px solid var(--border2);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:0.6rem;transition:all 0.2s;background:none;}
 .task-row.done .task-check{background:rgba(58,154,90,0.2);border-color:var(--live);color:var(--live);}
@@ -98,6 +114,7 @@ body{background:var(--bg);color:var(--text);font-family:'Josefin Sans',sans-seri
 .add-task-input:focus{border-color:var(--gold);}
 .add-task-input::placeholder{color:var(--text3);}
 
+/* KANBAN */
 .kanban-wrap{display:grid;grid-template-columns:repeat(2,1fr);gap:0.6rem;margin-bottom:1.5rem;}
 @media(min-width:600px){.kanban-wrap{grid-template-columns:repeat(4,1fr);}}
 .kanban-col{background:var(--surface);border:1px solid var(--border);padding:0.75rem;min-height:120px;}
@@ -111,6 +128,7 @@ body{background:var(--bg);color:var(--text);font-family:'Josefin Sans',sans-seri
 .kanban-add-input:focus{border-color:var(--border2);}
 .kanban-add-input::placeholder{color:var(--text3);}
 
+/* PEOPLE */
 .people-list{display:flex;flex-direction:column;gap:0.4rem;margin-bottom:1.2rem;}
 .person-card{background:var(--surface);border:1px solid var(--border);}
 .person-header{display:flex;align-items:center;gap:0.75rem;padding:0.85rem 1rem;cursor:pointer;}
@@ -127,6 +145,7 @@ body{background:var(--bg);color:var(--text);font-family:'Josefin Sans',sans-seri
 .person-del{background:none;border:none;color:var(--text3);cursor:pointer;font-size:0.68rem;padding:2px;margin-left:4px;transition:color 0.2s;}
 .person-del:hover{color:var(--rose);}
 
+/* PHOTO BOARD */
 .photo-board{display:grid;grid-template-columns:repeat(2,1fr);gap:0.5rem;margin-bottom:1.2rem;}
 @media(min-width:480px){.photo-board{grid-template-columns:repeat(3,1fr);}}
 .photo-card{background:var(--surface);border:1px solid var(--border);overflow:hidden;position:relative;aspect-ratio:1;cursor:pointer;transition:all 0.2s;}
@@ -141,9 +160,9 @@ body{background:var(--bg);color:var(--text);font-family:'Josefin Sans',sans-seri
 .photo-card-del:hover{color:var(--rose);}
 .photo-add-card{background:var(--surface2);border:1px dashed rgba(155,106,191,0.2);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:all 0.2s;aspect-ratio:1;}
 .photo-add-card:hover{border-color:var(--border2);}
-.photo-add-icon{font-size:1.4rem;color:var(--text3);margin-bottom:0.3rem;}
-.photo-add-label{font-size:0.58rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--text3);}
+.photo-add-label{font-size:0.6rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--text3);}
 
+/* CALENDAR MINI */
 .cal-mini-list{display:flex;flex-direction:column;gap:0.35rem;margin-bottom:1.2rem;}
 .cal-mini-item{display:flex;align-items:center;gap:0.75rem;padding:0.6rem 0.85rem;background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--gold);}
 .cal-mini-date{font-family:'Cormorant Garamond',serif;font-size:1.05rem;color:var(--gold);flex-shrink:0;min-width:36px;}
@@ -152,8 +171,9 @@ body{background:var(--bg);color:var(--text);font-family:'Josefin Sans',sans-seri
 .cal-mini-venue{font-size:0.62rem;color:var(--text3);letter-spacing:0.05em;}
 .cal-mini-empty{text-align:center;padding:1.5rem;color:var(--text3);font-size:0.75rem;letter-spacing:0.1em;line-height:2;border:1px dashed rgba(155,106,191,0.12);}
 
+/* LINKS */
 .link-list{display:flex;flex-direction:column;gap:0.35rem;margin-bottom:1.2rem;}
-.link-item{display:flex;align-items:center;gap:0.75rem;padding:0.6rem 0.85rem;background:var(--surface);border:1px solid var(--border);text-decoration:none;transition:all 0.2s;cursor:pointer;}
+.link-item{display:flex;align-items:center;gap:0.75rem;padding:0.6rem 0.85rem;background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--gold);text-decoration:none;transition:all 0.2s;cursor:pointer;}
 .link-item:hover{border-color:var(--border2);}
 .link-item-text{flex:1;}
 .link-item-title{font-size:0.8rem;color:var(--gold);letter-spacing:0.04em;}
@@ -164,6 +184,7 @@ body{background:var(--bg);color:var(--text);font-family:'Josefin Sans',sans-seri
 .link-item:hover .link-item-del{opacity:1;}
 .link-item-del:hover{color:var(--rose);}
 
+/* MODAL */
 .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:200;display:none;align-items:center;justify-content:center;padding:1rem;}
 .modal-bg.open{display:flex;}
 .modal{background:var(--surface);border:1px solid var(--border2);border-top:3px solid var(--gold);padding:1.6rem;width:100%;max-width:440px;position:relative;max-height:90vh;overflow-y:auto;}
@@ -181,9 +202,6 @@ body{background:var(--bg);color:var(--text);font-family:'Josefin Sans',sans-seri
 .modal-save:hover{background:rgba(201,168,76,0.2);color:var(--text);}
 .modal-cancel{background:none;border:1px solid var(--border);color:var(--text3);padding:0.65rem 1.1rem;font-size:0.65rem;letter-spacing:0.18em;text-transform:uppercase;cursor:pointer;font-family:'Josefin Sans',sans-serif;}
 .modal-cancel:hover{border-color:var(--rose);color:var(--rose);}
-.save-dot{font-size:0.58rem;color:var(--teal);letter-spacing:0.08em;opacity:0;transition:opacity 0.3s;margin-left:0.4rem;}
-.save-dot.show{opacity:1;}
-.section-gap{height:1.5rem;}
 </style>
 </head>
 <body>
@@ -198,28 +216,30 @@ body{background:var(--bg);color:var(--text);font-family:'Josefin Sans',sans-seri
   </div>
 </div>
 
-<!-- HOME SCREEN -->
 <div id="homeScreen">
-  <div class="home-greeting">
-    <div class="home-greeting-text" id="greetingText">Good evening.</div>
-    <div class="home-greeting-sub">What are we working on?</div>
+  <div class="home-top">
+    <div>
+      <div class="home-greeting-text" id="greetingText">Good evening.</div>
+      <div class="home-greeting-sub">What needs attention?</div>
+    </div>
+    <div class="focus-badge" id="focusBadge" style="display:none;">Focus: <span id="focusPillarName">—</span></div>
   </div>
   <div class="board-scroll" id="pillarsGrid"></div>
 </div>
 
-<!-- PILLAR SCREEN -->
 <div id="pillarScreen">
   <div class="pillar-header" id="pillarHeader">
     <button class="back-btn" onclick="goHome()">←</button>
-    <div class="pillar-header-icon" id="phIcon"></div>
     <div class="pillar-header-name" id="phName"></div>
-    <div class="pillar-header-pct" id="phPct"></div>
+    <div class="pillar-header-right">
+      <div class="pillar-header-pct" id="phPct"></div>
+      <div class="pillar-header-sub">combined score</div>
+    </div>
   </div>
   <div class="pillar-progress-bar"><div class="pillar-progress-fill" id="pillarProgressFill"></div></div>
   <div class="pillar-body" id="pillarBody"></div>
 </div>
 
-<!-- ADD ITEM MODAL (generic) -->
 <div class="modal-bg" id="addItemModal">
   <div class="modal">
     <div class="modal-title" id="addItemTitle">Add Item</div>
@@ -253,114 +273,153 @@ const LS = {
   set:(k,v)=>{try{localStorage.setItem(k,v);}catch(e){}}
 };
 
-// ── PILLAR DEFINITIONS ──
+// ── PILLAR → TRACKER CATEGORY MAPPING ──
+// Maps each Command Center pillar to the Growth Tracker category IDs it contributes to
+const PILLAR_TRACKER_MAP = {
+  'social':     ['marketing','brand'],
+  'venue':      ['venues','booking'],
+  'hosts':      ['talent'],
+  'gigs':       ['operations','booking'],
+  'music':      ['operations'],
+  'merch-shop': ['brand','finance'],
+  'merch-make': ['brand'],
+  'events':     ['growth','marketing'],
+};
+
+// ── PILLARS ──
 const PILLARS = [
-  { id:'social',      name:'Social & Brand',    icon:'📱', color:'var(--p-social)',     desc:'Posts, Reels, branding, content calendar' },
-  { id:'venue',       name:'Venue Growth',       icon:'🍺', color:'var(--p-venue)',      desc:'Venue leads, flyers, ads, landing page' },
-  { id:'hosts',       name:'Hosts & Team',       icon:'🌟', color:'var(--p-hosts)',      desc:'Check-ins, leads, host kits, onboarding' },
-  { id:'gigs',        name:'Gigs',               icon:'🎤', color:'var(--p-gigs)',       desc:'Bingo, Trivia, Karaoke — scheduling & prep' },
-  { id:'music',       name:'Music',              icon:'🎵', color:'var(--p-music)',      desc:'Download lists, playlists, interim music' },
-  { id:'merch-shop',  name:'Merch Shop',         icon:'🛍️', color:'var(--p-merch-shop)', desc:'Printify, shop links, product tracking' },
-  { id:'merch-make',  name:'Merch Production',   icon:'✂️', color:'var(--p-merch-make)', desc:'Physical make list — stickers, shirts, candles' },
-  { id:'events',      name:'Specialty Events',   icon:'✨', color:'var(--p-events)',     desc:'Upcoming events, marketing, venue pitches' },
+  { id:'social',      name:'Social & Brand',   color:'var(--p-social)',    desc:'Posts, Reels, branding, content calendar' },
+  { id:'venue',       name:'Venue Growth',      color:'var(--p-venue)',     desc:'Venue leads, flyers, ads, landing page' },
+  { id:'hosts',       name:'Hosts & Team',      color:'var(--p-hosts)',     desc:'Check-ins, leads, host kits, onboarding' },
+  { id:'gigs',        name:'Gigs',              color:'var(--p-gigs)',      desc:'Bingo, Trivia, Karaoke — scheduling & prep' },
+  { id:'music',       name:'Music',             color:'var(--p-music)',     desc:'Download lists, playlists, interim music' },
+  { id:'merch-shop',  name:'Merch Shop',        color:'var(--p-merch-shop)',desc:'Printify, shop links, product tracking' },
+  { id:'merch-make',  name:'Merch Production',  color:'var(--p-merch-make)',desc:'Physical make list — stickers, shirts, candles' },
+  { id:'events',      name:'Specialty Events',  color:'var(--p-events)',    desc:'Upcoming events, marketing, venue pitches' },
 ];
 
 // ── STATE ──
-// Each pillar stores: { tasks:[], kanban:{}, people:[], links:[], photos:[], notes:'' }
-// tasks: [{id,label,done}]
-// kanban: {lead:[{id,name}], contacted:[...], active:[...], won:[...]}
-// people: [{id,name,status,note}]
-// links: [{id,title,url,sub}]
-// photos: [{id,name,url,link}]
 let pillarData = {};
+let trackerAnswers = {};
+let trackerCategories = [];
 let currentPillarId = null;
-let calEntries = []; // from HQ firebase
+let calEntries = [];
 
-// ── DEFAULTS ──
 function defaultPillarData(id) {
   const base = { tasks:[], links:[], notes:'' };
-  if(id === 'venue') return {...base, kanban:{ lead:[], contacted:[], active:[], won:[] }};
+  if(id === 'venue') return {...base, kanban:{lead:[],contacted:[],active:[],won:[]}};
   if(id === 'hosts') return {...base, people:[]};
   if(id === 'merch-shop') return {...base, photos:[]};
   return base;
 }
 
-// ── LOAD / SAVE ──
+// ── LOAD ──
 function loadAll() {
   PILLARS.forEach(p => {
     const raw = LS.get('cc-'+p.id);
     pillarData[p.id] = raw ? JSON.parse(raw) : defaultPillarData(p.id);
-    // ensure all required keys exist
     if(!pillarData[p.id].tasks) pillarData[p.id].tasks = [];
     if(!pillarData[p.id].links) pillarData[p.id].links = [];
     if(p.id === 'venue' && !pillarData[p.id].kanban) pillarData[p.id].kanban = {lead:[],contacted:[],active:[],won:[]};
     if(p.id === 'hosts' && !pillarData[p.id].people) pillarData[p.id].people = [];
     if(p.id === 'merch-shop' && !pillarData[p.id].photos) pillarData[p.id].photos = [];
   });
-  // sync from Firebase in background
+
+  // load tracker answers from localStorage
+  try { const t = LS.get('tracker-answers'); if(t) trackerAnswers = JSON.parse(t); } catch(e){}
+  try { const c = LS.get('tracker-categories'); if(c) trackerCategories = JSON.parse(c); } catch(e){}
+
   if(db) {
+    // sync command center pillar data
     db.collection('command_center').doc('pillars').onSnapshot(snap => {
       if(snap.exists) {
         const d = snap.data();
-        PILLARS.forEach(p => {
-          if(d[p.id]) {
-            pillarData[p.id] = d[p.id];
-            LS.set('cc-'+p.id, JSON.stringify(d[p.id]));
-          }
-        });
+        PILLARS.forEach(p => { if(d[p.id]) { pillarData[p.id] = d[p.id]; LS.set('cc-'+p.id, JSON.stringify(d[p.id])); }});
         renderHome();
         if(currentPillarId) renderPillar(currentPillarId);
       }
     }, ()=>{});
-    // Load cal entries from HQ
-    db.collection('cal_entries').get().then(snap => {
-      calEntries = [];
-      snap.forEach(doc => calEntries.push(doc.data()));
+
+    // sync tracker state (real-time, same as HQ)
+    db.collection('tracker_data').doc('state').onSnapshot(snap => {
+      if(snap.exists) {
+        const d = snap.data();
+        if(d.answers) { trackerAnswers = d.answers; LS.set('tracker-answers', JSON.stringify(d.answers)); }
+        if(d.categories) { trackerCategories = d.categories; LS.set('tracker-categories', JSON.stringify(d.categories)); }
+        renderHome();
+        if(currentPillarId) renderPillar(currentPillarId);
+      }
+    }, ()=>{});
+
+    // load cal entries
+    db.collection('hq_data').doc('cal-entries').get().then(snap => {
+      if(snap.exists) { try { calEntries = JSON.parse(snap.data().value)||[]; } catch(e){} }
       if(currentPillarId === 'gigs') renderPillar('gigs');
-    }).catch(()=>{
-      // try the array format
-      db.collection('hq_data').doc('cal-entries').get().then(snap => {
-        if(snap.exists) {
-          try { calEntries = JSON.parse(snap.data().value) || []; } catch(e) {}
-          if(currentPillarId === 'gigs') renderPillar('gigs');
-        }
-      }).catch(()=>{});
-    });
+    }).catch(()=>{});
   }
 }
 
+// ── SAVE ──
 function save(pillarId, showDot) {
   LS.set('cc-'+pillarId, JSON.stringify(pillarData[pillarId]));
   if(db) {
-    const update = {};
-    update[pillarId] = pillarData[pillarId];
+    const update = {}; update[pillarId] = pillarData[pillarId];
     db.collection('command_center').doc('pillars').set(update, {merge:true}).catch(()=>{});
   }
-  if(showDot) {
-    const d = document.getElementById('saveDot');
-    if(d) { d.classList.add('show'); setTimeout(()=>d.classList.remove('show'),1500); }
-  }
-  renderHome(); // update rings
+  if(showDot) { const d=document.getElementById('saveDot'); if(d){d.classList.add('show');setTimeout(()=>d.classList.remove('show'),1500);}}
+  renderHome();
 }
 
 // ── PROGRESS CALC ──
-function calcProgress(pillarId) {
-  const d = pillarData[pillarId];
-  if(!d) return 0;
-  let total = 0, done = 0;
-  // tasks
-  (d.tasks||[]).forEach(t => { total++; if(t.done) done++; });
-  // kanban (venue) - items in 'active' or 'won' count as done
-  if(d.kanban) {
-    const cols = d.kanban;
-    ['lead','contacted','active','won'].forEach((col,i) => {
-      (cols[col]||[]).forEach(() => { total++; if(i>=2) done++; });
-    });
-  }
-  // people - those with status 'good' count as done
-  (d.people||[]).forEach(p => { total++; if(p.status==='good') done++; });
-  if(total === 0) return 0;
+// CC-only progress (tasks/kanban/people)
+function calcCCProgress(pillarId) {
+  const d = pillarData[pillarId]; if(!d) return 0;
+  let total=0, done=0;
+  (d.tasks||[]).forEach(t=>{total++;if(t.done)done++;});
+  if(d.kanban){['lead','contacted','active','won'].forEach((col,i)=>{(d.kanban[col]||[]).forEach(()=>{total++;if(i>=2)done++;});});}
+  (d.people||[]).forEach(p=>{total++;if(p.status==='good')done++;});
+  if(total===0) return null; // null = no data
   return Math.round((done/total)*100);
+}
+
+// Tracker-only progress for categories linked to this pillar
+function calcTrackerProgress(pillarId) {
+  const catIds = PILLAR_TRACKER_MAP[pillarId] || [];
+  if(!catIds.length || !trackerCategories.length) return null;
+  let totalScore=0, totalItems=0;
+  catIds.forEach(catId => {
+    const cat = trackerCategories.find(c=>c.id===catId);
+    if(!cat) return;
+    cat.items.forEach(item => {
+      const ans = trackerAnswers[catId+'_'+item.id];
+      totalItems++;
+      if(ans==='yes') totalScore+=1;
+      else if(ans==='partial') totalScore+=0.5;
+    });
+  });
+  if(totalItems===0) return null;
+  return Math.round((totalScore/totalItems)*100);
+}
+
+// Combined: weighted average of CC tasks + tracker answers
+function calcCombinedProgress(pillarId) {
+  const cc = calcCCProgress(pillarId);
+  const tr = calcTrackerProgress(pillarId);
+  if(cc===null && tr===null) return 0;
+  if(cc===null) return tr;
+  if(tr===null) return cc;
+  // weight: 50/50 blend
+  return Math.round((cc + tr) / 2);
+}
+
+// Find the pillar with the lowest combined score (the one to focus on)
+function getFocusPillar() {
+  let lowest = null, lowestPct = 101;
+  PILLARS.forEach(p => {
+    const pct = calcCombinedProgress(p.id);
+    if(pct < lowestPct) { lowestPct = pct; lowest = p; }
+  });
+  return lowest;
 }
 
 // ── GREETING ──
@@ -374,60 +433,67 @@ function updateGreeting() {
   else el.textContent = 'Good evening.';
 }
 
-// ── RING SVG ──
-function ringHTML(pct, color) {
-  const r = 13, circ = 2*Math.PI*r;
-  const dash = (pct/100)*circ;
-  return '<svg width="32" height="32" viewBox="0 0 32 32"><circle cx="16" cy="16" r="'+r+'" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="3"/><circle cx="16" cy="16" r="'+r+'" fill="none" stroke="'+color+'" stroke-width="3" stroke-dasharray="'+dash+' '+circ+'" stroke-linecap="round" opacity="0.8"/></svg>';
-}
-
-// ── HOME ──
+// ── HOME RENDER ──
 function renderHome() {
   const grid = document.getElementById('pillarsGrid');
   if(!grid) return;
-  grid.innerHTML = PILLARS.map(p => {
-    const pct = calcProgress(p.id);
+
+  const focus = getFocusPillar();
+  const focusBadge = document.getElementById('focusBadge');
+  const focusName = document.getElementById('focusPillarName');
+  if(focus && focusBadge && focusName) {
+    focusBadge.style.display = 'block';
+    focusName.textContent = focus.name;
+  }
+
+  // Sort: lowest combined % first so most-needing-attention is leftmost
+  const sorted = [...PILLARS].sort((a,b) => calcCombinedProgress(a.id) - calcCombinedProgress(b.id));
+
+  grid.innerHTML = sorted.map(p => {
+    const pct = calcCombinedProgress(p.id);
+    const ccPct = calcCCProgress(p.id);
+    const trPct = calcTrackerProgress(p.id);
     const d = pillarData[p.id] || {};
     const tasks = d.tasks || [];
     const incomplete = tasks.filter(t=>!t.done);
     const done = tasks.filter(t=>t.done);
-    const colorRaw = p.color; // e.g. var(--p-social)
+    const isFocus = focus && focus.id === p.id;
 
-    // show up to 6 incomplete tasks, then done ones greyed
-    const visibleTasks = [...incomplete.slice(0,6), ...done.slice(0,2)];
-    const remaining = incomplete.length > 6 ? incomplete.length - 6 : 0;
+    const visibleTasks = [...incomplete.slice(0,5), ...done.slice(0,1)];
+    const remaining = incomplete.length > 5 ? incomplete.length - 5 : 0;
 
     const tasksHTML = visibleTasks.map(t =>
       '<div class="pillar-task-chip'+(t.done?' done':'')+'">'+
-        '<div class="pillar-task-dot" style="background:'+colorRaw+';opacity:'+(t.done?'0.3':'0.7')+';"></div>'+
-        '<span>'+escHtml(t.label)+'</span>'+
+        '<div class="pillar-task-dot" style="background:'+p.color+';opacity:'+(t.done?'0.25':'0.7')+';"></div>'+
+        '<span class="chip-text">'+escHtml(t.label)+'</span>'+
       '</div>'
     ).join('');
 
-    const remainingHTML = remaining > 0
-      ? '<div class="pillar-col-add">+'+remaining+' more task'+(remaining>1?'s':'')+'</div>'
-      : '<div class="pillar-col-add" style="opacity:0.5;">tap to add tasks</div>';
+    const moreHTML = remaining > 0
+      ? '<div class="pillar-col-more">+'+remaining+' more</div>'
+      : (tasks.length === 0 ? '' : '<div class="pillar-col-more" style="opacity:0.4;">all tasks shown</div>');
 
-    return '<div class="pillar-col" onclick="openPillar(\''+p.id+'\')" style="border-color:'+colorRaw.replace('var(--','').replace(')','')+'22;">'+
-      '<style>.pillar-col[onclick*="'+p.id+'"]::before{background:'+colorRaw+';}</style>'+
+    const scoreDetail = [
+      ccPct !== null ? 'tasks: '+ccPct+'%' : null,
+      trPct !== null ? 'tracker: '+trPct+'%' : null,
+    ].filter(Boolean).join(' · ');
+
+    return '<div class="pillar-col'+(isFocus?' focus-col':'')+'" onclick="openPillar(\''+p.id+'\')">' +
+      '<style>.pillar-col[onclick*="\''+p.id+'\'"]::before{background:'+p.color+';}</style>'+
       '<div class="pillar-col-header">'+
         '<div class="pillar-col-top">'+
-          '<div class="pillar-col-icon">'+p.icon+'</div>'+
           '<div class="pillar-col-name">'+p.name+'</div>'+
-          '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;">'+
-            '<div class="pillar-col-pct" style="color:'+colorRaw+'">'+pct+'%</div>'+
-          '</div>'+
+          '<div class="pillar-col-pct" style="color:'+p.color+'">'+pct+'%</div>'+
         '</div>'+
-        '<div class="pillar-col-bar"><div class="pillar-col-bar-fill" style="width:'+pct+'%;background:'+colorRaw+';"></div></div>'+
+        '<div class="pillar-col-bar"><div class="pillar-col-bar-fill" style="width:'+pct+'%;background:'+p.color+';"></div></div>'+
       '</div>'+
       '<div class="pillar-col-tasks">'+
         (tasks.length === 0
-          ? '<div style="font-size:0.65rem;color:var(--text3);text-align:center;padding:1rem 0;letter-spacing:0.06em;line-height:1.8;">'+escHtml(p.desc)+'</div>'
-          : tasksHTML
-        )+
+          ? '<div class="pillar-col-empty">'+escHtml(p.desc)+'</div>'
+          : tasksHTML)+
       '</div>'+
-      remainingHTML+
-      '<div class="pillar-col-open">Open →</div>'+
+      moreHTML+
+      '<div class="pillar-col-open">'+(scoreDetail||'tap to open')+' →</div>'+
     '</div>';
   }).join('');
 }
@@ -437,14 +503,10 @@ function openPillar(id) {
   document.getElementById('homeScreen').style.display = 'none';
   document.getElementById('pillarScreen').style.display = 'block';
   const p = PILLARS.find(x=>x.id===id);
-  document.getElementById('phIcon').textContent = p.icon;
   document.getElementById('phName').textContent = p.name;
-  document.getElementById('pillarHeader').style.setProperty('--pc', p.color);
-  document.getElementById('pillarHeader').style.cssText += ';border-bottom:1px solid var(--border);';
-  document.getElementById('pillarHeader').querySelector('::before') ;
-  // set header accent
-  const hdr = document.getElementById('pillarHeader');
-  hdr.dataset.color = p.color;
+  let styleEl = document.getElementById('pillarHeaderStyle');
+  if(!styleEl){styleEl=document.createElement('style');styleEl.id='pillarHeaderStyle';document.head.appendChild(styleEl);}
+  styleEl.textContent = '#pillarHeader::before{background:'+p.color+'!important;}';
   renderPillar(id);
   window.scrollTo(0,0);
 }
@@ -457,64 +519,56 @@ function goHome() {
   window.scrollTo(0,0);
 }
 
-// ── RENDER PILLAR ──
+// ── RENDER PILLAR DETAIL ──
 function renderPillar(id) {
   const p = PILLARS.find(x=>x.id===id);
-  const pct = calcProgress(id);
+  const pct = calcCombinedProgress(id);
+  const ccPct = calcCCProgress(id);
+  const trPct = calcTrackerProgress(id);
+
   document.getElementById('phPct').textContent = pct+'%';
   document.getElementById('phPct').style.color = p.color;
   document.getElementById('pillarProgressFill').style.width = pct+'%';
   document.getElementById('pillarProgressFill').style.background = p.color;
 
-  // header color line
-  const hdr = document.getElementById('pillarHeader');
-  hdr.style.cssText = 'background:var(--surface);border-bottom:1px solid var(--border);padding:1rem 1.5rem;display:flex;align-items:center;gap:1rem;position:sticky;top:0;z-index:50;';
-  // inject style for ::before
-  let styleEl = document.getElementById('pillarHeaderStyle');
-  if(!styleEl){styleEl=document.createElement('style');styleEl.id='pillarHeaderStyle';document.head.appendChild(styleEl);}
-  styleEl.textContent = '#pillarHeader::before{background:'+p.color+'!important;}';
-
   const body = document.getElementById('pillarBody');
-  body.innerHTML = buildPillarHTML(id);
+  body.innerHTML = buildPillarHTML(id, ccPct, trPct);
   attachPillarEvents(id);
 }
 
 // ── BUILD PILLAR HTML ──
-function buildPillarHTML(id) {
-  const d = pillarData[id];
+function buildPillarHTML(id, ccPct, trPct) {
+  const p = PILLARS.find(x=>x.id===id);
   let html = '<span class="save-dot" id="saveDot">Saved ✓</span>';
 
-  // TASKS section (all pillars)
+  // Tracker sync bar — shows contribution from both sources
+  const catIds = PILLAR_TRACKER_MAP[id] || [];
+  const catNames = catIds.map(cid => {
+    const cat = trackerCategories.find(c=>c.id===cid);
+    return cat ? cat.name : cid;
+  }).join(', ');
+
+  html += '<div class="tracker-sync-bar">'+
+    '<div>'+
+      '<div class="tracker-sync-label">Combined Score</div>'+
+      '<div class="tracker-sync-breakdown">'+
+        (ccPct!==null ? 'Tasks: '+ccPct+'%' : 'No tasks yet')+
+        (trPct!==null ? ' &nbsp;·&nbsp; Growth Tracker: '+trPct+'%' : ' &nbsp;·&nbsp; Tracker: not started')+
+      '</div>'+
+      (catNames ? '<div class="tracker-sync-breakdown" style="margin-top:2px;color:var(--text4);">Tracker categories: '+escHtml(catNames)+'</div>' : '')+
+    '</div>'+
+    '<div class="tracker-sync-pct">'+(trPct!==null?trPct+'%':'—')+'</div>'+
+  '</div>';
+
   html += buildTasksHTML(id);
 
-  // Pillar-specific sections
-  if(id === 'social') html += buildLinksSection(id, 'Quick Links', [
-    {title:'Instagram',sub:'@belladonnanights'},
-    {title:'Facebook',sub:'Belladonna Audio Alchemies'},
-    {title:'Wix Website',sub:'belladonnanights.com'},
-    {title:'MailerLite',sub:'Email campaigns'},
-    {title:'Canva',sub:'Brand assets & templates'},
-  ]) + buildNotesSection(id, 'Content Brain Dump');
-
+  if(id === 'social') html += buildLinksSection(id, 'Quick Links') + buildNotesSection(id, 'Content Brain Dump');
   if(id === 'venue') html += buildKanbanHTML(id) + buildLinksSection(id, 'Resources') + buildNotesSection(id, 'Pitch Notes');
-
   if(id === 'hosts') html += buildPeopleHTML(id) + buildLinksSection(id, 'Resources') + buildNotesSection(id, 'Team Notes');
-
-  if(id === 'gigs') html += buildGigsCalHTML() + buildLinksSection(id, 'Quick Links', [
-    {title:'Music Bingo',sub:'belladonnanights.github.io/bingo',url:'https://belladonnanights.github.io/bingo/index.html'},
-    {title:'Trivia App',sub:'belladonna trivia system',url:'https://belladonnatrivia.github.io/'},
-    {title:'Bingo Categories',sub:'Add or schedule categories'},
-    {title:'Host Hub',sub:'Check-in / Check-out',url:'host-hub.html'},
-  ]) + buildNotesSection(id, 'Gig Prep Notes');
-
+  if(id === 'gigs') html += buildGigsCalHTML() + buildLinksSection(id, 'Quick Links') + buildNotesSection(id, 'Gig Prep Notes');
   if(id === 'music') html += buildLinksSection(id, 'Playlists & Sources') + buildNotesSection(id, 'Download List & Ideas');
-
-  if(id === 'merch-shop') html += buildPhotoBoard(id) + buildLinksSection(id, 'Shop Links', [
-    {title:'Printify',sub:'Print-on-demand dashboard',url:'https://printify.com'},
-  ]) + buildNotesSection(id, 'Shop Notes');
-
+  if(id === 'merch-shop') html += buildPhotoBoard(id) + buildLinksSection(id, 'Shop Links') + buildNotesSection(id, 'Shop Notes');
   if(id === 'merch-make') html += buildNotesSection(id, 'Make List') + buildLinksSection(id, 'Supplies & Resources');
-
   if(id === 'events') html += buildLinksSection(id, 'Upcoming Events & Pitches') + buildNotesSection(id, 'Event Concepts & Marketing Notes');
 
   return html;
@@ -525,16 +579,13 @@ function buildTasksHTML(id) {
   const tasks = pillarData[id].tasks || [];
   const incomplete = tasks.filter(t=>!t.done);
   const complete = tasks.filter(t=>t.done);
-  let html = '<div class="section-label">To-Do <span class="save-dot" id="saveDot" style="display:inline;"></span></div>';
-  html += '<div class="add-task-row">';
-  html += '<input type="text" class="add-task-input" id="newTaskInput" placeholder="Add a task..." onkeydown="if(event.key===\'Enter\')addTask(\''+id+'\')">';
-  html += '<button class="btn-sm btn-gold" onclick="addTask(\''+id+'\')">+ Add</button>';
-  html += '</div>';
+  let html = '<div class="section-label">To-Do</div>';
+  html += '<div class="add-task-row"><input type="text" class="add-task-input" id="newTaskInput" placeholder="Add a task..." onkeydown="if(event.key===\'Enter\')addTask(\''+id+'\')"><button class="btn-sm btn-gold" onclick="addTask(\''+id+'\')">+ Add</button></div>';
   html += '<div class="task-list" id="taskList">';
-  incomplete.forEach(t => { html += taskRowHTML(id, t); });
-  if(complete.length > 0) {
-    html += '<div style="font-size:0.6rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--text3);padding:0.4rem 0.2rem;margin-top:0.3rem;">Completed ('+complete.length+')</div>';
-    complete.forEach(t => { html += taskRowHTML(id, t); });
+  incomplete.forEach(t => { html += taskRowHTML(id,t); });
+  if(complete.length>0){
+    html += '<div style="font-size:0.58rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--text3);padding:0.4rem 0.2rem;margin-top:0.3rem;">Completed ('+complete.length+')</div>';
+    complete.forEach(t => { html += taskRowHTML(id,t); });
   }
   html += '</div>';
   return html;
@@ -542,28 +593,23 @@ function buildTasksHTML(id) {
 
 function taskRowHTML(pillarId, t) {
   return '<div class="task-row'+(t.done?' done':'')+'" id="task-'+t.id+'" onclick="toggleTask(\''+pillarId+'\',\''+t.id+'\')">' +
-    '<div class="task-check">'+(t.done?'✓':'')+'</div>' +
-    '<div class="task-label">'+escHtml(t.label)+'</div>' +
-    '<button class="task-del" onclick="event.stopPropagation();deleteTask(\''+pillarId+'\',\''+t.id+'\')">✕</button>' +
+    '<div class="task-check">'+(t.done?'✓':'')+'</div>'+
+    '<div class="task-label">'+escHtml(t.label)+'</div>'+
+    '<button class="task-del" onclick="event.stopPropagation();deleteTask(\''+pillarId+'\',\''+t.id+'\')">✕</button>'+
   '</div>';
 }
 
 function addTask(pillarId) {
-  const inp = document.getElementById('newTaskInput');
-  if(!inp) return;
-  const label = inp.value.trim();
-  if(!label) return;
+  const inp = document.getElementById('newTaskInput'); if(!inp) return;
+  const label = inp.value.trim(); if(!label) return;
   pillarData[pillarId].tasks.push({id:'t'+Date.now(), label, done:false});
   inp.value = '';
-  save(pillarId, true);
-  renderPillar(pillarId);
+  save(pillarId, true); renderPillar(pillarId);
 }
-
 function toggleTask(pillarId, taskId) {
   const t = pillarData[pillarId].tasks.find(x=>x.id===taskId);
-  if(t) { t.done = !t.done; save(pillarId); renderPillar(pillarId); }
+  if(t){t.done=!t.done; save(pillarId); renderPillar(pillarId);}
 }
-
 function deleteTask(pillarId, taskId) {
   pillarData[pillarId].tasks = pillarData[pillarId].tasks.filter(x=>x.id!==taskId);
   save(pillarId); renderPillar(pillarId);
@@ -572,123 +618,82 @@ function deleteTask(pillarId, taskId) {
 // ── KANBAN ──
 function buildKanbanHTML(id) {
   const k = pillarData[id].kanban || {lead:[],contacted:[],active:[],won:[]};
-  const cols = [
-    {key:'lead', label:'Lead', color:'var(--text3)'},
-    {key:'contacted', label:'Contacted', color:'var(--gold)'},
-    {key:'active', label:'Active', color:'var(--teal)'},
-    {key:'won', label:'Won 🏆', color:'var(--live)'},
-  ];
+  const cols = [{key:'lead',label:'Lead',color:'var(--text3)'},{key:'contacted',label:'Contacted',color:'var(--gold)'},{key:'active',label:'Active',color:'var(--teal)'},{key:'won',label:'Won',color:'var(--live)'}];
   let html = '<div class="section-label">Venue Pipeline</div><div class="kanban-wrap">';
   cols.forEach(col => {
-    html += '<div class="kanban-col"><div class="kanban-col-title" style="color:'+col.color+'">'+col.label+' ('+((k[col.key]||[]).length)+')</div>';
+    html += '<div class="kanban-col"><div class="kanban-col-title" style="color:'+col.color+'">'+col.label+' ('+(k[col.key]||[]).length+')</div>';
     (k[col.key]||[]).forEach(item => {
       html += '<div class="kanban-item" ondblclick="moveKanban(\''+id+'\',\''+col.key+'\',\''+item.id+'\')">'+escHtml(item.name)+'<button class="kanban-item-del" onclick="event.stopPropagation();deleteKanban(\''+id+'\',\''+col.key+'\',\''+item.id+'\')">✕</button></div>';
     });
-    html += '<input type="text" class="kanban-add-input" placeholder="+ Add..." data-col="'+col.key+'" onkeydown="if(event.key===\'Enter\')addKanban(\''+id+'\',this)">';
-    html += '</div>';
+    html += '<input type="text" class="kanban-add-input" placeholder="+ Add..." data-col="'+col.key+'" onkeydown="if(event.key===\'Enter\')addKanban(\''+id+'\',this)"></div>';
   });
-  html += '</div><div style="font-size:0.6rem;color:var(--text3);margin-bottom:1.2rem;letter-spacing:0.05em;">Double-tap a card to move it to the next stage</div>';
+  html += '</div><div style="font-size:0.6rem;color:var(--text3);margin-bottom:1.2rem;letter-spacing:0.05em;">Double-tap a card to advance to next stage</div>';
   return html;
 }
-
 function addKanban(pillarId, input) {
-  const name = input.value.trim();
-  if(!name) return;
-  const col = input.dataset.col;
-  if(!pillarData[pillarId].kanban[col]) pillarData[pillarId].kanban[col] = [];
-  pillarData[pillarId].kanban[col].push({id:'k'+Date.now(), name});
-  input.value = '';
-  save(pillarId); renderPillar(pillarId);
+  const name=input.value.trim();if(!name)return;
+  const col=input.dataset.col;
+  if(!pillarData[pillarId].kanban[col])pillarData[pillarId].kanban[col]=[];
+  pillarData[pillarId].kanban[col].push({id:'k'+Date.now(),name});
+  input.value=''; save(pillarId); renderPillar(pillarId);
 }
-
-function deleteKanban(pillarId, col, itemId) {
-  pillarData[pillarId].kanban[col] = (pillarData[pillarId].kanban[col]||[]).filter(x=>x.id!==itemId);
-  save(pillarId); renderPillar(pillarId);
+function deleteKanban(pillarId,col,itemId){
+  pillarData[pillarId].kanban[col]=(pillarData[pillarId].kanban[col]||[]).filter(x=>x.id!==itemId);
+  save(pillarId);renderPillar(pillarId);
 }
-
-function moveKanban(pillarId, fromCol, itemId) {
-  const order = ['lead','contacted','active','won'];
-  const fi = order.indexOf(fromCol);
-  if(fi === -1 || fi === order.length-1) return;
-  const toCol = order[fi+1];
-  const item = (pillarData[pillarId].kanban[fromCol]||[]).find(x=>x.id===itemId);
-  if(!item) return;
-  pillarData[pillarId].kanban[fromCol] = pillarData[pillarId].kanban[fromCol].filter(x=>x.id!==itemId);
-  if(!pillarData[pillarId].kanban[toCol]) pillarData[pillarId].kanban[toCol] = [];
+function moveKanban(pillarId,fromCol,itemId){
+  const order=['lead','contacted','active','won'];
+  const fi=order.indexOf(fromCol);if(fi===-1||fi===order.length-1)return;
+  const toCol=order[fi+1];
+  const item=(pillarData[pillarId].kanban[fromCol]||[]).find(x=>x.id===itemId);if(!item)return;
+  pillarData[pillarId].kanban[fromCol]=pillarData[pillarId].kanban[fromCol].filter(x=>x.id!==itemId);
+  if(!pillarData[pillarId].kanban[toCol])pillarData[pillarId].kanban[toCol]=[];
   pillarData[pillarId].kanban[toCol].push(item);
-  save(pillarId); renderPillar(pillarId);
+  save(pillarId);renderPillar(pillarId);
 }
 
 // ── PEOPLE ──
 function buildPeopleHTML(id) {
   const people = pillarData[id].people || [];
-  let html = '<div class="section-label" style="display:flex;align-items:center;justify-content:space-between;">';
-  html += '<span>Hosts & Leads</span>';
-  html += '<button class="btn-sm btn-gold" style="margin-left:auto;" onclick="openAddPersonModal()">+ Add</button>';
-  html += '</div>';
+  let html = '<div class="section-label" style="display:flex;align-items:center;justify-content:space-between;"><span>Hosts & Leads</span><button class="btn-sm btn-gold" style="margin-left:auto;" onclick="openAddPersonModal()">+ Add</button></div>';
   html += '<div class="people-list" id="peopleList">';
-  if(people.length === 0) html += '<div class="cal-mini-empty">No people added yet.<br>Add hosts, leads, or team contacts.</div>';
+  if(!people.length) html += '<div class="cal-mini-empty">No people added yet.</div>';
   people.forEach(person => {
-    const statusClass = person.status === 'good' ? 'status-good' : person.status === 'due' ? 'status-due' : 'status-overdue';
-    const statusLabel = person.status === 'good' ? 'Checked In' : person.status === 'due' ? 'Follow Up' : 'Needs Attention';
-    html += '<div class="person-card">' +
-      '<div class="person-header" onclick="togglePerson(\''+person.id+'\')">' +
-        '<div class="person-avatar">'+person.name.charAt(0).toUpperCase()+'</div>' +
-        '<div class="person-name">'+escHtml(person.name)+'</div>' +
-        '<div class="person-status '+statusClass+'">'+statusLabel+'</div>' +
-        '<button class="person-del" onclick="event.stopPropagation();deletePerson(\''+id+'\',\''+person.id+'\')">✕</button>' +
-      '</div>' +
-      '<div class="person-body" id="pb-'+person.id+'">' +
-        '<div style="display:flex;gap:0.4rem;margin-top:0.75rem;flex-wrap:wrap;">' +
-          ['good','due','overdue'].map(s=>'<button class="btn-sm'+(person.status===s?' btn-gold':'')+ '" onclick="setPersonStatus(\''+id+'\',\''+person.id+'\',\''+s+'\')">'+(s==='good'?'✓ Good':(s==='due'?'Follow Up':'Needs Attn'))+'</button>').join('') +
-        '</div>' +
-        '<textarea class="person-note" placeholder="Notes about this person..." onchange="savePersonNote(\''+id+'\',\''+person.id+'\',this.value)" onblur="savePersonNote(\''+id+'\',\''+person.id+'\',this.value)">'+escHtml(person.note||'')+'</textarea>' +
-      '</div>' +
-    '</div>';
+    const sc = person.status==='good'?'status-good':person.status==='due'?'status-due':'status-overdue';
+    const sl = person.status==='good'?'Checked In':person.status==='due'?'Follow Up':'Needs Attention';
+    html += '<div class="person-card"><div class="person-header" onclick="togglePerson(\''+person.id+'\')">'+
+      '<div class="person-avatar">'+person.name.charAt(0).toUpperCase()+'</div>'+
+      '<div class="person-name">'+escHtml(person.name)+'</div>'+
+      '<div class="person-status '+sc+'">'+sl+'</div>'+
+      '<button class="person-del" onclick="event.stopPropagation();deletePerson(\''+id+'\',\''+person.id+'\')">✕</button>'+
+    '</div><div class="person-body" id="pb-'+person.id+'">'+
+      '<div style="display:flex;gap:0.4rem;margin-top:0.75rem;flex-wrap:wrap;">'+
+        ['good','due','overdue'].map(s=>'<button class="btn-sm'+(person.status===s?' btn-gold':'')+'" onclick="setPersonStatus(\''+id+'\',\''+person.id+'\',\''+s+'\')">'+(s==='good'?'Good':(s==='due'?'Follow Up':'Needs Attn'))+'</button>').join('')+
+      '</div>'+
+      '<textarea class="person-note" placeholder="Notes..." onchange="savePersonNote(\''+id+'\',\''+person.id+'\',this.value)" onblur="savePersonNote(\''+id+'\',\''+person.id+'\',this.value)">'+escHtml(person.note||'')+'</textarea>'+
+    '</div></div>';
   });
   html += '</div>';
   return html;
 }
+function togglePerson(personId){const el=document.getElementById('pb-'+personId);if(el)el.classList.toggle('open');}
+function setPersonStatus(pillarId,personId,status){const p=(pillarData[pillarId].people||[]).find(x=>x.id===personId);if(p){p.status=status;save(pillarId);renderPillar(pillarId);}}
+function savePersonNote(pillarId,personId,note){const p=(pillarData[pillarId].people||[]).find(x=>x.id===personId);if(p){p.note=note;save(pillarId);}}
+function deletePerson(pillarId,personId){pillarData[pillarId].people=(pillarData[pillarId].people||[]).filter(x=>x.id!==personId);save(pillarId);renderPillar(pillarId);}
 
-function togglePerson(personId) {
-  const el = document.getElementById('pb-'+personId);
-  if(el) el.classList.toggle('open');
-}
-function setPersonStatus(pillarId, personId, status) {
-  const p = (pillarData[pillarId].people||[]).find(x=>x.id===personId);
-  if(p) { p.status = status; save(pillarId); renderPillar(pillarId); }
-}
-function savePersonNote(pillarId, personId, note) {
-  const p = (pillarData[pillarId].people||[]).find(x=>x.id===personId);
-  if(p) { p.note = note; save(pillarId); }
-}
-function deletePerson(pillarId, personId) {
-  pillarData[pillarId].people = (pillarData[pillarId].people||[]).filter(x=>x.id!==personId);
-  save(pillarId); renderPillar(pillarId);
-}
-
-// ── GIGS CALENDAR ──
+// ── GIGS CAL ──
 function buildGigsCalHTML() {
   const now = new Date();
-  const upcoming = calEntries
-    .filter(e => e.type === 'event' && e.date >= now.toISOString().slice(0,10))
-    .sort((a,b) => a.date > b.date ? 1 : -1)
-    .slice(0, 10);
-  let html = '<div class="section-label">Upcoming Gigs <span style="font-size:0.55rem;color:var(--text3);text-transform:none;letter-spacing:0;">(from HQ Calendar)</span></div>';
+  const upcoming = calEntries.filter(e=>e.type==='event'&&e.date>=now.toISOString().slice(0,10)).sort((a,b)=>a.date>b.date?1:-1).slice(0,10);
+  let html = '<div class="section-label">Upcoming Gigs <span style="font-size:0.52rem;color:var(--text3);text-transform:none;letter-spacing:0;">(from HQ Calendar)</span></div>';
   html += '<div class="cal-mini-list">';
-  if(upcoming.length === 0) {
-    html += '<div class="cal-mini-empty">No upcoming gigs found.<br>Add events in the HQ Calendar tab.<br><a href="hq.html" style="color:var(--teal);text-decoration:none;font-size:0.7rem;letter-spacing:0.08em;">→ Open HQ</a></div>';
+  if(!upcoming.length) {
+    html += '<div class="cal-mini-empty">No upcoming gigs found.<br>Add events in the HQ Calendar tab.<br><a href="hq.html" style="color:var(--teal);text-decoration:none;font-size:0.68rem;letter-spacing:0.08em;">Open HQ</a></div>';
   } else {
-    upcoming.forEach(e => {
-      const d = new Date(e.date+'T12:00:00');
-      const dayStr = d.toLocaleDateString('en-US',{month:'short',day:'numeric'});
-      html += '<div class="cal-mini-item">' +
-        '<div class="cal-mini-date">'+dayStr+'</div>' +
-        '<div class="cal-mini-info">' +
-          '<div class="cal-mini-title">'+escHtml(e.title||'')+'</div>' +
-          '<div class="cal-mini-venue">'+(e.notes?escHtml(e.notes.slice(0,60)):'')+'</div>' +
-        '</div>' +
-      '</div>';
+    upcoming.forEach(e=>{
+      const d=new Date(e.date+'T12:00:00');
+      const dayStr=d.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+      html+='<div class="cal-mini-item"><div class="cal-mini-date">'+dayStr+'</div><div class="cal-mini-info"><div class="cal-mini-title">'+escHtml(e.title||'')+'</div><div class="cal-mini-venue">'+(e.notes?escHtml(e.notes.slice(0,60)):'')+'</div></div></div>';
     });
   }
   html += '</div>';
@@ -696,164 +701,100 @@ function buildGigsCalHTML() {
 }
 
 // ── LINKS ──
-function buildLinksSection(id, label, defaults) {
+function buildLinksSection(id, label) {
   const links = pillarData[id].links || [];
-  let html = '<div class="section-label">'+label+'</div>';
-  html += '<div class="link-list" id="linkList-'+id+'">';
-  links.forEach(lnk => {
-    html += linkItemHTML(id, lnk);
-  });
-  html += '</div>';
-  html += '<button class="btn-sm" style="margin-bottom:1.5rem;" onclick="openAddLinkModal(\''+id+'\')">+ Add Link</button>';
+  let html = '<div class="section-label">'+label+'</div><div class="link-list" id="linkList-'+id+'">';
+  links.forEach(lnk => { html += linkItemHTML(id, lnk); });
+  html += '</div><button class="btn-sm" style="margin-bottom:1.5rem;" onclick="openAddLinkModal(\''+id+'\')">+ Add Link</button>';
   return html;
 }
-
 function linkItemHTML(pillarId, lnk) {
-  const tag = lnk.url ? 'a' : 'div';
-  const extra = lnk.url ? 'href="'+escHtml(lnk.url)+'" target="_blank"' : '';
-  return '<'+tag+' class="link-item" '+extra+'>' +
-    '<div class="link-item-icon">🔗</div>' +
-    '<div class="link-item-text">' +
-      '<div class="link-item-title">'+escHtml(lnk.title)+'</div>' +
-      (lnk.sub ? '<div class="link-item-sub">'+escHtml(lnk.sub)+'</div>' : '') +
-    '</div>' +
-    (lnk.url ? '<div class="link-item-arrow">›</div>' : '') +
-    '<button class="link-item-del" onclick="event.stopPropagation();event.preventDefault();deleteLink(\''+pillarId+'\',\''+lnk.id+'\')">✕</button>' +
-  '</'+tag+'>';
+  const tag=lnk.url?'a':'div', extra=lnk.url?'href="'+escHtml(lnk.url)+'" target="_blank"':'';
+  return '<'+tag+' class="link-item" '+extra+'><div class="link-item-text"><div class="link-item-title">'+escHtml(lnk.title)+'</div>'+(lnk.sub?'<div class="link-item-sub">'+escHtml(lnk.sub)+'</div>':'')+'</div>'+(lnk.url?'<div class="link-item-arrow">›</div>':'')+'<button class="link-item-del" onclick="event.stopPropagation();event.preventDefault();deleteLink(\''+pillarId+'\',\''+lnk.id+'\')">✕</button></'+tag+'>';
 }
-
-function deleteLink(pillarId, linkId) {
-  pillarData[pillarId].links = (pillarData[pillarId].links||[]).filter(x=>x.id!==linkId);
-  save(pillarId); renderPillar(pillarId);
-}
+function deleteLink(pillarId,linkId){pillarData[pillarId].links=(pillarData[pillarId].links||[]).filter(x=>x.id!==linkId);save(pillarId);renderPillar(pillarId);}
 
 // ── PHOTO BOARD ──
 function buildPhotoBoard(id) {
   const photos = pillarData[id].photos || [];
-  let html = '<div class="section-label">Product Board</div>';
-  html += '<div class="photo-board" id="photoBoard-'+id+'">';
+  let html = '<div class="section-label">Product Board</div><div class="photo-board" id="photoBoard-'+id+'">';
   photos.forEach(ph => {
-    html += '<div class="photo-card">' +
-      (ph.url ? '<img src="'+escHtml(ph.url)+'" alt="'+escHtml(ph.name)+'">' : '<div style="width:100%;height:70%;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:1.5rem;color:var(--text3);">🖼️</div>') +
-      '<div class="photo-card-body">' +
-        '<div class="photo-card-name">'+escHtml(ph.name)+'</div>' +
-        (ph.link ? '<a href="'+escHtml(ph.link)+'" target="_blank" class="photo-card-link">'+escHtml(ph.link.replace(/https?:\/\//,'').slice(0,30))+'</a>' : '') +
-      '</div>' +
-      '<button class="photo-card-del" onclick="deletePhoto(\''+id+'\',\''+ph.id+'\')">✕</button>' +
-    '</div>';
+    html += '<div class="photo-card">'+(ph.url?'<img src="'+escHtml(ph.url)+'" alt="'+escHtml(ph.name)+'">'  :'<div style="width:100%;height:70%;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:1.2rem;color:var(--text3);">[ ]</div>')+'<div class="photo-card-body"><div class="photo-card-name">'+escHtml(ph.name)+'</div>'+(ph.link?'<a href="'+escHtml(ph.link)+'" target="_blank" class="photo-card-link">'+escHtml(ph.link.replace(/https?:\/\//,'').slice(0,28))+'</a>':'')+'</div><button class="photo-card-del" onclick="deletePhoto(\''+id+'\',\''+ph.id+'\')">✕</button></div>';
   });
-  html += '<div class="photo-add-card" onclick="openAddPhotoModal(\''+id+'\')"><div class="photo-add-icon">+</div><div class="photo-add-label">Add Product</div></div>';
-  html += '</div>';
+  html += '<div class="photo-add-card" onclick="openAddPhotoModal(\''+id+'\')"><div class="photo-add-label">+ Add Product</div></div></div>';
   return html;
 }
-
-function deletePhoto(pillarId, photoId) {
-  pillarData[pillarId].photos = (pillarData[pillarId].photos||[]).filter(x=>x.id!==photoId);
-  save(pillarId); renderPillar(pillarId);
-}
+function deletePhoto(pillarId,photoId){pillarData[pillarId].photos=(pillarData[pillarId].photos||[]).filter(x=>x.id!==photoId);save(pillarId);renderPillar(pillarId);}
 
 // ── NOTES ──
 function buildNotesSection(id, label) {
   const note = pillarData[id].notes || '';
-  return '<div class="section-label">'+label+'</div>' +
-    '<textarea class="form-textarea" style="margin-bottom:1.5rem;min-height:120px;" id="notesArea-'+id+'" placeholder="Dump your ideas, brain dump, notes..." onchange="saveNotes(\''+id+'\',this.value)" onblur="saveNotes(\''+id+'\',this.value)">'+escHtml(note)+'</textarea>';
+  return '<div class="section-label">'+label+'</div><textarea class="form-textarea" style="margin-bottom:1.5rem;min-height:120px;width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:0.6rem 0.85rem;font-size:0.85rem;font-family:\'Josefin Sans\',sans-serif;outline:none;resize:vertical;letter-spacing:0.03em;line-height:1.7;" id="notesArea-'+id+'" placeholder="Notes, ideas, brain dump..." onchange="saveNotes(\''+id+'\',this.value)" onblur="saveNotes(\''+id+'\',this.value)">'+escHtml(note)+'</textarea>';
 }
+function saveNotes(pillarId,val){pillarData[pillarId].notes=val;save(pillarId);}
 
-function saveNotes(pillarId, val) {
-  pillarData[pillarId].notes = val;
-  save(pillarId);
-}
-
-// ── MODAL HELPERS ──
+// ── MODALS ──
 let _modalCallback = null;
-
-function openAddItemModal(title, fieldsHTML, callback) {
-  document.getElementById('addItemTitle').textContent = title;
-  document.getElementById('addItemFields').innerHTML = fieldsHTML;
-  _modalCallback = callback;
+function openAddItemModal(title,fieldsHTML,callback){
+  document.getElementById('addItemTitle').textContent=title;
+  document.getElementById('addItemFields').innerHTML=fieldsHTML;
+  _modalCallback=callback;
   document.getElementById('addItemModal').classList.add('open');
 }
-function closeAddItemModal() {
-  document.getElementById('addItemModal').classList.remove('open');
-  _modalCallback = null;
-}
-function confirmAddItem() {
-  if(_modalCallback) _modalCallback();
-}
+function closeAddItemModal(){document.getElementById('addItemModal').classList.remove('open');_modalCallback=null;}
+function confirmAddItem(){if(_modalCallback)_modalCallback();}
 
 function openAddLinkModal(pillarId) {
   openAddItemModal('Add Link',
-    '<div class="form-group"><label class="form-label">Title</label><input type="text" class="form-input" id="lnkTitle" placeholder="Link title"></div>' +
-    '<div class="form-group"><label class="form-label">URL (optional)</label><input type="text" class="form-input" id="lnkUrl" placeholder="https://..."></div>' +
+    '<div class="form-group"><label class="form-label">Title</label><input type="text" class="form-input" id="lnkTitle" placeholder="Link title"></div>'+
+    '<div class="form-group"><label class="form-label">URL (optional)</label><input type="text" class="form-input" id="lnkUrl" placeholder="https://..."></div>'+
     '<div class="form-group"><label class="form-label">Description (optional)</label><input type="text" class="form-input" id="lnkSub" placeholder="Short description"></div>',
-    () => {
-      const title = document.getElementById('lnkTitle').value.trim();
-      if(!title) return;
-      const url = document.getElementById('lnkUrl').value.trim();
-      const sub = document.getElementById('lnkSub').value.trim();
-      if(!pillarData[pillarId].links) pillarData[pillarId].links = [];
-      pillarData[pillarId].links.push({id:'l'+Date.now(), title, url, sub});
-      save(pillarId, true);
-      renderPillar(pillarId);
-      closeAddItemModal();
-    }
-  );
+    ()=>{
+      const title=document.getElementById('lnkTitle').value.trim();if(!title)return;
+      const url=document.getElementById('lnkUrl').value.trim();
+      const sub=document.getElementById('lnkSub').value.trim();
+      if(!pillarData[pillarId].links)pillarData[pillarId].links=[];
+      pillarData[pillarId].links.push({id:'l'+Date.now(),title,url,sub});
+      save(pillarId,true);renderPillar(pillarId);closeAddItemModal();
+    });
 }
-
 function openAddPersonModal() {
   openAddItemModal('Add Host / Lead / Contact',
-    '<div class="form-group"><label class="form-label">Name</label><input type="text" class="form-input" id="pName" placeholder="Full name"></div>' +
-    '<div class="form-group"><label class="form-label">Status</label><select class="form-select" id="pStatus"><option value="good">✓ Good</option><option value="due">Follow Up</option><option value="overdue">Needs Attention</option></select></div>' +
+    '<div class="form-group"><label class="form-label">Name</label><input type="text" class="form-input" id="pName" placeholder="Full name"></div>'+
+    '<div class="form-group"><label class="form-label">Status</label><select class="form-select" id="pStatus"><option value="good">Good</option><option value="due">Follow Up</option><option value="overdue">Needs Attention</option></select></div>'+
     '<div class="form-group"><label class="form-label">Notes</label><textarea class="form-textarea" id="pNote" placeholder="Role, notes, last contact..."></textarea></div>',
-    () => {
-      const name = document.getElementById('pName').value.trim();
-      if(!name) return;
-      const status = document.getElementById('pStatus').value;
-      const note = document.getElementById('pNote').value.trim();
-      if(!pillarData['hosts'].people) pillarData['hosts'].people = [];
-      pillarData['hosts'].people.push({id:'p'+Date.now(), name, status, note});
-      save('hosts', true);
-      renderPillar('hosts');
-      closeAddItemModal();
-    }
-  );
+    ()=>{
+      const name=document.getElementById('pName').value.trim();if(!name)return;
+      const status=document.getElementById('pStatus').value;
+      const note=document.getElementById('pNote').value.trim();
+      if(!pillarData['hosts'].people)pillarData['hosts'].people=[];
+      pillarData['hosts'].people.push({id:'p'+Date.now(),name,status,note});
+      save('hosts',true);renderPillar('hosts');closeAddItemModal();
+    });
 }
-
 function openAddPhotoModal(pillarId) {
   openAddItemModal('Add Product',
-    '<div class="form-group"><label class="form-label">Product Name</label><input type="text" class="form-input" id="phName" placeholder="e.g. Rook Enamel Pin"></div>' +
-    '<div class="form-group"><label class="form-label">Image URL (optional)</label><input type="text" class="form-input" id="phUrl" placeholder="https://..."></div>' +
+    '<div class="form-group"><label class="form-label">Product Name</label><input type="text" class="form-input" id="phName" placeholder="e.g. Rook Enamel Pin"></div>'+
+    '<div class="form-group"><label class="form-label">Image URL (optional)</label><input type="text" class="form-input" id="phUrl" placeholder="https://..."></div>'+
     '<div class="form-group"><label class="form-label">Shop Link (optional)</label><input type="text" class="form-input" id="phLink" placeholder="https://printify.com/..."></div>',
-    () => {
-      const name = document.getElementById('phName').value.trim();
-      if(!name) return;
-      const url = document.getElementById('phUrl').value.trim();
-      const link = document.getElementById('phLink').value.trim();
-      if(!pillarData[pillarId].photos) pillarData[pillarId].photos = [];
-      pillarData[pillarId].photos.push({id:'ph'+Date.now(), name, url, link});
-      save(pillarId, true);
-      renderPillar(pillarId);
-      closeAddItemModal();
-    }
-  );
+    ()=>{
+      const name=document.getElementById('phName').value.trim();if(!name)return;
+      const url=document.getElementById('phUrl').value.trim();
+      const link=document.getElementById('phLink').value.trim();
+      if(!pillarData[pillarId].photos)pillarData[pillarId].photos=[];
+      pillarData[pillarId].photos.push({id:'ph'+Date.now(),name,url,link});
+      save(pillarId,true);renderPillar(pillarId);closeAddItemModal();
+    });
 }
 
 function attachPillarEvents(id) {
-  // auto-resize textareas
-  document.querySelectorAll('textarea').forEach(ta => {
-    ta.addEventListener('input', () => {
-      ta.style.height = 'auto';
-      ta.style.height = ta.scrollHeight + 'px';
-    });
+  document.querySelectorAll('textarea').forEach(ta=>{
+    ta.addEventListener('input',()=>{ta.style.height='auto';ta.style.height=ta.scrollHeight+'px';});
   });
 }
 
-function escHtml(s) {
-  if(!s) return '';
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
+function escHtml(s){if(!s)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
-// ── INIT ──
 function init() {
   updateGreeting();
   loadAll();
