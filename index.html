@@ -5,34 +5,41 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Belladonna Host Hub</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Josefin+Sans:wght@200;300;400&display=swap');
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { background: #000000; color: #e8e0f0; font-family: 'Josefin Sans', sans-serif; font-weight: 300; min-height: 100vh; padding: 3rem 1.5rem; letter-spacing: 0.04em; }
-  .wrap { max-width: 420px; margin: 0 auto; text-align: center; }
-
-  .logo-img {
-    width: 180px;
-    height: auto;
-    margin: 0 auto 1rem;
-    display: block;
-    opacity: 0.95;
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400&family=Josefin+Sans:wght@200;300;400;600&display=swap');
+  *{margin:0;padding:0;box-sizing:border-box;}
+  :root{
+    --bg:#08060a;--surface:#13101a;--surface2:#1a1525;
+    --border:rgba(155,106,191,0.18);--border2:rgba(155,106,191,0.38);--border-gold:rgba(201,168,76,0.35);
+    --gold:#c9a84c;--gold-dim:rgba(201,168,76,0.1);
+    --purple:#9b6abf;--purple2:#7a4a9a;
+    --text:#f0eaf8;--text2:#b8a8d0;--text3:#6a5a80;--text4:#3a2a50;
+    --purple-btn:#c8b0e8;
   }
-
-  .brand { font-family: 'Cormorant Garamond', serif; font-size: 2.8rem; font-weight: 300; color: #c9a96e; letter-spacing: 0.2em; text-transform: uppercase; padding-right: 0.2em; }
-  .sub { font-size: 0.58rem; letter-spacing: 0.55em; text-transform: uppercase; color: #6a5a7a; margin-top: 0.3rem; margin-bottom: 0.5rem; }
-  .ornament { color: #3a2a4a; font-family: 'Cormorant Garamond', serif; font-size: 1rem; letter-spacing: 0.4em; margin: 1rem 0 2rem; }
-  .section-label { font-size: 0.55rem; letter-spacing: 0.4em; text-transform: uppercase; color: #5a4a6a; margin-bottom: 0.9rem; text-align: left; padding-left: 0.2rem; }
-  .links { display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 2rem; }
-  .link-card { display: block; background: #111118; border: 1px solid rgba(201,169,110,0.25); border-radius: 12px; padding: 1.2rem 1.5rem; text-decoration: none; transition: all 0.25s; position: relative; overflow: hidden; text-align: left; }
-  .link-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, #c9a96e, transparent); }
-  .link-card:hover { border-color: rgba(201,169,110,0.5); transform: translateY(-2px); background: rgba(201,169,110,0.04); }
-  .link-inner { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
-  .link-text { flex: 1; }
-  .link-title { font-size: 0.72rem; letter-spacing: 0.18em; text-transform: uppercase; margin-bottom: 0.2rem; color: #c9a96e; }
-  .link-desc { font-size: 0.62rem; color: #6a5a7a; letter-spacing: 0.04em; line-height: 1.4; }
-  .link-arrow { color: #6a5a7a; font-size: 0.8rem; flex-shrink: 0; transition: color 0.2s; }
-  .link-card:hover .link-arrow { color: #c9a96e; }
-  .footer { font-size: 0.55rem; letter-spacing: 0.2em; color: #3a2a4a; margin-top: 2.5rem; text-transform: uppercase; }
+  body{background:var(--bg);color:var(--text);font-family:'Josefin Sans',sans-serif;font-weight:300;min-height:100vh;letter-spacing:0.04em;}
+  
+  .wrap{max-width:420px;margin:0 auto;padding:3rem 1.5rem;}
+  
+  .logo-img{width:160px;height:auto;margin:0 auto 1.5rem;display:block;opacity:0.92;}
+  
+  .brand{font-family:'Cormorant Garamond',serif;font-size:2.8rem;font-weight:300;color:var(--gold);letter-spacing:0.22em;text-transform:uppercase;text-align:center;padding-right:0.2em;}
+  .sub{font-size:0.55rem;letter-spacing:0.55em;text-transform:uppercase;color:var(--text3);margin-top:0.3rem;margin-bottom:0.5rem;text-align:center;}
+  
+  .rule{border:none;height:1px;background:linear-gradient(90deg,transparent,rgba(155,106,191,0.3),rgba(201,168,76,0.3),transparent);margin:1.5rem 0 2rem;}
+  
+  .section-label{font-size:0.52rem;letter-spacing:0.42em;text-transform:uppercase;color:var(--text4);margin-bottom:0.85rem;font-weight:400;border-bottom:1px solid rgba(155,106,191,0.1);padding-bottom:0.5rem;}
+  
+  .links{display:flex;flex-direction:column;gap:0.5rem;margin-bottom:2rem;}
+  
+  .link-card{display:block;background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--gold);padding:1.1rem 1.2rem;text-decoration:none;transition:all 0.22s;position:relative;}
+  .link-card:hover{border-color:var(--border2);background:var(--surface2);}
+  .link-inner{display:flex;align-items:center;justify-content:space-between;gap:1rem;}
+  .link-text{flex:1;}
+  .link-title{font-size:0.7rem;letter-spacing:0.2em;text-transform:uppercase;margin-bottom:0.2rem;color:var(--gold);font-weight:400;}
+  .link-desc{font-size:0.65rem;color:var(--text3);letter-spacing:0.04em;line-height:1.5;}
+  .link-arrow{color:var(--text3);font-size:0.9rem;flex-shrink:0;font-family:'Cormorant Garamond',serif;transition:color 0.2s;}
+  .link-card:hover .link-arrow{color:var(--gold);}
+  
+  .footer{font-size:0.52rem;letter-spacing:0.22em;color:var(--text4);margin-top:2.5rem;text-transform:uppercase;text-align:center;padding-top:1.5rem;border-top:1px solid rgba(155,106,191,0.08);}
 </style>
 </head>
 <body>
@@ -40,7 +47,7 @@
   <img src="logo.png" alt="Belladonna Audio Alchemies" class="logo-img">
   <div class="brand">Belladonna</div>
   <div class="sub">Host Hub</div>
-  <div class="ornament">✦ ✦ ✦</div>
+  <hr class="rule">
 
   <div class="section-label">Your Shift</div>
   <div class="links">
@@ -64,7 +71,7 @@
     </a>
   </div>
 
-  <div class="section-label">Tools & Games</div>
+  <div class="section-label">Tools &amp; Games</div>
   <div class="links">
     <a href="https://belladonnanights.github.io/bingo/index.html" class="link-card" target="_blank">
       <div class="link-inner">
@@ -77,7 +84,29 @@
     </a>
   </div>
 
-  <div class="footer">Belladonna Audio Alchemies &nbsp;✦&nbsp; Host Hub</div>
+  <div class="section-label">Management</div>
+  <div class="links">
+    <a href="hq.html" class="link-card" style="border-left-color:var(--purple);">
+      <div class="link-inner">
+        <div class="link-text">
+          <div class="link-title">Headquarters</div>
+          <div class="link-desc">Hosts, venues, stats, calendar &amp; growth tracker</div>
+        </div>
+        <div class="link-arrow">›</div>
+      </div>
+    </a>
+    <a href="command-center.html" class="link-card">
+      <div class="link-inner">
+        <div class="link-text">
+          <div class="link-title">Command Center</div>
+          <div class="link-desc">Social, venues, gigs, merch, events &amp; more</div>
+        </div>
+        <div class="link-arrow">›</div>
+      </div>
+    </a>
+  </div>
+
+  <div class="footer">Belladonna Audio Alchemies &nbsp;&middot;&nbsp; Host Hub</div>
 </div>
 </body>
 </html>
