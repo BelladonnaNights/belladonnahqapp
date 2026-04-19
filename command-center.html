@@ -284,14 +284,19 @@ const LS = {
 // ── PILLAR → TRACKER CATEGORY MAPPING ──
 // Maps each Command Center pillar to the Growth Tracker category IDs it contributes to
 const PILLAR_TRACKER_MAP = {
+  'goals':      ['growth'],
   'social':     ['marketing','brand'],
   'venue':      ['venues','booking'],
+  'crm':        ['booking','growth'],
   'hosts':      ['talent'],
   'gigs':       ['operations','booking'],
   'music':      ['operations'],
   'merch-shop': ['brand','finance'],
   'merch-make': ['brand'],
   'events':     ['growth','marketing'],
+  'finance':    ['finance'],
+  'legal':      ['legal'],
+  'sops':       ['operations','talent'],
 };
 
 // ── PILLARS ──
@@ -436,9 +441,8 @@ function calcCombinedProgress(pillarId) {
   const cc = calcCCProgress(pillarId);
   const tr = calcTrackerProgress(pillarId);
   if(cc===null && tr===null) return 0;
-  if(cc===null) return tr;
-  if(tr===null) return cc;
-  // weight: 50/50 blend
+  if(cc===null) return tr;   // no tasks yet — show tracker score as-is
+  if(tr===null) return cc;   // no tracker data — show task score as-is
   return Math.round((cc + tr) / 2);
 }
 
@@ -614,7 +618,54 @@ function buildPillarHTML(id, ccPct, trPct) {
   if(id === 'legal') html += buildLegalHTML(id);
   if(id === 'sops') html += buildSOPsHTML(id);
 
+  // Completed summary at the bottom
+  html += buildCompletedSummary(id);
+
   return html;
+}
+
+// ── COMPLETED SUMMARY ──
+function buildCompletedSummary(id) {
+  const d = pillarData[id] || {};
+  const lines = [];
+
+  // Completed tasks
+  const doneTasks = (d.tasks||[]).filter(t=>t.done);
+  if(doneTasks.length) {
+    lines.push('<div style="font-size:0.58rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--text3);margin-bottom:0.5rem;">Completed Tasks ('+doneTasks.length+')</div>');
+    doneTasks.forEach(t => {
+      lines.push('<div style="display:flex;align-items:center;gap:0.6rem;padding:0.45rem 0.75rem;background:var(--surface);border:1px solid rgba(155,106,191,0.08);margin-bottom:0.25rem;opacity:0.6;">'+
+        '<span style="color:#b88ae8;font-size:0.65rem;">&#10003;</span>'+
+        '<span style="font-size:0.75rem;color:var(--text3);text-decoration:line-through;">'+escHtml(t.label)+'</span>'+
+      '</div>');
+    });
+  }
+
+  // Completed tracker items for this pillar
+  const catIds = PILLAR_TRACKER_MAP[id] || [];
+  const doneTrackerItems = [];
+  catIds.forEach(catId => {
+    const cat = trackerCategories.find(c=>c.id===catId);
+    if(!cat) return;
+    cat.items.forEach(item => {
+      const ans = trackerAnswers[catId+'_'+item.id];
+      if(ans==='yes') doneTrackerItems.push({label:item.label, catName:cat.name});
+      else if(ans==='partial') doneTrackerItems.push({label:item.label+' (partial)', catName:cat.name});
+    });
+  });
+  if(doneTrackerItems.length) {
+    lines.push('<div style="font-size:0.58rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--text3);margin-bottom:0.5rem;margin-top:'+(doneTasks.length?'1rem':'0')+';">Completed in Growth Tracker ('+doneTrackerItems.length+')</div>');
+    doneTrackerItems.forEach(item => {
+      lines.push('<div style="display:flex;align-items:flex-start;gap:0.6rem;padding:0.45rem 0.75rem;background:var(--surface);border:1px solid rgba(155,106,191,0.08);margin-bottom:0.25rem;opacity:0.6;">'+
+        '<span style="color:#b88ae8;font-size:0.65rem;margin-top:1px;">&#10003;</span>'+
+        '<span style="font-size:0.75rem;color:var(--text3);text-decoration:line-through;flex:1;">'+escHtml(item.label)+'</span>'+
+        '<span style="font-size:0.52rem;color:var(--text4);flex-shrink:0;">'+escHtml(item.catName)+'</span>'+
+      '</div>');
+    });
+  }
+
+  if(!lines.length) return '';
+  return '<div style="margin-top:1.5rem;padding-top:1rem;border-top:1px solid rgba(155,106,191,0.12);">' + lines.join('') + '</div>';
 }
 
 // ── TASKS ──
