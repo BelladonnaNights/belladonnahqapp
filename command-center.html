@@ -64,8 +64,16 @@ body{background:var(--bg);color:var(--text);font-family:'Josefin Sans',sans-seri
 .pillar-task-dot{width:4px;height:4px;flex-shrink:0;margin-top:5px;}
 .pillar-col-more{margin:0 0.7rem 0.4rem;border:1px dashed rgba(155,106,191,0.12);padding:0.35rem 0.55rem;font-size:0.58rem;letter-spacing:0.12em;color:var(--text4);text-align:center;flex-shrink:0;}
 .pillar-col-empty{font-size:0.62rem;color:var(--text4);text-align:center;padding:0.9rem 0.5rem;line-height:1.9;letter-spacing:0.04em;}
+.col-drag-handle{font-size:0.55rem;color:rgba(155,106,191,0.3);cursor:grab;text-align:center;padding:0.18rem 0;letter-spacing:0.15em;flex-shrink:0;user-select:none;}
+.col-drag-handle:hover{color:rgba(201,168,76,0.5);}
+.pillar-col.dragging{opacity:0.4;}
+.pillar-col.drag-over{border-color:var(--gold) !important;}
 .pillar-col-open{font-size:0.5rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--text4);padding:0.45rem 0.7rem;border-top:1px solid rgba(155,106,191,0.07);text-align:right;flex-shrink:0;transition:color 0.2s;}
-.pillar-col:hover .pillar-col-open{color:var(--text3);}
+.pillar-col:hover .col-drag-handle{font-size:0.55rem;color:rgba(155,106,191,0.3);cursor:grab;text-align:center;padding:0.18rem 0;letter-spacing:0.15em;flex-shrink:0;user-select:none;}
+.col-drag-handle:hover{color:rgba(201,168,76,0.5);}
+.pillar-col.dragging{opacity:0.4;}
+.pillar-col.drag-over{border-color:var(--gold) !important;}
+.pillar-col-open{color:var(--text3);}
 
 /* PILLAR DETAIL SCREEN */
 #pillarScreen{display:none;}
@@ -288,14 +296,19 @@ const PILLAR_TRACKER_MAP = {
 
 // ── PILLARS ──
 const PILLARS = [
-  { id:'social',      name:'Social & Brand',   color:'var(--p-social)',    desc:'Posts, Reels, branding, content calendar' },
-  { id:'venue',       name:'Venue Growth',      color:'var(--p-venue)',     desc:'Venue leads, flyers, ads, landing page' },
-  { id:'hosts',       name:'Hosts & Team',      color:'var(--p-hosts)',     desc:'Check-ins, leads, host kits, onboarding' },
-  { id:'gigs',        name:'Gigs',              color:'var(--p-gigs)',      desc:'Bingo, Trivia, Karaoke — scheduling & prep' },
-  { id:'music',       name:'Music',             color:'var(--p-music)',     desc:'Download lists, playlists, interim music' },
-  { id:'merch-shop',  name:'Merch Shop',        color:'var(--p-merch-shop)',desc:'Printify, shop links, product tracking' },
-  { id:'merch-make',  name:'Merch Production',  color:'var(--p-merch-make)',desc:'Physical make list — stickers, shirts, candles' },
-  { id:'events',      name:'Specialty Events',  color:'var(--p-events)',    desc:'Upcoming events, marketing, venue pitches' },
+  { id:'goals',       name:'Goals & Strategy',  color:'#c9a84c', desc:'Quarterly targets, revenue goals, priorities' },
+  { id:'social',      name:'Social & Brand',    color:'#b88ae8', desc:'Posts, Reels, branding, email, press, affiliates' },
+  { id:'venue',       name:'Venue Growth',      color:'#e0bf6a', desc:'Venue leads, pitches, flyers, partnerships' },
+  { id:'crm',         name:'Private Event CRM', color:'#9b6abf', desc:'Private event leads, quotes, bookings, clients' },
+  { id:'hosts',       name:'Hosts & Team',      color:'#c9a84c', desc:'Check-ins, leads, host kits, team notes' },
+  { id:'gigs',        name:'Gigs',              color:'#d0b8f0', desc:'Bingo, Trivia, Karaoke — scheduling, checklists, gear' },
+  { id:'music',       name:'Music',             color:'#a06ad0', desc:'Download lists, playlists, interim music' },
+  { id:'merch-shop',  name:'Merch Shop',        color:'#e0bf6a', desc:'Printify, shop links, product board' },
+  { id:'merch-make',  name:'Merch Production',  color:'#7a4aaa', desc:'Physical make list — stickers, shirts, candles' },
+  { id:'events',      name:'Specialty Events',  color:'#b88ae8', desc:'Upcoming events, marketing, venue pitches' },
+  { id:'finance',     name:'Finance',           color:'#c9a84c', desc:'Invoices, contractor pay, expenses, tax tracker' },
+  { id:'legal',       name:'Legal & Compliance',color:'#9060c0', desc:'Contracts, licenses, insurance, agreements' },
+  { id:'sops',        name:'SOPs & Templates',  color:'#e0bf6a', desc:'How we do things — procedures, guides, checklists' },
 ];
 
 // ── STATE ──
@@ -305,11 +318,28 @@ let trackerCategories = [];
 let currentPillarId = null;
 let calEntries = [];
 
+const DEFAULT_LEGAL_ITEMS = [
+  {id:'l1',name:'LLC registered and active',cat:'Business',renewal:'',done:false},
+  {id:'l2',name:'EIN obtained from IRS',cat:'Business',renewal:'',done:false},
+  {id:'l3',name:'General liability insurance active',cat:'Insurance',renewal:'',done:false},
+  {id:'l4',name:'Music license (ASCAP/BMI)',cat:'License',renewal:'',done:false},
+  {id:'l5',name:'Venue contract template created',cat:'Contract',renewal:'',done:false},
+  {id:'l6',name:'Independent contractor agreements',cat:'Contract',renewal:'',done:false},
+  {id:'l7',name:'Website terms & conditions live',cat:'Website',renewal:'',done:false},
+  {id:'l8',name:'Website privacy policy live',cat:'Website',renewal:'',done:false},
+  {id:'l9',name:'Business license current',cat:'License',renewal:'',done:false},
+];
+
 function defaultPillarData(id) {
   const base = { tasks:[], links:[], notes:'' };
   if(id === 'venue') return {...base, kanban:{lead:[],contacted:[],active:[],won:[]}};
   if(id === 'hosts') return {...base, people:[]};
   if(id === 'merch-shop') return {...base, photos:[]};
+  if(id === 'crm') return {...base, clients:[], kanban:{lead:[],quoted:[],booked:[],completed:[]}};
+  if(id === 'finance') return {...base, invoices:[], contractors:[], expenses:[], taxRate:25};
+  if(id === 'legal') return {...base, items:DEFAULT_LEGAL_ITEMS.map(x=>({...x}))};
+  if(id === 'goals') return {...base, goals:[]};
+  if(id === 'sops') return {...base, templates:[]};
   return base;
 }
 
@@ -434,6 +464,14 @@ function updateGreeting() {
 }
 
 // ── HOME RENDER ──
+let pillarOrder = null;
+function getOrderedPillars() {
+  if(!pillarOrder) return PILLARS;
+  const ordered = pillarOrder.map(id => PILLARS.find(p => p.id === id)).filter(Boolean);
+  const missing = PILLARS.filter(p => !pillarOrder.includes(p.id));
+  return [...ordered, ...missing];
+}
+
 function renderHome() {
   const grid = document.getElementById('pillarsGrid');
   if(!grid) return;
@@ -446,10 +484,9 @@ function renderHome() {
     focusName.textContent = focus.name;
   }
 
-  // Sort: lowest combined % first so most-needing-attention is leftmost
-  const sorted = [...PILLARS].sort((a,b) => calcCombinedProgress(a.id) - calcCombinedProgress(b.id));
+  const ordered = getOrderedPillars();
 
-  grid.innerHTML = sorted.map(p => {
+  grid.innerHTML = ordered.map(p => {
     const pct = calcCombinedProgress(p.id);
     const ccPct = calcCCProgress(p.id);
     const trPct = calcTrackerProgress(p.id);
@@ -478,8 +515,9 @@ function renderHome() {
       trPct !== null ? 'tracker: '+trPct+'%' : null,
     ].filter(Boolean).join(' · ');
 
-    return '<div class="pillar-col'+(isFocus?' focus-col':'')+'" onclick="openPillar(\''+p.id+'\')">' +
-      '<style>.pillar-col[onclick*="\''+p.id+'\'"]::before{background:'+p.color+';}</style>'+
+    return '<div class="pillar-col'+(isFocus?' focus-col':'')+'" id="pc-'+p.id+'" data-id="'+p.id+'" draggable="true" onclick="openPillar(\''+p.id+'\')" ondragstart="colDragStart(event,this)" ondragover="colDragOver(event,this)" ondrop="colDragDrop(event,this)" ondragend="colDragEnd()">' +
+      '<style>#pc-'+p.id+'::before{background:'+p.color+';}</style>'+
+      '<div class="col-drag-handle" onclick="event.stopPropagation()">&#8942;&#8942;</div>'+
       '<div class="pillar-col-header">'+
         '<div class="pillar-col-top">'+
           '<div class="pillar-col-name">'+p.name+'</div>'+
@@ -570,6 +608,11 @@ function buildPillarHTML(id, ccPct, trPct) {
   if(id === 'merch-shop') html += buildPhotoBoard(id) + buildLinksSection(id, 'Shop Links') + buildNotesSection(id, 'Shop Notes');
   if(id === 'merch-make') html += buildNotesSection(id, 'Make List') + buildLinksSection(id, 'Supplies & Resources');
   if(id === 'events') html += buildLinksSection(id, 'Upcoming Events & Pitches') + buildNotesSection(id, 'Event Concepts & Marketing Notes');
+  if(id === 'goals') html += buildGoalsHTML(id) + buildIdeasHTML();
+  if(id === 'crm') html += buildCRMHTML(id);
+  if(id === 'finance') html += buildFinanceHTML(id);
+  if(id === 'legal') html += buildLegalHTML(id);
+  if(id === 'sops') html += buildSOPsHTML(id);
 
   return html;
 }
@@ -797,6 +840,8 @@ function escHtml(s){if(!s)return'';return String(s).replace(/&/g,'&amp;').replac
 
 function init() {
   updateGreeting();
+  try{const o=LS.get('cc3-order');if(o)pillarOrder=JSON.parse(o);}catch(e){}
+  try{const id=LS.get('cc3-ideas');if(id)ideas=JSON.parse(id);}catch(e){}
   loadAll();
   renderHome();
 }
