@@ -232,7 +232,7 @@ body{background:var(--bg);color:var(--text);font-family:'Josefin Sans',sans-seri
     </div>
     <div class="focus-badge" id="focusBadge" style="display:none;">Focus: <span id="focusPillarName">—</span></div>
   </div>
-  <div class="board-scroll" id="pillarsGrid"></div>
+  <div class="board-scroll" id="pillarsGrid" ondragover="event.preventDefault()"></div>
 </div>
 
 <div id="pillarScreen">
@@ -837,6 +837,43 @@ function attachPillarEvents(id) {
 }
 
 function escHtml(s){if(!s)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+// DRAG TO REORDER
+let _dragSrcId=null,_dragOverId=null;
+function colDragStart(e,el){
+  _dragSrcId=el.dataset.id;
+  e.dataTransfer.effectAllowed='move';
+  e.dataTransfer.setData('text/plain',_dragSrcId);
+  el.classList.add('dragging');
+}
+function colDragOver(e,el){
+  e.preventDefault();e.stopPropagation();
+  e.dataTransfer.dropEffect='move';
+  let col=el;while(col&&!col.dataset.id)col=col.parentElement;
+  if(!col||!col.dataset.id)return;
+  if(col.dataset.id===_dragOverId)return;
+  document.querySelectorAll('.pillar-col').forEach(c=>c.classList.remove('drag-over'));
+  col.classList.add('drag-over');
+  _dragOverId=col.dataset.id;
+}
+function colDragDrop(e,el){
+  e.preventDefault();e.stopPropagation();
+  let col=el;while(col&&!col.dataset.id)col=col.parentElement;
+  const targetId=col?col.dataset.id:null;
+  if(!_dragSrcId||!targetId||_dragSrcId===targetId)return;
+  const ids=getOrderedPillars().map(p=>p.id);
+  const fi=ids.indexOf(_dragSrcId),ti=ids.indexOf(targetId);
+  if(fi===-1||ti===-1)return;
+  ids.splice(fi,1);ids.splice(ti,0,_dragSrcId);
+  pillarOrder=ids;
+  LS.set('cc3-order',JSON.stringify(ids));
+  if(db)db.collection('command_center').doc('pillars').set({_order:ids},{merge:true}).catch(()=>{});
+  colDragEnd();renderHome();
+}
+function colDragEnd(){
+  _dragSrcId=null;_dragOverId=null;
+  document.querySelectorAll('.pillar-col').forEach(c=>{c.classList.remove('dragging');c.classList.remove('drag-over');});
+}
 
 function init() {
   updateGreeting();
