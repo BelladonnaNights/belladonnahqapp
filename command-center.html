@@ -358,6 +358,11 @@ function loadAll() {
     if(p.id === 'venue' && !pillarData[p.id].kanban) pillarData[p.id].kanban = {lead:[],contacted:[],active:[],won:[]};
     if(p.id === 'hosts' && !pillarData[p.id].people) pillarData[p.id].people = [];
     if(p.id === 'merch-shop' && !pillarData[p.id].photos) pillarData[p.id].photos = [];
+    if(p.id === 'crm'){if(!pillarData[p.id].clients)pillarData[p.id].clients=[];if(!pillarData[p.id].kanban)pillarData[p.id].kanban={lead:[],quoted:[],booked:[],completed:[]};}
+    if(p.id === 'finance'){if(!pillarData[p.id].invoices)pillarData[p.id].invoices=[];if(!pillarData[p.id].contractors)pillarData[p.id].contractors=[];if(!pillarData[p.id].expenses)pillarData[p.id].expenses=[];if(!pillarData[p.id].taxRate)pillarData[p.id].taxRate=25;}
+    if(p.id === 'legal' && !pillarData[p.id].items) pillarData[p.id].items = DEFAULT_LEGAL_ITEMS.map(x=>({...x}));
+    if(p.id === 'goals' && !pillarData[p.id].goals) pillarData[p.id].goals = [];
+    if(p.id === 'sops' && !pillarData[p.id].templates) pillarData[p.id].templates = [];
   });
 
   // load tracker answers from localStorage
@@ -618,6 +623,9 @@ function buildPillarHTML(id, ccPct, trPct) {
   if(id === 'legal') html += buildLegalHTML(id);
   if(id === 'sops') html += buildSOPsHTML(id);
 
+  // Growth Tracker items for this pillar
+  html += buildTrackerItemsSection(id);
+
   // Completed summary at the bottom
   html += buildCompletedSummary(id);
 
@@ -666,6 +674,65 @@ function buildCompletedSummary(id) {
 
   if(!lines.length) return '';
   return '<div style="margin-top:1.5rem;padding-top:1rem;border-top:1px solid rgba(155,106,191,0.12);">' + lines.join('') + '</div>';
+}
+
+// ── GROWTH TRACKER ITEMS ──
+function buildTrackerItemsSection(id) {
+  const catIds = PILLAR_TRACKER_MAP[id] || [];
+  if(!catIds.length) return '';
+  // collect all items across linked categories
+  const allItems = [];
+  catIds.forEach(catId => {
+    const cat = trackerCategories.find(c=>c.id===catId);
+    if(!cat) return;
+    cat.items.forEach(item => {
+      const ans = trackerAnswers[catId+'_'+item.id] || 'no';
+      allItems.push({id:catId+'_'+item.id, label:item.label, catName:cat.name, ans});
+    });
+  });
+  if(!allItems.length) return '';
+
+  const incomplete = allItems.filter(i=>i.ans!=='yes');
+  const done = allItems.filter(i=>i.ans==='yes');
+  const partial = allItems.filter(i=>i.ans==='partial');
+
+  let h = '<div class="section-label">Growth Tracker Checklist</div>';
+
+  // Incomplete items
+  incomplete.forEach(item => {
+    const isPartial = item.ans==='partial';
+    h += '<div style="display:flex;align-items:flex-start;gap:0.75rem;padding:0.6rem 0.85rem;background:var(--surface);border:1px solid var(--border);margin-bottom:0.3rem;cursor:pointer;" onclick="cycleTrackerItem(''+item.id+'')">' +
+      '<div style="width:15px;height:15px;border:1px solid var(--border2);flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;font-size:0.52rem;background:'+(isPartial?'rgba(201,168,76,0.15)':'none')+';border-color:'+(isPartial?'var(--gold)':'var(--border2)')+';color:'+(isPartial?'var(--gold)':'')+';">'+(isPartial?'~':'')+'</div>' +
+      '<div style="flex:1;">' +
+        '<div style="font-size:0.78rem;color:var(--text2);">'+escHtml(item.label)+'</div>' +
+        '<div style="font-size:0.55rem;color:var(--text3);margin-top:2px;letter-spacing:0.06em;">'+escHtml(item.catName)+'</div>' +
+      '</div>' +
+      '<div style="font-size:0.55rem;color:var(--text3);flex-shrink:0;padding-top:2px;">tap to advance</div>' +
+    '</div>';
+  });
+
+  if(done.length) {
+    h += '<div style="font-size:0.55rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--text3);padding:0.5rem 0.2rem 0.3rem;">' + done.length + ' completed in tracker</div>';
+  }
+
+  return h;
+}
+
+function cycleTrackerItem(compositeId) {
+  // compositeId = catId_itemId
+  const current = trackerAnswers[compositeId] || 'no';
+  const cycle = {no:'partial', partial:'yes', yes:'no'};
+  trackerAnswers[compositeId] = cycle[current];
+  // save to localStorage and Firebase (same format as HQ tracker)
+  try{localStorage.setItem('tracker-answers', JSON.stringify(trackerAnswers));}catch(e){}
+  if(db){
+    db.collection('tracker_data').doc('state').set({
+      answers: trackerAnswers,
+      updatedAt: Date.now()
+    }, {merge:true}).catch(()=>{});
+  }
+  if(currentPillarId) renderPillar(currentPillarId);
+  renderHome();
 }
 
 // ── TASKS ──
