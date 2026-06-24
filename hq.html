@@ -215,8 +215,8 @@ body{background:var(--bg);color:var(--text);font-family:'Josefin Sans',sans-seri
 .cal-event:hover{background:rgba(201,168,76,0.28);}
 .cal-task-social{background:rgba(122,74,154,0.12);border:1px solid rgba(122,74,154,0.3);padding:0.15rem 0.4rem;font-size:0.58rem;color:var(--purple-btn);letter-spacing:0.03em;cursor:pointer;line-height:1.3;}
 .cal-task-social:hover{background:rgba(122,74,154,0.22);}
-.cal-task-marketing{background:rgba(42,136,112,0.1);border:1px solid rgba(42,136,112,0.28);padding:0.15rem 0.4rem;font-size:0.58rem;color:var(--teal);letter-spacing:0.03em;cursor:pointer;line-height:1.3;}
-.cal-task-marketing:hover{background:rgba(42,136,112,0.2);}
+.cal-task-socialmedia{background:rgba(42,136,112,0.1);border:1px solid rgba(42,136,112,0.28);padding:0.15rem 0.4rem;font-size:0.58rem;color:var(--teal);letter-spacing:0.03em;cursor:pointer;line-height:1.3;}
+.cal-task-socialmedia:hover{background:rgba(42,136,112,0.2);}
 .cal-legend{display:flex;gap:1rem;flex-wrap:wrap;margin-top:1rem;}
 .cal-legend-item{display:flex;align-items:center;gap:0.4rem;font-size:0.6rem;color:var(--text3);letter-spacing:0.06em;}
 .cal-legend-dot{width:10px;height:10px;flex-shrink:0;}
@@ -248,7 +248,7 @@ body{background:var(--bg);color:var(--text);font-family:'Josefin Sans',sans-seri
 .entry-chip{font-size:0.65rem;letter-spacing:0.1em;padding:0.35rem 0.85rem;cursor:pointer;border:1px solid var(--border);background:var(--surface2);color:var(--text3);font-family:'Josefin Sans',sans-serif;transition:all 0.2s;}
 .entry-chip.sel-event{border-color:var(--gold);color:var(--gold);background:var(--gold-dim);}
 .entry-chip.sel-social{border-color:var(--purple2);color:var(--purple-btn);background:var(--purple-dim);}
-.entry-chip.sel-marketing{border-color:var(--teal);color:var(--teal);background:rgba(42,136,112,0.1);}
+.entry-chip.sel-socialmedia{border-color:var(--teal);color:var(--teal);background:rgba(42,136,112,0.1);}
 .entry-detail{padding:0.5rem 0;}
 .entry-detail-type{font-size:0.6rem;letter-spacing:0.22em;text-transform:uppercase;margin-bottom:0.5rem;}
 .entry-detail-title{font-family:'Cormorant Garamond',serif;font-size:1.5rem;color:var(--gold);margin-bottom:0.4rem;}
@@ -506,11 +506,12 @@ body{background:var(--bg);color:var(--text);font-family:'Josefin Sans',sans-seri
       <button class="add-entry-btn" onclick="openEntryModal()">+ Add</button>
     </div>
   </div>
+  <div id="thisWeekPanel"></div>
   <div id="calScroll"></div>
   <div class="cal-legend">
     <div class="cal-legend-item"><div class="cal-legend-dot" style="background:rgba(201,169,110,0.4);border:1px solid var(--gold);"></div>Event / Gig</div>
     <div class="cal-legend-item"><div class="cal-legend-dot" style="background:rgba(122,90,170,0.3);border:1px solid var(--purple2);"></div>Social Media Post</div>
-    <div class="cal-legend-item"><div class="cal-legend-dot" style="background:rgba(58,160,138,0.25);border:1px solid var(--teal2);"></div>Marketing / Promo</div>
+    <div class="cal-legend-item"><div class="cal-legend-dot" style="background:rgba(58,160,138,0.25);border:1px solid var(--teal2);"></div>Social Media</div>
   </div>
 </div>
 
@@ -555,7 +556,7 @@ body{background:var(--bg);color:var(--text);font-family:'Josefin Sans',sans-seri
       <div class="entry-type-chips">
         <div class="entry-chip sel-event" onclick="selectEntryType('event',this)">Event / Gig</div>
         <div class="entry-chip" onclick="selectEntryType('social',this)">Social Media Post</div>
-        <div class="entry-chip" onclick="selectEntryType('marketing',this)">Marketing / Promo</div>
+        <div class="entry-chip" onclick="selectEntryType('socialmedia',this)">Social Media</div>
       </div>
     </div>
     <div class="form-group"><label class="form-label">Title</label><input type="text" class="form-input" id="entryTitle" placeholder="e.g. The Coaster Karaoke Night"></div>
@@ -665,7 +666,7 @@ const DEFAULT_ROSTER=[
   {id:'h1',name:'Ahnna',skills:['Karaoke'],venues:['The Coaster']},
   {id:'h2',name:'Eddy',skills:['Karaoke'],venues:['The Coaster']},
   {id:'h3',name:'Miguel',skills:['Karaoke'],venues:['The Coaster']},
-  {id:'h4',name:'Corissa',skills:['Karaoke'],venues:['The Coaster']},
+  
 ];
 const DEFAULT_VENUES=[
   {id:'v1',name:'The Coaster',gigs:['Karaoke'],notes:''},
@@ -1262,15 +1263,16 @@ function renderCalendar(){
     let yr=startYear,mo=startMonth+m;
     if(mo>11){mo-=12;yr++;}
     const isCurrentMonth=(mo===today.getMonth()&&yr===today.getFullYear());
-    const firstDay=new Date(yr,mo,1).getDay();
+    const rawFirst=new Date(yr,mo,1).getDay();
+    const firstDay=(rawFirst+6)%7;
     const daysInMonth=new Date(yr,mo+1,0).getDate();
     const daysInPrev=new Date(yr,mo,0).getDate();
     const totalCells=Math.ceil((firstDay+daysInMonth)/7)*7;
     html+=`<div class="cal-month-block">
       <div class="cal-month-heading${isCurrentMonth?' is-today-month':''}">${MONTHS[mo]} ${yr}</div>
       <div class="cal-grid-header">
-        <div class="cal-day-name">Sun</div><div class="cal-day-name">Mon</div><div class="cal-day-name">Tue</div>
-        <div class="cal-day-name">Wed</div><div class="cal-day-name">Thu</div><div class="cal-day-name">Fri</div><div class="cal-day-name">Sat</div>
+        <div class="cal-day-name">Mon</div><div class="cal-day-name">Tue</div><div class="cal-day-name">Wed</div>
+        <div class="cal-day-name">Thu</div><div class="cal-day-name">Fri</div><div class="cal-day-name">Sat</div><div class="cal-day-name" style="color:var(--rose2)">Sun</div>
       </div>
       <div class="cal-grid">`;
     for(let i=0;i<totalCells;i++){
@@ -1285,7 +1287,7 @@ function renderCalendar(){
       const tasks=dayEntries.filter(e=>e.type!=='event');
       let entriesHtml='';
       events.forEach(e=>{entriesHtml+=`<div class="cal-event" onclick="event.stopPropagation();openEntryDetail('${e.id}')">${e.title}</div>`;});
-      if(showTasks){tasks.forEach(e=>{const cls=e.type==='social'?'cal-task-social':'cal-task-marketing';entriesHtml+=`<div class="${cls}" onclick="event.stopPropagation();openEntryDetail('${e.id}')">${e.title}</div>`;});}
+      if(showTasks){tasks.forEach(e=>{const cls=e.type==='social'?'cal-task-social':'cal-task-socialmedia';entriesHtml+=`<div class="${cls}" onclick="event.stopPropagation();openEntryDetail('${e.id}')">${e.title}</div>`;});}
       html+=`<div class="cal-cell${otherMonth?' other-month':''}${isToday?' today':''}" onclick="openEntryModalOnDate('${dateStr}')"><div class="cal-date-num">${day}</div><div class="cal-entries">${entriesHtml}</div></div>`;
     }
     html+=`</div>
@@ -1307,7 +1309,7 @@ function renderCalendar(){
     </div>`;
   }
   scroll.innerHTML=html;
-  setTimeout(()=>{document.querySelectorAll('.cal-note-area').forEach(el=>autoGrow(el));},50);
+  setTimeout(()=>{document.querySelectorAll('.cal-note-area,.sunday-notes-area').forEach(el=>autoGrow(el));},50);
 }
 
 function toggleTasks(){
@@ -1334,7 +1336,7 @@ function openEntryModal(id=null){
   chips.forEach(c=>c.className='entry-chip');
   if(currentEntryType==='event')chips[0].classList.add('sel-event');
   else if(currentEntryType==='social')chips[1].classList.add('sel-social');
-  else chips[2].classList.add('sel-marketing');
+  else chips[2].classList.add('sel-socialmedia');
   document.getElementById('entryModal').classList.add('open');
   document.getElementById('entryTitle').focus();
 }
@@ -1361,7 +1363,7 @@ function saveEntry(){
 function openEntryDetail(id){
   detailEntryId=id;
   const e=calEntries.find(x=>x.id===id);if(!e)return;
-  const typeLabel=e.type==='event'?'Event / Gig':e.type==='social'?'Social Media Post':'Marketing / Promo';
+  const typeLabel=e.type==='event'?'Event / Gig':e.type==='social'?'Social Media Post':'Social Media';
   const typeColor=e.type==='event'?'var(--gold)':e.type==='social'?'var(--purple-btn)':'var(--teal2)';
   document.getElementById('entryDetailContent').innerHTML=`<div class="entry-detail"><div class="entry-detail-type" style="color:${typeColor}">${typeLabel}</div><div class="entry-detail-title">${e.title}</div><div class="entry-detail-date">${formatDate(e.date)}</div>${e.notes?`<div class="entry-detail-notes">${e.notes}</div>`:''}</div>`;
   document.getElementById('entryDetailModal').classList.add('open');
@@ -1412,7 +1414,7 @@ const DEFAULT_TRACKER_CATEGORIES=[
     {id:"scheduling",label:"Scheduling system for hosts across venues"},
     {id:"hostpay",label:"Host pay structure / contractor agreements in place"},
   ]},
-  {id:"marketing",name:"Marketing & Audience Building",icon:"📣",color:"#3aa08a",items:[
+  {id:"socialmedia",name:"Marketing & Audience Building",icon:"📣",color:"#3aa08a",items:[
     {id:"insta",label:"Active Instagram account with regular posts"},
     {id:"fb",label:"Active Facebook page"},
     {id:"tiktok",label:"TikTok account with event content"},
@@ -1778,9 +1780,148 @@ function trackerReset(){
 }
 
 
+
+// ── WORD OF THE DAY ──
+const WOTD_LIST=[
+  {word:'CROW',hint:'dark & clever'},{word:'ROOK',hint:'strategic power'},
+  {word:'VIBE',hint:'feel the room'},{word:'SING',hint:'what we do'},
+  {word:'NOIR',hint:'dark & beautiful'},{word:'LURE',hint:'draw them in'},
+  {word:'PULSE',hint:'keep the beat'},{word:'GLOW',hint:'light it up'},
+  {word:'BOLD',hint:'own the stage'},{word:'DUSK',hint:'magic hour'},
+  {word:'HUSH',hint:'command the room'},{word:'SPARK',hint:'ignite the night'},
+  {word:'FLUX',hint:'always moving'},{word:'SWAY',hint:'move the crowd'},
+  {word:'RIFF',hint:'improvise freely'},{word:'MUSE',hint:'your inspiration'},
+  {word:'HAUNT',hint:'unforgettable'},{word:'SURGE',hint:'build the energy'},
+  {word:'KEEN',hint:'sharp and ready'},{word:'BLAZE',hint:'burn bright'},
+  {word:'WAIL',hint:'let it out'},{word:'SHADE',hint:'cool under pressure'},
+  {word:'WILD',hint:'controlled chaos'},{word:'SOUL',hint:'put it in everything'},
+  {word:'SILK',hint:'smooth delivery'},{word:'DAZE',hint:'leave them stunned'},
+  {word:'CULT',hint:'build your following'},{word:'BROOD',hint:'depth behind the smile'},
+  {word:'PLUM',hint:'rich and deep'},{word:'LOFT',hint:'elevate everything'},
+  {word:'RAVE',hint:'they will talk'},{word:'CLOAK',hint:'mystery and allure'},
+  {word:'GRAIL',hint:'the real thing'},{word:'THRALL',hint:'hold them captive'},
+  {word:'BLOOM',hint:'in full effect'},
+];
+function getWOTD(){
+  const now=new Date();
+  const start=new Date(now.getFullYear(),0,0);
+  const dayOfYear=Math.floor((now-start)/(1000*60*60*24));
+  return WOTD_LIST[dayOfYear%WOTD_LIST.length];
+}
+function renderWOTD(){
+  const el=document.getElementById('wotdWord');
+  const sub=document.getElementById('wotdSub');
+  if(!el)return;
+  const w=getWOTD();
+  el.textContent=w.word;
+  if(sub)sub.textContent=w.hint;
+}
+
+// ── SUNDAY WRAPS ──
+let sundayWraps={};
+
+function getWeekKey(yr,mo,day){
+  const d=new Date(yr,mo,day);
+  d.setHours(0,0,0,0);
+  const dayOfWeek=(d.getDay()+6)%7;
+  const monday=new Date(d);
+  monday.setDate(d.getDate()-dayOfWeek);
+  return monday.getFullYear()+'-'+String(monday.getMonth()+1).padStart(2,'0')+'-'+String(monday.getDate()).padStart(2,'0');
+}
+function loadSundayWraps(){
+  try{const s=LS.get('sunday-wraps');if(s)sundayWraps=JSON.parse(s);}catch(e){}
+  if(db){
+    db.collection('cal_sunday_wraps').doc('all').onSnapshot(snap=>{
+      if(snap.exists){sundayWraps=snap.data()||{};renderThisWeek();renderCalendar();}
+    },()=>{});
+  }
+}
+function saveSundayWraps(){
+  LS.set('sunday-wraps',JSON.stringify(sundayWraps));
+  if(db){try{db.collection('cal_sunday_wraps').doc('all').set(sundayWraps);}catch(e){}}
+}
+function getSundayWrap(weekKey){
+  if(!sundayWraps[weekKey])sundayWraps[weekKey]={items:[],notes:''};
+  return sundayWraps[weekKey];
+}
+function addSundayItem(weekKey){
+  const input=document.getElementById('sundayInput-'+weekKey);
+  if(!input||!input.value.trim())return;
+  const wrap=getSundayWrap(weekKey);
+  wrap.items.push({id:Date.now().toString(),text:input.value.trim(),done:false});
+  input.value='';
+  saveSundayWraps();
+  renderCalendar();
+  renderThisWeek();
+}
+function addSundayItemKey(e,weekKey){if(e.key==='Enter')addSundayItem(weekKey);}
+function toggleSundayItem(weekKey,itemId){
+  const wrap=getSundayWrap(weekKey);
+  const item=wrap.items.find(i=>i.id===itemId);
+  if(item)item.done=!item.done;
+  saveSundayWraps();
+  renderCalendar();
+  renderThisWeek();
+}
+function deleteSundayItem(weekKey,itemId){
+  const wrap=getSundayWrap(weekKey);
+  wrap.items=wrap.items.filter(i=>i.id!==itemId);
+  saveSundayWraps();
+  renderCalendar();
+  renderThisWeek();
+}
+function saveSundayNotes(weekKey){
+  const el=document.getElementById('sundayNotes-'+weekKey);
+  if(!el)return;
+  getSundayWrap(weekKey).notes=el.value;
+  saveSundayWraps();
+}
+function renderThisWeek(){
+  const el=document.getElementById('thisWeekPanel');
+  if(!el)return;
+  const today=new Date();
+  const weekKey=getWeekKey(today.getFullYear(),today.getMonth(),today.getDate());
+  const dayOfWeek=(today.getDay()+6)%7;
+  const sunday=new Date(today);
+  sunday.setDate(today.getDate()+(6-dayOfWeek));
+  const sunStr=sunday.toLocaleDateString('en-US',{month:'long',day:'numeric'});
+  const wrap=getSundayWrap(weekKey);
+  const itemsHtml=wrap.items.length?wrap.items.map(item=>`
+    <div class="this-week-item">
+      <div class="this-week-check${item.done?' done':''}" onclick="toggleSundayItem('${weekKey}','${item.id}')"></div>
+      <div class="this-week-item-text${item.done?' done':''}">${item.text}</div>
+    </div>`).join(''):`<div class="this-week-empty">No tasks yet for this week — add them on Sunday in the calendar below.</div>`;
+  el.innerHTML=`<div class="this-week-panel">
+    <div class="this-week-header">
+      <div class="this-week-title">⚑ This Week's Delegation</div>
+      <div class="this-week-date">Due Sunday ${sunStr}</div>
+    </div>
+    <div class="this-week-checklist">${itemsHtml}</div>
+  </div>`;
+}
+function renderSundayWrap(weekKey){
+  const wrap=getSundayWrap(weekKey);
+  return`<div class="sunday-wrap" onclick="event.stopPropagation()">
+    <div class="sunday-wrap-label">⚑ Week Wrap — Delegation Checklist</div>
+    <div class="sunday-checklist">
+      ${wrap.items.map(item=>`<div class="sunday-check-row">
+        <div class="sunday-checkbox${item.done?' done':''}" onclick="toggleSundayItem('${weekKey}','${item.id}')"></div>
+        <span class="sunday-check-text${item.done?' done':''}">${item.text}</span>
+        <button class="sunday-check-del" onclick="deleteSundayItem('${weekKey}','${item.id}')">✕</button>
+      </div>`).join('')}
+    </div>
+    <div class="sunday-add-row">
+      <input type="text" class="sunday-add-input" id="sundayInput-${weekKey}" placeholder="Add task..." onkeydown="addSundayItemKey(event,'${weekKey}')" onclick="event.stopPropagation()">
+      <button class="sunday-add-btn" onclick="event.stopPropagation();addSundayItem('${weekKey}')">+ Add</button>
+    </div>
+    <textarea class="sunday-notes-area" id="sundayNotes-${weekKey}" placeholder="Freeform notes..." onblur="saveSundayNotes('${weekKey}')" oninput="autoGrow(this)" onclick="event.stopPropagation()">${wrap.notes||''}</textarea>
+  </div>`;
+}
+
 // ── INIT ── renders immediately, Firebase syncs in background
 function init(){
   loadStorage();
+  loadSundayWraps();
   loadRanks();
   loadHostOrder();
   loadTrackerAnswers();
@@ -1791,6 +1932,7 @@ function init(){
   renderVenueManage();
   populateHistoryDropdown();
   populateRosterFilters();
+  renderThisWeek();
   renderCalendar();
   fetchSheetData();
   setInterval(fetchSheetData,60000);
