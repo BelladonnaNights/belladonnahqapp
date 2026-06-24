@@ -498,13 +498,9 @@ body{background:var(--bg);color:var(--text);font-family:'Josefin Sans',sans-seri
 <!-- CALENDAR -->
 <div class="panel" id="panel-calendar">
   <div class="cal-toolbar">
-    <div class="cal-toolbar-right" style="margin-left:auto;">
+    <div class="cal-toolbar-right" style="margin-left:auto;gap:0.5rem;">
       <button class="delegation-modal-btn" onclick="openDelegationModal()">⚑ Write Delegations</button>
-      <div class="cal-toggle" onclick="toggleTasks()">
-        <div class="cal-toggle-switch on" id="taskToggle"><div class="cal-toggle-thumb"></div></div>
-        <span id="taskToggleLabel">Show Tasks</span>
-      </div>
-      <button class="add-entry-btn" onclick="openEntryModal()">+ Add</button>
+      <button class="add-entry-btn" onclick="openEntryModal()">+ Add Entry</button>
     </div>
   </div>
   <div id="thisWeekPanel"></div>
@@ -540,13 +536,11 @@ body{background:var(--bg);color:var(--text);font-family:'Josefin Sans',sans-seri
   <div class="delegation-modal">
     <div class="delegation-modal-title">⚑ Week Delegation List</div>
     <div class="delegation-modal-week" id="delegModalWeekLabel"></div>
-    <div class="delegation-item-list" id="delegModalList"></div>
-    <div class="delegation-add-row">
-      <input type="text" class="delegation-add-input" id="delegModalInput" placeholder="Add a delegation..." onkeydown="if(event.key==='Enter')delegModalAddItem()">
-      <button class="delegation-add-save" onclick="delegModalAddItem()">+ Add</button>
-    </div>
-    <div class="modal-actions">
-      <button class="modal-cancel" onclick="closeDelegationModal()">Close</button>
+    <div style="font-size:0.68rem;color:var(--text3);margin-bottom:0.7rem;line-height:1.6;">Write one task per line. These will appear as a checklist on Sunday and in the This Week panel.</div>
+    <textarea class="delegation-free-textarea" id="delegFreeText" placeholder="Post about the Coaster show&#10;Pull the playlist for Tuesday&#10;Send invoice to McMillins&#10;..."></textarea>
+    <div style="display:flex;gap:0.5rem;margin-top:0.9rem;justify-content:flex-end;">
+      <button class="modal-cancel" onclick="closeDelegationModal()">Cancel</button>
+      <button class="modal-save" onclick="saveDelegationFreeText()" style="background:rgba(60,180,80,0.12);border-color:#4aaa5a;color:#4aaa5a;">Save List</button>
     </div>
   </div>
 </div>
@@ -1313,7 +1307,7 @@ function renderCalendar(){
           ${[0,1,2].map(si=>`
             <div class="cal-note-section${si===2?' random-delegation-note':''}">
               <div class="cal-note-header">
-                <input type="text" class="cal-note-title-input" id="notetitle-${yr}-${mo}-${si}" value="${getNoteTitle(yr,mo,si)}" placeholder="${si===2?'Random Delegations':'Section title...'}" onblur="saveNoteTitle(${yr},${mo},${si})" onclick="event.stopPropagation()">
+                <input type="text" class="cal-note-title-input" id="notetitle-${yr}-${mo}-${si}" value="${getNoteTitle(yr,mo,si)||(si===2?'Random Delegations':'')}" placeholder="${si===2?'Random Delegations':'Section title...'}" onblur="saveNoteTitle(${yr},${mo},${si})" onclick="event.stopPropagation()">
                 <span class="cal-notes-saved" id="noteSaved-${yr}-${mo}-${si}">✓</span>
                 <button class="cal-note-expand-btn" onclick="expandNote(${yr},${mo},${si})">⤢</button>
               </div>
@@ -1899,42 +1893,46 @@ function renderThisWeek(){
   const today=new Date();
   const weekKey=getWeekKey(today.getFullYear(),today.getMonth(),today.getDate());
   const dayOfWeek=(today.getDay()+6)%7;
-  const sunday=new Date(today);
-  sunday.setDate(today.getDate()+(6-dayOfWeek));
-  const sunStr=sunday.toLocaleDateString('en-US',{month:'long',day:'numeric'});
+  const sunday=new Date(today);sunday.setDate(today.getDate()+(6-dayOfWeek));
+  const sunStr=sunday.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
   const wrap=getSundayWrap(weekKey);
-  const itemsHtml=wrap.items.length?wrap.items.map(item=>`
-    <div class="this-week-item">
-      <div class="this-week-check${item.done?' done':''}" onclick="toggleSundayItem('${weekKey}','${item.id}')" style="border-color:rgba(60,180,80,0.5);"></div>
-      <div class="this-week-item-text${item.done?' done':''}">${item.text}</div>
-    </div>`).join(''):`<div class="this-week-empty">No tasks yet for this week — add them on Sunday in the calendar below.</div>`;
-  el.innerHTML=`<div class="this-week-panel">
-    <div class="this-week-header">
-      <div class="this-week-title">⚑ This Week's Delegations</div>
-      <div class="this-week-date">Due Sunday ${sunStr}</div>
+  const done=wrap.items.filter(i=>i.done).length;
+  const total=wrap.items.length;
+  const pctW=total?Math.round((done/total)*100):0;
+  const itemsHtml=wrap.items.length
+    ?wrap.items.map(item=>`<div class="tw-item">
+        <div class="tw-check${item.done?' done':''}" onclick="toggleSundayItem('${weekKey}','${item.id}')"></div>
+        <span class="tw-text${item.done?' done':''}">${item.text}</span>
+      </div>`).join('')
+    :`<div class="tw-empty">No delegations yet — click <strong style="color:#4aaa5a">⚑ Write Delegations</strong> to add this week's list.</div>`;
+  el.innerHTML=`<div class="tw-panel">
+    <div class="tw-header">
+      <div>
+        <div class="tw-title">⚑ This Week's Delegations</div>
+        <div class="tw-due">Due ${sunStr}</div>
+      </div>
+      <div class="tw-right">
+        ${total?`<div class="tw-progress-wrap"><div class="tw-progress-bar" style="width:${pctW}%"></div></div><div class="tw-count">${done}/${total} done</div>`:''}
+        <button class="tw-edit-btn" onclick="openDelegationModal()">✎ Edit</button>
+      </div>
     </div>
-    <div class="this-week-checklist">${itemsHtml}</div>
+    <div class="tw-list">${itemsHtml}</div>
   </div>`;
 }
 function renderSundayWrap(weekKey){
   const wrap=getSundayWrap(weekKey);
-  return`<div class="sunday-wrap" onclick="event.stopPropagation()">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.6rem;">
-      <div class="sunday-wrap-label" style="margin-bottom:0;">⚑ Delegation Checklist</div>
-      <button style="background:none;border:1px solid rgba(60,180,80,0.3);color:#4aaa5a;font-size:0.58rem;letter-spacing:0.12em;padding:0.2rem 0.5rem;border-radius:12px;cursor:pointer;font-family:'Josefin Sans',sans-serif;" onclick="event.stopPropagation();openDelegationModal('${weekKey}')">✎ Edit</button>
+  const checklistHtml=wrap.items.length
+    ?wrap.items.map(item=>`<div class="sw-row">
+        <div class="sw-check${item.done?' done':''}" onclick="event.stopPropagation();toggleSundayItem('${weekKey}','${item.id}')"></div>
+        <span class="sw-text${item.done?' done':''}">${item.text}</span>
+      </div>`).join('')
+    :`<div class="sw-empty">No delegations — click Edit to write this week's list.</div>`;
+  return`<div class="sw-wrap" onclick="event.stopPropagation()">
+    <div class="sw-header">
+      <span class="sw-label">⚑ Delegations</span>
+      <button class="sw-edit-btn" onclick="event.stopPropagation();openDelegationModal('${weekKey}')">✎ Edit</button>
     </div>
-    <div class="sunday-checklist">
-      ${wrap.items.map(item=>`<div class="sunday-check-row">
-        <div class="sunday-checkbox${item.done?' done':''}" onclick="toggleSundayItem('${weekKey}','${item.id}')"></div>
-        <span class="sunday-check-text${item.done?' done':''}">${item.text}</span>
-        <button class="sunday-check-del" onclick="deleteSundayItem('${weekKey}','${item.id}')">✕</button>
-      </div>`).join('')}
-    </div>
-    <div class="sunday-add-row">
-      <input type="text" class="sunday-add-input" id="sundayInput-${weekKey}" placeholder="Add task..." onkeydown="addSundayItemKey(event,'${weekKey}')" onclick="event.stopPropagation()">
-      <button class="sunday-add-btn" onclick="event.stopPropagation();addSundayItem('${weekKey}')">+ Add</button>
-    </div>
-    <textarea class="sunday-notes-area" id="sundayNotes-${weekKey}" placeholder="Freeform notes..." onblur="saveSundayNotes('${weekKey}')" oninput="autoGrow(this)" onclick="event.stopPropagation()">${wrap.notes||''}</textarea>
+    <div class="sw-list">${checklistHtml}</div>
   </div>`;
 }
 
@@ -1943,51 +1941,37 @@ function renderSundayWrap(weekKey){
 let delegModalWeekKey = null;
 
 function openDelegationModal(weekKey){
-  // default to current week
   const today=new Date();
   delegModalWeekKey=weekKey||getWeekKey(today.getFullYear(),today.getMonth(),today.getDate());
-  // get sunday of that week for label
   const parts=delegModalWeekKey.split('-');
   const monday=new Date(parseInt(parts[0]),parseInt(parts[1])-1,parseInt(parts[2]));
   const sunday=new Date(monday);sunday.setDate(monday.getDate()+6);
   const label=sunday.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
-  document.getElementById('delegModalWeekLabel').textContent='Due Sunday '+label;
-  renderDelegModalList();
+  document.getElementById('delegModalWeekLabel').textContent='Due Sunday, '+label;
+  // Pre-fill textarea with existing items
+  const wrap=getSundayWrap(delegModalWeekKey);
+  document.getElementById('delegFreeText').value=wrap.items.map(i=>i.text).join('\n');
   document.getElementById('delegationModal').classList.add('open');
-  setTimeout(()=>document.getElementById('delegModalInput').focus(),100);
+  setTimeout(()=>document.getElementById('delegFreeText').focus(),100);
 }
 function closeDelegationModal(){
   document.getElementById('delegationModal').classList.remove('open');
   delegModalWeekKey=null;
 }
-function renderDelegModalList(){
-  const el=document.getElementById('delegModalList');
-  if(!el)return;
+function saveDelegationFreeText(){
+  const text=document.getElementById('delegFreeText').value;
+  const lines=text.split('\n').map(l=>l.trim()).filter(Boolean);
   const wrap=getSundayWrap(delegModalWeekKey);
-  el.innerHTML=wrap.items.length?wrap.items.map(item=>`
-    <div class="delegation-item-row">
-      <div class="delegation-item-text" style="color:${item.done?'var(--text3)':'#4aaa5a'};text-decoration:${item.done?'line-through':'none'}">${item.text}</div>
-      <button class="delegation-item-del" onclick="delegModalDeleteItem('${item.id}')">✕</button>
-    </div>`).join(''):'<div style="font-size:0.72rem;color:var(--text3);padding:0.3rem 0;">No delegations yet for this week.</div>';
-}
-function delegModalAddItem(){
-  const input=document.getElementById('delegModalInput');
-  if(!input||!input.value.trim())return;
-  const wrap=getSundayWrap(delegModalWeekKey);
-  wrap.items.push({id:Date.now().toString(),text:input.value.trim(),done:false});
-  input.value='';
+  // Preserve done state for existing items by matching text
+  const existing=wrap.items;
+  wrap.items=lines.map(line=>{
+    const found=existing.find(e=>e.text===line);
+    return found||{id:Date.now().toString()+Math.random(),text:line,done:false};
+  });
   saveSundayWraps();
-  renderDelegModalList();
   renderCalendar();
   renderThisWeek();
-}
-function delegModalDeleteItem(itemId){
-  const wrap=getSundayWrap(delegModalWeekKey);
-  wrap.items=wrap.items.filter(i=>i.id!==itemId);
-  saveSundayWraps();
-  renderDelegModalList();
-  renderCalendar();
-  renderThisWeek();
+  closeDelegationModal();
 }
 
 // ── INIT ── renders immediately, Firebase syncs in background
