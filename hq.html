@@ -215,8 +215,8 @@ body{background:var(--bg);color:var(--text);font-family:'Josefin Sans',sans-seri
 .cal-event:hover{background:rgba(201,168,76,0.28);}
 .cal-task-social{background:rgba(122,74,154,0.12);border:1px solid rgba(122,74,154,0.3);padding:0.15rem 0.4rem;font-size:0.58rem;color:var(--purple-btn);letter-spacing:0.03em;cursor:pointer;line-height:1.3;}
 .cal-task-social:hover{background:rgba(122,74,154,0.22);}
-.cal-task-socialmedia{background:rgba(42,136,112,0.1);border:1px solid rgba(42,136,112,0.28);padding:0.15rem 0.4rem;font-size:0.58rem;color:var(--teal);letter-spacing:0.03em;cursor:pointer;line-height:1.3;}
-.cal-task-socialmedia:hover{background:rgba(42,136,112,0.2);}
+.cal-task-delegation{background:rgba(42,136,112,0.1);border:1px solid rgba(42,136,112,0.28);padding:0.15rem 0.4rem;font-size:0.58rem;color:var(--teal);letter-spacing:0.03em;cursor:pointer;line-height:1.3;}
+.cal-task-delegation:hover{background:rgba(42,136,112,0.2);}
 .cal-legend{display:flex;gap:1rem;flex-wrap:wrap;margin-top:1rem;}
 .cal-legend-item{display:flex;align-items:center;gap:0.4rem;font-size:0.6rem;color:var(--text3);letter-spacing:0.06em;}
 .cal-legend-dot{width:10px;height:10px;flex-shrink:0;}
@@ -248,7 +248,7 @@ body{background:var(--bg);color:var(--text);font-family:'Josefin Sans',sans-seri
 .entry-chip{font-size:0.65rem;letter-spacing:0.1em;padding:0.35rem 0.85rem;cursor:pointer;border:1px solid var(--border);background:var(--surface2);color:var(--text3);font-family:'Josefin Sans',sans-serif;transition:all 0.2s;}
 .entry-chip.sel-event{border-color:var(--gold);color:var(--gold);background:var(--gold-dim);}
 .entry-chip.sel-social{border-color:var(--purple2);color:var(--purple-btn);background:var(--purple-dim);}
-.entry-chip.sel-socialmedia{border-color:var(--teal);color:var(--teal);background:rgba(42,136,112,0.1);}
+.entry-chip.sel-delegation{border-color:var(--teal);color:var(--teal);background:rgba(42,136,112,0.1);}
 .entry-detail{padding:0.5rem 0;}
 .entry-detail-type{font-size:0.6rem;letter-spacing:0.22em;text-transform:uppercase;margin-bottom:0.5rem;}
 .entry-detail-title{font-family:'Cormorant Garamond',serif;font-size:1.5rem;color:var(--gold);margin-bottom:0.4rem;}
@@ -499,6 +499,7 @@ body{background:var(--bg);color:var(--text);font-family:'Josefin Sans',sans-seri
 <div class="panel" id="panel-calendar">
   <div class="cal-toolbar">
     <div class="cal-toolbar-right" style="margin-left:auto;">
+      <button class="delegation-modal-btn" onclick="openDelegationModal()">⚑ Write Delegations</button>
       <div class="cal-toggle" onclick="toggleTasks()">
         <div class="cal-toggle-switch on" id="taskToggle"><div class="cal-toggle-thumb"></div></div>
         <span id="taskToggleLabel">Show Tasks</span>
@@ -511,7 +512,7 @@ body{background:var(--bg);color:var(--text);font-family:'Josefin Sans',sans-seri
   <div class="cal-legend">
     <div class="cal-legend-item"><div class="cal-legend-dot" style="background:rgba(201,169,110,0.4);border:1px solid var(--gold);"></div>Event / Gig</div>
     <div class="cal-legend-item"><div class="cal-legend-dot" style="background:rgba(122,90,170,0.3);border:1px solid var(--purple2);"></div>Social Media Post</div>
-    <div class="cal-legend-item"><div class="cal-legend-dot" style="background:rgba(58,160,138,0.25);border:1px solid var(--teal2);"></div>Social Media</div>
+    <div class="cal-legend-item"><div class="cal-legend-dot" style="background:rgba(60,180,80,0.25);border:1px solid #4aaa5a;"></div>Delegation</div>
   </div>
 </div>
 
@@ -525,11 +526,27 @@ body{background:var(--bg);color:var(--text);font-family:'Josefin Sans',sans-seri
 <div class="modal-bg" id="resetStatsModal">
   <div class="modal" style="max-width:400px;text-align:center;">
     <div style="font-size:2rem;margin-bottom:0.75rem;">⚠️</div>
-    <div style="font-family:'Cormorant Garamond',serif;font-size:1.4rem;color:var(--rose2);letter-spacing:0.08em;margin-bottom:0.6rem;">Reset Stats Data?</div>
+    <div style="font-family:'Cormorant Garamond',serif;font-size:1.4rem;color:#4aaa5a;letter-spacing:0.08em;margin-bottom:0.6rem;">Reset Stats Data?</div>
     <div style="font-size:0.78rem;color:var(--text3);line-height:1.7;margin-bottom:1.2rem;">This will clear all cached checkout and shift data from this browser. Stats will reload fresh from Google Sheets on your next visit. <strong style="color:var(--text2);">This cannot be undone.</strong></div>
     <div class="modal-actions" style="justify-content:center;">
       <button class="modal-cancel" onclick="closeResetStatsModal()">Cancel</button>
-      <button class="modal-save" style="background:rgba(176,80,112,0.15);border-color:var(--rose2);color:var(--rose2);" onclick="confirmResetStats()">Yes, Reset Stats</button>
+      <button class="modal-save" style="background:rgba(60,180,80,0.15);border-color:#4aaa5a;color:#4aaa5a;" onclick="confirmResetStats()">Yes, Reset Stats</button>
+    </div>
+  </div>
+</div>
+
+<!-- DELEGATION MODAL -->
+<div class="delegation-modal-bg" id="delegationModal">
+  <div class="delegation-modal">
+    <div class="delegation-modal-title">⚑ Week Delegation List</div>
+    <div class="delegation-modal-week" id="delegModalWeekLabel"></div>
+    <div class="delegation-item-list" id="delegModalList"></div>
+    <div class="delegation-add-row">
+      <input type="text" class="delegation-add-input" id="delegModalInput" placeholder="Add a delegation..." onkeydown="if(event.key==='Enter')delegModalAddItem()">
+      <button class="delegation-add-save" onclick="delegModalAddItem()">+ Add</button>
+    </div>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="closeDelegationModal()">Close</button>
     </div>
   </div>
 </div>
@@ -556,7 +573,7 @@ body{background:var(--bg);color:var(--text);font-family:'Josefin Sans',sans-seri
       <div class="entry-type-chips">
         <div class="entry-chip sel-event" onclick="selectEntryType('event',this)">Event / Gig</div>
         <div class="entry-chip" onclick="selectEntryType('social',this)">Social Media Post</div>
-        <div class="entry-chip" onclick="selectEntryType('socialmedia',this)">Social Media</div>
+        <div class="entry-chip" onclick="selectEntryType('delegation',this)">Delegation</div>
       </div>
     </div>
     <div class="form-group"><label class="form-label">Title</label><input type="text" class="form-input" id="entryTitle" placeholder="e.g. The Coaster Karaoke Night"></div>
@@ -576,7 +593,7 @@ body{background:var(--bg);color:var(--text);font-family:'Josefin Sans',sans-seri
     <div class="modal-actions" style="margin-top:1rem;">
       <button class="modal-cancel" onclick="closeEntryDetail()">Close</button>
       <button class="modal-save" onclick="editEntryFromDetail()">Edit</button>
-      <button class="modal-cancel" onclick="deleteEntryFromDetail()" style="border-color:var(--rose2);color:var(--rose2);">Delete</button>
+      <button class="modal-cancel" onclick="deleteEntryFromDetail()" style="border-color:#4aaa5a;color:#4aaa5a;">Delete</button>
     </div>
   </div>
 </div>
@@ -1272,7 +1289,7 @@ function renderCalendar(){
       <div class="cal-month-heading${isCurrentMonth?' is-today-month':''}">${MONTHS[mo]} ${yr}</div>
       <div class="cal-grid-header">
         <div class="cal-day-name">Mon</div><div class="cal-day-name">Tue</div><div class="cal-day-name">Wed</div>
-        <div class="cal-day-name">Thu</div><div class="cal-day-name">Fri</div><div class="cal-day-name">Sat</div><div class="cal-day-name" style="color:var(--rose2)">Sun</div>
+        <div class="cal-day-name">Thu</div><div class="cal-day-name">Fri</div><div class="cal-day-name">Sat</div><div class="cal-day-name" style="color:#4aaa5a">Sun</div>
       </div>
       <div class="cal-grid">`;
     for(let i=0;i<totalCells;i++){
@@ -1287,16 +1304,16 @@ function renderCalendar(){
       const tasks=dayEntries.filter(e=>e.type!=='event');
       let entriesHtml='';
       events.forEach(e=>{entriesHtml+=`<div class="cal-event" onclick="event.stopPropagation();openEntryDetail('${e.id}')">${e.title}</div>`;});
-      if(showTasks){tasks.forEach(e=>{const cls=e.type==='social'?'cal-task-social':'cal-task-socialmedia';entriesHtml+=`<div class="${cls}" onclick="event.stopPropagation();openEntryDetail('${e.id}')">${e.title}</div>`;});}
+      if(showTasks){tasks.forEach(e=>{const cls=e.type==='social'?'cal-task-social':e.type==='delegation'?'cal-task-delegation':'cal-task-delegation';entriesHtml+=`<div class="${cls}" onclick="event.stopPropagation();openEntryDetail('${e.id}')">${e.title}</div>`;});}
       html+=`<div class="cal-cell${otherMonth?' other-month':''}${isToday?' today':''}" onclick="openEntryModalOnDate('${dateStr}')"><div class="cal-date-num">${day}</div><div class="cal-entries">${entriesHtml}</div></div>`;
     }
     html+=`</div>
       <div class="cal-month-notes">
         <div class="cal-notes-grid">
           ${[0,1,2].map(si=>`
-            <div class="cal-note-section">
+            <div class="cal-note-section${si===2?' random-delegation-note':''}">
               <div class="cal-note-header">
-                <input type="text" class="cal-note-title-input" id="notetitle-${yr}-${mo}-${si}" value="${getNoteTitle(yr,mo,si)}" placeholder="Section title..." onblur="saveNoteTitle(${yr},${mo},${si})" onclick="event.stopPropagation()">
+                <input type="text" class="cal-note-title-input" id="notetitle-${yr}-${mo}-${si}" value="${getNoteTitle(yr,mo,si)}" placeholder="${si===2?'Random Delegations':'Section title...'}" onblur="saveNoteTitle(${yr},${mo},${si})" onclick="event.stopPropagation()">
                 <span class="cal-notes-saved" id="noteSaved-${yr}-${mo}-${si}">✓</span>
                 <button class="cal-note-expand-btn" onclick="expandNote(${yr},${mo},${si})">⤢</button>
               </div>
@@ -1336,7 +1353,7 @@ function openEntryModal(id=null){
   chips.forEach(c=>c.className='entry-chip');
   if(currentEntryType==='event')chips[0].classList.add('sel-event');
   else if(currentEntryType==='social')chips[1].classList.add('sel-social');
-  else chips[2].classList.add('sel-socialmedia');
+  else chips[2].classList.add('sel-delegation');
   document.getElementById('entryModal').classList.add('open');
   document.getElementById('entryTitle').focus();
 }
@@ -1414,7 +1431,7 @@ const DEFAULT_TRACKER_CATEGORIES=[
     {id:"scheduling",label:"Scheduling system for hosts across venues"},
     {id:"hostpay",label:"Host pay structure / contractor agreements in place"},
   ]},
-  {id:"socialmedia",name:"Marketing & Audience Building",icon:"📣",color:"#3aa08a",items:[
+  {id:"delegation",name:"Marketing & Audience Building",icon:"📣",color:"#3aa08a",items:[
     {id:"insta",label:"Active Instagram account with regular posts"},
     {id:"fb",label:"Active Facebook page"},
     {id:"tiktok",label:"TikTok account with event content"},
@@ -1650,7 +1667,7 @@ function renderTracker(){
             <div class="tracker-btn-group">
               <button class="tracker-ans-btn" onclick="setTrackerAnswer('${cat.id}','${item.id}','yes')" style="${ans==='yes'?'border-color:'+cat.color+';color:'+cat.color+';background:'+cat.color+'22;':''}">Yes ✅</button>
               <button class="tracker-ans-btn" onclick="setTrackerAnswer('${cat.id}','${item.id}','partial')" style="${ans==='partial'?'border-color:'+cat.color+';color:'+cat.color+';background:'+cat.color+'22;':''}">In Progress 🔄</button>
-              <button class="tracker-ans-btn" onclick="setTrackerAnswer('${cat.id}','${item.id}','no')" style="${ans==='no'?'border-color:var(--rose2);color:var(--rose2);background:rgba(176,80,112,0.15);':''}">Not Yet ❌</button>
+              <button class="tracker-ans-btn" onclick="setTrackerAnswer('${cat.id}','${item.id}','no')" style="${ans==='no'?'border-color:#4aaa5a;color:#4aaa5a;background:rgba(60,180,80,0.15);':''}">Not Yet ❌</button>
             </div>
           </div>`;
         }).join('')}
@@ -1684,7 +1701,7 @@ function renderTracker(){
       const itemsHtml = allDone
         ? '<div class="tracker-glance-all-done">✅ All complete</div>'
         : [...inProg.map(i=>`<div class="tracker-glance-item"><div class="tracker-glance-item-dot" style="background:#c9a96e;"></div><span style="color:var(--gold)">${i.label}</span></div>`),
-           ...notDone.map(i=>`<div class="tracker-glance-item"><div class="tracker-glance-item-dot" style="background:var(--rose2);"></div><span>${i.label}</span></div>`)
+           ...notDone.map(i=>`<div class="tracker-glance-item"><div class="tracker-glance-item-dot" style="background:#4aaa5a;"></div><span>${i.label}</span></div>`)
           ].join('');
       const catIdx = TRACKER_CATEGORIES.indexOf(cat);
       return `<div class="tracker-glance-card" draggable="true" data-catid="${cat.id}"
@@ -1888,12 +1905,12 @@ function renderThisWeek(){
   const wrap=getSundayWrap(weekKey);
   const itemsHtml=wrap.items.length?wrap.items.map(item=>`
     <div class="this-week-item">
-      <div class="this-week-check${item.done?' done':''}" onclick="toggleSundayItem('${weekKey}','${item.id}')"></div>
+      <div class="this-week-check${item.done?' done':''}" onclick="toggleSundayItem('${weekKey}','${item.id}')" style="border-color:rgba(60,180,80,0.5);"></div>
       <div class="this-week-item-text${item.done?' done':''}">${item.text}</div>
     </div>`).join(''):`<div class="this-week-empty">No tasks yet for this week — add them on Sunday in the calendar below.</div>`;
   el.innerHTML=`<div class="this-week-panel">
     <div class="this-week-header">
-      <div class="this-week-title">⚑ This Week's Delegation</div>
+      <div class="this-week-title">⚑ This Week's Delegations</div>
       <div class="this-week-date">Due Sunday ${sunStr}</div>
     </div>
     <div class="this-week-checklist">${itemsHtml}</div>
@@ -1902,7 +1919,10 @@ function renderThisWeek(){
 function renderSundayWrap(weekKey){
   const wrap=getSundayWrap(weekKey);
   return`<div class="sunday-wrap" onclick="event.stopPropagation()">
-    <div class="sunday-wrap-label">⚑ Week Wrap — Delegation Checklist</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.6rem;">
+      <div class="sunday-wrap-label" style="margin-bottom:0;">⚑ Delegation Checklist</div>
+      <button style="background:none;border:1px solid rgba(60,180,80,0.3);color:#4aaa5a;font-size:0.58rem;letter-spacing:0.12em;padding:0.2rem 0.5rem;border-radius:12px;cursor:pointer;font-family:'Josefin Sans',sans-serif;" onclick="event.stopPropagation();openDelegationModal('${weekKey}')">✎ Edit</button>
+    </div>
     <div class="sunday-checklist">
       ${wrap.items.map(item=>`<div class="sunday-check-row">
         <div class="sunday-checkbox${item.done?' done':''}" onclick="toggleSundayItem('${weekKey}','${item.id}')"></div>
@@ -1916,6 +1936,58 @@ function renderSundayWrap(weekKey){
     </div>
     <textarea class="sunday-notes-area" id="sundayNotes-${weekKey}" placeholder="Freeform notes..." onblur="saveSundayNotes('${weekKey}')" oninput="autoGrow(this)" onclick="event.stopPropagation()">${wrap.notes||''}</textarea>
   </div>`;
+}
+
+
+// ── DELEGATION MODAL ──
+let delegModalWeekKey = null;
+
+function openDelegationModal(weekKey){
+  // default to current week
+  const today=new Date();
+  delegModalWeekKey=weekKey||getWeekKey(today.getFullYear(),today.getMonth(),today.getDate());
+  // get sunday of that week for label
+  const parts=delegModalWeekKey.split('-');
+  const monday=new Date(parseInt(parts[0]),parseInt(parts[1])-1,parseInt(parts[2]));
+  const sunday=new Date(monday);sunday.setDate(monday.getDate()+6);
+  const label=sunday.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
+  document.getElementById('delegModalWeekLabel').textContent='Due Sunday '+label;
+  renderDelegModalList();
+  document.getElementById('delegationModal').classList.add('open');
+  setTimeout(()=>document.getElementById('delegModalInput').focus(),100);
+}
+function closeDelegationModal(){
+  document.getElementById('delegationModal').classList.remove('open');
+  delegModalWeekKey=null;
+}
+function renderDelegModalList(){
+  const el=document.getElementById('delegModalList');
+  if(!el)return;
+  const wrap=getSundayWrap(delegModalWeekKey);
+  el.innerHTML=wrap.items.length?wrap.items.map(item=>`
+    <div class="delegation-item-row">
+      <div class="delegation-item-text" style="color:${item.done?'var(--text3)':'#4aaa5a'};text-decoration:${item.done?'line-through':'none'}">${item.text}</div>
+      <button class="delegation-item-del" onclick="delegModalDeleteItem('${item.id}')">✕</button>
+    </div>`).join(''):'<div style="font-size:0.72rem;color:var(--text3);padding:0.3rem 0;">No delegations yet for this week.</div>';
+}
+function delegModalAddItem(){
+  const input=document.getElementById('delegModalInput');
+  if(!input||!input.value.trim())return;
+  const wrap=getSundayWrap(delegModalWeekKey);
+  wrap.items.push({id:Date.now().toString(),text:input.value.trim(),done:false});
+  input.value='';
+  saveSundayWraps();
+  renderDelegModalList();
+  renderCalendar();
+  renderThisWeek();
+}
+function delegModalDeleteItem(itemId){
+  const wrap=getSundayWrap(delegModalWeekKey);
+  wrap.items=wrap.items.filter(i=>i.id!==itemId);
+  saveSundayWraps();
+  renderDelegModalList();
+  renderCalendar();
+  renderThisWeek();
 }
 
 // ── INIT ── renders immediately, Firebase syncs in background
