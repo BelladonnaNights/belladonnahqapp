@@ -91,30 +91,9 @@ body{background:var(--bg);color:var(--text);font-family:'Josefin Sans',sans-seri
 .venue-tag{font-size:0.6rem;letter-spacing:0.1em;padding:0.2rem 0.6rem;border-radius:2px;background:var(--purple-dim);color:var(--purple-btn);border:1px solid var(--border);}
 .no-results{text-align:center;padding:1.5rem;color:var(--text3);font-size:0.78rem;letter-spacing:0.12em;}
 
-.games-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:0.75rem;}
-.game-item{background:var(--surface);border:1px solid var(--border);overflow:hidden;transition:all 0.2s;display:flex;flex-direction:column;}
-.game-item.drag-over{border-color:var(--gold);}
-.game-item:hover{border-color:var(--border2);}
-.game-item.glow-gold{border-color:rgba(201,168,76,0.45);box-shadow:0 0 0 1px rgba(201,168,76,0.1);}
-.game-item.glow-rose{border-color:rgba(160,56,88,0.45);box-shadow:0 0 0 1px rgba(160,56,88,0.1);}
-.game-item.glow-teal{border-color:rgba(42,136,112,0.45);box-shadow:0 0 0 1px rgba(42,136,112,0.1);}
-.game-item.glow-purple{border-color:rgba(143,117,80,0.45);box-shadow:0 0 0 1px rgba(143,117,80,0.1);}
-.game-header{display:flex;flex-direction:column;padding:1rem;cursor:pointer;flex:1;}
-.drag-handle{color:var(--text3);font-size:0.91rem;cursor:grab;letter-spacing:-1px;line-height:1;margin-bottom:0.5rem;opacity:0.5;}
-.game-header-text{flex:1;}
-.game-name{font-size:0.88rem;color:var(--text);letter-spacing:0.04em;line-height:1.4;margin-bottom:0.5rem;}
-.game-header-actions{display:flex;gap:0.3rem;padding-top:0.5rem;border-top:1px solid var(--border);}
-.fav-btn{background:none;border:none;font-size:1.04rem;cursor:pointer;opacity:0.35;transition:opacity 0.2s;padding:1px;color:var(--gold);}
-.fav-btn.active{opacity:1;}
 .action-btn{background:none;border:1px solid var(--border);color:var(--text3);width:26px;height:26px;cursor:pointer;font-size:1.1rem;display:flex;align-items:center;justify-content:center;transition:all 0.2s;}
 .action-btn.edit:hover{border-color:var(--gold);color:var(--gold);}
 .action-btn.delete:hover{border-color:var(--rose);color:var(--rose);}
-.game-expand{display:none;padding:0 1rem 1rem 1rem;border-top:1px solid var(--border);}
-.game-expand.open{display:block;}
-.game-desc-text{font-size:0.82rem;color:var(--text2);line-height:1.7;padding-top:0.75rem;}
-.bingo-link{display:inline-block;margin-top:0.5rem;font-size:0.72rem;color:var(--teal);letter-spacing:0.08em;text-decoration:none;}
-.bingo-link:hover{color:var(--gold);}
-.fav-label{font-size:0.6rem;letter-spacing:0.22em;text-transform:uppercase;color:var(--gold);margin-bottom:0.4rem;padding-left:0.2rem;}
 
 .venue-manage-card{background:var(--surface);border:1px solid var(--border);padding:1rem 1.2rem;margin-bottom:0.7rem;position:relative;}
 .venue-manage-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:0.5rem;}
@@ -128,7 +107,7 @@ body{background:var(--bg);color:var(--text);font-family:'Josefin Sans',sans-seri
 .gig-private{background:rgba(143,117,80,0.14);color:var(--purple2);border-color:var(--border2);}
 .venue-perf-card{background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--gold);padding:1.1rem 1.2rem;margin-bottom:0.7rem;position:relative;}
 .venue-perf-name{font-family:'Cormorant Garamond',serif;font-size:1.1rem;color:var(--gold);margin-bottom:0.6rem;letter-spacing:0.08em;}
-.venue-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0.6rem;margin-bottom:0.6rem;}
+.venue-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:0.6rem;margin-bottom:0.6rem;}
 .venue-stat{text-align:center;background:var(--surface2);padding:0.6rem 0.3rem;}
 .venue-stat-val{font-family:'Cormorant Garamond',serif;font-size:1.4rem;color:var(--gold);line-height:1;}
 .venue-stat-label{font-size:0.58rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--text3);margin-top:0.2rem;}
@@ -186,19 +165,12 @@ body{background:var(--bg);color:var(--text);font-family:'Josefin Sans',sans-seri
   .panel{padding:1rem;}
   .logo{font-size:1.5rem;letter-spacing:0.1em;}
   .logo-img{width:36px;height:36px;}
-  .venue-stats{grid-template-columns:1fr 1fr 1fr;}
+  .venue-stats{grid-template-columns:1fr 1fr;}
 }
 
-/* CALENDAR */
-.cal-toolbar{display:flex;align-items:center;justify-content:flex-end;margin-bottom:1.2rem;flex-wrap:wrap;gap:0.5rem;}
+/* CALENDAR (shared with Schedule tab's calendar view) */
 .cal-month-block{margin-bottom:2.5rem;}
 .cal-month-heading{font-family:'Cormorant Garamond',serif;font-size:1.6rem;font-weight:300;color:var(--gold);letter-spacing:0.2em;margin-bottom:0.7rem;padding-bottom:0.5rem;border-bottom:1px solid var(--border);}
-.cal-toolbar-right{display:flex;align-items:center;gap:0.6rem;}
-.cal-toggle{display:flex;align-items:center;gap:0.5rem;font-size:0.65rem;color:var(--text3);cursor:pointer;letter-spacing:0.1em;}
-.cal-toggle-switch{width:36px;height:20px;background:var(--surface2);border:1px solid var(--border);position:relative;cursor:pointer;transition:background 0.2s;flex-shrink:0;}
-.cal-toggle-switch.on{background:rgba(201,168,76,0.2);border-color:var(--gold);}
-.cal-toggle-thumb{width:14px;height:14px;background:var(--text3);position:absolute;top:2px;left:2px;transition:all 0.2s;}
-.cal-toggle-switch.on .cal-toggle-thumb{left:18px;background:var(--gold);}
 .add-entry-btn{background:var(--gold-dim);border:1px solid var(--border-gold);color:var(--gold);padding:0.4rem 1rem;font-size:0.65rem;letter-spacing:0.18em;text-transform:uppercase;cursor:pointer;font-family:'Josefin Sans',sans-serif;transition:all 0.2s;}
 .add-entry-btn:hover{background:rgba(201,168,76,0.2);}
 .cal-grid-header{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:2px;}
@@ -211,58 +183,20 @@ body{background:var(--bg);color:var(--text);font-family:'Josefin Sans',sans-seri
 .cal-date-num{font-size:0.65rem;color:var(--text3);margin-bottom:0.3rem;font-family:'Josefin Sans',sans-serif;line-height:1;}
 .cal-cell.today .cal-date-num{color:var(--gold);font-weight:600;}
 .cal-entries{display:flex;flex-direction:column;gap:2px;}
-.cal-event{background:rgba(201,168,76,0.15);border:1px solid rgba(201,168,76,0.35);padding:0.18rem 0.4rem;font-size:0.6rem;color:var(--gold);letter-spacing:0.03em;cursor:pointer;line-height:1.3;transition:background 0.15s;}
-.cal-event:hover{background:rgba(201,168,76,0.28);}
-.cal-task-social{background:rgba(143,117,80,0.14);border:1px solid rgba(143,117,80,0.32);padding:0.15rem 0.4rem;font-size:0.58rem;color:var(--purple);letter-spacing:0.03em;cursor:pointer;line-height:1.3;}
-.cal-task-social:hover{background:rgba(143,117,80,0.24);}
-.cal-task-delegation{background:rgba(42,136,112,0.1);border:1px solid rgba(42,136,112,0.28);padding:0.15rem 0.4rem;font-size:0.58rem;color:var(--teal);letter-spacing:0.03em;cursor:pointer;line-height:1.3;}
-.cal-task-delegation:hover{background:rgba(42,136,112,0.2);}
-.cal-legend{display:flex;gap:1rem;flex-wrap:wrap;margin-top:1rem;}
-.cal-legend-item{display:flex;align-items:center;gap:0.4rem;font-size:0.6rem;color:var(--text3);letter-spacing:0.06em;}
-.cal-legend-dot{width:10px;height:10px;flex-shrink:0;}
-.cal-month-notes{margin-top:1rem;margin-bottom:2.5rem;}
-.cal-notes-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0.75rem;}
-.cal-note-section{background:var(--surface);border:1px solid var(--border);}
-.cal-note-header{display:flex;align-items:center;justify-content:space-between;padding:0.6rem 0.8rem;border-bottom:1px solid var(--border);gap:0.4rem;}
-.cal-note-title-input{flex:1;background:none;border:none;color:var(--gold);font-size:0.65rem;letter-spacing:0.14em;text-transform:uppercase;font-family:'Josefin Sans',sans-serif;outline:none;padding:0;min-width:0;}
-.cal-note-title-input::placeholder{color:var(--text3);}
-.cal-note-expand-btn{background:none;border:1px solid var(--border);color:var(--text3);width:22px;height:22px;cursor:pointer;font-size:0.65rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all 0.2s;}
-.cal-note-expand-btn:hover{border-color:var(--gold);color:var(--gold);}
-.cal-note-body{padding:0.6rem 0.8rem;}
-.cal-note-area{width:100%;background:none;border:none;color:var(--text2);font-size:0.75rem;font-family:'Josefin Sans',sans-serif;letter-spacing:0.03em;outline:none;resize:none;line-height:1.7;overflow:hidden;box-sizing:border-box;min-height:60px;}
-.cal-note-area::placeholder{color:var(--text3);}
-.cal-notes-saved{font-size:0.55rem;color:var(--teal);letter-spacing:0.08em;opacity:0;transition:opacity 0.3s;}
-.cal-notes-saved.show{opacity:1;}
-.note-expand-modal{position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:300;display:none;align-items:center;justify-content:center;padding:1.5rem;}
-.note-expand-modal.open{display:flex;}
-.note-expand-inner{background:var(--surface);border:1px solid var(--border2);border-top:3px solid var(--gold);width:100%;max-width:560px;max-height:80vh;display:flex;flex-direction:column;position:relative;overflow:hidden;}
-.note-expand-header{display:flex;align-items:center;justify-content:space-between;padding:1rem 1.2rem;border-bottom:1px solid var(--border);}
-.note-expand-title{font-size:0.65rem;letter-spacing:0.22em;text-transform:uppercase;color:var(--gold);}
-.note-expand-close{background:none;border:1px solid var(--border);color:var(--text3);width:28px;height:28px;cursor:pointer;font-size:0.8rem;display:flex;align-items:center;justify-content:center;transition:all 0.2s;}
-.note-expand-close:hover{border-color:var(--rose);color:var(--rose);}
-.note-expand-body{padding:1.2rem;flex:1;overflow-y:auto;}
-.note-expand-area{width:100%;background:none;border:none;color:var(--text2);font-size:0.88rem;font-family:'Josefin Sans',sans-serif;letter-spacing:0.03em;outline:none;resize:none;line-height:1.8;min-height:300px;box-sizing:border-box;}
-.note-expand-area::placeholder{color:var(--text3);}
-@media(max-width:600px){.cal-notes-grid{grid-template-columns:1fr;}}
-.entry-type-chips{display:flex;gap:0.4rem;flex-wrap:wrap;}
-.entry-chip{font-size:0.65rem;letter-spacing:0.1em;padding:0.35rem 0.85rem;cursor:pointer;border:1px solid var(--border);background:var(--surface2);color:var(--text3);font-family:'Josefin Sans',sans-serif;transition:all 0.2s;}
-.entry-chip.sel-event{border-color:var(--gold);color:var(--gold);background:var(--gold-dim);}
-.entry-chip.sel-social{border-color:var(--purple2);color:var(--purple-btn);background:var(--purple-dim);}
-.entry-chip.sel-delegation{border-color:var(--teal);color:var(--teal);background:rgba(42,136,112,0.1);}
-.entry-detail{padding:0.5rem 0;}
-.entry-detail-type{font-size:0.6rem;letter-spacing:0.22em;text-transform:uppercase;margin-bottom:0.5rem;}
-.entry-detail-title{font-family:'Cormorant Garamond',serif;font-size:1.5rem;color:var(--gold);margin-bottom:0.4rem;}
-.entry-detail-date{font-size:0.65rem;color:var(--text3);margin-bottom:0.8rem;letter-spacing:0.08em;}
-.entry-detail-notes{font-size:0.82rem;color:var(--text2);line-height:1.6;}
 
 /* ADMIN */
-.admin-section{background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--rose);margin-bottom:1rem;}
-.admin-header{display:flex;align-items:center;justify-content:space-between;padding:0.9rem 1.2rem;cursor:pointer;}
-.admin-header-title{font-size:0.65rem;letter-spacing:0.28em;text-transform:uppercase;color:var(--rose);font-weight:400;}
-.admin-arrow{color:var(--text3);font-size:0.8rem;transition:transform 0.2s;}
-.admin-arrow.open{transform:rotate(90deg);}
-.admin-content{display:none;padding:1rem 1.2rem;border-top:1px solid var(--border);}
+.admin-bar{position:relative;display:flex;justify-content:flex-end;padding:0.7rem 1.5rem 0;background:var(--bg);}
+.admin-bar-toggle{display:inline-flex;align-items:center;gap:0.6rem;background:var(--gold-dim);border:1px solid var(--border-gold);color:var(--gold);padding:0.5rem 1.1rem;border-radius:2px;cursor:pointer;font-family:'Josefin Sans',sans-serif;transition:all 0.2s;}
+.admin-bar-toggle:hover{background:rgba(201,169,110,0.2);}
+.admin-bar-label{font-size:0.62rem;letter-spacing:0.18em;text-transform:uppercase;}
+.admin-bar-arrow{font-size:0.6rem;color:var(--gold);transition:transform 0.2s;line-height:1;}
+.admin-bar-arrow.open{transform:rotate(180deg);}
+.admin-content{display:none;position:absolute;top:100%;right:1.5rem;margin-top:0.5rem;width:360px;max-width:calc(100vw - 2rem);background:var(--surface);border:1px solid var(--border2);border-top:3px solid var(--gold);padding:1.1rem;max-height:70vh;overflow-y:auto;box-shadow:0 14px 34px rgba(0,0,0,0.6);z-index:250;}
 .admin-content.open{display:block;}
+.admin-section{background:var(--surface2);border:1px solid var(--border);margin-bottom:1rem;padding:0.9rem 1rem;}
+.admin-section:last-child{margin-bottom:0;}
+.admin-section-title{font-size:0.6rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);margin-bottom:0.7rem;}
+.admin-ranks-list{margin-bottom:0.6rem;}
 .admin-rank-row{display:flex;align-items:center;gap:0.6rem;padding:0.5rem 0;border-bottom:1px solid var(--border);}
 .admin-rank-row:last-child{border-bottom:none;}
 .admin-rank-drag{color:var(--text3);cursor:grab;font-size:1.1rem;}
@@ -272,6 +206,10 @@ body{background:var(--bg);color:var(--text);font-family:'Josefin Sans',sans-seri
 .admin-rank-del:hover{color:var(--rose);}
 .admin-save-btn{background:var(--gold-dim);border:1px solid var(--border-gold);color:var(--gold);padding:0.5rem 1.2rem;font-size:0.65rem;letter-spacing:0.18em;text-transform:uppercase;cursor:pointer;font-family:'Josefin Sans',sans-serif;transition:all 0.2s;margin-top:0.75rem;}
 .admin-save-btn:hover{background:rgba(201,168,76,0.2);}
+.admin-add-btn{background:none;border:1px solid var(--border2);color:var(--text2);padding:0.4rem 1rem;font-size:0.62rem;letter-spacing:0.14em;text-transform:uppercase;cursor:pointer;font-family:'Josefin Sans',sans-serif;transition:all 0.2s;margin-top:0.3rem;}
+.admin-add-btn:hover{border-color:var(--gold);color:var(--gold);}
+.admin-danger-btn{background:rgba(160,56,88,0.1);border:1px solid rgba(160,56,88,0.35);color:var(--rose);padding:0.5rem 1.1rem;font-size:0.63rem;letter-spacing:0.14em;text-transform:uppercase;cursor:pointer;font-family:'Josefin Sans',sans-serif;transition:all 0.2s;}
+.admin-danger-btn:hover{background:rgba(160,56,88,0.2);}
 
 /* GROWTH TRACKER */
 .tracker-intro{text-align:center;padding:3rem 1rem;}
@@ -401,11 +339,9 @@ body{background:var(--bg);color:var(--text);font-family:'Josefin Sans',sans-seri
   </div>
   <div class="tabs">
     <button class="tab active" onclick="showTab('hosts',this)">Hosts</button>
-    <button class="tab" onclick="showTab('games',this)">Game Library</button>
     <button class="tab" onclick="showTab('venues',this)">Venues</button>
     <button class="tab" onclick="showTab('schedule',this)">Schedule</button>
     <button class="tab" onclick="showTab('stats',this)">Stats</button>
-    <button class="tab" onclick="showTab('calendar',this)">Calendar</button>
     <button class="tab" onclick="showTab('tracker',this)">Growth Tracker</button>
     <a href="command-center.html" class="tab" style="text-decoration:none;border-bottom:2px solid rgba(201,168,76,0.35);color:var(--gold);opacity:0.75;">Command Center</a>
   </div>
@@ -469,30 +405,6 @@ body{background:var(--bg);color:var(--text);font-family:'Josefin Sans',sans-seri
   </div>
 </div>
 
-<!-- GAMES -->
-<div class="panel" id="panel-games">
-  <div class="subtabs">
-    <button class="subtab active" onclick="showSub('games','mini',this)">Mini Games</button>
-    <button class="subtab" onclick="showSub('games','specialty',this)">Specialty Events</button>
-  </div>
-  <div class="subpanel active" id="sub-games-mini">
-    <div class="section-header">
-      <div class="section-title">Mini Games <span class="save-dot" id="miniSave">Saved ✓</span></div>
-      <button class="btn-sm btn-gold" onclick="openGameModal('mini')">+ Add Game</button>
-    </div>
-    <div id="fav-mini-section"></div>
-    <div class="games-list" id="list-mini"></div>
-  </div>
-  <div class="subpanel" id="sub-games-specialty">
-    <div class="section-header">
-      <div class="section-title">Specialty Events <span class="save-dot" id="specialtySave">Saved ✓</span></div>
-      <button class="btn-sm btn-gold" onclick="openGameModal('specialty')">+ Add Event</button>
-    </div>
-    <div id="fav-specialty-section"></div>
-    <div class="games-list" id="list-specialty"></div>
-  </div>
-</div>
-
 <!-- VENUES -->
 <div class="panel" id="panel-venues">
   <div class="subtabs">
@@ -511,6 +423,20 @@ body{background:var(--bg);color:var(--text);font-family:'Josefin Sans',sans-seri
       <div class="section-title">Venue Performance</div>
       <button class="btn-sm" onclick="loadVenueStats()">↻ Refresh</button>
     </div>
+    <div class="sched-toolbar">
+      <input type="date" class="roster-search-input" id="perfFrom" onchange="renderVenueStats()" style="min-width:130px;flex:none;" title="From date">
+      <input type="date" class="roster-search-input" id="perfTo" onchange="renderVenueStats()" style="min-width:130px;flex:none;" title="To date">
+      <select class="roster-filter-select" id="perfSort" onchange="renderVenueStats()">
+        <option value="gigs">Sort: Most Gigs</option>
+        <option value="avgtips">Sort: Highest Avg Tips</option>
+        <option value="topnight">Sort: Best Single Night</option>
+        <option value="crowd">Sort: Avg Crowd</option>
+        <option value="energy">Sort: Energy</option>
+        <option value="paid">Sort: Pay Rate</option>
+        <option value="az">Sort: A–Z</option>
+      </select>
+      <button class="btn-sm" id="perfClearBtn" onclick="document.getElementById('perfFrom').value='';document.getElementById('perfTo').value='';renderVenueStats();">Clear Dates</button>
+    </div>
     <div id="venuesList"><div class="empty-state">Loading from checkout data...</div></div>
   </div>
 </div>
@@ -518,10 +444,14 @@ body{background:var(--bg);color:var(--text);font-family:'Josefin Sans',sans-seri
 <!-- SCHEDULE -->
 <div class="panel" id="panel-schedule">
   <div class="subtabs">
-    <button class="subtab active" onclick="showSub('schedule','table',this)">Spreadsheet</button>
-    <button class="subtab" onclick="showSub('schedule','cal',this)">Calendar</button>
+    <button class="subtab active" onclick="showSub('schedule','cal',this)">Calendar</button>
+    <button class="subtab" onclick="showSub('schedule','table',this)">Spreadsheet</button>
   </div>
-  <div class="subpanel active" id="sub-schedule-table">
+  <div class="subpanel active" id="sub-schedule-cal">
+    <div class="sched-toolbar"><button class="add-entry-btn" onclick="openGigModal()">+ Schedule Gig</button></div>
+    <div id="gigCalScroll"></div>
+  </div>
+  <div class="subpanel" id="sub-schedule-table">
     <div class="sched-toolbar">
       <input type="text" class="roster-search-input" id="schedSearch" placeholder="Search venue, host, notes..." oninput="renderScheduleSpreadsheet()" style="flex:2;min-width:160px;">
       <select class="roster-filter-select" id="schedFilterVenue" onchange="renderScheduleSpreadsheet()"><option value="">All Venues</option></select>
@@ -538,10 +468,6 @@ body{background:var(--bg);color:var(--text);font-family:'Josefin Sans',sans-seri
       <button class="btn-sm btn-gold" onclick="openGigModal()">+ Schedule Gig</button>
     </div>
     <div id="schedTableWrap"><div class="empty-state">Loading schedule...</div></div>
-  </div>
-  <div class="subpanel" id="sub-schedule-cal">
-    <div class="sched-toolbar"><button class="add-entry-btn" onclick="openGigModal()">+ Schedule Gig</button></div>
-    <div id="gigCalScroll"></div>
   </div>
   <div class="sched-legend">
     <div class="sched-legend-item"><div class="sched-legend-dot" style="background:var(--live);"></div>Signed In</div>
@@ -562,24 +488,6 @@ body{background:var(--bg);color:var(--text);font-family:'Josefin Sans',sans-seri
 
 
 
-<!-- CALENDAR -->
-<div class="panel" id="panel-calendar">
-  <div class="cal-toolbar">
-    <div class="cal-toolbar-right" style="margin-left:auto;gap:0.5rem;">
-      <button class="delegation-modal-btn" onclick="openDelegationModal()">⚑ Write Delegations</button>
-      <button class="add-entry-btn" onclick="openEntryModal()">+ Add Entry</button>
-    </div>
-  </div>
-  <div id="thisWeekPanel"></div>
-  <div id="calScroll"></div>
-  <div class="cal-legend">
-    <div class="cal-legend-item"><div class="cal-legend-dot" style="background:rgba(201,169,110,0.4);border:1px solid var(--gold);"></div>Event / Gig</div>
-    <div class="cal-legend-item"><div class="cal-legend-dot" style="background:rgba(143,117,80,0.3);border:1px solid var(--purple2);"></div>Social Media Post</div>
-    <div class="cal-legend-item"><div class="cal-legend-dot" style="background:rgba(60,180,80,0.25);border:1px solid #4aaa5a;"></div>Delegation</div>
-  </div>
-</div>
-
-
 <!-- GROWTH TRACKER -->
 <div class="panel" id="panel-tracker">
   <div id="trackerView"></div>
@@ -594,80 +502,6 @@ body{background:var(--bg);color:var(--text);font-family:'Josefin Sans',sans-seri
     <div class="modal-actions" style="justify-content:center;">
       <button class="modal-cancel" onclick="closeResetStatsModal()">Cancel</button>
       <button class="modal-save" style="background:rgba(60,180,80,0.15);border-color:#4aaa5a;color:#4aaa5a;" onclick="confirmResetStats()">Yes, Reset Stats</button>
-    </div>
-  </div>
-</div>
-
-<!-- DELEGATION MODAL -->
-<div class="delegation-modal-bg" id="delegationModal">
-  <div class="delegation-modal">
-    <div class="delegation-modal-title">⚑ Week Delegation List</div>
-    <div class="delegation-modal-week" id="delegModalWeekLabel"></div>
-    <div style="font-size:0.68rem;color:var(--text3);margin-bottom:0.7rem;line-height:1.6;">Write one task per line. These will appear as a checklist on Sunday and in the This Week panel.</div>
-    <textarea class="delegation-free-textarea" id="delegFreeText" placeholder="Post about the Coaster show&#10;Pull the playlist for Tuesday&#10;Send invoice to McMillins&#10;..."></textarea>
-    <div style="display:flex;gap:0.5rem;margin-top:0.9rem;justify-content:flex-end;">
-      <button class="modal-cancel" onclick="closeDelegationModal()">Cancel</button>
-      <button class="modal-save" onclick="saveDelegationFreeText()" style="background:rgba(60,180,80,0.12);border-color:#4aaa5a;color:#4aaa5a;">Save List</button>
-    </div>
-  </div>
-</div>
-
-<!-- NOTE EXPAND MODAL -->
-<div class="note-expand-modal" id="noteExpandModal">
-  <div class="note-expand-inner">
-    <div class="note-expand-header">
-      <div class="note-expand-title" id="noteExpandTitle"></div>
-      <button class="note-expand-close" onclick="closeNoteExpand()">✕</button>
-    </div>
-    <div class="note-expand-body">
-      <textarea class="note-expand-area" id="noteExpandArea" placeholder="Notes..." oninput="syncExpandedNote()"></textarea>
-    </div>
-  </div>
-</div>
-
-<!-- ENTRY MODAL -->
-<div class="modal-bg" id="entryModal">
-  <div class="modal">
-    <div class="modal-title" id="entryModalTitle">Add Entry</div>
-    <div class="form-group">
-      <label class="form-label">Type</label>
-      <div class="entry-type-chips">
-        <div class="entry-chip sel-event" onclick="selectEntryType('event',this)">Event / Gig</div>
-        <div class="entry-chip" onclick="selectEntryType('social',this)">Social Media Post</div>
-        <div class="entry-chip" onclick="selectEntryType('delegation',this)">Delegation</div>
-      </div>
-    </div>
-    <div class="form-group"><label class="form-label">Title</label><input type="text" class="form-input" id="entryTitle" placeholder="e.g. The Coaster Karaoke Night"></div>
-    <div class="form-group"><label class="form-label">Date</label><input type="date" class="form-input" id="entryDate"></div>
-    <div class="form-group"><label class="form-label">Notes (optional)</label><textarea class="form-textarea" id="entryNotes" placeholder="Playlist ideas, post copy, promo details..." style="min-height:70px;"></textarea></div>
-    <div class="modal-actions">
-      <button class="modal-cancel" onclick="closeEntryModal()">Cancel</button>
-      <button class="modal-save" onclick="saveEntry()">Save</button>
-    </div>
-  </div>
-</div>
-
-<!-- ENTRY DETAIL MODAL -->
-<div class="modal-bg" id="entryDetailModal">
-  <div class="modal">
-    <div id="entryDetailContent"></div>
-    <div class="modal-actions" style="margin-top:1rem;">
-      <button class="modal-cancel" onclick="closeEntryDetail()">Close</button>
-      <button class="modal-save" onclick="editEntryFromDetail()">Edit</button>
-      <button class="modal-cancel" onclick="deleteEntryFromDetail()" style="border-color:#4aaa5a;color:#4aaa5a;">Delete</button>
-    </div>
-  </div>
-</div>
-
-<!-- GAME MODAL -->
-<div class="modal-bg" id="gameModal">
-  <div class="modal">
-    <div class="modal-title" id="gameModalTitle">Add Game</div>
-    <div class="form-group"><label class="form-label">Game Name</label><input type="text" class="form-input" id="gmName" placeholder="Enter game name"></div>
-    <div class="form-group"><label class="form-label">Description / How to Play</label><textarea class="form-textarea" id="gmDesc" placeholder="How does this game work? Any tips for the host?"></textarea></div>
-    <div class="modal-actions">
-      <button class="modal-cancel" onclick="closeGameModal()">Cancel</button>
-      <button class="modal-save" onclick="saveGame()">Save Game</button>
     </div>
   </div>
 </div>
@@ -746,24 +580,6 @@ const LS={
 };
 
 const SKILLS=['Karaoke','Bingo','Trivia','Events','Private Events'];
-const DEFAULT_MINI=[
-  {id:'m1',name:'Messy Caroling',desc:'"Your Man is a Bum" sung to "Little Drummer Boy" — hosts lead the crowd in a chaotic caroling version where classic holiday lyrics get swapped for Belladonna originals.',favs:false},
-  {id:'m2',name:'Guess the Remix',desc:'Play a remixed version of a well-known song and have guests guess the original.',favs:false},
-  {id:'m3',name:'One Word Titles',desc:'Guests must name a song using only one word from the title — others guess the full song.',favs:false},
-  {id:'m4',name:'Name That Intro',desc:'Play only the first few seconds of a song intro and see who can name it first.',favs:false},
-  {id:'m5',name:'Lord & Lyrics',desc:'Read out lyrics without the melody and have guests identify the song.',favs:false},
-  {id:'m6',name:'Musical Synopsis',desc:'Give a dramatic plot summary of a song and have guests guess what it is.',favs:false},
-  {id:'m7',name:'Name That Tune',desc:'Classic tune identification game — play a snippet and guests race to name it.',favs:false},
-];
-const DEFAULT_SPECIALTY=[
-  {id:'s0',name:'Music Bingo',desc:'Launch the full Belladonna Music Bingo experience.',link:'https://belladonnanights.github.io/bingo/index.html',isLink:true,favs:false},
-  {id:'s1',name:'Bachelorette Experience',desc:'Curated games and moments for the bride-to-be.',favs:false},
-  {id:'s2',name:'VIP Dinner Party',desc:'Elevated hosting format for seated dinner events.',favs:false},
-  {id:'s3',name:'Birthday Takeover',desc:'Custom spotlight moments for the birthday guest.',favs:false},
-  {id:'s4',name:'Midnight Mixer',desc:'Late night social energy format.',favs:false},
-  {id:'s5',name:'Competition Night',desc:'Tournament bracket with prizes and announcements.',favs:false},
-  {id:'s6',name:'Open Mic Social',desc:'Hosted storytelling and social spotlight.',favs:false},
-];
 const DEFAULT_ROSTER=[
   {id:'h1',name:'Ahnna',skills:['Karaoke'],venues:['The Coaster']},
   {id:'h2',name:'Eddy',skills:['Karaoke'],venues:['The Coaster']},
@@ -777,14 +593,12 @@ const DEFAULT_VENUES=[
   {id:'v4',name:'The Forum',gigs:['Karaoke'],notes:''},
 ];
 
-let miniGames=[...DEFAULT_MINI],specialtyEvents=[...DEFAULT_SPECIALTY],roster=[...DEFAULT_ROSTER],venues=[...DEFAULT_VENUES];
-let editGameTab=null,editGameId=null,editRosterId=null,editVenueId=null;
+let roster=[...DEFAULT_ROSTER],venues=[...DEFAULT_VENUES];
+let editRosterId=null,editVenueId=null;
 let dragSrc=null,dragTabId=null,checkoutData=[];
 
 // ── STORAGE ── uses localStorage, Firebase syncs in background
 function loadStorage(){
-  try{const m=LS.get('games-mini');if(m)miniGames=JSON.parse(m);}catch(e){}
-  try{const s=LS.get('games-specialty');if(s)specialtyEvents=JSON.parse(s);}catch(e){}
   try{const r=LS.get('host-roster');if(r)roster=JSON.parse(r);}catch(e){}
   try{const v=LS.get('venues-list');if(v)venues=JSON.parse(v);}catch(e){}
 }
@@ -800,7 +614,6 @@ function showTab(id,el){
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   document.getElementById('panel-'+id).classList.add('active');el.classList.add('active');
   if(id==='stats')loadStats();
-  if(id==='calendar')renderCalendar();
   if(id==='tracker')renderTracker();
   if(id==='schedule'){populateSchedFilters();Promise.all([fetchCheckinHistory(),fetchCheckoutHistory()]).then(renderScheduleAll);}
 }
@@ -969,6 +782,7 @@ function renderSigninLog(){
 }
 
 // ── GIG SCHEDULE ──
+const MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
 let gigSchedule=[],editingGigId=null,pendingGigDate=null,selectedGigVenue='',selectedGigHost='Unassigned';
 function loadGigSchedule(){
   try{const g=LS.get('gig-schedule');if(g)gigSchedule=JSON.parse(g);}catch(e){}
@@ -1385,25 +1199,65 @@ function saveVenue(){
 }
 function deleteVenue(id){if(!confirm('Remove this venue?'))return;venues=venues.filter(v=>v.id!==id);persist('venues-list',venues,'venuesSave');renderVenueManage();populateRosterFilters();}
 
+const TIP_BRACKET_VALUE={'No tips':0,'Under $10':5,'$10–$25':17.5,'$25–$50':37.5,'$50–$75':62.5,'$75–$100':87.5,'$100+':110};
 async function loadVenueStats(){
   await fetchCheckoutData();
+  renderVenueStats();
+}
+function renderVenueStats(){
   const el=document.getElementById('venuesList');
   if(!checkoutData.length){el.innerHTML='<div class="empty-state">No checkout data yet.</div>';return;}
+  const from=document.getElementById('perfFrom')?.value||'';
+  const to=document.getElementById('perfTo')?.value||'';
+  const sortBy=document.getElementById('perfSort')?.value||'gigs';
+  const rows=checkoutData.filter(r=>{
+    if(from&&r.date<from)return false;
+    if(to&&r.date>to)return false;
+    return true;
+  });
+  if(!rows.length){el.innerHTML='<div class="empty-state">No shifts in that date range.</div>';return;}
   const vm={};
-  checkoutData.forEach(r=>{
+  rows.forEach(r=>{
     const v=r.venue||'Unknown';
-    if(!vm[v])vm[v]={shifts:0,crowdTotal:0,crowdCount:0,energyTotal:0,energyCount:0,tips:[],paid:0};
+    if(!vm[v])vm[v]={shifts:0,crowdTotal:0,crowdCount:0,energyTotal:0,energyCount:0,tips:[],tipDollarTotal:0,tipDollarCount:0,bestTip:null,bestTipVal:-1,paid:0};
     vm[v].shifts++;
     const m=(r.crowd_size||'').match(/(\d+)/);if(m){vm[v].crowdTotal+=parseInt(m[1]);vm[v].crowdCount++;}
     const em=(r.energy_level||'').match(/(\d)/);if(em){vm[v].energyTotal+=parseInt(em[1]);vm[v].energyCount++;}
-    const tip=r.tip_scale||'';if(tip&&tip!=='Not specified'&&tip!=='No tips')vm[v].tips.push(tip);
+    const tip=r.tip_scale||'';
+    if(tip&&tip!=='Not specified'&&tip!=='N/A'){
+      vm[v].tips.push(tip);
+      const dollarVal=TIP_BRACKET_VALUE[tip];
+      if(dollarVal!==undefined){
+        vm[v].tipDollarTotal+=dollarVal;vm[v].tipDollarCount++;
+        if(dollarVal>vm[v].bestTipVal){vm[v].bestTipVal=dollarVal;vm[v].bestTip=tip;}
+      }
+    }
     if((r.got_paid||'').toLowerCase()==='yes')vm[v].paid++;
   });
-  el.innerHTML=Object.entries(vm).map(([name,d])=>{
+  let entries=Object.entries(vm).map(([name,d])=>{
     const avgCrowd=d.crowdCount?Math.round(d.crowdTotal/d.crowdCount):0;
     const avgEnergy=d.energyCount?(d.energyTotal/d.energyCount).toFixed(1):0;
-    const topTip=d.tips.length?d.tips.sort((a,b)=>d.tips.filter(v=>v===b).length-d.tips.filter(v=>v===a).length)[0]:'—';
-    return`<div class="venue-perf-card"><div class="venue-perf-name">${name}</div><div class="venue-stats"><div class="venue-stat"><div class="venue-stat-val">${d.shifts}</div><div class="venue-stat-label">Shifts</div></div><div class="venue-stat"><div class="venue-stat-val">${avgCrowd||'—'}</div><div class="venue-stat-label">Avg Crowd</div></div><div class="venue-stat"><div class="venue-stat-val">${avgEnergy||'—'}${avgEnergy?'★':''}</div><div class="venue-stat-label">Energy</div></div></div><div style="font-size:0.81rem;color:var(--text3);">Top tips: <span style="color:var(--gold)">${topTip}</span> &nbsp;·&nbsp; Paid: <span style="color:var(--teal2)">${d.paid}/${d.shifts}</span></div></div>`;
+    const avgTips=d.tipDollarCount?Math.round(d.tipDollarTotal/d.tipDollarCount):null;
+    const payRate=d.shifts?Math.round(d.paid/d.shifts*100):0;
+    return{name,d,avgCrowd,avgEnergy:parseFloat(avgEnergy)||0,avgTips,payRate};
+  });
+  const sorters={
+    gigs:(a,b)=>b.d.shifts-a.d.shifts,
+    avgtips:(a,b)=>(b.avgTips??-1)-(a.avgTips??-1),
+    topnight:(a,b)=>b.d.bestTipVal-a.d.bestTipVal,
+    crowd:(a,b)=>b.avgCrowd-a.avgCrowd,
+    energy:(a,b)=>b.avgEnergy-a.avgEnergy,
+    paid:(a,b)=>b.payRate-a.payRate,
+    az:(a,b)=>a.name.localeCompare(b.name),
+  };
+  entries.sort(sorters[sortBy]||sorters.gigs);
+  el.innerHTML=entries.map(({name,d,avgCrowd,avgEnergy,avgTips,payRate})=>{
+    return`<div class="venue-perf-card"><div class="venue-perf-name">${name}</div><div class="venue-stats">
+      <div class="venue-stat"><div class="venue-stat-val">${d.shifts}</div><div class="venue-stat-label">Gigs</div></div>
+      <div class="venue-stat"><div class="venue-stat-val">${avgCrowd||'—'}</div><div class="venue-stat-label">Avg Crowd</div></div>
+      <div class="venue-stat"><div class="venue-stat-val">${avgEnergy||'—'}${avgEnergy?'★':''}</div><div class="venue-stat-label">Energy</div></div>
+      <div class="venue-stat"><div class="venue-stat-val">${avgTips!==null?'$'+avgTips:'—'}</div><div class="venue-stat-label">Avg Tips</div></div>
+      </div><div style="font-size:0.81rem;color:var(--text3);">Best night: <span style="color:var(--gold)">${d.bestTip||'—'}</span> &nbsp;·&nbsp; Paid: <span style="color:var(--teal2)">${d.paid}/${d.shifts} (${payRate}%)</span></div></div>`;
   }).join('');
 }
 
@@ -1428,881 +1282,18 @@ async function loadStats(){
     <div class="insight-card"><div class="insight-title">Pay &amp; Tips</div><div class="insight-row"><span class="insight-name">Pay rate</span><span class="insight-val">${Math.round(paid/checkoutData.length*100)}%</span></div><div class="insight-row"><span class="insight-name">Total shifts</span><span class="insight-val">${checkoutData.length}</span></div><div class="insight-row"><span class="insight-name">Paid on time</span><span class="insight-val">${paid}</span></div></div>`;
 }
 
-// ── GAMES ──
-function renderGames(){renderGameList('mini',miniGames);renderGameList('specialty',specialtyEvents);}
-function renderGameList(tab,games){
-  const favs=games.filter(g=>g.favs),rest=games.filter(g=>!g.favs);
-  document.getElementById('fav-'+tab+'-section').innerHTML=favs.length?`<div class="fav-label" style="margin-bottom:0.6rem;">★ Pinned</div><div class="games-list">${renderGameItems(tab,favs)}</div>`:'';
-  const listEl=document.getElementById('list-'+tab);listEl.innerHTML=rest.length?renderGameItems(tab,rest):'<div class="empty-state" style="grid-column:1/-1">No games yet. Add one above.</div>';
-  attachDrag(tab);
-}
-function renderGameItems(tab,games){
-  const glowClasses=['glow-gold','glow-rose','glow-teal','glow-purple'];
-  return games.map((g,i)=>`
-    <div class="game-item ${glowClasses[i % 4]}" draggable="${!g.isLink}" data-id="${g.id}" data-tab="${tab}">
-      <div class="game-header" onclick="toggleExpand('${g.id}')">
-        <div class="drag-handle">⠿</div>
-        <div class="game-header-text"><div class="game-name">${g.name}</div></div>
-        <div class="game-header-actions">
-          <button class="fav-btn${g.favs?' active':''}" onclick="event.stopPropagation();toggleFav('${tab}','${g.id}')">★</button>
-          ${!g.isLink?`<button class="action-btn edit" onclick="event.stopPropagation();openGameModal('${tab}','${g.id}')">✎</button>`:''}
-          <button class="action-btn delete" onclick="event.stopPropagation();deleteGame('${tab}','${g.id}')">✕</button>
-        </div>
-      </div>
-      <div class="game-expand" id="expand-${g.id}">
-        <div class="game-desc-text">${g.desc||'No description yet.'}</div>
-        ${g.isLink?`<a href="${g.link}" target="_blank" class="bingo-link">↗ Open Bingo App</a>`:''}
-      </div>
-    </div>`).join('');
-}
-function toggleExpand(id){document.getElementById('expand-'+id).classList.toggle('open');}
-function toggleFav(tab,id){const games=tab==='mini'?miniGames:specialtyEvents;const g=games.find(x=>x.id===id);if(g)g.favs=!g.favs;persist(tab==='mini'?'games-mini':'games-specialty',games,tab==='mini'?'miniSave':'specialtySave');renderGameList(tab,games);}
-function attachDrag(tab){
-  document.querySelectorAll(`#list-${tab} .game-item[draggable="true"]`).forEach(el=>{
-    el.addEventListener('dragstart',e=>{dragSrc=el.dataset.id;dragTabId=tab;el.style.opacity='0.4';e.dataTransfer.effectAllowed='move';});
-    el.addEventListener('dragend',e=>{el.style.opacity='1';document.querySelectorAll('.game-item').forEach(x=>x.classList.remove('drag-over'));});
-    el.addEventListener('dragover',e=>{e.preventDefault();el.classList.add('drag-over');});
-    el.addEventListener('drop',e=>{
-      e.preventDefault();if(dragSrc===el.dataset.id)return;
-      const games=tab==='mini'?miniGames:specialtyEvents;
-      const fi=games.findIndex(g=>g.id===dragSrc),ti=games.findIndex(g=>g.id===el.dataset.id);
-      if(fi>-1&&ti>-1){const[m]=games.splice(fi,1);games.splice(ti,0,m);}
-      persist(tab==='mini'?'games-mini':'games-specialty',games,tab==='mini'?'miniSave':'specialtySave');
-      renderGameList(tab,games);
-    });
-  });
-}
-function openGameModal(tab,id=null){
-  editGameTab=tab;editGameId=id;
-  const g=id?(tab==='mini'?miniGames:specialtyEvents).find(x=>x.id===id):null;
-  document.getElementById('gameModalTitle').textContent=id?'Edit Game':(tab==='mini'?'Add Mini Game':'Add Specialty Event');
-  document.getElementById('gmName').value=g?g.name:'';
-  document.getElementById('gmDesc').value=g?g.desc||'':'';
-  document.getElementById('gameModal').classList.add('open');
-  document.getElementById('gmName').focus();
-}
-function closeGameModal(){document.getElementById('gameModal').classList.remove('open');editGameId=null;}
-function saveGame(){
-  const name=document.getElementById('gmName').value.trim();const desc=document.getElementById('gmDesc').value.trim();if(!name)return;
-  const games=editGameTab==='mini'?miniGames:specialtyEvents;
-  if(editGameId){const g=games.find(x=>x.id===editGameId);if(g){g.name=name;g.desc=desc;}}
-  else games.push({id:Date.now().toString(),name,desc,favs:false});
-  persist(editGameTab==='mini'?'games-mini':'games-specialty',games,editGameTab==='mini'?'miniSave':'specialtySave');
-  renderGameList(editGameTab,games);closeGameModal();
-}
-function deleteGame(tab,id){
-  if(!confirm('Delete this game?'))return;
-  if(tab==='mini')miniGames=miniGames.filter(g=>g.id!==id);else specialtyEvents=specialtyEvents.filter(g=>g.id!==id);
-  persist(tab==='mini'?'games-mini':'games-specialty',tab==='mini'?miniGames:specialtyEvents,tab==='mini'?'miniSave':'specialtySave');
-  renderGameList(tab,tab==='mini'?miniGames:specialtyEvents);
-}
-
-// ── CALENDAR ──
-let calEntries=[];
-let showTasks=true;
-let currentEntryType='event';
-let editingEntryId=null;
-let detailEntryId=null;
-const MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
-
-function loadCalEntries(){
-  try{const c=LS.get('cal-entries');if(c)calEntries=JSON.parse(c);}catch(e){}
-  // load from Firebase in background
-  if(db){db.collection('cal_entries').get().then(snap=>{if(!snap.empty){calEntries=snap.docs.map(d=>({id:d.id,...d.data()}));renderCalendar();}}).catch(()=>{});}
-}
-function saveCalEntry(entry,isDelete=false){
-  LS.set('cal-entries',JSON.stringify(calEntries));
-  if(!db)return;
-  try{
-    if(isDelete){db.collection('cal_entries').doc(entry.id).delete();}
-    else{db.collection('cal_entries').doc(entry.id).set({title:entry.title,date:entry.date,type:entry.type,notes:entry.notes||''});}
-  }catch(e){}
-}
-
-// ── MONTH NOTES ──
-let monthNotes={};
-let expandNoteKey=null;
-
-function loadMonthNotes(){
-  try{const n=LS.get('cal-month-notes-v2');if(n)monthNotes=JSON.parse(n);}catch(e){}
-  if(db){db.collection('cal_notes').doc('all_notes').get().then(snap=>{if(snap.exists){monthNotes={...monthNotes,...snap.data()};document.querySelectorAll('.cal-note-area').forEach(el=>{const parts=el.id.replace('note-','').split('-');if(parts.length===3)el.value=getMonthNote(parts[0],parts[1],parts[2]);autoGrow(el);});}}).catch(()=>{});}
-}
-function persistNotes(){
-  LS.set('cal-month-notes-v2',JSON.stringify(monthNotes));
-  if(db){try{db.collection('cal_notes').doc('all_notes').set(monthNotes,{merge:true});}catch(e){}}
-}
-function saveMonthNote(yr,mo,si){
-  const key=yr+'-'+mo+'-'+si;
-  const el=document.getElementById('note-'+yr+'-'+mo+'-'+si);
-  if(!el)return;
-  monthNotes[key]=el.value;
-  if(expandNoteKey===key){const exp=document.getElementById('noteExpandArea');if(exp)exp.value=el.value;}
-  persistNotes();
-  const saved=document.getElementById('noteSaved-'+yr+'-'+mo+'-'+si);
-  if(saved){saved.classList.add('show');setTimeout(()=>saved.classList.remove('show'),1500);}
-}
-function saveNoteTitle(yr,mo,si){
-  const el=document.getElementById('notetitle-'+yr+'-'+mo+'-'+si);
-  if(!el)return;
-  monthNotes['title-'+yr+'-'+mo+'-'+si]=el.value;
-  persistNotes();
-}
-function getMonthNote(yr,mo,si){return monthNotes[yr+'-'+mo+'-'+si]||'';}
-function getNoteTitle(yr,mo,si){return monthNotes['title-'+yr+'-'+mo+'-'+si]||'';}
-function autoGrow(el){el.style.height='auto';el.style.height=el.scrollHeight+'px';}
-function expandNote(yr,mo,si){
-  expandNoteKey=yr+'-'+mo+'-'+si;
-  const title=monthNotes['title-'+yr+'-'+mo+'-'+si]||(MONTHS[mo]+' '+yr+' — Section '+(si+1));
-  document.getElementById('noteExpandTitle').textContent=title;
-  const area=document.getElementById('noteExpandArea');
-  area.value=getMonthNote(yr,mo,si);
-  area.dataset.yr=yr;area.dataset.mo=mo;area.dataset.si=si;
-  document.getElementById('noteExpandModal').classList.add('open');
-  area.focus();
-}
-function syncExpandedNote(){
-  const area=document.getElementById('noteExpandArea');
-  const yr=area.dataset.yr,mo=area.dataset.mo,si=area.dataset.si;
-  monthNotes[yr+'-'+mo+'-'+si]=area.value;
-  const inline=document.getElementById('note-'+yr+'-'+mo+'-'+si);
-  if(inline){inline.value=area.value;autoGrow(inline);}
-  persistNotes();
-}
-function closeNoteExpand(){
-  syncExpandedNote();
-  document.getElementById('noteExpandModal').classList.remove('open');
-  expandNoteKey=null;
-}
-
-function renderCalendar(){
-  const scroll=document.getElementById('calScroll');
-  if(!scroll)return;
-  const today=new Date();
-  const startYear=today.getFullYear();
-  const startMonth=today.getMonth();
-  let html='';
-  for(let m=0;m<12;m++){
-    let yr=startYear,mo=startMonth+m;
-    if(mo>11){mo-=12;yr++;}
-    const isCurrentMonth=(mo===today.getMonth()&&yr===today.getFullYear());
-    const rawFirst=new Date(yr,mo,1).getDay();
-    const firstDay=(rawFirst+6)%7;
-    const daysInMonth=new Date(yr,mo+1,0).getDate();
-    const daysInPrev=new Date(yr,mo,0).getDate();
-    const totalCells=Math.ceil((firstDay+daysInMonth)/7)*7;
-    html+=`<div class="cal-month-block">
-      <div class="cal-month-heading${isCurrentMonth?' is-today-month':''}">${MONTHS[mo]} ${yr}</div>
-      <div class="cal-grid-header">
-        <div class="cal-day-name">Mon</div><div class="cal-day-name">Tue</div><div class="cal-day-name">Wed</div>
-        <div class="cal-day-name">Thu</div><div class="cal-day-name">Fri</div><div class="cal-day-name">Sat</div><div class="cal-day-name" style="color:#4aaa5a">Sun</div>
-      </div>
-      <div class="cal-grid">`;
-    for(let i=0;i<totalCells;i++){
-      let day,otherMonth=false,cellMo=mo,cellYr=yr;
-      if(i<firstDay){day=daysInPrev-firstDay+i+1;otherMonth=true;cellMo=mo-1;if(cellMo<0){cellMo=11;cellYr--;}}
-      else if(i>=firstDay+daysInMonth){day=i-firstDay-daysInMonth+1;otherMonth=true;cellMo=mo+1;if(cellMo>11){cellMo=0;cellYr++;}}
-      else{day=i-firstDay+1;}
-      const dateStr=cellYr+'-'+String(cellMo+1).padStart(2,'0')+'-'+String(day).padStart(2,'0');
-      const isToday=!otherMonth&&day===today.getDate()&&mo===today.getMonth()&&yr===today.getFullYear();
-      const dayEntries=calEntries.filter(e=>e.date===dateStr);
-      const events=dayEntries.filter(e=>e.type==='event');
-      const tasks=dayEntries.filter(e=>e.type!=='event');
-      let entriesHtml='';
-      events.forEach(e=>{entriesHtml+=`<div class="cal-event" onclick="event.stopPropagation();openEntryDetail('${e.id}')">${e.title}</div>`;});
-      if(showTasks){tasks.forEach(e=>{const cls=e.type==='social'?'cal-task-social':e.type==='delegation'?'cal-task-delegation':'cal-task-delegation';entriesHtml+=`<div class="${cls}" onclick="event.stopPropagation();openEntryDetail('${e.id}')">${e.title}</div>`;});}
-      html+=`<div class="cal-cell${otherMonth?' other-month':''}${isToday?' today':''}" onclick="openEntryModalOnDate('${dateStr}')"><div class="cal-date-num">${day}</div><div class="cal-entries">${entriesHtml}</div></div>`;
-    }
-    html+=`</div>
-      <div class="cal-month-notes">
-        <div class="cal-notes-grid">
-          ${[0,1,2].map(si=>`
-            <div class="cal-note-section${si===2?' random-delegation-note':''}">
-              <div class="cal-note-header">
-                <input type="text" class="cal-note-title-input" id="notetitle-${yr}-${mo}-${si}" value="${getNoteTitle(yr,mo,si)||(si===2?'Random Delegations':'')}" placeholder="${si===2?'Random Delegations':'Section title...'}" onblur="saveNoteTitle(${yr},${mo},${si})" onclick="event.stopPropagation()">
-                <span class="cal-notes-saved" id="noteSaved-${yr}-${mo}-${si}">✓</span>
-                <button class="cal-note-expand-btn" onclick="expandNote(${yr},${mo},${si})">⤢</button>
-              </div>
-              <div class="cal-note-body">
-                <textarea class="cal-note-area" id="note-${yr}-${mo}-${si}" placeholder="Notes..." oninput="autoGrow(this)" onblur="saveMonthNote(${yr},${mo},${si})">${getMonthNote(yr,mo,si)}</textarea>
-              </div>
-            </div>`).join('')}
-        </div>
-      </div>
-    </div>`;
-  }
-  scroll.innerHTML=html;
-  setTimeout(()=>{document.querySelectorAll('.cal-note-area,.sunday-notes-area').forEach(el=>autoGrow(el));},50);
-}
-
-function toggleTasks(){
-  showTasks=!showTasks;
-  const sw=document.getElementById('taskToggle');
-  sw.classList.toggle('on',showTasks);
-  document.getElementById('taskToggleLabel').textContent=showTasks?'Show Tasks':'Tasks Hidden';
-  renderCalendar();
-}
-function selectEntryType(type,el){
-  currentEntryType=type;
-  document.querySelectorAll('.entry-chip').forEach(c=>c.className='entry-chip');
-  el.classList.add('sel-'+type);
-}
-function openEntryModal(id=null){
-  editingEntryId=id;
-  const entry=id?calEntries.find(e=>e.id===id):null;
-  document.getElementById('entryModalTitle').textContent=id?'Edit Entry':'Add Entry';
-  document.getElementById('entryTitle').value=entry?entry.title:'';
-  document.getElementById('entryDate').value=entry?entry.date:'';
-  document.getElementById('entryNotes').value=entry?entry.notes||'':'';
-  currentEntryType=entry?entry.type:'event';
-  const chips=document.querySelectorAll('.entry-chip');
-  chips.forEach(c=>c.className='entry-chip');
-  if(currentEntryType==='event')chips[0].classList.add('sel-event');
-  else if(currentEntryType==='social')chips[1].classList.add('sel-social');
-  else chips[2].classList.add('sel-delegation');
-  document.getElementById('entryModal').classList.add('open');
-  document.getElementById('entryTitle').focus();
-}
-function openEntryModalOnDate(date){openEntryModal();document.getElementById('entryDate').value=date;}
-function closeEntryModal(){document.getElementById('entryModal').classList.remove('open');editingEntryId=null;}
-function saveEntry(){
-  const title=document.getElementById('entryTitle').value.trim();
-  const date=document.getElementById('entryDate').value;
-  const notes=document.getElementById('entryNotes').value.trim();
-  if(!title||!date)return;
-  const payload={title,date,type:currentEntryType,notes};
-  if(editingEntryId){
-    const e=calEntries.find(x=>x.id===editingEntryId);
-    if(e)Object.assign(e,payload);
-    saveCalEntry({id:editingEntryId,...payload});
-  }else{
-    const id=Date.now().toString();
-    const entry={id,...payload};
-    calEntries.push(entry);
-    saveCalEntry(entry);
-  }
-  renderCalendar();closeEntryModal();
-}
-function openEntryDetail(id){
-  detailEntryId=id;
-  const e=calEntries.find(x=>x.id===id);if(!e)return;
-  const typeLabel=e.type==='event'?'Event / Gig':e.type==='social'?'Social Media Post':'Social Media';
-  const typeColor=e.type==='event'?'var(--gold)':e.type==='social'?'var(--purple-btn)':'var(--teal2)';
-  document.getElementById('entryDetailContent').innerHTML=`<div class="entry-detail"><div class="entry-detail-type" style="color:${typeColor}">${typeLabel}</div><div class="entry-detail-title">${e.title}</div><div class="entry-detail-date">${formatDate(e.date)}</div>${e.notes?`<div class="entry-detail-notes">${e.notes}</div>`:''}</div>`;
-  document.getElementById('entryDetailModal').classList.add('open');
-}
-function closeEntryDetail(){document.getElementById('entryDetailModal').classList.remove('open');detailEntryId=null;}
-function editEntryFromDetail(){const id=detailEntryId;closeEntryDetail();openEntryModal(id);}
-function deleteEntryFromDetail(){
-  if(!confirm('Delete this entry?'))return;
-  const entry=calEntries.find(e=>e.id===detailEntryId);
-  calEntries=calEntries.filter(e=>e.id!==detailEntryId);
-  if(entry)saveCalEntry(entry,true);
-  LS.set('cal-entries',JSON.stringify(calEntries));
-  renderCalendar();closeEntryDetail();
-}
-function formatDate(str){const d=new Date(str+'T12:00:00');return d.toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});}
-
-
-// ── GROWTH TRACKER ──
-const DEFAULT_TRACKER_CATEGORIES=[
-  {id:"operations",name:"Operations & Event Execution",icon:"🎤",color:"#c9a96e",items:[
-    {id:"pa",label:"PA system / audio gear owned or reliably rented"},
-    {id:"mics",label:"Microphones (at least 2 working mics for karaoke)"},
-    {id:"screen",label:"Screen/display for lyrics or trivia visuals"},
-    {id:"lighting",label:"Basic stage lighting setup"},
-    {id:"software",label:"Karaoke/trivia software or platform set up"},
-    {id:"songlib",label:"Karaoke song library built out (500+ songs)"},
-    {id:"triviab",label:"Trivia question bank created (multiple categories)"},
-    {id:"bingo",label:"Musical bingo cards/system ready"},
-    {id:"backup",label:"Backup plan for tech failure at events"},
-    {id:"loadout",label:"Standard load-in/load-out routine established"},
-  ]},
-  {id:"venues",name:"Venue Relationships & Sales",icon:"🍺",color:"#b05070",items:[
-    {id:"firstv",label:"At least one paying venue partner signed"},
-    {id:"contract",label:"Venue contract/agreement template created"},
-    {id:"pricing",label:"Venue pricing/rate card defined"},
-    {id:"pitch",label:"Venue pitch deck or one-pager ready"},
-    {id:"followup",label:"System for following up with prospective venues"},
-    {id:"rebook",label:"Process to check in and keep existing venues happy"},
-    {id:"multiv",label:"3+ active venue partners"},
-    {id:"revshare",label:"Revenue share or flat fee model clearly defined"},
-  ]},
-  {id:"talent",name:"Talent & Team",icon:"🌟",color:"#8a7355",items:[
-    {id:"solo",label:"You can fully run a show solo without issues"},
-    {id:"sop",label:"Standard operating procedures written for running a show"},
-    {id:"hostapp",label:"Application/intake process for new hosts"},
-    {id:"training",label:"Host training process defined"},
-    {id:"secondhost",label:"At least one other trained host available"},
-    {id:"scheduling",label:"Scheduling system for hosts across venues"},
-    {id:"hostpay",label:"Host pay structure / contractor agreements in place"},
-  ]},
-  {id:"delegation",name:"Marketing & Audience Building",icon:"📣",color:"#3aa08a",items:[
-    {id:"insta",label:"Active Instagram account with regular posts"},
-    {id:"fb",label:"Active Facebook page"},
-    {id:"tiktok",label:"TikTok account with event content"},
-    {id:"emaillist",label:"Email list started (even small)"},
-    {id:"emailcampaign",label:"Regular email newsletter or updates sent"},
-    {id:"eventpromo",label:"Each event promoted on social before it happens"},
-    {id:"fanhub",label:"Fan Hub page on website active and updated"},
-    {id:"ugc",label:"Reposting fan/venue content regularly"},
-    {id:"branded",label:"Branded content templates for consistent look"},
-  ]},
-  {id:"booking",name:"Booking & Scheduling",icon:"📅",color:"#c9a96e",items:[
-    {id:"calendar",label:"Master calendar for all events maintained"},
-    {id:"bookingform",label:"Online booking inquiry form live (private events)"},
-    {id:"deposit",label:"Deposit policy defined for private bookings"},
-    {id:"confirmflow",label:"Confirmation process for new bookings"},
-    {id:"reminders",label:"Automated or manual reminders sent before events"},
-    {id:"cancelpolicy",label:"Cancellation/rescheduling policy documented"},
-    {id:"pubcal",label:"Public event calendar on website kept up to date"},
-  ]},
-  {id:"finance",name:"Finance & Pricing",icon:"💰",color:"#b05070",items:[
-    {id:"bizaccount",label:"Separate business bank account opened"},
-    {id:"invoicing",label:"Invoicing system in place (even simple)"},
-    {id:"tracking",label:"Income & expenses tracked monthly"},
-    {id:"taxset",label:"Setting aside money for taxes each month"},
-    {id:"pricing2",label:"Pricing covers all costs + profit margin"},
-    {id:"tipping",label:"Tip-a-host system working and promoted"},
-    {id:"profitloss",label:"Aware of profit/loss per event on average"},
-    {id:"accountant",label:"Accountant or tax software being used"},
-  ]},
-  {id:"legal",name:"Legal & Contracts",icon:"📋",color:"#8a7355",items:[
-    {id:"llc",label:"LLC formally registered and active"},
-    {id:"ein",label:"EIN obtained from IRS"},
-    {id:"liability",label:"General liability insurance active"},
-    {id:"vcontract",label:"Venue contracts used for every gig"},
-    {id:"icagreement",label:"Independent contractor agreements for hosts"},
-    {id:"tos",label:"Terms & Conditions on website"},
-    {id:"privacy",label:"Privacy policy on website"},
-    {id:"musiclicense",label:"Aware of / addressed music licensing (ASCAP/BMI)"},
-  ]},
-  {id:"tech",name:"Tech & Tools",icon:"💻",color:"#3aa08a",items:[
-    {id:"website",label:"Website live and up to date"},
-    {id:"bookingtech",label:"Online booking/inquiry form functional"},
-    {id:"payment",label:"Payment processing set up (Venmo, Stripe, Square, etc.)"},
-    {id:"email",label:"Professional email address (not just Gmail)"},
-    {id:"emailmkt",label:"Email marketing tool set up (Mailchimp, etc.)"},
-    {id:"socialschd",label:"Social media scheduling tool in use"},
-    {id:"crm",label:"Some form of CRM or contact tracking for venues/leads"},
-    {id:"cloud",label:"Files/assets backed up to cloud storage"},
-  ]},
-  {id:"brand",name:"Brand & Experience Design",icon:"✨",color:"#c9a96e",items:[
-    {id:"logo",label:"Professional logo finalized"},
-    {id:"colorkit",label:"Brand colors and fonts defined"},
-    {id:"vibe",label:"Consistent vibe/personality across all channels"},
-    {id:"themednight",label:"At least 2-3 themed night concepts developed"},
-    {id:"hostpersona",label:"Host persona/character defined (not just MC)"},
-    {id:"merch",label:"Merch or branded items available (even stickers)"},
-    {id:"testimonials",label:"Testimonials or reviews collected from venues/fans"},
-    {id:"signatureexp",label:"Signature moment or bit that makes every show memorable"},
-  ]},
-  {id:"growth",name:"Growth & Partnerships",icon:"🚀",color:"#b05070",items:[
-    {id:"growthgoal",label:"Written goal for # of gigs per month this year"},
-    {id:"newmarkets",label:"Researched expanding to new cities or areas"},
-    {id:"partnerships",label:"Partnership with at least one non-bar venue"},
-    {id:"corporate",label:"Corporate/private event offering defined"},
-    {id:"referral",label:"Referral system or incentive for venues to refer you"},
-    {id:"press",label:"Any local press, blog features, or media coverage"},
-    {id:"collab",label:"Collaborated with another local brand or entertainer"},
-  ]},
-];
-
-let TRACKER_CATEGORIES = DEFAULT_TRACKER_CATEGORIES.map(c=>({...c,items:[...c.items]}));
-let trackerPhase = 'results'; // start on results - show intro only if never taken
-let trackerCatIdx = 0;
-let trackerAnswers = {};
-let trackerCatOrder = null; // custom drag order (array of ids)
-let trackerExpandedCat = null;
-let trackerEditingQ = null; // {catId, itemId} or null
-let trackerDragSrc = null;
-
-function loadTrackerAnswers(){
-  try{const t=LS.get('tracker-answers');if(t)trackerAnswers=JSON.parse(t);}catch(e){}
-  try{const c=LS.get('tracker-categories');if(c)TRACKER_CATEGORIES=JSON.parse(c);}catch(e){}
-  try{const o=LS.get('tracker-order');if(o)trackerCatOrder=JSON.parse(o);}catch(e){}
-  if(Object.keys(trackerAnswers).length===0) trackerPhase='intro';
-  // set up real-time listener so all devices stay in sync
-  if(db){
-    db.collection('tracker_data').doc('state').onSnapshot(snap=>{
-      if(snap.exists){
-        const d=snap.data();
-        if(d.answers){trackerAnswers=d.answers;LS.set('tracker-answers',JSON.stringify(d.answers));}
-        if(d.categories){TRACKER_CATEGORIES=d.categories;LS.set('tracker-categories',JSON.stringify(d.categories));}
-        if(d.order!==undefined){trackerCatOrder=d.order;if(d.order)LS.set('tracker-order',JSON.stringify(d.order));}
-        if(Object.keys(trackerAnswers).length===0) trackerPhase='intro';
-        else if(trackerPhase==='intro') trackerPhase='results';
-        renderTracker();
-      }
-    },()=>{});
-  }
-}
-
-function saveTrackerState(){
-  LS.set('tracker-answers',JSON.stringify(trackerAnswers));
-  LS.set('tracker-categories',JSON.stringify(TRACKER_CATEGORIES));
-  if(trackerCatOrder) LS.set('tracker-order',JSON.stringify(trackerCatOrder));
-  if(db){
-    try{
-      db.collection('tracker_data').doc('state').set({
-        answers:trackerAnswers,
-        categories:TRACKER_CATEGORIES,
-        order:trackerCatOrder||null,
-        updatedAt:Date.now()
-      });
-    }catch(e){}
-  }
-  const dot=document.getElementById('trackerSaveDot');
-  if(dot){dot.classList.add('show');setTimeout(()=>dot.classList.remove('show'),1500);}
-}
-
-function setTrackerAnswer(catId,itemId,val){
-  trackerAnswers[catId+'_'+itemId]=val;
-  saveTrackerState();
-  renderTracker();
-}
-
-function getTrackerAnswer(catId,itemId){return trackerAnswers[catId+'_'+itemId]||null;}
-
-function getOrderedCategories(){
-  if(!trackerCatOrder) return TRACKER_CATEGORIES;
-  return [...trackerCatOrder.map(id=>TRACKER_CATEGORIES.find(c=>c.id===id)).filter(Boolean),
-    ...TRACKER_CATEGORIES.filter(c=>!trackerCatOrder.includes(c.id))];
-}
-
-function trackerCalcPct(cat){
-  let score=0;
-  cat.items.forEach(item=>{const a=trackerAnswers[cat.id+'_'+item.id];if(a==='yes')score+=1;else if(a==='partial')score+=0.5;});
-  return cat.items.length?Math.round((score/cat.items.length)*100):0;
-}
-function trackerOverallPct(){
-  let total=0;
-  TRACKER_CATEGORIES.forEach(cat=>total+=trackerCalcPct(cat));
-  return Math.round(total/TRACKER_CATEGORIES.length);
-}
-function trackerScoreColor(pct){
-  if(pct>=80)return'var(--teal2)';
-  if(pct>=50)return'var(--gold)';
-  return'var(--rose2)';
-}
-function trackerAdvance(){
-  const isLast=trackerCatIdx===TRACKER_CATEGORIES.length-1;
-  if(isLast){trackerPhase='results';}else{trackerCatIdx++;}
-  renderTracker();
-}
-
-// ── QUESTION EDITING ──
-function trackerAddQuestion(catId){
-  const label=prompt('Enter new question:');
-  if(!label||!label.trim())return;
-  const cat=TRACKER_CATEGORIES.find(c=>c.id===catId);
-  if(!cat)return;
-  cat.items.push({id:'q'+Date.now(),label:label.trim()});
-  saveTrackerState();
-  renderTracker();
-}
-function trackerEditQuestion(catId,itemId){
-  const cat=TRACKER_CATEGORIES.find(c=>c.id===catId);
-  if(!cat)return;
-  const item=cat.items.find(i=>i.id===itemId);
-  if(!item)return;
-  const label=prompt('Edit question:',item.label);
-  if(label===null)return;
-  if(!label.trim()){trackerDeleteQuestion(catId,itemId);return;}
-  item.label=label.trim();
-  saveTrackerState();
-  renderTracker();
-}
-function trackerDeleteQuestion(catId,itemId){
-  if(!confirm('Delete this question?'))return;
-  const cat=TRACKER_CATEGORIES.find(c=>c.id===catId);
-  if(!cat)return;
-  cat.items=cat.items.filter(i=>i.id!==itemId);
-  delete trackerAnswers[catId+'_'+itemId];
-  saveTrackerState();
-  renderTracker();
-}
-
-function renderTracker(){
-  const el=document.getElementById('trackerView');
-  if(!el)return;
-
-  if(trackerPhase==='intro'){
-    el.innerHTML=`<div class="tracker-intro">
-      <div class="tracker-intro-icon">🎤</div>
-      <div class="tracker-intro-title">How Built-Out Is Your Business?</div>
-      <div class="tracker-intro-body">Go through 10 categories to calculate your real completion percentage. See exactly what is done, what is in progress, and what still needs attention.</div>
-      <button class="tracker-start-btn" onclick="trackerPhase='quiz';trackerCatIdx=0;renderTracker()">Let's Go →</button>
-    </div>`;
-    return;
-  }
-
-  if(trackerPhase==='quiz'){
-    const cat=TRACKER_CATEGORIES[trackerCatIdx];
-    const pct=trackerCalcPct(cat);
-    const allDone=cat.items.every(item=>trackerAnswers[cat.id+'_'+item.id]);
-    const isLast=trackerCatIdx===TRACKER_CATEGORIES.length-1;
-
-    // category nav bar
-    const catNav=TRACKER_CATEGORIES.map((c,i)=>`<button class="tracker-cat-nav-btn${i===trackerCatIdx?' active':''}" onclick="trackerCatIdx=${i};renderTracker()" style="border-color:${i===trackerCatIdx?c.color:'transparent'};color:${i===trackerCatIdx?c.color:'var(--text3)'};">${c.icon}</button>`).join('');
-
-    el.innerHTML=`
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.8rem;">
-      <div class="tracker-cat-nav">${catNav}</div>
-      <button class="tracker-back-results-btn" onclick="trackerPhase='results';renderTracker()">← Results</button>
-    </div>
-      <div class="tracker-quiz-card">
-        <div class="tracker-cat-header">
-          <span class="tracker-cat-icon">${cat.icon}</span>
-          <span class="tracker-cat-name" style="color:${cat.color}">${cat.name}</span>
-          <span class="tracker-save-dot" id="trackerSaveDot">✓</span>
-        </div>
-        <div class="tracker-cat-sub">Answer honestly — partial credit counts!</div>
-        <div class="tracker-meter-label"><span>Completion</span><span style="color:${cat.color};font-weight:400">${pct}%</span></div>
-        <div class="tracker-meter-wrap"><div class="tracker-meter-fill" style="width:${pct}%;background:${cat.color};"></div></div>
-        ${cat.items.map((item,i)=>{
-          const ans=getTrackerAnswer(cat.id,item.id);
-          return`<div class="tracker-q-row">
-            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:0.5rem;margin-bottom:0.5rem;">
-              <div class="tracker-q-label" style="margin-bottom:0">${i+1}. ${item.label}</div>
-              <div style="display:flex;gap:0.25rem;flex-shrink:0;">
-                <button class="action-btn edit" onclick="trackerEditQuestion('${cat.id}','${item.id}')" title="Edit">✎</button>
-                <button class="action-btn delete" onclick="trackerDeleteQuestion('${cat.id}','${item.id}')" title="Delete">✕</button>
-              </div>
-            </div>
-            <div class="tracker-btn-group">
-              <button class="tracker-ans-btn" onclick="setTrackerAnswer('${cat.id}','${item.id}','yes')" style="${ans==='yes'?'border-color:'+cat.color+';color:'+cat.color+';background:'+cat.color+'22;':''}">Yes ✅</button>
-              <button class="tracker-ans-btn" onclick="setTrackerAnswer('${cat.id}','${item.id}','partial')" style="${ans==='partial'?'border-color:'+cat.color+';color:'+cat.color+';background:'+cat.color+'22;':''}">In Progress 🔄</button>
-              <button class="tracker-ans-btn" onclick="setTrackerAnswer('${cat.id}','${item.id}','no')" style="${ans==='no'?'border-color:#4aaa5a;color:#4aaa5a;background:rgba(60,180,80,0.15);':''}">Not Yet ❌</button>
-            </div>
-          </div>`;
-        }).join('')}
-        <button class="tracker-add-q-btn" onclick="trackerAddQuestion('${cat.id}')">+ Add Question</button>
-        <div class="tracker-nav">
-          <button class="tracker-nav-prev" onclick="trackerCatIdx--;renderTracker()" ${trackerCatIdx===0?'disabled':''}>← Back</button>
-          <span class="tracker-nav-count">${trackerCatIdx+1} / ${TRACKER_CATEGORIES.length}</span>
-          <button class="tracker-nav-next" onclick="trackerAdvance()" ${!allDone?'disabled':''}>
-            ${isLast?'See Results ✦':'Next →'}
-          </button>
-        </div>
-      </div>`;
-    return;
-  }
-
-  // RESULTS
-  const overall=trackerOverallPct();
-  const overallColor=trackerScoreColor(overall);
-  const msgs=['Your foundation is strong. Time to scale.','Solid progress — fill in the gaps and you will be firing on all cylinders.','Lots of opportunity to build. Each item you check off makes Belladonna more resilient.'];
-  const msg=overall>=80?msgs[0]:overall>=50?msgs[1]:msgs[2];
-  const ordered=getOrderedCategories();
-
-  // build glance row html
-  const glanceHtml = `<div class="tracker-glance-row">
-    ${getOrderedCategories().map(cat=>{
-      const pct=trackerCalcPct(cat);
-      const color=cat.color;
-      const notDone=cat.items.filter(item=>trackerAnswers[cat.id+'_'+item.id]==='no');
-      const inProg=cat.items.filter(item=>trackerAnswers[cat.id+'_'+item.id]==='partial');
-      const allDone=notDone.length===0&&inProg.length===0;
-      const itemsHtml = allDone
-        ? '<div class="tracker-glance-all-done">✅ All complete</div>'
-        : [...inProg.map(i=>`<div class="tracker-glance-item"><div class="tracker-glance-item-dot" style="background:#c9a96e;"></div><span style="color:var(--gold)">${i.label}</span></div>`),
-           ...notDone.map(i=>`<div class="tracker-glance-item"><div class="tracker-glance-item-dot" style="background:#4aaa5a;"></div><span>${i.label}</span></div>`)
-          ].join('');
-      const catIdx = TRACKER_CATEGORIES.indexOf(cat);
-      return `<div class="tracker-glance-card" draggable="true" data-catid="${cat.id}"
-          ondragstart="trackerDragStart(event,this)"
-          ondragover="trackerDragOver(event,this)"
-          ondrop="trackerDrop(event,this)"
-          ondragend="trackerDragEnd()"
-          ondblclick="event.stopPropagation();trackerPhase='quiz';trackerCatIdx=${catIdx};renderTracker()"
-          style="border-color:${color}33;">
-        <div style="position:absolute;top:0;left:0;right:0;height:2px;background:${color};border-radius:10px 10px 0 0;"></div>
-        <div class="tracker-glance-header">
-          <div class="tracker-glance-name">${cat.icon} ${cat.name.split(' ')[0]}</div>
-          <div class="tracker-glance-pct" style="color:${color}">${pct}%</div>
-        </div>
-        <div class="tracker-glance-items">${itemsHtml}</div>
-      </div>`;
-    }).join('')}
-  </div>`;
-
-  const resultsGridHtml = `<div style="font-size:0.65rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--text3);margin-bottom:0.6rem;">Drag cards to reorder</div>
-    <div class="tracker-results-grid" id="trackerResultsGrid">
-      ${ordered.map(cat=>{
-        const pct=trackerCalcPct(cat);
-        const isOpen=trackerExpandedCat===cat.id;
-        const notDone=cat.items.filter(item=>{const a=trackerAnswers[cat.id+'_'+item.id];return a==='no'||a==='partial';});
-        return`<div class="tracker-result-card" draggable="true" data-catid="${cat.id}" style="border-color:${cat.color}44"
-          ondragstart="trackerDragStart(event,this)"
-          ondragover="trackerDragOver(event,this)"
-          ondrop="trackerDrop(event,this)"
-          ondragend="trackerDragEnd()"
-          onclick="trackerExpandedCat=trackerExpandedCat==='${cat.id}'?null:'${cat.id}';renderTracker()">
-          <div class="tracker-result-card-header">
-            <div class="tracker-result-cat-name">${cat.icon} ${cat.name}</div>
-            <div class="tracker-result-pct" style="color:${cat.color}">${pct}%</div>
-          </div>
-          <div class="tracker-meter-wrap"><div class="tracker-meter-fill" style="width:${pct}%;background:${cat.color};"></div></div>
-          <div class="tracker-result-sub">${notDone.length===0?'✅ All items complete!':notDone.length+' item'+(notDone.length>1?'s':'')+' need attention · tap to expand'}</div>
-          ${isOpen&&notDone.length>0?`<div class="tracker-todo-list">${notDone.map(item=>{const a=trackerAnswers[cat.id+'_'+item.id];return`<div class="tracker-todo-item"><span>${a==='partial'?'🔄':'❌'}</span><span>${item.label}</span></div>`;}).join('')}</div>`:''}
-        </div>`;
-      }).join('')}
-    </div>`;
-
-  const overallHtml = `<div class="tracker-overall">
-      <div class="tracker-overall-label">Overall Score</div>
-      <div class="tracker-big-pct" style="color:${overallColor}">${overall}%</div>
-      <div class="tracker-meter-wrap" style="max-width:300px;margin:0.75rem auto;">
-        <div class="tracker-meter-fill" style="width:${overall}%;background:${overallColor};"></div>
-      </div>
-      <div class="tracker-overall-msg">${msg}</div>
-      <div style="display:flex;gap:0.5rem;justify-content:center;margin-top:1rem;flex-wrap:wrap;">
-        <button class="tracker-retake-btn" onclick="trackerPhase=&apos;quiz&apos;;trackerCatIdx=0;renderTracker()">Edit / Retake Quiz</button>
-        <button class="tracker-retake-btn" onclick="trackerReset()">Reset All</button>
-      </div>
-    </div>`;
-
-  el.innerHTML = resultsGridHtml + '<div style="margin-top:1.5rem;"></div>' + glanceHtml + overallHtml;
-}
-
-// ── TRACKER DRAG ──
-function trackerDragStart(e,el){
-  trackerDragSrc=el.dataset.catid;
-  el.style.opacity='0.4';
-  e.dataTransfer.effectAllowed='move';
-}
-function trackerDragOver(e,el){
-  e.preventDefault();
-  el.style.outline='2px solid var(--gold)';
-}
-function trackerDrop(e,el){
-  e.preventDefault();
-  const targetId=el.dataset.catid;
-  if(trackerDragSrc===targetId)return;
-  const ordered=getOrderedCategories();
-  const ids=ordered.map(c=>c.id);
-  const fi=ids.indexOf(trackerDragSrc);
-  const ti=ids.indexOf(targetId);
-  if(fi>-1&&ti>-1){const[m]=ids.splice(fi,1);ids.splice(ti,0,m);}
-  trackerCatOrder=ids;
-  saveTrackerState();
-  renderTracker();
-}
-function trackerDragEnd(){
-  document.querySelectorAll('.tracker-result-card').forEach(el=>{el.style.opacity='1';el.style.outline='none';});
-}
-function trackerReset(){
-  if(!confirm('Reset all answers? This cannot be undone.'))return;
-  trackerAnswers={};
-  trackerCatOrder=null;
-  TRACKER_CATEGORIES=DEFAULT_TRACKER_CATEGORIES.map(c=>({...c,items:[...c.items]}));
-  trackerPhase='intro';
-  saveTrackerState();
-  renderTracker();
-}
-
-
-
-// ── WORD OF THE DAY ──
-const WOTD_LIST=[
-  {word:'CROW',hint:'dark & clever'},{word:'ROOK',hint:'strategic power'},
-  {word:'VIBE',hint:'feel the room'},{word:'SING',hint:'what we do'},
-  {word:'NOIR',hint:'dark & beautiful'},{word:'LURE',hint:'draw them in'},
-  {word:'PULSE',hint:'keep the beat'},{word:'GLOW',hint:'light it up'},
-  {word:'BOLD',hint:'own the stage'},{word:'DUSK',hint:'magic hour'},
-  {word:'HUSH',hint:'command the room'},{word:'SPARK',hint:'ignite the night'},
-  {word:'FLUX',hint:'always moving'},{word:'SWAY',hint:'move the crowd'},
-  {word:'RIFF',hint:'improvise freely'},{word:'MUSE',hint:'your inspiration'},
-  {word:'HAUNT',hint:'unforgettable'},{word:'SURGE',hint:'build the energy'},
-  {word:'KEEN',hint:'sharp and ready'},{word:'BLAZE',hint:'burn bright'},
-  {word:'WAIL',hint:'let it out'},{word:'SHADE',hint:'cool under pressure'},
-  {word:'WILD',hint:'controlled chaos'},{word:'SOUL',hint:'put it in everything'},
-  {word:'SILK',hint:'smooth delivery'},{word:'DAZE',hint:'leave them stunned'},
-  {word:'CULT',hint:'build your following'},{word:'BROOD',hint:'depth behind the smile'},
-  {word:'PLUM',hint:'rich and deep'},{word:'LOFT',hint:'elevate everything'},
-  {word:'RAVE',hint:'they will talk'},{word:'CLOAK',hint:'mystery and allure'},
-  {word:'GRAIL',hint:'the real thing'},{word:'THRALL',hint:'hold them captive'},
-  {word:'BLOOM',hint:'in full effect'},
-];
-function getWOTD(){
-  const now=new Date();
-  const start=new Date(now.getFullYear(),0,0);
-  const dayOfYear=Math.floor((now-start)/(1000*60*60*24));
-  return WOTD_LIST[dayOfYear%WOTD_LIST.length];
-}
-function renderWOTD(){
-  const el=document.getElementById('wotdWord');
-  const sub=document.getElementById('wotdSub');
-  if(!el)return;
-  const w=getWOTD();
-  el.textContent=w.word;
-  if(sub)sub.textContent=w.hint;
-}
-
-// ── SUNDAY WRAPS ──
-let sundayWraps={};
-
-function getWeekKey(yr,mo,day){
-  const d=new Date(yr,mo,day);
-  d.setHours(0,0,0,0);
-  const dayOfWeek=(d.getDay()+6)%7;
-  const monday=new Date(d);
-  monday.setDate(d.getDate()-dayOfWeek);
-  return monday.getFullYear()+'-'+String(monday.getMonth()+1).padStart(2,'0')+'-'+String(monday.getDate()).padStart(2,'0');
-}
-function loadSundayWraps(){
-  try{const s=LS.get('sunday-wraps');if(s)sundayWraps=JSON.parse(s);}catch(e){}
-  if(db){
-    db.collection('cal_sunday_wraps').doc('all').onSnapshot(snap=>{
-      if(snap.exists){sundayWraps=snap.data()||{};renderThisWeek();renderCalendar();}
-    },()=>{});
-  }
-}
-function saveSundayWraps(){
-  LS.set('sunday-wraps',JSON.stringify(sundayWraps));
-  if(db){try{db.collection('cal_sunday_wraps').doc('all').set(sundayWraps);}catch(e){}}
-}
-function getSundayWrap(weekKey){
-  if(!sundayWraps[weekKey])sundayWraps[weekKey]={items:[],notes:''};
-  return sundayWraps[weekKey];
-}
-function addSundayItem(weekKey){
-  const input=document.getElementById('sundayInput-'+weekKey);
-  if(!input||!input.value.trim())return;
-  const wrap=getSundayWrap(weekKey);
-  wrap.items.push({id:Date.now().toString(),text:input.value.trim(),done:false});
-  input.value='';
-  saveSundayWraps();
-  renderCalendar();
-  renderThisWeek();
-}
-function addSundayItemKey(e,weekKey){if(e.key==='Enter')addSundayItem(weekKey);}
-function toggleSundayItem(weekKey,itemId){
-  const wrap=getSundayWrap(weekKey);
-  const item=wrap.items.find(i=>i.id===itemId);
-  if(item)item.done=!item.done;
-  saveSundayWraps();
-  renderCalendar();
-  renderThisWeek();
-}
-function deleteSundayItem(weekKey,itemId){
-  const wrap=getSundayWrap(weekKey);
-  wrap.items=wrap.items.filter(i=>i.id!==itemId);
-  saveSundayWraps();
-  renderCalendar();
-  renderThisWeek();
-}
-function saveSundayNotes(weekKey){
-  const el=document.getElementById('sundayNotes-'+weekKey);
-  if(!el)return;
-  getSundayWrap(weekKey).notes=el.value;
-  saveSundayWraps();
-}
-function renderThisWeek(){
-  const el=document.getElementById('thisWeekPanel');
-  if(!el)return;
-  const today=new Date();
-  const weekKey=getWeekKey(today.getFullYear(),today.getMonth(),today.getDate());
-  const dayOfWeek=(today.getDay()+6)%7;
-  const sunday=new Date(today);sunday.setDate(today.getDate()+(6-dayOfWeek));
-  const sunStr=sunday.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
-  const wrap=getSundayWrap(weekKey);
-  const done=wrap.items.filter(i=>i.done).length;
-  const total=wrap.items.length;
-  const pctW=total?Math.round((done/total)*100):0;
-  const itemsHtml=wrap.items.length
-    ?wrap.items.map(item=>`<div class="tw-item">
-        <div class="tw-check${item.done?' done':''}" onclick="toggleSundayItem('${weekKey}','${item.id}')"></div>
-        <span class="tw-text${item.done?' done':''}">${item.text}</span>
-      </div>`).join('')
-    :`<div class="tw-empty">No delegations yet — click <strong style="color:#4aaa5a">⚑ Write Delegations</strong> to add this week's list.</div>`;
-  el.innerHTML=`<div class="tw-panel">
-    <div class="tw-header">
-      <div>
-        <div class="tw-title">⚑ This Week's Delegations</div>
-        <div class="tw-due">Due ${sunStr}</div>
-      </div>
-      <div class="tw-right">
-        ${total?`<div class="tw-progress-wrap"><div class="tw-progress-bar" style="width:${pctW}%"></div></div><div class="tw-count">${done}/${total} done</div>`:''}
-        <button class="tw-edit-btn" onclick="openDelegationModal()">✎ Edit</button>
-      </div>
-    </div>
-    <div class="tw-list">${itemsHtml}</div>
-  </div>`;
-}
-function renderSundayWrap(weekKey){
-  const wrap=getSundayWrap(weekKey);
-  const checklistHtml=wrap.items.length
-    ?wrap.items.map(item=>`<div class="sw-row">
-        <div class="sw-check${item.done?' done':''}" onclick="event.stopPropagation();toggleSundayItem('${weekKey}','${item.id}')"></div>
-        <span class="sw-text${item.done?' done':''}">${item.text}</span>
-      </div>`).join('')
-    :`<div class="sw-empty">No delegations — click Edit to write this week's list.</div>`;
-  return`<div class="sw-wrap" onclick="event.stopPropagation()">
-    <div class="sw-header">
-      <span class="sw-label">⚑ Delegations</span>
-      <button class="sw-edit-btn" onclick="event.stopPropagation();openDelegationModal('${weekKey}')">✎ Edit</button>
-    </div>
-    <div class="sw-list">${checklistHtml}</div>
-  </div>`;
-}
-
-
-// ── DELEGATION MODAL ──
-let delegModalWeekKey = null;
-
-function openDelegationModal(weekKey){
-  const today=new Date();
-  delegModalWeekKey=weekKey||getWeekKey(today.getFullYear(),today.getMonth(),today.getDate());
-  const parts=delegModalWeekKey.split('-');
-  const monday=new Date(parseInt(parts[0]),parseInt(parts[1])-1,parseInt(parts[2]));
-  const sunday=new Date(monday);sunday.setDate(monday.getDate()+6);
-  const label=sunday.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
-  document.getElementById('delegModalWeekLabel').textContent='Due Sunday, '+label;
-  // Pre-fill textarea with existing items
-  const wrap=getSundayWrap(delegModalWeekKey);
-  document.getElementById('delegFreeText').value=wrap.items.map(i=>i.text).join('\n');
-  document.getElementById('delegationModal').classList.add('open');
-  setTimeout(()=>document.getElementById('delegFreeText').focus(),100);
-}
-function closeDelegationModal(){
-  document.getElementById('delegationModal').classList.remove('open');
-  delegModalWeekKey=null;
-}
-function saveDelegationFreeText(){
-  const text=document.getElementById('delegFreeText').value;
-  const lines=text.split('\n').map(l=>l.trim()).filter(Boolean);
-  const wrap=getSundayWrap(delegModalWeekKey);
-  // Preserve done state for existing items by matching text
-  const existing=wrap.items;
-  wrap.items=lines.map(line=>{
-    const found=existing.find(e=>e.text===line);
-    return found||{id:Date.now().toString()+Math.random(),text:line,done:false};
-  });
-  saveSundayWraps();
-  renderCalendar();
-  renderThisWeek();
-  closeDelegationModal();
-}
-
 // ── INIT ── renders immediately, Firebase syncs in background
 function init(){
   loadStorage();
-  loadSundayWraps();
   loadRanks();
   loadHostOrder();
   loadTrackerAnswers();
-  loadCalEntries();
-  loadMonthNotes();
   loadGigSchedule();
   loadSigninReviewed();
   renderRoster();
-  renderGames();
   renderVenueManage();
   populateRosterFilters();
   populateSchedFilters();
-  renderThisWeek();
-  renderCalendar();
   fetchSheetData();
   setInterval(fetchSheetData,60000);
 }
