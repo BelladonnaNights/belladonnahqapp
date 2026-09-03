@@ -5,23 +5,23 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Belladonna Check-Out</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300&family=Josefin+Sans:wght@200;300;400&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300&family=Josefin+Sans:wght@200;300;400&display=swap');
   * { margin: 0; padding: 0; box-sizing: border-box; }
   :root {
-    --bg: #0a0a0f; --surface: #111118; --surface2: #18181f;
-    --border: rgba(180,140,200,0.15); --border2: rgba(180,140,200,0.3);
-    --gold: #c9a96e; --rose2: #b05070; --teal2: #3aa08a;
-    --text: #e8e0f0; --text3: #9a8aaa;
+    --bg: #000000; --surface: #0d0d0d; --surface2: #141414;
+    --border: rgba(180,150,100,0.16); --border2: rgba(180,150,100,0.32);
+    --gold: #c9a96e; --rose2: #b0505a; --teal2: #3aa08a;
+    --text: #f0ece0; --text3: #8a8272;
     --live: #3aaa6a; --live-dim: rgba(58,170,106,0.15);
-    --purple-btn: #d4c0e8;
+    --purple-btn: #c9a96e;
   }
   body { background: var(--bg); color: var(--text); font-family: 'Josefin Sans', sans-serif; font-weight: 300; min-height: 100vh; padding: 2rem 1rem; letter-spacing: 0.04em; }
   .form-wrap { max-width: 480px; margin: 0 auto; }
   .form-header { text-align: center; margin-bottom: 2.5rem; position: relative; padding-bottom: 1.5rem; }
   .form-header::after { content: ''; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 80px; height: 1px; background: linear-gradient(90deg, transparent, var(--rose2), transparent); }
-  .brand { font-family: 'Cormorant Garamond', serif; font-size: 2rem; font-weight: 300; color: var(--gold); letter-spacing: 0.18em; text-transform: uppercase; padding-right: 0.18em; }
+  .brand { font-family: 'Playfair Display', serif; font-size: 2rem; font-weight: 700; color: var(--gold); letter-spacing: 0.14em; text-transform: uppercase; padding-right: 0.14em; }
   .form-subtitle { font-size: 0.65rem; letter-spacing: 0.4em; text-transform: uppercase; color: var(--text3); margin-top: 0.3rem; }
-  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 2rem; position: relative; overflow: hidden; margin-bottom: 1rem; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 2rem; position: relative; overflow: hidden; margin-bottom: 1rem; }
   .card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, var(--rose2), var(--gold), transparent); }
   .card-title { font-size: 0.6rem; letter-spacing: 0.3em; text-transform: uppercase; color: var(--text3); margin-bottom: 1.2rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--border); }
   .field { margin-bottom: 1.4rem; }
@@ -29,8 +29,8 @@
   .field-input, .field-select, .field-textarea { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); padding: 0.75rem 1rem; font-size: 0.82rem; font-family: 'Josefin Sans', sans-serif; font-weight: 300; letter-spacing: 0.05em; outline: none; transition: border-color 0.2s; -webkit-appearance: none; }
   .field-input:focus, .field-select:focus, .field-textarea:focus { border-color: var(--gold); }
   .field-input::placeholder, .field-textarea::placeholder { color: var(--text3); }
-  .field-select { cursor: pointer; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%239a8aaa' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 1rem center; padding-right: 2.5rem; }
-  .field-select option { background: #18181f; color: var(--text); }
+  .field-select { cursor: pointer; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238a8272' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 1rem center; padding-right: 2.5rem; }
+  .field-select option { background: #141414; color: var(--text); }
   .field-textarea { resize: vertical; min-height: 90px; line-height: 1.6; }
   .venue-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
   .venue-chip { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 0.7rem 0.8rem; font-size: 0.72rem; color: var(--purple-btn); cursor: pointer; text-align: center; transition: all 0.2s; letter-spacing: 0.05em; font-family: 'Josefin Sans', sans-serif; line-height: 1.3; }
@@ -42,24 +42,24 @@
   .add-venue-input::placeholder { color: var(--text3); }
   .add-btn { background: rgba(201,169,110,0.15); border: 1px solid var(--gold); color: var(--purple-btn); border-radius: 8px; padding: 0.6rem 1rem; font-size: 0.7rem; cursor: pointer; font-family: 'Josefin Sans', sans-serif; font-weight: 400; letter-spacing: 0.1em; transition: all 0.2s; white-space: nowrap; }
   .add-btn:hover { background: rgba(201,169,110,0.25); color: var(--text); }
-  .time-now-btn { display: inline-block; margin-top: 0.5rem; font-size: 0.65rem; font-family: 'Josefin Sans', sans-serif; font-weight: 400; letter-spacing: 0.15em; text-transform: uppercase; color: var(--purple-btn); background: rgba(180,140,200,0.12); border: 1px solid rgba(180,140,200,0.35); border-radius: 20px; padding: 0.4rem 1rem; cursor: pointer; transition: all 0.2s; }
-  .time-now-btn:hover { background: rgba(180,140,200,0.22); color: var(--text); }
+  .time-now-btn { display: inline-block; margin-top: 0.5rem; font-size: 0.65rem; font-family: 'Josefin Sans', sans-serif; font-weight: 400; letter-spacing: 0.15em; text-transform: uppercase; color: var(--purple-btn); background: rgba(201,169,110,0.12); border: 1px solid rgba(201,169,110,0.35); border-radius: 6px; padding: 0.4rem 1rem; cursor: pointer; transition: all 0.2s; }
+  .time-now-btn:hover { background: rgba(201,169,110,0.22); color: var(--text); }
   .crowd-options { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.4rem; }
   .crowd-chip { background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 0.6rem 0.2rem; font-size: 0.62rem; color: var(--purple-btn); cursor: pointer; text-align: center; transition: all 0.2s; font-family: 'Josefin Sans', sans-serif; font-weight: 400; }
   .crowd-chip:hover { border-color: var(--teal2); color: var(--text); }
   .crowd-chip.selected { border-color: var(--teal2); color: var(--purple-btn); background: rgba(58,160,138,0.15); }
   .stars { display: flex; gap: 8px; }
-  .star { font-size: 1.8rem; cursor: pointer; color: #3a2a4a; transition: color 0.15s; line-height: 1; }
+  .star { font-size: 1.8rem; cursor: pointer; color: #332f24; transition: color 0.15s; line-height: 1; }
   .star.lit { color: var(--gold); }
   .star:hover { color: var(--gold); }
   .yn-toggle { display: flex; gap: 0.5rem; }
-  .yn-btn { flex: 1; padding: 0.8rem; border-radius: 8px; font-size: 0.7rem; font-weight: 400; letter-spacing: 0.2em; text-transform: uppercase; cursor: pointer; font-family: 'Josefin Sans', sans-serif; transition: all 0.2s; border: 1px solid rgba(180,140,200,0.3); background: var(--surface2); color: var(--purple-btn); }
-  .yn-btn:hover { color: var(--text); border-color: rgba(180,140,200,0.5); }
+  .yn-btn { flex: 1; padding: 0.8rem; border-radius: 8px; font-size: 0.7rem; font-weight: 400; letter-spacing: 0.2em; text-transform: uppercase; cursor: pointer; font-family: 'Josefin Sans', sans-serif; transition: all 0.2s; border: 1px solid rgba(201,169,110,0.3); background: var(--surface2); color: var(--purple-btn); }
+  .yn-btn:hover { color: var(--text); border-color: rgba(201,169,110,0.5); }
   .yn-btn.yes-sel { border-color: var(--live); color: var(--purple-btn); background: rgba(58,170,106,0.15); }
   .yn-btn.no-sel { border-color: var(--rose2); color: var(--purple-btn); background: rgba(176,80,112,0.15); }
   .status-toggle { display: flex; gap: 0.5rem; }
-  .status-btn { flex: 1; padding: 0.8rem; border-radius: 8px; font-size: 0.7rem; font-weight: 400; letter-spacing: 0.2em; text-transform: uppercase; cursor: pointer; font-family: 'Josefin Sans', sans-serif; transition: all 0.2s; border: 1px solid rgba(180,140,200,0.3); background: var(--surface2); color: var(--purple-btn); }
-  .status-btn:hover { color: var(--text); border-color: rgba(180,140,200,0.5); }
+  .status-btn { flex: 1; padding: 0.8rem; border-radius: 8px; font-size: 0.7rem; font-weight: 400; letter-spacing: 0.2em; text-transform: uppercase; cursor: pointer; font-family: 'Josefin Sans', sans-serif; transition: all 0.2s; border: 1px solid rgba(201,169,110,0.3); background: var(--surface2); color: var(--purple-btn); }
+  .status-btn:hover { color: var(--text); border-color: rgba(201,169,110,0.5); }
   .status-btn.active-sel { border-color: var(--live); color: var(--purple-btn); background: rgba(58,170,106,0.15); }
   .status-btn.inactive-sel { border-color: var(--rose2); color: var(--purple-btn); background: rgba(176,80,112,0.15); }
   .photo-upload { border: 1px dashed var(--border2); border-radius: 8px; padding: 1.2rem; text-align: center; cursor: pointer; transition: all 0.2s; position: relative; }
@@ -68,7 +68,7 @@
   .photo-label { font-size: 0.65rem; color: var(--purple-btn); letter-spacing: 0.1em; }
   .photo-label span { color: var(--gold); }
   .photo-name { font-size: 0.7rem; color: var(--teal2); margin-top: 0.3rem; }
-  .submit-btn { width: 100%; background: rgba(176,80,112,0.1); border: 1px solid var(--rose2); color: var(--purple-btn); padding: 1rem; border-radius: 40px; font-size: 0.72rem; font-weight: 400; letter-spacing: 0.35em; text-transform: uppercase; cursor: pointer; font-family: 'Josefin Sans', sans-serif; transition: all 0.25s; margin-top: 0.5rem; }
+  .submit-btn { width: 100%; background: rgba(176,80,112,0.1); border: 1px solid var(--rose2); color: var(--purple-btn); padding: 1rem; border-radius: 8px; font-size: 0.72rem; font-weight: 400; letter-spacing: 0.35em; text-transform: uppercase; cursor: pointer; font-family: 'Josefin Sans', sans-serif; transition: all 0.25s; margin-top: 0.5rem; }
   .submit-btn:hover { background: rgba(176,80,112,0.2); color: var(--text); }
   .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
   .required { color: var(--rose2); margin-left: 2px; }
