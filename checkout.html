@@ -112,7 +112,21 @@
       <button class="time-now-btn" onclick="setNow()">↑ Use Current Time</button>
     </div>
   </div>
-  <div class="card">
+  <div class="card" id="cancelCard" style="border-color:rgba(176,80,112,0.3);">
+    <div class="card-title">Gig Status</div>
+    <div class="field" style="margin-bottom:0;">
+      <label class="field-label">Was This Gig Canceled?</label>
+      <div class="yn-toggle">
+        <button class="yn-btn yes-sel" id="cancelNo" onclick="setCanceled(false)">No, It Happened</button>
+        <button class="yn-btn" id="cancelYes" onclick="setCanceled(true)">Yes, Canceled</button>
+      </div>
+    </div>
+    <div class="field" id="cancelReasonField" style="display:none;margin-top:1.2rem;margin-bottom:0;">
+      <label class="field-label">What Happened? <span class="required">*</span></label>
+      <textarea class="field-textarea" id="cancelReason" placeholder="e.g. Venue closed early for a private party, weather, no-show crowd..."></textarea>
+    </div>
+  </div>
+  <div class="card" id="shiftIntelCard">
     <div class="card-title">Shift Intel</div>
     <div class="field">
       <label class="field-label">Crowd Size</label>
@@ -125,7 +139,7 @@
       </div>
     </div>
     <div class="field">
-      <label class="field-label">How Many Singers/Players Were There?</label>
+      <label class="field-label">How Many Singers Were There?</label>
       <input type="number" class="field-input" id="singers" placeholder="0" min="0">
     </div>
     <div class="field">
@@ -146,7 +160,7 @@
       </div>
     </div>
   </div>
-  <div class="card">
+  <div class="card" id="payTipsCard">
     <div class="card-title">Pay & Tips</div>
     <div class="field">
       <label class="field-label">Did You Get Your Pay?</label>
@@ -193,16 +207,29 @@
         <div style="font-size:1.2rem;margin-bottom:0.4rem;">📎</div>
         <div class="photo-label">Tap to attach — <span>browse files</span></div>
         <div class="photo-name" id="photoName"></div>
+        <img id="photoPreview" style="display:none;max-width:100%;border-radius:8px;margin-top:0.6rem;">
       </div>
+    </div>
+    <div class="field" style="margin-bottom:0;">
+      <label class="field-label">Venue Photo Uploaded?</label>
+      <div style="font-size:0.72rem;color:var(--text3);letter-spacing:0.04em;" id="photoStatus">No photo attached — that's OK if there's nothing to show.</div>
     </div>
     <button class="submit-btn" id="submitBtn" onclick="submitForm()">Check Out</button>
     <div class="msg msg-success" id="successMsg">Shift recorded. Thank you for a beautiful night. 🖤</div>
     <div class="msg msg-error" id="errorMsg"></div>
   </div>
 </div>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
 <script>
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbye_Vv3kGcmPhforDf73jQ-7NIOaLbg4jwTPI9_VTspEIU4nNK_NxTY14KYyQsUDe2GYQ/exec';
-let selectedVenue='',selectedCrowd='',starRating=0,venueBusy='',gotPaid='',currentStatus='Active',photoURL='';
+let storage=null;
+try{
+  firebase.initializeApp({apiKey:"AIzaSyCIfAE1JGHsUGzzVH2pz1Vyj5b5OhA0tDQ",authDomain:"belladonna-hq.firebaseapp.com",projectId:"belladonna-hq",storageBucket:"belladonna-hq.firebasestorage.app",messagingSenderId:"1021873183587",appId:"1:1021873183587:web:def283bb7b5ca48e4f9156"});
+  storage=firebase.storage();
+}catch(e){console.warn('Firebase init failed:',e);}
+
+let selectedVenue='',selectedCrowd='',starRating=0,venueBusy='',gotPaid='',currentStatus='Active',selectedPhotoFile=null,gigCanceled=false;
 document.getElementById('date').value=new Date().toISOString().split('T')[0];
 function setNow(){const n=new Date();document.getElementById('checkoutTime').value=String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0');}
 function selectVenue(el){document.querySelectorAll('.venue-chip').forEach(c=>c.classList.remove('selected'));el.classList.add('selected');selectedVenue=el.textContent.trim();}
@@ -211,7 +238,32 @@ function selectCrowd(el){document.querySelectorAll('.crowd-chip').forEach(c=>c.c
 function setStar(n){starRating=n;document.querySelectorAll('.star').forEach((s,i)=>s.classList.toggle('lit',i<n));}
 function setYN(field,val){if(field==='busy'){venueBusy=val;document.getElementById('busyYes').className='yn-btn'+(val==='Yes'?' yes-sel':'');document.getElementById('busyNo').className='yn-btn'+(val==='No'?' no-sel':'');}else{gotPaid=val;document.getElementById('paidYes').className='yn-btn'+(val==='Yes'?' yes-sel':'');document.getElementById('paidNo').className='yn-btn'+(val==='No'?' no-sel':'');}}
 function setStatus(s){currentStatus=s;document.getElementById('statusActive').className='status-btn'+(s==='Active'?' active-sel':'');document.getElementById('statusInactive').className='status-btn'+(s==='Inactive'?' inactive-sel':'');}
-function handlePhoto(input){if(input.files&&input.files[0]){photoURL=input.files[0].name;document.getElementById('photoName').textContent='✓ '+photoURL;}}
+function setCanceled(val){
+  gigCanceled=val;
+  document.getElementById('cancelNo').className='yn-btn'+(!val?' yes-sel':'');
+  document.getElementById('cancelYes').className='yn-btn'+(val?' no-sel':'');
+  document.getElementById('cancelReasonField').style.display=val?'block':'none';
+  document.getElementById('shiftIntelCard').style.display=val?'none':'block';
+  document.getElementById('payTipsCard').style.display=val?'none':'block';
+}
+function handlePhoto(input){
+  if(input.files&&input.files[0]){
+    selectedPhotoFile=input.files[0];
+    document.getElementById('photoName').textContent='✓ '+selectedPhotoFile.name;
+    document.getElementById('photoStatus').textContent='Photo will upload when you submit.';
+    const reader=new FileReader();
+    reader.onload=e=>{const img=document.getElementById('photoPreview');img.src=e.target.result;img.style.display='block';};
+    reader.readAsDataURL(selectedPhotoFile);
+  }
+}
+async function uploadPhotoIfAny(host,date){
+  if(!selectedPhotoFile||!storage)return '';
+  const safeName=selectedPhotoFile.name.replace(/[^a-zA-Z0-9.\-_]/g,'_');
+  const path='checkout-photos/'+date+'_'+host.replace(/[^a-zA-Z0-9]/g,'_')+'_'+Date.now()+'_'+safeName;
+  const ref=storage.ref().child(path);
+  await ref.put(selectedPhotoFile);
+  return await ref.getDownloadURL();
+}
 async function submitForm(){
   const host=document.getElementById('host').value.trim();
   const date=document.getElementById('date').value;
@@ -219,12 +271,32 @@ async function submitForm(){
   if(!host){showError('Please enter your host name.');return;}
   if(!selectedVenue){showError('Please select or add a venue.');return;}
   if(!date||!time){showError('Please fill in date and check-out time.');return;}
+  if(gigCanceled&&!document.getElementById('cancelReason').value.trim()){showError('Please briefly say what happened.');return;}
   const btn=document.getElementById('submitBtn');
-  btn.disabled=true;btn.textContent='Submitting...';
+  btn.disabled=true;btn.textContent=selectedPhotoFile?'Uploading photo...':'Submitting...';
   document.getElementById('errorMsg').style.display='none';
   try{
-    await fetch(SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({form_type:'checkout',host,venue:selectedVenue,date,checkout_time:time,crowd_size:selectedCrowd||'Not specified',singers:document.getElementById('singers').value||'0',energy:starRating+' / 5',venue_busy:venueBusy||'Not answered',got_paid:gotPaid||'Not answered',tip_scale:document.getElementById('tipScale').value||'Not specified',issues:document.getElementById('issues').value.trim(),notes:document.getElementById('notes').value.trim(),status:currentStatus,photo_url:photoURL})});
-    document.getElementById('successMsg').style.display='block';btn.textContent='Checked Out ✓';
+    let photoURL='';
+    try{photoURL=await uploadPhotoIfAny(host,date);}catch(photoErr){console.warn('Photo upload failed:',photoErr);}
+    btn.textContent='Submitting...';
+    await fetch(SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+      form_type:'checkout',host,venue:selectedVenue,date,checkout_time:time,
+      crowd_size:gigCanceled?'N/A':(selectedCrowd||'Not specified'),
+      singers:gigCanceled?'N/A':(document.getElementById('singers').value||'0'),
+      energy:gigCanceled?'N/A':(starRating+' / 5'),
+      venue_busy:gigCanceled?'N/A':(venueBusy||'Not answered'),
+      got_paid:gigCanceled?'Not answered':(gotPaid||'Not answered'),
+      tip_scale:gigCanceled?'N/A':(document.getElementById('tipScale').value||'Not specified'),
+      issues:document.getElementById('issues').value.trim(),
+      notes:document.getElementById('notes').value.trim(),
+      status:currentStatus,
+      photo_url:photoURL,
+      gig_canceled:gigCanceled?'Yes':'No',
+      cancel_reason:gigCanceled?document.getElementById('cancelReason').value.trim():''
+    })});
+    document.getElementById('successMsg').style.display='block';
+    document.getElementById('successMsg').textContent=gigCanceled?"Got it — marked as canceled. Thanks for letting us know. 🖤":"Shift recorded. Thank you for a beautiful night. 🖤";
+    btn.textContent='Checked Out ✓';
   }catch(e){showError('Submission failed. Please try again.');btn.disabled=false;btn.textContent='Check Out';}
 }
 function showError(msg){const el=document.getElementById('errorMsg');el.textContent=msg;el.style.display='block';}
