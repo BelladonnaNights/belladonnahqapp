@@ -298,6 +298,10 @@ body{background:var(--bg);color:var(--text);font-family:'Josefin Sans',sans-seri
 .sched-status-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
 .sched-status-label{font-size:0.6rem;letter-spacing:0.14em;text-transform:uppercase;padding:0.2rem 0.6rem;border-radius:2px;white-space:nowrap;}
 .gig-event{font-size:0.62rem;padding:2px 6px;margin-bottom:2px;border-radius:2px;cursor:pointer;line-height:1.4;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.bulk-add-row{display:flex;gap:0.5rem;align-items:center;margin-bottom:0.6rem;flex-wrap:wrap;}
+.bulk-add-row .bulk-input{flex:1;min-width:110px;}
+.bulk-repeat-label{display:flex;align-items:center;gap:0.35rem;font-size:0.65rem;color:var(--text3);letter-spacing:0.04em;white-space:nowrap;}
+.bulk-repeat-label input{accent-color:var(--gold);width:14px;height:14px;cursor:pointer;}
 </style>
 </head>
 <body>
@@ -387,7 +391,10 @@ body{background:var(--bg);color:var(--text);font-family:'Josefin Sans',sans-seri
   <div class="subpanel" id="sub-hosts-history">
     <div class="section-header">
       <div class="section-title">Sign-In Log</div>
-      <button class="btn-sm" onclick="refreshSigninLog()">↻ Refresh</button>
+      <div style="display:flex;gap:0.5rem;">
+        <button class="btn-sm" onclick="markAllSigninReviewed()">✓ Mark All Reviewed</button>
+        <button class="btn-sm" onclick="refreshSigninLog()">↻ Refresh</button>
+      </div>
     </div>
     <div class="signin-filters">
       <input type="text" class="roster-search-input" id="signinSearch" placeholder="Search host, venue, or notes..." oninput="renderSigninLog()" style="flex:2;min-width:160px;">
@@ -401,6 +408,7 @@ body{background:var(--bg);color:var(--text);font-family:'Josefin Sans',sans-seri
       <input type="date" class="roster-search-input" id="signinFrom" onchange="renderSigninLog()" style="min-width:130px;flex:none;" title="From date">
       <input type="date" class="roster-search-input" id="signinTo" onchange="renderSigninLog()" style="min-width:130px;flex:none;" title="To date">
     </div>
+    <div style="font-size:0.62rem;color:var(--text3);letter-spacing:0.04em;margin:-0.5rem 0 0.8rem;">Showing the last 90 days by default — set a "From" date above to look further back.</div>
     <div id="signinResults"><div class="empty-state">Loading sign-in log...</div></div>
   </div>
 </div>
@@ -448,7 +456,7 @@ body{background:var(--bg);color:var(--text);font-family:'Josefin Sans',sans-seri
     <button class="subtab" onclick="showSub('schedule','table',this)">Spreadsheet</button>
   </div>
   <div class="subpanel active" id="sub-schedule-cal">
-    <div class="sched-toolbar"><button class="add-entry-btn" onclick="openGigModal()">+ Schedule Gig</button></div>
+    <div class="sched-toolbar"><button class="add-entry-btn" onclick="openGigModal()">+ Schedule Gig</button><button class="btn-sm" onclick="openBulkAddModal()">+ Bulk Add</button></div>
     <div id="gigCalScroll"></div>
   </div>
   <div class="subpanel" id="sub-schedule-table">
@@ -466,6 +474,7 @@ body{background:var(--bg);color:var(--text);font-family:'Josefin Sans',sans-seri
       <input type="date" class="roster-search-input" id="schedFrom" onchange="renderScheduleSpreadsheet()" style="min-width:130px;flex:none;">
       <input type="date" class="roster-search-input" id="schedTo" onchange="renderScheduleSpreadsheet()" style="min-width:130px;flex:none;">
       <button class="btn-sm btn-gold" onclick="openGigModal()">+ Schedule Gig</button>
+      <button class="btn-sm" onclick="openBulkAddModal()">+ Bulk Add</button>
     </div>
     <div id="schedTableWrap"><div class="empty-state">Loading schedule...</div></div>
   </div>
@@ -533,6 +542,16 @@ body{background:var(--bg);color:var(--text);font-family:'Josefin Sans',sans-seri
     <div class="form-group"><label class="form-label">Venue</label><div class="chip-grid" id="gigVenueChips"></div></div>
     <div class="form-group"><label class="form-label">Assigned Host</label><div class="chip-grid" id="gigHostChips"></div></div>
     <div class="form-group"><label class="form-label">Notes (optional)</label><textarea class="form-textarea" id="gigNotes" placeholder="Any details about this gig..." style="min-height:60px;"></textarea></div>
+    <div class="form-group" id="gigRepeatRow">
+      <label style="display:flex;align-items:center;gap:0.5rem;font-size:0.75rem;color:var(--text2);cursor:pointer;">
+        <input type="checkbox" id="gigRepeatCheckbox" style="accent-color:var(--gold);width:16px;height:16px;cursor:pointer;" onchange="document.getElementById('gigRepeatWeeksRow').style.display=this.checked?'flex':'none';">
+        Repeats every week
+      </label>
+    </div>
+    <div class="form-group" id="gigRepeatWeeksRow" style="display:none;align-items:center;gap:0.6rem;">
+      <label class="form-label" style="margin:0;">For</label><input type="number" class="form-input" id="gigRepeatWeeks" value="12" min="2" max="52" style="width:70px;"><span style="font-size:0.75rem;color:var(--text3);">weeks</span>
+    </div>
+    <div class="form-group" id="gigSeriesNote" style="display:none;font-size:0.7rem;color:var(--text3);">This gig is part of a repeating series — you'll be asked whether changes apply to just this one or to future gigs too.</div>
     <div class="form-group" id="gigCancelRow" style="display:none;">
       <label style="display:flex;align-items:center;gap:0.5rem;font-size:0.75rem;color:var(--text2);cursor:pointer;">
         <input type="checkbox" id="gigCancelCheckbox" style="accent-color:var(--rose);width:16px;height:16px;cursor:pointer;">
@@ -543,6 +562,32 @@ body{background:var(--bg);color:var(--text);font-family:'Josefin Sans',sans-seri
       <button class="modal-cancel" id="gigDeleteBtn" style="display:none;border-color:var(--rose);color:var(--rose);" onclick="deleteGig()">Delete</button>
       <button class="modal-cancel" onclick="closeGigModal()">Cancel</button>
       <button class="modal-save" onclick="saveGig()">Save Gig</button>
+    </div>
+  </div>
+</div>
+
+<!-- GIG SCOPE MODAL (Apple Calendar-style: this one vs future) -->
+<div class="modal-bg" id="gigScopeModal">
+  <div class="modal" style="max-width:380px;text-align:center;">
+    <div class="modal-title" id="gigScopeTitle">Repeating Gig</div>
+    <div style="font-size:0.8rem;color:var(--text3);margin-bottom:1.2rem;line-height:1.6;">This gig repeats. Apply this change to just this gig, or to this and all future gigs in the series?</div>
+    <div class="modal-actions" style="justify-content:center;flex-direction:column;gap:0.5rem;">
+      <button class="modal-save" style="width:100%;" onclick="resolveGigScope('one')">Just This Gig</button>
+      <button class="modal-save" style="width:100%;" onclick="resolveGigScope('future')">This &amp; Future Gigs</button>
+      <button class="modal-cancel" style="width:100%;" onclick="closeGigScopeModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- BULK ADD GIGS MODAL -->
+<div class="modal-bg" id="bulkAddModal">
+  <div class="modal" style="max-width:620px;">
+    <div class="modal-title">Bulk Add Gigs</div>
+    <div id="bulkAddRows"></div>
+    <button class="btn-sm" onclick="addBulkRow()" style="margin-top:0.6rem;">+ Add Another Gig</button>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="closeBulkAddModal()">Cancel</button>
+      <button class="modal-save" onclick="saveBulkGigs()">Save All Gigs</button>
     </div>
   </div>
 </div>
@@ -690,15 +735,15 @@ function normVenueName(v){return (v||'').toString().toLowerCase().trim();}
 function formatDateShort(str){if(!str)return '—';const d=new Date(str+'T12:00:00');if(isNaN(d))return str;return d.toLocaleDateString('en-US',{month:'short',day:'numeric'});}
 
 // ── SIGN-IN LOG ──
-let signinReviewed={};
+let signinReviewed={}; // keyed by host+venue+date pair, so check-in and check-out share one reviewed state
 function loadSigninReviewed(){
   if(db){db.collection('hq_data').doc('signin-reviewed').get().then(snap=>{if(snap.exists){signinReviewed=snap.data()||{};renderSigninLog();}}).catch(()=>{});}
 }
-function setReviewed(id,val){
-  signinReviewed[id]=val;
+function setReviewed(key,val){
+  signinReviewed[key]=val;
   if(db){try{db.collection('hq_data').doc('signin-reviewed').set(signinReviewed,{merge:true});}catch(e){}}
 }
-function makeRecordId(type,host,date,time){return (type+'_'+host+'_'+date+'_'+time).toLowerCase().replace(/[^a-z0-9]+/g,'_');}
+function pairKey(host,venue,date){return (host+'|'+venue+'|'+date).toLowerCase().replace(/[^a-z0-9|]+/g,'_');}
 async function refreshSigninLog(){
   const el=document.getElementById('signinResults');
   if(el)el.innerHTML='<div class="empty-state">Loading sign-in log...</div>';
@@ -713,72 +758,90 @@ function populateVenueFilterOptions(selectId){
   sel.innerHTML='<option value="">All Venues</option>'+getVenueNames().map(v=>`<option value="${v}">${v}</option>`).join('');
   sel.value=cur;
 }
-function renderSigninLog(){
-  const el=document.getElementById('signinResults');
-  if(!el)return;
+// Pairs each host's check-in with their check-out for the same venue+date, filtered
+// by the log's search/type/venue/date controls. Defaults to the last 90 days when no
+// explicit date range is set, so old history doesn't clutter the view forever.
+function getFilteredSigninGroups(){
   const search=(document.getElementById('signinSearch').value||'').toLowerCase().trim();
   const typeF=document.getElementById('signinTypeFilter').value;
   const venueF=document.getElementById('signinVenueFilter').value;
   const from=document.getElementById('signinFrom').value;
   const to=document.getElementById('signinTo').value;
+  const defaultFrom=from?null:(()=>{const d=new Date();d.setDate(d.getDate()-90);return d.toISOString().slice(0,10);})();
 
-  let records=[];
+  const groups={};
   checkinHistory.forEach(r=>{
-    records.push({type:'checkin',host:r.host||'',venue:r.venue||'',date:r.date||'',time:r.check_in_time||'',notes:r.notes||'',cancelled:false});
+    const key=pairKey(r.host,r.venue,r.date);
+    if(!groups[key])groups[key]={key,host:r.host||'',venue:r.venue||'',date:r.date||'',checkin:null,checkout:null};
+    groups[key].checkin=r;
   });
   checkoutHistory.forEach(r=>{
-    const cancelled=(r.gig_canceled||'').toLowerCase()==='yes';
-    records.push({type:'checkout',host:r.host||'',venue:r.venue||'',date:r.date||'',time:r.check_out_time||'',
-      notes:cancelled?(r.cancel_reason||''):(r.notes||''),issues:r.issues||'',cancelled,
-      crowd:r.crowd_size||'',energy:r.energy_level||'',paid:r.got_paid||'',tips:r.tip_scale||'',
-      photo:(r.photo_url||'').startsWith('http')?r.photo_url:''});
+    const key=pairKey(r.host,r.venue,r.date);
+    if(!groups[key])groups[key]={key,host:r.host||'',venue:r.venue||'',date:r.date||'',checkin:null,checkout:null};
+    groups[key].checkout=r;
   });
 
-  records=records.filter(r=>{
-    if(typeF==='cancelled'&&!r.cancelled)return false;
-    if(typeF==='checkin'&&r.type!=='checkin')return false;
-    if(typeF==='checkout'&&r.type!=='checkout')return false;
-    if(venueF&&r.venue!==venueF)return false;
-    if(from&&r.date<from)return false;
-    if(to&&r.date>to)return false;
+  let entries=Object.values(groups).map(g=>({...g,cancelled:!!(g.checkout&&(g.checkout.gig_canceled||'').toLowerCase()==='yes')}));
+  entries=entries.filter(g=>{
+    if(typeF==='cancelled'&&!g.cancelled)return false;
+    if(typeF==='checkin'&&!g.checkin)return false;
+    if(typeF==='checkout'&&!g.checkout)return false;
+    if(venueF&&g.venue!==venueF)return false;
+    if(from&&g.date<from)return false;
+    if(to&&g.date>to)return false;
+    if(!from&&defaultFrom&&g.date<defaultFrom)return false;
     if(search){
-      const hay=(r.host+' '+r.venue+' '+(r.notes||'')+' '+(r.issues||'')).toLowerCase();
+      const hay=(g.host+' '+g.venue+' '+(g.checkin?.notes||'')+' '+(g.checkout?.notes||'')+' '+(g.checkout?.issues||'')).toLowerCase();
       if(!hay.includes(search))return false;
     }
     return true;
   });
-  records.sort((a,b)=>(b.date+b.time).localeCompare(a.date+a.time));
-
-  if(!records.length){el.innerHTML='<div class="empty-state">No sign-in records match these filters.</div>';return;}
-
-  el.innerHTML=records.map(r=>{
-    const id=makeRecordId(r.type,r.host,r.date,r.time);
-    const reviewed=!!signinReviewed[id];
-    return `<div class="signin-card type-${r.type}${r.cancelled?' cancelled':''}">
+  entries.sort((a,b)=>b.date.localeCompare(a.date));
+  return entries;
+}
+function renderSigninLog(){
+  const el=document.getElementById('signinResults');
+  if(!el)return;
+  const entries=getFilteredSigninGroups();
+  if(!entries.length){el.innerHTML='<div class="empty-state">No sign-in records match these filters.</div>';return;}
+  el.innerHTML=entries.map(g=>{
+    const reviewed=!!signinReviewed[g.key];
+    const co=g.checkout;
+    return `<div class="signin-card${g.cancelled?' cancelled':''}">
       <div class="signin-top">
         <div>
-          <div class="signin-host">${r.host||'—'}</div>
-          <div class="signin-meta">${r.venue||'—'} · ${formatDateShort(r.date)}${r.time?' · '+r.time:''}</div>
+          <div class="signin-host">${g.host||'—'}</div>
+          <div class="signin-meta">${g.venue||'—'} · ${formatDateShort(g.date)}</div>
         </div>
         <div>
-          <span class="signin-badge ${r.type}">${r.type==='checkin'?'Check-In':'Check-Out'}</span>
-          ${r.cancelled?'<span class="signin-badge cancelled-badge">Cancelled</span>':''}
+          <span class="signin-badge checkin"${g.checkin?'':' style="opacity:0.4"'}>Check-In${g.checkin&&g.checkin.check_in_time?' · '+g.checkin.check_in_time:''}${g.checkin?'':' — none'}</span>
+          <span class="signin-badge checkout"${co?'':' style="opacity:0.4"'}>Check-Out${co&&co.check_out_time?' · '+co.check_out_time:''}${co?'':' — none'}</span>
+          ${g.cancelled?'<span class="signin-badge cancelled-badge">Cancelled</span>':''}
         </div>
       </div>
-      ${r.type==='checkout'&&!r.cancelled?`<div class="signin-detail-row">
-        <span><b>Crowd:</b> ${r.crowd||'—'}</span>
-        <span><b>Energy:</b> ${r.energy||'—'}</span>
-        <span><b>Paid:</b> ${r.paid||'—'}</span>
-        <span><b>Tips:</b> ${r.tips||'—'}</span>
+      ${co&&!g.cancelled?`<div class="signin-detail-row">
+        <span><b>Crowd:</b> ${co.crowd_size||'—'}</span>
+        <span><b>Energy:</b> ${co.energy_level||'—'}</span>
+        <span><b>Paid:</b> ${co.got_paid||'—'}</span>
+        <span><b>Tips:</b> ${co.tip_scale||'—'}</span>
       </div>`:''}
-      ${r.notes?`<div class="signin-notes">${r.cancelled?'<b style="color:var(--rose)">Reason: </b>':''}${r.notes}</div>`:''}
-      ${r.photo?`<img src="${r.photo}" class="signin-photo" onclick="window.open('${r.photo}','_blank')" alt="Shift photo">`:(r.type==='checkout'?'<div class="signin-meta" style="margin-top:0.5rem;">📎 No photo attached</div>':'')}
+      ${g.checkin&&g.checkin.notes?`<div class="signin-notes"><b style="color:var(--text3)">Check-in note: </b>${g.checkin.notes}</div>`:''}
+      ${g.cancelled?`<div class="signin-notes"><b style="color:var(--rose)">Reason: </b>${co.cancel_reason||''}</div>`:(co&&co.notes?`<div class="signin-notes"><b style="color:var(--text3)">Check-out note: </b>${co.notes}</div>`:'')}
+      ${co&&(co.photo_url||'').startsWith('http')?`<img src="${co.photo_url}" class="signin-photo" onclick="window.open('${co.photo_url}','_blank')" alt="Shift photo">`:''}
       <label class="signin-reviewed${reviewed?' is-reviewed':''}">
-        <input type="checkbox" ${reviewed?'checked':''} onchange="setReviewed('${id}',this.checked);this.closest('.signin-reviewed').classList.toggle('is-reviewed',this.checked);this.parentElement.lastChild.textContent=this.checked?' Reviewed':' Mark Reviewed';">
+        <input type="checkbox" ${reviewed?'checked':''} onchange="setReviewed('${g.key}',this.checked);this.closest('.signin-reviewed').classList.toggle('is-reviewed',this.checked);this.nextElementSibling.textContent=this.checked?'Reviewed':'Mark Reviewed';">
         <span>${reviewed?'Reviewed':'Mark Reviewed'}</span>
       </label>
     </div>`;
   }).join('');
+}
+function markAllSigninReviewed(){
+  const entries=getFilteredSigninGroups();
+  if(!entries.length)return;
+  if(!confirm('Mark all '+entries.length+' currently-shown sign-in/out records as reviewed?'))return;
+  entries.forEach(g=>{signinReviewed[g.key]=true;});
+  if(db){try{db.collection('hq_data').doc('signin-reviewed').set(signinReviewed,{merge:true});}catch(e){}}
+  renderSigninLog();
 }
 
 // ── GIG SCHEDULE ──
@@ -791,9 +854,24 @@ function loadGigSchedule(){
 function saveGigScheduleLocal(){LS.set('gig-schedule',JSON.stringify(gigSchedule));}
 function persistGig(entry,isDelete){
   saveGigScheduleLocal();
-  if(db){try{if(isDelete)db.collection('gig_schedule').doc(entry.id).delete();else db.collection('gig_schedule').doc(entry.id).set({date:entry.date,time:entry.time||'',venue:entry.venue,host:entry.host||'Unassigned',status:entry.status||'scheduled',notes:entry.notes||''});}catch(e){}}
+  if(db){try{if(isDelete)db.collection('gig_schedule').doc(entry.id).delete();else db.collection('gig_schedule').doc(entry.id).set({date:entry.date,time:entry.time||'',venue:entry.venue,host:entry.host||'Unassigned',status:entry.status||'scheduled',notes:entry.notes||'',seriesId:entry.seriesId||null});}catch(e){}}
   // mirror to the Sheet so the Apps Script no-show trigger can read it
   try{fetch(SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({form_type:'schedule',action:isDelete?'delete':'upsert',id:entry.id,date:entry.date,time:entry.time||'',venue:entry.venue,host:entry.host||'Unassigned',status:entry.status||'scheduled',notes:entry.notes||''})});}catch(e){}
+}
+// Creates one gig, or (if repeatWeekly) a whole series of weekly occurrences sharing a seriesId.
+function createGigEntry(base,repeatWeekly,weeks){
+  weeks=weeks||12;
+  const seriesId=repeatWeekly?('series_'+Date.now()+'_'+Math.random().toString(36).slice(2,7)):null;
+  const count=repeatWeekly?weeks:1;
+  const baseDate=new Date(base.date+'T12:00:00');
+  for(let w=0;w<count;w++){
+    const d=new Date(baseDate);
+    d.setDate(d.getDate()+w*7);
+    const dateStr=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+    const entry={id:Date.now().toString()+'_'+w+'_'+Math.random().toString(36).slice(2,6),date:dateStr,time:base.time||'',venue:base.venue,host:base.host||'Unassigned',status:'scheduled',notes:base.notes||'',seriesId};
+    gigSchedule.push(entry);
+    persistGig(entry,false);
+  }
 }
 function gigSignedIn(entry){return checkinHistory.some(r=>normVenueName(r.venue)===normVenueName(entry.venue)&&r.date===entry.date);}
 function gigSignedInBy(entry){return [...new Set(checkinHistory.filter(r=>normVenueName(r.venue)===normVenueName(entry.venue)&&r.date===entry.date).map(r=>r.host))].join(', ');}
@@ -840,7 +918,7 @@ function renderScheduleSpreadsheet(){
       const mismatch=signedBy&&signedBy.toLowerCase()!==(g.host||'').toLowerCase();
       return `<tr>
         <td><span class="sched-status-dot" style="background:${st.color};display:inline-block"></span></td>
-        <td>${formatDateShort(g.date)}</td>
+        <td>${formatDateShort(g.date)}${g.seriesId?' <span title="Repeating weekly" style="color:var(--text3)">↻</span>':''}</td>
         <td>${g.time||'—'}</td>
         <td>${g.venue}</td>
         <td>${g.host||'Unassigned'}${mismatch?` <span style="color:var(--text3);font-size:0.7rem">(signed in: ${signedBy})</span>`:''}</td>
@@ -861,16 +939,15 @@ function renderGigCalendar(){
     let yr=startYear,mo=startMonth+m;
     if(mo>11){mo-=12;yr++;}
     const isCurrentMonth=(mo===today.getMonth()&&yr===today.getFullYear());
-    const rawFirst=new Date(yr,mo,1).getDay();
-    const firstDay=(rawFirst+6)%7;
+    const firstDay=new Date(yr,mo,1).getDay();
     const daysInMonth=new Date(yr,mo+1,0).getDate();
     const daysInPrev=new Date(yr,mo,0).getDate();
     const totalCells=Math.ceil((firstDay+daysInMonth)/7)*7;
     html+=`<div class="cal-month-block">
       <div class="cal-month-heading${isCurrentMonth?' is-today-month':''}">${MONTHS[mo]} ${yr}</div>
       <div class="cal-grid-header">
-        <div class="cal-day-name">Mon</div><div class="cal-day-name">Tue</div><div class="cal-day-name">Wed</div>
-        <div class="cal-day-name">Thu</div><div class="cal-day-name">Fri</div><div class="cal-day-name">Sat</div><div class="cal-day-name" style="color:#4aaa5a">Sun</div>
+        <div class="cal-day-name" style="color:#4aaa5a">Sun</div><div class="cal-day-name">Mon</div><div class="cal-day-name">Tue</div>
+        <div class="cal-day-name">Wed</div><div class="cal-day-name">Thu</div><div class="cal-day-name">Fri</div><div class="cal-day-name">Sat</div>
       </div>
       <div class="cal-grid">`;
     for(let i=0;i<totalCells;i++){
@@ -884,7 +961,7 @@ function renderGigCalendar(){
       let entriesHtml='';
       dayGigs.forEach(g=>{
         const st=getGigStatus(g);
-        entriesHtml+=`<div class="gig-event" style="background:${st.color}22;border:1px solid ${st.color};color:${st.color}" onclick="event.stopPropagation();openGigModal('${g.id}')">${g.venue}</div>`;
+        entriesHtml+=`<div class="gig-event" style="background:${st.color}22;border:1px solid ${st.color};color:${st.color}" onclick="event.stopPropagation();openGigModal('${g.id}')">${g.seriesId?'↻ ':''}${g.venue}</div>`;
       });
       html+=`<div class="cal-cell${otherMonth?' other-month':''}${isToday?' today':''}" onclick="openGigModalOnDate('${dateStr}')"><div class="cal-date-num">${day}</div><div class="cal-entries">${entriesHtml}</div></div>`;
     }
@@ -915,6 +992,12 @@ function openGigModal(id){
   document.getElementById('gigCancelRow').style.display=id?'block':'none';
   document.getElementById('gigCancelCheckbox').checked=!!(g&&g.status==='cancelled');
   document.getElementById('gigDeleteBtn').style.display=id?'inline-block':'none';
+  // "Repeats weekly" only makes sense when creating a brand new gig
+  document.getElementById('gigRepeatRow').style.display=id?'none':'block';
+  document.getElementById('gigRepeatCheckbox').checked=false;
+  document.getElementById('gigRepeatWeeksRow').style.display='none';
+  document.getElementById('gigRepeatWeeks').value=12;
+  document.getElementById('gigSeriesNote').style.display=(id&&g&&g.seriesId)?'block':'none';
   pendingGigDate=null;
   document.getElementById('gigModal').classList.add('open');
 }
@@ -928,24 +1011,126 @@ function saveGig(){
   if(!date||!selectedGigVenue){alert('Please set a date and venue.');return;}
   if(editingGigId){
     const g=gigSchedule.find(x=>x.id===editingGigId);
-    if(g){g.date=date;g.time=time;g.venue=selectedGigVenue;g.host=selectedGigHost;g.notes=notes;g.status=cancelled?'cancelled':'scheduled';}
+    if(!g)return;
+    const changes={date,time,venue:selectedGigVenue,host:selectedGigHost,notes,status:cancelled?'cancelled':'scheduled'};
+    const seriesMates=g.seriesId?gigSchedule.filter(x=>x.seriesId===g.seriesId):[];
+    if(g.seriesId&&seriesMates.length>1){
+      pendingGigScopeAction={type:'edit',gig:g,changes,origDate:g.date};
+      closeGigModal();
+      openGigScopeModal('Edit Repeating Gig');
+      return;
+    }
+    Object.assign(g,changes);
     persistGig(g,false);
+    renderScheduleAll();closeGigModal();
   }else{
-    const id=Date.now().toString();
-    const entry={id,date,time,venue:selectedGigVenue,host:selectedGigHost,status:'scheduled',notes};
-    gigSchedule.push(entry);
-    persistGig(entry,false);
+    const repeatWeekly=document.getElementById('gigRepeatCheckbox').checked;
+    const weeks=parseInt(document.getElementById('gigRepeatWeeks').value)||12;
+    createGigEntry({date,time,venue:selectedGigVenue,host:selectedGigHost,notes},repeatWeekly,weeks);
+    renderScheduleAll();closeGigModal();
   }
-  renderScheduleAll();closeGigModal();
 }
 function deleteGig(){
   if(!editingGigId)return;
-  if(!confirm('Delete this scheduled gig?'))return;
   const g=gigSchedule.find(x=>x.id===editingGigId);
+  if(!g)return;
+  const seriesMates=g.seriesId?gigSchedule.filter(x=>x.seriesId===g.seriesId):[];
+  if(g.seriesId&&seriesMates.length>1){
+    pendingGigScopeAction={type:'delete',gig:g};
+    closeGigModal();
+    openGigScopeModal('Delete Repeating Gig');
+    return;
+  }
+  if(!confirm('Delete this scheduled gig?'))return;
   gigSchedule=gigSchedule.filter(x=>x.id!==editingGigId);
   saveGigScheduleLocal();
-  if(g)persistGig(g,true);
+  persistGig(g,true);
   renderScheduleAll();closeGigModal();
+}
+
+// ── APPLE-CALENDAR-STYLE "THIS ONE / FUTURE" SCOPE PROMPT ──
+let pendingGigScopeAction=null;
+function openGigScopeModal(title){
+  document.getElementById('gigScopeTitle').textContent=title;
+  document.getElementById('gigScopeModal').classList.add('open');
+}
+function closeGigScopeModal(){document.getElementById('gigScopeModal').classList.remove('open');pendingGigScopeAction=null;}
+function resolveGigScope(scope){
+  const action=pendingGigScopeAction;
+  if(!action){closeGigScopeModal();return;}
+  const g=action.gig;
+  if(action.type==='edit'){
+    if(scope==='one'){
+      Object.assign(g,action.changes);
+      g.seriesId=null; // detach — future series-wide edits won't touch it anymore
+      persistGig(g,false);
+    }else{
+      // This occurrence can move its own date; every other future occurrence in the
+      // series keeps its own date and only picks up the non-date fields.
+      g.date=action.changes.date;g.time=action.changes.time;g.venue=action.changes.venue;g.host=action.changes.host;g.notes=action.changes.notes;g.status=action.changes.status;
+      persistGig(g,false);
+      const mates=gigSchedule.filter(x=>x.seriesId===g.seriesId&&x.id!==g.id&&x.date>=action.origDate);
+      mates.forEach(m=>{
+        m.time=action.changes.time;m.venue=action.changes.venue;m.host=action.changes.host;m.notes=action.changes.notes;m.status=action.changes.status;
+        persistGig(m,false);
+      });
+    }
+  }else if(action.type==='delete'){
+    if(scope==='one'){
+      gigSchedule=gigSchedule.filter(x=>x.id!==g.id);
+      saveGigScheduleLocal();
+      persistGig(g,true);
+    }else{
+      const mates=gigSchedule.filter(x=>x.seriesId===g.seriesId&&x.date>=g.date);
+      mates.forEach(m=>persistGig(m,true));
+      gigSchedule=gigSchedule.filter(x=>!(x.seriesId===g.seriesId&&x.date>=g.date));
+      saveGigScheduleLocal();
+    }
+  }
+  renderScheduleAll();
+  closeGigScopeModal();
+}
+
+// ── BULK ADD GIGS ──
+let bulkRowCount=0;
+function openBulkAddModal(){
+  document.getElementById('bulkAddRows').innerHTML='';
+  bulkRowCount=0;
+  addBulkRow();addBulkRow();addBulkRow();
+  document.getElementById('bulkAddModal').classList.add('open');
+}
+function closeBulkAddModal(){document.getElementById('bulkAddModal').classList.remove('open');}
+function addBulkRow(){
+  const id=bulkRowCount++;
+  const venueOpts=getVenueNames().map(v=>`<option value="${v}">${v}</option>`).join('');
+  const hostOpts=['Unassigned',...roster.map(h=>h.name)].map(n=>`<option value="${n}">${n}</option>`).join('');
+  const row=document.createElement('div');
+  row.className='bulk-add-row';
+  row.id='bulkRow'+id;
+  row.innerHTML=`
+    <input type="date" class="form-input bulk-input" id="bulkDate${id}">
+    <select class="form-input bulk-input" id="bulkVenue${id}"><option value="">Venue...</option>${venueOpts}</select>
+    <select class="form-input bulk-input" id="bulkHost${id}">${hostOpts}</select>
+    <label class="bulk-repeat-label"><input type="checkbox" id="bulkRepeat${id}"> Weekly</label>
+    <button class="action-btn delete" onclick="document.getElementById('bulkRow${id}').remove()">✕</button>
+  `;
+  document.getElementById('bulkAddRows').appendChild(row);
+}
+function saveBulkGigs(){
+  const rows=document.querySelectorAll('.bulk-add-row');
+  let count=0;
+  rows.forEach(row=>{
+    const id=row.id.replace('bulkRow','');
+    const date=document.getElementById('bulkDate'+id).value;
+    const venue=document.getElementById('bulkVenue'+id).value;
+    const host=document.getElementById('bulkHost'+id).value||'Unassigned';
+    const repeat=document.getElementById('bulkRepeat'+id).checked;
+    if(!date||!venue)return;
+    createGigEntry({date,time:'',venue,host,notes:''},repeat,12);
+    count++;
+  });
+  renderScheduleAll();closeBulkAddModal();
+  if(!count)alert('No complete rows to save — each row needs at least a date and venue.');
 }
 
 // ── RANKS & ADMIN ──
@@ -1168,7 +1353,7 @@ function saveRoster(){
   if(editRosterId){const h=roster.find(x=>x.id===editRosterId);if(h){h.name=name;h.skills=skills;h.venues=vs;h.rankId=rankId;}}
   else roster.push({id:Date.now().toString(),name,skills,venues:vs,rankId});
   persist('host-roster',roster,'rosterSave');
-  renderRoster();filterRoster();populateHistoryDropdown();closeRosterModal();
+  renderRoster();filterRoster();closeRosterModal();
 }
 function deleteHost(id){if(!confirm('Remove this host?'))return;roster=roster.filter(h=>h.id!==id);persist('host-roster',roster,'rosterSave');renderRoster();}
 
@@ -1280,6 +1465,212 @@ async function loadStats(){
     <div class="insight-card"><div class="insight-title">Top Venues</div>${topV.map(([n,c])=>`<div class="insight-row"><span class="insight-name">${n}</span><span class="insight-val">${c}</span></div>`).join('')}</div>
     <div class="insight-card"><div class="insight-title">Busiest Nights</div>${topD.length?topD.map(([d,c])=>`<div class="insight-row"><span class="insight-name">${d}</span><span class="insight-val">${c} shifts</span></div>`).join(''):'<div class="insight-row"><span class="insight-name">Not enough data</span></div>'}</div>
     <div class="insight-card"><div class="insight-title">Pay &amp; Tips</div><div class="insight-row"><span class="insight-name">Pay rate</span><span class="insight-val">${Math.round(paid/checkoutData.length*100)}%</span></div><div class="insight-row"><span class="insight-name">Total shifts</span><span class="insight-val">${checkoutData.length}</span></div><div class="insight-row"><span class="insight-name">Paid on time</span><span class="insight-val">${paid}</span></div></div>`;
+}
+
+// ── GROWTH TRACKER ──
+// NOTE: this whole feature was accidentally deleted during an earlier cleanup pass
+// and had to be rebuilt from the surviving CSS. The categories/icons/colors below
+// are recovered, but the actual question wording is new — Bella's original
+// questions were not recoverable. Any answers she'd already given may still be
+// sitting in Firestore under 'tracker-answers' but won't line up with new question
+// text, since the two weren't stored together.
+const TRACKER_ANSWER_OPTIONS=[{label:'Not Yet',val:0},{label:'Started',val:33},{label:'Mostly There',val:66},{label:'Nailed It',val:100}];
+const DEFAULT_TRACKER_CATEGORIES=[
+  {id:"operations",name:"Operations & Event Execution",icon:"🎤",color:"#c9a96e",items:[
+    "Do you have a standard pre-show checklist every host follows?",
+    "Is there a clear backup plan if a host can't make their gig?",
+    "Do hosts have everything they need (equipment, playlists, question banks) without contacting you day-of?",
+    "Is equipment maintenance or replacement handled on a schedule, not just when something breaks?"
+  ]},
+  {id:"venues",name:"Venue Relationships & Sales",icon:"🍺",color:"#b05070",items:[
+    "Do all active venues have a signed, current contract?",
+    "Do you have a repeatable pitch or process for landing new venues?",
+    "Are venue rates reviewed on a regular schedule?",
+    "Do you track which venues are your most profitable?"
+  ]},
+  {id:"talent",name:"Talent & Team",icon:"🌟",color:"#8a7355",items:[
+    "Is there a written onboarding process for new hosts?",
+    "Do hosts get regular feedback or check-ins?",
+    "Is there a clear path for hosts to grow (ranks, pay increases, more venues)?",
+    "Could the business keep running smoothly if you were out for two weeks?"
+  ]},
+  {id:"delegation",name:"Marketing & Audience Building",icon:"📣",color:"#3aa08a",items:[
+    "Do you post consistently on social media, not just when you remember?",
+    "Do you know which channels actually bring you new venues or hosts?",
+    "Is there a plan for growing your following, not just maintaining it?"
+  ]},
+  {id:"booking",name:"Booking & Scheduling",icon:"📅",color:"#c9a96e",items:[
+    "Is your gig schedule centralized somewhere everyone can see it?",
+    "Do you know at a glance if a gig doesn't have a host assigned?",
+    "Is there a system for handling cancellations and rescheduling?"
+  ]},
+  {id:"finance",name:"Finance & Pricing",icon:"💰",color:"#b05070",items:[
+    "Do you know your profit margin per gig, not just revenue?",
+    "Are host payments handled on a consistent, documented schedule?",
+    "Do you track tips and pay data well enough to spot underpaying venues?"
+  ]},
+  {id:"legal",name:"Legal & Contracts",icon:"📋",color:"#8a7355",items:[
+    "Are hosts onboarded as documented independent contractors (W9, signed agreement)?",
+    "Do venue contracts spell out cancellation and payment terms?",
+    "Is there a plan for what happens if a venue or host disputes payment?"
+  ]},
+  {id:"tech",name:"Tech & Tools",icon:"💻",color:"#3aa08a",items:[
+    "Are your check-in/check-out and scheduling tools something hosts actually use without confusion?",
+    "Is your data backed up somewhere beyond one device?",
+    "Could someone else step in and run the tech side if needed?"
+  ]},
+  {id:"brand",name:"Brand & Experience Design",icon:"✨",color:"#c9a96e",items:[
+    "Is the guest experience consistent across venues, or does it depend heavily on which host is there?",
+    "Do you have branded materials hosts can rely on at every gig?",
+    "Is there a distinct Belladonna feel guests would recognize at any venue?"
+  ]},
+  {id:"growth",name:"Growth & Partnerships",icon:"🚀",color:"#b05070",items:[
+    "Do you have a clear picture of how many more venues or hosts you can take on before something breaks?",
+    "Are you tracking competitors or acquisition opportunities proactively?",
+    "Is there a plan for the next 6-12 months, not just reacting as things come up?"
+  ]},
+];
+let trackerCategories=JSON.parse(JSON.stringify(DEFAULT_TRACKER_CATEGORIES));
+let trackerAnswers={};
+let trackerMode='glance';
+let trackerQuizIndex=0;
+
+function loadTrackerAnswers(){
+  try{const t=LS.get('tracker-answers');if(t)trackerAnswers=JSON.parse(t);}catch(e){}
+  try{const c=LS.get('tracker-categories');if(c)trackerCategories=JSON.parse(c);}catch(e){}
+  if(db){
+    db.collection('hq_data').doc('tracker-answers').get().then(snap=>{if(snap.exists){try{trackerAnswers=JSON.parse(snap.data().value);if(document.getElementById('panel-tracker').classList.contains('active'))renderTracker();}catch(e){}}}).catch(()=>{});
+    db.collection('hq_data').doc('tracker-categories').get().then(snap=>{if(snap.exists){try{trackerCategories=JSON.parse(snap.data().value);if(document.getElementById('panel-tracker').classList.contains('active'))renderTracker();}catch(e){}}}).catch(()=>{});
+  }
+}
+function saveTrackerAnswers(){persist('tracker-answers',trackerAnswers,'trackerSaveDot');}
+function trackerKey(catId,idx){return catId+'::'+idx;}
+function trackerCatScore(cat){
+  if(!cat.items.length)return 0;
+  const total=cat.items.reduce((sum,_,i)=>sum+(trackerAnswers[trackerKey(cat.id,i)]||0),0);
+  return Math.round(total/cat.items.length);
+}
+function trackerOverallScore(){
+  if(!trackerCategories.length)return 0;
+  return Math.round(trackerCategories.reduce((sum,c)=>sum+trackerCatScore(c),0)/trackerCategories.length);
+}
+function trackerHasAnyAnswers(){return Object.keys(trackerAnswers).length>0;}
+function trackerScoreColor(pct){if(pct>=75)return 'var(--live)';if(pct>=40)return 'var(--gold)';return 'var(--rose)';}
+function trackerOverallMessage(pct){
+  if(pct>=85)return "Belladonna's running like a well-oiled machine. Keep an eye on the few soft spots below.";
+  if(pct>=60)return "Solid foundation — a handful of areas are worth shoring up before you scale further.";
+  if(pct>=30)return "The bones are there. A few focused pushes in the categories below will make a big difference.";
+  return "Early days — pick one category below and start there. No need to fix everything at once.";
+}
+
+function renderTracker(){
+  if(trackerMode==='quiz'){renderTrackerQuiz();return;}
+  if(trackerMode==='results'){renderTrackerResults();return;}
+  renderTrackerGlance();
+}
+function renderTrackerGlance(){
+  const el=document.getElementById('trackerView');
+  if(!trackerHasAnyAnswers()){
+    el.innerHTML=`<div class="tracker-intro">
+      <div class="tracker-intro-icon">🌱</div>
+      <div class="tracker-intro-title">Growth Tracker</div>
+      <div class="tracker-intro-body">A quick self-check across ${trackerCategories.length} areas of the business — where things are solid, and where there's room to grow. Takes a few minutes, and you can retake it or edit answers any time.</div>
+      <button class="tracker-start-btn" onclick="startTrackerQuiz(0)">Begin Assessment</button>
+    </div>`;
+    return;
+  }
+  const overall=trackerOverallScore();
+  el.innerHTML=`
+    <div class="tracker-overall">
+      <div class="tracker-overall-label">Overall <span id="trackerSaveDot">Saved ✓</span></div>
+      <div class="tracker-big-pct" style="color:${trackerScoreColor(overall)}">${overall}%</div>
+      <div class="tracker-overall-msg">${trackerOverallMessage(overall)}</div>
+      <button class="tracker-retake-btn" onclick="startTrackerQuiz(0)">Retake Full Assessment</button>
+    </div>
+    <div class="tracker-glance-grid">
+      ${trackerCategories.map((c,ci)=>{
+        const pct=trackerCatScore(c);
+        return `<div class="tracker-glance-card" style="border-top:3px solid ${c.color}" onclick="startTrackerQuiz(${ci})">
+          <div class="tracker-glance-header"><div class="tracker-glance-name">${c.icon} ${c.name}</div><div class="tracker-glance-pct" style="color:${trackerScoreColor(pct)}">${pct}%</div></div>
+          <div class="tracker-glance-items">${c.items.slice(0,3).map((q,qi)=>{
+            const ans=trackerAnswers[trackerKey(c.id,qi)];
+            const opt=TRACKER_ANSWER_OPTIONS.find(o=>o.val===ans);
+            return `<div class="tracker-glance-item">${opt?'●':'○'} ${opt?opt.label:'Not answered'}</div>`;
+          }).join('')}${c.items.length>3?`<div class="tracker-glance-item">+ ${c.items.length-3} more</div>`:''}</div>
+        </div>`;
+      }).join('')}
+    </div>`;
+}
+function startTrackerQuiz(catIndex){trackerMode='quiz';trackerQuizIndex=catIndex;renderTracker();}
+function renderTrackerQuiz(){
+  const el=document.getElementById('trackerView');
+  const cat=trackerCategories[trackerQuizIndex];
+  if(!cat){trackerMode='results';renderTracker();return;}
+  const pct=trackerCatScore(cat);
+  el.innerHTML=`<div class="tracker-quiz-card" style="border-top-color:${cat.color}">
+    <div class="tracker-cat-header"><span class="tracker-cat-icon">${cat.icon}</span><span class="tracker-cat-name">${cat.name}</span></div>
+    <div class="tracker-cat-sub">Category ${trackerQuizIndex+1} of ${trackerCategories.length}</div>
+    <div class="tracker-meter-wrap"><div class="tracker-meter-fill" style="width:${pct}%;background:${cat.color}"></div></div>
+    <div class="tracker-meter-label"><span>${pct}% complete</span><span id="trackerSaveDot">Saved ✓</span></div>
+    ${cat.items.map((q,qi)=>{
+      const ans=trackerAnswers[trackerKey(cat.id,qi)];
+      return `<div class="tracker-q-row">
+        <div class="tracker-q-label">${q} <button class="tracker-edit-btn" onclick="editTrackerQuestion('${cat.id}',${qi})">✎ edit</button></div>
+        <div class="tracker-btn-group">${TRACKER_ANSWER_OPTIONS.map(o=>`<button class="tracker-ans-btn" style="${ans===o.val?`border-color:${cat.color};color:${cat.color};background:${cat.color}22`:''}" onclick="answerTrackerQuestion('${cat.id}',${qi},${o.val})">${o.label}</button>`).join('')}</div>
+      </div>`;
+    }).join('')}
+    <button class="tracker-add-q-btn" onclick="addTrackerQuestion('${cat.id}')">+ Add a question to this category</button>
+    <div class="tracker-nav">
+      <button class="tracker-nav-prev" ${trackerQuizIndex===0?'disabled':''} onclick="trackerPrev()">‹ Previous</button>
+      <span class="tracker-nav-count">${trackerQuizIndex+1} / ${trackerCategories.length}</span>
+      <button class="tracker-nav-next" onclick="trackerNext()">${trackerQuizIndex===trackerCategories.length-1?'See Results':'Next ›'}</button>
+    </div>
+  </div>
+  <div style="text-align:center;margin-top:1rem;"><button class="btn-sm" onclick="trackerMode='glance';renderTracker();">← Back to overview</button></div>`;
+}
+function answerTrackerQuestion(catId,idx,val){trackerAnswers[trackerKey(catId,idx)]=val;saveTrackerAnswers();renderTrackerQuiz();}
+function editTrackerQuestion(catId,idx){
+  const cat=trackerCategories.find(c=>c.id===catId);if(!cat)return;
+  const newText=prompt('Edit question:',cat.items[idx]);
+  if(newText===null||!newText.trim())return;
+  cat.items[idx]=newText.trim();
+  persist('tracker-categories',trackerCategories,'trackerSaveDot');
+  renderTrackerQuiz();
+}
+function addTrackerQuestion(catId){
+  const cat=trackerCategories.find(c=>c.id===catId);if(!cat)return;
+  const text=prompt('New question for '+cat.name+':');
+  if(!text||!text.trim())return;
+  cat.items.push(text.trim());
+  persist('tracker-categories',trackerCategories,'trackerSaveDot');
+  renderTrackerQuiz();
+}
+function trackerNext(){
+  if(trackerQuizIndex<trackerCategories.length-1){trackerQuizIndex++;renderTracker();}
+  else{trackerMode='results';renderTracker();}
+}
+function trackerPrev(){if(trackerQuizIndex>0){trackerQuizIndex--;renderTracker();}}
+function renderTrackerResults(){
+  const el=document.getElementById('trackerView');
+  const overall=trackerOverallScore();
+  el.innerHTML=`<div class="tracker-overall">
+      <div class="tracker-overall-label">Overall</div>
+      <div class="tracker-big-pct" style="color:${trackerScoreColor(overall)}">${overall}%</div>
+      <div class="tracker-overall-msg">${trackerOverallMessage(overall)}</div>
+      <button class="tracker-retake-btn" onclick="startTrackerQuiz(0)">Retake Full Assessment</button>
+    </div>
+    <div class="tracker-results-grid">
+      ${trackerCategories.map((c,ci)=>{
+        const pct=trackerCatScore(c);
+        const todo=c.items.map((q,qi)=>({q,ans:trackerAnswers[trackerKey(c.id,qi)]})).filter(x=>x.ans===undefined||x.ans<66);
+        return `<div class="tracker-result-card" style="border-left-color:${c.color}" onclick="startTrackerQuiz(${ci})">
+          <div class="tracker-result-card-header"><div class="tracker-result-cat-name">${c.icon} ${c.name}</div><div class="tracker-result-pct" style="color:${trackerScoreColor(pct)}">${pct}%</div></div>
+          <div class="tracker-result-sub">${c.items.length} question${c.items.length===1?'':'s'}</div>
+          ${todo.length?`<div class="tracker-todo-list">${todo.slice(0,3).map(t=>`<div class="tracker-todo-item">→ ${t.q}</div>`).join('')}${todo.length>3?`<div class="tracker-todo-item">+ ${todo.length-3} more</div>`:''}</div>`:''}
+        </div>`;
+      }).join('')}
+    </div>
+    <div style="text-align:center;margin-top:1rem;"><button class="btn-sm" onclick="trackerMode='glance';renderTracker();">← Back to overview</button></div>`;
 }
 
 // ── INIT ── renders immediately, Firebase syncs in background
