@@ -219,15 +219,8 @@
     <div class="msg msg-error" id="errorMsg"></div>
   </div>
 </div>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
 <script>
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbye_Vv3kGcmPhforDf73jQ-7NIOaLbg4jwTPI9_VTspEIU4nNK_NxTY14KYyQsUDe2GYQ/exec';
-let storage=null;
-try{
-  firebase.initializeApp({apiKey:"AIzaSyCIfAE1JGHsUGzzVH2pz1Vyj5b5OhA0tDQ",authDomain:"belladonna-hq.firebaseapp.com",projectId:"belladonna-hq",storageBucket:"belladonna-hq.firebasestorage.app",messagingSenderId:"1021873183587",appId:"1:1021873183587:web:def283bb7b5ca48e4f9156"});
-  storage=firebase.storage();
-}catch(e){console.warn('Firebase init failed:',e);}
 
 let selectedVenue='',selectedCrowd='',starRating=0,venueBusy='',gotPaid='',currentStatus='Active',selectedPhotoFile=null,gigCanceled=false;
 document.getElementById('date').value=new Date().toISOString().split('T')[0];
@@ -256,13 +249,30 @@ function handlePhoto(input){
     reader.readAsDataURL(selectedPhotoFile);
   }
 }
-async function uploadPhotoIfAny(host,date){
-  if(!selectedPhotoFile||!storage)return '';
-  const safeName=selectedPhotoFile.name.replace(/[^a-zA-Z0-9.\-_]/g,'_');
-  const path='checkout-photos/'+date+'_'+host.replace(/[^a-zA-Z0-9]/g,'_')+'_'+Date.now()+'_'+safeName;
-  const ref=storage.ref().child(path);
-  await ref.put(selectedPhotoFile);
-  return await ref.getDownloadURL();
+// Resizes/compresses the photo in-browser and returns plain base64 (no data: prefix),
+// so it can ride along in the same JSON POST that already goes to Apps Script —
+// which then saves it to Google Drive. Keeps the upload small and fast on venue wifi.
+function compressPhoto(file,maxDim=1600,quality=0.75){
+  return new Promise((resolve,reject)=>{
+    const reader=new FileReader();
+    reader.onload=e=>{
+      const img=new Image();
+      img.onload=()=>{
+        let w=img.width,h=img.height;
+        if(w>maxDim||h>maxDim){
+          if(w>h){h=Math.round(h*maxDim/w);w=maxDim;}else{w=Math.round(w*maxDim/h);h=maxDim;}
+        }
+        const canvas=document.createElement('canvas');
+        canvas.width=w;canvas.height=h;
+        canvas.getContext('2d').drawImage(img,0,0,w,h);
+        resolve(canvas.toDataURL('image/jpeg',quality).split(',')[1]);
+      };
+      img.onerror=reject;
+      img.src=e.target.result;
+    };
+    reader.onerror=reject;
+    reader.readAsDataURL(file);
+  });
 }
 async function submitForm(){
   const host=document.getElementById('host').value.trim();
@@ -273,11 +283,13 @@ async function submitForm(){
   if(!date||!time){showError('Please fill in date and check-out time.');return;}
   if(gigCanceled&&!document.getElementById('cancelReason').value.trim()){showError('Please briefly say what happened.');return;}
   const btn=document.getElementById('submitBtn');
-  btn.disabled=true;btn.textContent=selectedPhotoFile?'Uploading photo...':'Submitting...';
+  btn.disabled=true;btn.textContent=selectedPhotoFile?'Preparing photo...':'Submitting...';
   document.getElementById('errorMsg').style.display='none';
   try{
-    let photoURL='';
-    try{photoURL=await uploadPhotoIfAny(host,date);}catch(photoErr){console.warn('Photo upload failed:',photoErr);}
+    let photoData='';
+    if(selectedPhotoFile){
+      try{photoData=await compressPhoto(selectedPhotoFile);}catch(photoErr){console.warn('Photo compression failed:',photoErr);}
+    }
     btn.textContent='Submitting...';
     await fetch(SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({
       form_type:'checkout',host,venue:selectedVenue,date,checkout_time:time,
@@ -290,7 +302,8 @@ async function submitForm(){
       issues:document.getElementById('issues').value.trim(),
       notes:document.getElementById('notes').value.trim(),
       status:currentStatus,
-      photo_url:photoURL,
+      photo_data:photoData,
+      photo_name:selectedPhotoFile?selectedPhotoFile.name:'',
       gig_canceled:gigCanceled?'Yes':'No',
       cancel_reason:gigCanceled?document.getElementById('cancelReason').value.trim():''
     })});
