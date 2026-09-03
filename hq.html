@@ -332,6 +332,35 @@ body{background:var(--bg);color:var(--text);font-family:'Josefin Sans',sans-seri
 .tracker-add-q-btn:hover{border-color:var(--border2);color:var(--text2);}
 #trackerSaveDot{font-size:0.6rem;color:var(--teal);letter-spacing:0.08em;opacity:0;transition:opacity 0.3s;}
 #trackerSaveDot.show{opacity:1;}
+
+/* SIGN-IN LOG */
+.signin-filters{display:flex;gap:0.5rem;margin-bottom:1rem;flex-wrap:wrap;}
+.signin-card{background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--purple2);padding:1rem 1.2rem;margin-bottom:0.6rem;}
+.signin-card.type-checkout{border-left-color:var(--teal);}
+.signin-card.cancelled{border-left-color:var(--rose);}
+.signin-top{display:flex;align-items:flex-start;justify-content:space-between;gap:0.75rem;margin-bottom:0.5rem;flex-wrap:wrap;}
+.signin-host{font-family:'Cormorant Garamond',serif;font-size:1.25rem;color:var(--gold);letter-spacing:0.06em;}
+.signin-meta{font-size:0.65rem;color:var(--text3);letter-spacing:0.08em;margin-top:0.15rem;}
+.signin-badge{font-size:0.58rem;letter-spacing:0.14em;text-transform:uppercase;padding:0.2rem 0.6rem;border-radius:2px;white-space:nowrap;}
+.signin-badge.checkin{background:var(--purple-dim);color:var(--purple-btn);border:1px solid var(--border);}
+.signin-badge.checkout{background:rgba(58,160,138,0.1);color:var(--teal2);border:1px solid rgba(58,160,138,0.25);}
+.signin-badge.cancelled-badge{background:rgba(160,56,88,0.12);color:var(--rose);border:1px solid rgba(160,56,88,0.3);margin-left:0.4rem;}
+.signin-detail-row{display:flex;flex-wrap:wrap;gap:0.4rem 1rem;font-size:0.72rem;color:var(--text2);margin-bottom:0.5rem;}
+.signin-detail-row b{color:var(--text3);font-weight:400;}
+.signin-notes{font-size:0.78rem;color:var(--text2);line-height:1.6;background:var(--surface2);padding:0.6rem 0.75rem;margin-top:0.4rem;border-left:2px solid var(--border);}
+.signin-photo{margin-top:0.6rem;max-width:160px;border-radius:6px;display:block;cursor:pointer;border:1px solid var(--border);}
+.signin-reviewed{display:flex;align-items:center;gap:0.4rem;font-size:0.65rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--text3);margin-top:0.6rem;cursor:pointer;user-select:none;}
+.signin-reviewed input{accent-color:var(--gold);width:14px;height:14px;cursor:pointer;}
+.signin-reviewed.is-reviewed{color:var(--teal2);}
+
+/* SCHEDULE */
+.sched-toolbar{display:flex;gap:0.5rem;margin-bottom:1rem;flex-wrap:wrap;align-items:center;}
+.sched-legend{display:flex;gap:1rem;flex-wrap:wrap;font-size:0.62rem;letter-spacing:0.1em;color:var(--text3);margin:1.2rem 0 0.5rem;text-transform:uppercase;}
+.sched-legend-item{display:flex;align-items:center;gap:6px;}
+.sched-legend-dot{width:9px;height:9px;border-radius:50%;}
+.sched-status-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+.sched-status-label{font-size:0.6rem;letter-spacing:0.14em;text-transform:uppercase;padding:0.2rem 0.6rem;border-radius:2px;white-space:nowrap;}
+.gig-event{font-size:0.62rem;padding:2px 6px;margin-bottom:2px;border-radius:2px;cursor:pointer;line-height:1.4;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 </style>
 </head>
 <body>
@@ -375,6 +404,7 @@ body{background:var(--bg);color:var(--text);font-family:'Josefin Sans',sans-seri
     <button class="tab active" onclick="showTab('hosts',this)">Hosts</button>
     <button class="tab" onclick="showTab('games',this)">Game Library</button>
     <button class="tab" onclick="showTab('venues',this)">Venues</button>
+    <button class="tab" onclick="showTab('schedule',this)">Schedule</button>
     <button class="tab" onclick="showTab('stats',this)">Stats</button>
     <button class="tab" onclick="showTab('calendar',this)">Calendar</button>
     <button class="tab" onclick="showTab('tracker',this)">Growth Tracker</button>
@@ -387,7 +417,7 @@ body{background:var(--bg);color:var(--text);font-family:'Josefin Sans',sans-seri
   <div class="subtabs">
     <button class="subtab active" onclick="showSub('hosts','live',this)">Live Feed</button>
     <button class="subtab" onclick="showSub('hosts','roster',this)">Host Roster</button>
-    <button class="subtab" onclick="showSub('hosts','history',this)">Shift History</button>
+    <button class="subtab" onclick="showSub('hosts','history',this)">Sign-In Log</button>
   </div>
   <div class="subpanel active" id="sub-hosts-live">
     <div id="homeError" class="error-msg"></div>
@@ -420,21 +450,23 @@ body{background:var(--bg);color:var(--text);font-family:'Josefin Sans',sans-seri
     <div class="roster-grid" id="rosterList"></div>
   </div>
   <div class="subpanel" id="sub-hosts-history">
-    <div class="section-title" style="margin-bottom:1rem;">Shift History</div>
-    <div class="history-search">
-      <input type="text" class="history-input" id="historySearch" placeholder="Type host name...">
-      <select class="history-select" id="historyPick"><option value="">— or pick a host —</option></select>
-      <button class="history-btn" onclick="loadHistory()">Search</button>
+    <div class="section-header">
+      <div class="section-title">Sign-In Log</div>
+      <button class="btn-sm" onclick="refreshSigninLog()">↻ Refresh</button>
     </div>
-    <div id="historySelBar" style="display:none;display:none;align-items:center;gap:0.75rem;margin-bottom:0.75rem;padding:0.5rem 0.75rem;background:var(--surface2);border:1px solid var(--border);border-radius:8px;font-size:0.81rem;color:var(--text2)">
-      <label style="display:flex;align-items:center;gap:0.4rem;cursor:pointer;color:var(--gold)">
-        <input type="checkbox" id="historySelectAll" onchange="historyToggleAll(this.checked)" style="accent-color:var(--gold);width:15px;height:15px">
-        Select all
-      </label>
-      <span id="historySelCount" style="color:var(--text3)">0 selected</span>
-      <button class="btn-sm" onclick="historyCopySelected()" style="margin-left:auto">Copy selected</button>
+    <div class="signin-filters">
+      <input type="text" class="roster-search-input" id="signinSearch" placeholder="Search host, venue, or notes..." oninput="renderSigninLog()" style="flex:2;min-width:160px;">
+      <select class="roster-filter-select" id="signinTypeFilter" onchange="renderSigninLog()">
+        <option value="">All Entries</option>
+        <option value="checkin">Check-Ins</option>
+        <option value="checkout">Check-Outs</option>
+        <option value="cancelled">Cancelled Gigs</option>
+      </select>
+      <select class="roster-filter-select" id="signinVenueFilter" onchange="renderSigninLog()"><option value="">All Venues</option></select>
+      <input type="date" class="roster-search-input" id="signinFrom" onchange="renderSigninLog()" style="min-width:130px;flex:none;" title="From date">
+      <input type="date" class="roster-search-input" id="signinTo" onchange="renderSigninLog()" style="min-width:130px;flex:none;" title="To date">
     </div>
-    <div id="historyResults"><div class="empty-state">Search by name or pick a host above.</div></div>
+    <div id="signinResults"><div class="empty-state">Loading sign-in log...</div></div>
   </div>
 </div>
 
@@ -481,6 +513,42 @@ body{background:var(--bg);color:var(--text);font-family:'Josefin Sans',sans-seri
       <button class="btn-sm" onclick="loadVenueStats()">↻ Refresh</button>
     </div>
     <div id="venuesList"><div class="empty-state">Loading from checkout data...</div></div>
+  </div>
+</div>
+
+<!-- SCHEDULE -->
+<div class="panel" id="panel-schedule">
+  <div class="subtabs">
+    <button class="subtab active" onclick="showSub('schedule','table',this)">Spreadsheet</button>
+    <button class="subtab" onclick="showSub('schedule','cal',this)">Calendar</button>
+  </div>
+  <div class="subpanel active" id="sub-schedule-table">
+    <div class="sched-toolbar">
+      <input type="text" class="roster-search-input" id="schedSearch" placeholder="Search venue, host, notes..." oninput="renderScheduleSpreadsheet()" style="flex:2;min-width:160px;">
+      <select class="roster-filter-select" id="schedFilterVenue" onchange="renderScheduleSpreadsheet()"><option value="">All Venues</option></select>
+      <select class="roster-filter-select" id="schedFilterHost" onchange="renderScheduleSpreadsheet()"><option value="">All Hosts</option></select>
+      <select class="roster-filter-select" id="schedFilterStatus" onchange="renderScheduleSpreadsheet()">
+        <option value="">All Statuses</option>
+        <option value="signedin">Signed In</option>
+        <option value="upcoming">Upcoming</option>
+        <option value="noshow">No Sign-In</option>
+        <option value="cancelled">Cancelled</option>
+      </select>
+      <input type="date" class="roster-search-input" id="schedFrom" onchange="renderScheduleSpreadsheet()" style="min-width:130px;flex:none;">
+      <input type="date" class="roster-search-input" id="schedTo" onchange="renderScheduleSpreadsheet()" style="min-width:130px;flex:none;">
+      <button class="btn-sm btn-gold" onclick="openGigModal()">+ Schedule Gig</button>
+    </div>
+    <div id="schedTableWrap"><div class="empty-state">Loading schedule...</div></div>
+  </div>
+  <div class="subpanel" id="sub-schedule-cal">
+    <div class="sched-toolbar"><button class="add-entry-btn" onclick="openGigModal()">+ Schedule Gig</button></div>
+    <div id="gigCalScroll"></div>
+  </div>
+  <div class="sched-legend">
+    <div class="sched-legend-item"><div class="sched-legend-dot" style="background:var(--live);"></div>Signed In</div>
+    <div class="sched-legend-item"><div class="sched-legend-dot" style="background:var(--gold);"></div>Upcoming</div>
+    <div class="sched-legend-item"><div class="sched-legend-dot" style="background:var(--rose);"></div>No Sign-In (Past Due)</div>
+    <div class="sched-legend-item"><div class="sched-legend-dot" style="background:var(--text3);"></div>Cancelled</div>
   </div>
 </div>
 
@@ -623,6 +691,29 @@ body{background:var(--bg);color:var(--text);font-family:'Josefin Sans',sans-seri
   </div>
 </div>
 
+<!-- GIG SCHEDULE MODAL -->
+<div class="modal-bg" id="gigModal">
+  <div class="modal">
+    <div class="modal-title" id="gigModalTitle">Schedule Gig</div>
+    <div class="form-group"><label class="form-label">Date</label><input type="date" class="form-input" id="gigDate"></div>
+    <div class="form-group"><label class="form-label">Time (optional)</label><input type="time" class="form-input" id="gigTime"></div>
+    <div class="form-group"><label class="form-label">Venue</label><div class="chip-grid" id="gigVenueChips"></div></div>
+    <div class="form-group"><label class="form-label">Assigned Host</label><div class="chip-grid" id="gigHostChips"></div></div>
+    <div class="form-group"><label class="form-label">Notes (optional)</label><textarea class="form-textarea" id="gigNotes" placeholder="Any details about this gig..." style="min-height:60px;"></textarea></div>
+    <div class="form-group" id="gigCancelRow" style="display:none;">
+      <label style="display:flex;align-items:center;gap:0.5rem;font-size:0.75rem;color:var(--text2);cursor:pointer;">
+        <input type="checkbox" id="gigCancelCheckbox" style="accent-color:var(--rose);width:16px;height:16px;cursor:pointer;">
+        Mark this gig as cancelled
+      </label>
+    </div>
+    <div class="modal-actions">
+      <button class="modal-cancel" id="gigDeleteBtn" style="display:none;border-color:var(--rose);color:var(--rose);" onclick="deleteGig()">Delete</button>
+      <button class="modal-cancel" onclick="closeGigModal()">Cancel</button>
+      <button class="modal-save" onclick="saveGig()">Save Gig</button>
+    </div>
+  </div>
+</div>
+
 <!-- VENUE MODAL -->
 <div class="modal-bg" id="venueModal">
   <div class="modal">
@@ -642,6 +733,7 @@ body{background:var(--bg);color:var(--text);font-family:'Josefin Sans',sans-seri
 <script>
 const SHEETS_KEY="AIzaSyACMjXQCXjVo75hbMXtag_JctR4SoX70So";
 const SHEET_ID="1-MkZoNKkPqjAoJggahKiUsDUgjUhMTkoQ8rUBG4W-w0";
+const SCRIPT_URL="https://script.google.com/macros/s/AKfycbye_Vv3kGcmPhforDf73jQ-7NIOaLbg4jwTPI9_VTspEIU4nNK_NxTY14KYyQsUDe2GYQ/exec";
 let db=null;
 try{
   firebase.initializeApp({apiKey:"AIzaSyCIfAE1JGHsUGzzVH2pz1Vyj5b5OhA0tDQ",authDomain:"belladonna-hq.firebaseapp.com",projectId:"belladonna-hq",storageBucket:"belladonna-hq.firebasestorage.app",messagingSenderId:"1021873183587",appId:"1:1021873183587:web:def283bb7b5ca48e4f9156"});
@@ -711,11 +803,15 @@ function showTab(id,el){
   if(id==='stats')loadStats();
   if(id==='calendar')renderCalendar();
   if(id==='tracker')renderTracker();
+  if(id==='schedule'){populateSchedFilters();Promise.all([fetchCheckinHistory(),fetchCheckoutHistory()]).then(renderScheduleAll);}
 }
 function showSub(tab,id,el){
   document.querySelectorAll(`#panel-${tab} .subpanel`).forEach(p=>p.classList.remove('active'));
   document.querySelectorAll(`#panel-${tab} .subtab`).forEach(t=>t.classList.remove('active'));
   document.getElementById(`sub-${tab}-${id}`).classList.add('active');el.classList.add('active');
+  if(tab==='hosts'&&id==='history')refreshSigninLog();
+  if(tab==='schedule'&&id==='cal')renderGigCalendar();
+  if(tab==='schedule'&&id==='table')renderScheduleSpreadsheet();
 }
 
 // ── SHEETS ──
@@ -752,9 +848,291 @@ async function fetchCheckoutData(){
     const res=await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent('belladonna host check out')}?key=${SHEETS_KEY}`);
     const data=await res.json();
     if(data.error||!data.values||data.values.length<2){checkoutData=[];return;}
-    const headers=data.values[0].map(h=>h.toLowerCase().trim().replace(/\s+/g,'_'));
+    const headers=data.values[0].map(h=>h.toLowerCase().trim().replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,''));
     checkoutData=data.values.slice(1).map(row=>{const obj={};headers.forEach((h,i)=>obj[h]=row[i]||'');return obj;});
   }catch(e){checkoutData=[];}
+}
+
+// ── SIGN-IN LOG + GIG SCHEDULE: clean-normalized reads of the check-in/check-out tabs ──
+let checkinHistory=[],checkoutHistory=[];
+function normalizeSheetHeader(h){return h.toLowerCase().trim().replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'');}
+async function fetchCheckinHistory(){
+  try{
+    const res=await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent('belladonna check-in')}?key=${SHEETS_KEY}`);
+    const data=await res.json();
+    if(data.error||!data.values||data.values.length<2){checkinHistory=[];return;}
+    const headers=data.values[0].map(normalizeSheetHeader);
+    checkinHistory=data.values.slice(1).map(row=>{const obj={};headers.forEach((h,i)=>obj[h]=row[i]||'');return obj;});
+  }catch(e){checkinHistory=[];}
+}
+async function fetchCheckoutHistory(){
+  try{
+    const res=await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent('belladonna host check out')}?key=${SHEETS_KEY}`);
+    const data=await res.json();
+    if(data.error||!data.values||data.values.length<2){checkoutHistory=[];return;}
+    const headers=data.values[0].map(normalizeSheetHeader);
+    checkoutHistory=data.values.slice(1).map(row=>{const obj={};headers.forEach((h,i)=>obj[h]=row[i]||'');return obj;});
+  }catch(e){checkoutHistory=[];}
+}
+function normVenueName(v){return (v||'').toString().toLowerCase().trim();}
+function formatDateShort(str){if(!str)return '—';const d=new Date(str+'T12:00:00');if(isNaN(d))return str;return d.toLocaleDateString('en-US',{month:'short',day:'numeric'});}
+
+// ── SIGN-IN LOG ──
+let signinReviewed={};
+function loadSigninReviewed(){
+  if(db){db.collection('hq_data').doc('signin-reviewed').get().then(snap=>{if(snap.exists){signinReviewed=snap.data()||{};renderSigninLog();}}).catch(()=>{});}
+}
+function setReviewed(id,val){
+  signinReviewed[id]=val;
+  if(db){try{db.collection('hq_data').doc('signin-reviewed').set(signinReviewed,{merge:true});}catch(e){}}
+}
+function makeRecordId(type,host,date,time){return (type+'_'+host+'_'+date+'_'+time).toLowerCase().replace(/[^a-z0-9]+/g,'_');}
+async function refreshSigninLog(){
+  const el=document.getElementById('signinResults');
+  if(el)el.innerHTML='<div class="empty-state">Loading sign-in log...</div>';
+  await Promise.all([fetchCheckinHistory(),fetchCheckoutHistory()]);
+  populateVenueFilterOptions('signinVenueFilter');
+  renderSigninLog();
+}
+function populateVenueFilterOptions(selectId){
+  const sel=document.getElementById(selectId);
+  if(!sel)return;
+  const cur=sel.value;
+  sel.innerHTML='<option value="">All Venues</option>'+getVenueNames().map(v=>`<option value="${v}">${v}</option>`).join('');
+  sel.value=cur;
+}
+function renderSigninLog(){
+  const el=document.getElementById('signinResults');
+  if(!el)return;
+  const search=(document.getElementById('signinSearch').value||'').toLowerCase().trim();
+  const typeF=document.getElementById('signinTypeFilter').value;
+  const venueF=document.getElementById('signinVenueFilter').value;
+  const from=document.getElementById('signinFrom').value;
+  const to=document.getElementById('signinTo').value;
+
+  let records=[];
+  checkinHistory.forEach(r=>{
+    records.push({type:'checkin',host:r.host||'',venue:r.venue||'',date:r.date||'',time:r.check_in_time||'',notes:r.notes||'',cancelled:false});
+  });
+  checkoutHistory.forEach(r=>{
+    const cancelled=(r.gig_canceled||'').toLowerCase()==='yes';
+    records.push({type:'checkout',host:r.host||'',venue:r.venue||'',date:r.date||'',time:r.check_out_time||'',
+      notes:cancelled?(r.cancel_reason||''):(r.notes||''),issues:r.issues||'',cancelled,
+      crowd:r.crowd_size||'',energy:r.energy_level||'',paid:r.got_paid||'',tips:r.tip_scale||'',
+      photo:(r.photo_url||'').startsWith('http')?r.photo_url:''});
+  });
+
+  records=records.filter(r=>{
+    if(typeF==='cancelled'&&!r.cancelled)return false;
+    if(typeF==='checkin'&&r.type!=='checkin')return false;
+    if(typeF==='checkout'&&r.type!=='checkout')return false;
+    if(venueF&&r.venue!==venueF)return false;
+    if(from&&r.date<from)return false;
+    if(to&&r.date>to)return false;
+    if(search){
+      const hay=(r.host+' '+r.venue+' '+(r.notes||'')+' '+(r.issues||'')).toLowerCase();
+      if(!hay.includes(search))return false;
+    }
+    return true;
+  });
+  records.sort((a,b)=>(b.date+b.time).localeCompare(a.date+a.time));
+
+  if(!records.length){el.innerHTML='<div class="empty-state">No sign-in records match these filters.</div>';return;}
+
+  el.innerHTML=records.map(r=>{
+    const id=makeRecordId(r.type,r.host,r.date,r.time);
+    const reviewed=!!signinReviewed[id];
+    return `<div class="signin-card type-${r.type}${r.cancelled?' cancelled':''}">
+      <div class="signin-top">
+        <div>
+          <div class="signin-host">${r.host||'—'}</div>
+          <div class="signin-meta">${r.venue||'—'} · ${formatDateShort(r.date)}${r.time?' · '+r.time:''}</div>
+        </div>
+        <div>
+          <span class="signin-badge ${r.type}">${r.type==='checkin'?'Check-In':'Check-Out'}</span>
+          ${r.cancelled?'<span class="signin-badge cancelled-badge">Cancelled</span>':''}
+        </div>
+      </div>
+      ${r.type==='checkout'&&!r.cancelled?`<div class="signin-detail-row">
+        <span><b>Crowd:</b> ${r.crowd||'—'}</span>
+        <span><b>Energy:</b> ${r.energy||'—'}</span>
+        <span><b>Paid:</b> ${r.paid||'—'}</span>
+        <span><b>Tips:</b> ${r.tips||'—'}</span>
+      </div>`:''}
+      ${r.notes?`<div class="signin-notes">${r.cancelled?'<b style="color:var(--rose)">Reason: </b>':''}${r.notes}</div>`:''}
+      ${r.photo?`<img src="${r.photo}" class="signin-photo" onclick="window.open('${r.photo}','_blank')" alt="Shift photo">`:(r.type==='checkout'?'<div class="signin-meta" style="margin-top:0.5rem;">📎 No photo attached</div>':'')}
+      <label class="signin-reviewed${reviewed?' is-reviewed':''}">
+        <input type="checkbox" ${reviewed?'checked':''} onchange="setReviewed('${id}',this.checked);this.closest('.signin-reviewed').classList.toggle('is-reviewed',this.checked);this.parentElement.lastChild.textContent=this.checked?' Reviewed':' Mark Reviewed';">
+        <span>${reviewed?'Reviewed':'Mark Reviewed'}</span>
+      </label>
+    </div>`;
+  }).join('');
+}
+
+// ── GIG SCHEDULE ──
+let gigSchedule=[],editingGigId=null,pendingGigDate=null,selectedGigVenue='',selectedGigHost='Unassigned';
+function loadGigSchedule(){
+  try{const g=LS.get('gig-schedule');if(g)gigSchedule=JSON.parse(g);}catch(e){}
+  if(db){db.collection('gig_schedule').get().then(snap=>{if(!snap.empty){gigSchedule=snap.docs.map(d=>({id:d.id,...d.data()}));renderScheduleAll();}}).catch(()=>{});}
+}
+function saveGigScheduleLocal(){LS.set('gig-schedule',JSON.stringify(gigSchedule));}
+function persistGig(entry,isDelete){
+  saveGigScheduleLocal();
+  if(db){try{if(isDelete)db.collection('gig_schedule').doc(entry.id).delete();else db.collection('gig_schedule').doc(entry.id).set({date:entry.date,time:entry.time||'',venue:entry.venue,host:entry.host||'Unassigned',status:entry.status||'scheduled',notes:entry.notes||''});}catch(e){}}
+  // mirror to the Sheet so the Apps Script no-show trigger can read it
+  try{fetch(SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({form_type:'schedule',action:isDelete?'delete':'upsert',id:entry.id,date:entry.date,time:entry.time||'',venue:entry.venue,host:entry.host||'Unassigned',status:entry.status||'scheduled',notes:entry.notes||''})});}catch(e){}
+}
+function gigSignedIn(entry){return checkinHistory.some(r=>normVenueName(r.venue)===normVenueName(entry.venue)&&r.date===entry.date);}
+function gigSignedInBy(entry){return [...new Set(checkinHistory.filter(r=>normVenueName(r.venue)===normVenueName(entry.venue)&&r.date===entry.date).map(r=>r.host))].join(', ');}
+function gigCheckoutCancelled(entry){return checkoutHistory.some(r=>normVenueName(r.venue)===normVenueName(entry.venue)&&r.date===entry.date&&(r.gig_canceled||'').toLowerCase()==='yes');}
+function getGigStatus(entry){
+  if(entry.status==='cancelled'||gigCheckoutCancelled(entry))return{key:'cancelled',label:'Cancelled',color:'var(--text3)'};
+  if(gigSignedIn(entry))return{key:'signedin',label:'Signed In',color:'var(--live)'};
+  const gigDT=new Date(entry.date+'T'+(entry.time||'23:59')+':00');
+  const overdue=!isNaN(gigDT.getTime())&&(new Date()-gigDT)>30*60*1000;
+  if(overdue)return{key:'noshow',label:'No Sign-In',color:'var(--rose)'};
+  return{key:'upcoming',label:'Upcoming',color:'var(--gold)'};
+}
+function populateSchedFilters(){
+  populateVenueFilterOptions('schedFilterVenue');
+  const hf=document.getElementById('schedFilterHost');
+  if(hf){const cur=hf.value;hf.innerHTML='<option value="">All Hosts</option>'+roster.map(h=>`<option value="${h.name}">${h.name}</option>`).join('');hf.value=cur;}
+}
+function filteredGigs(){
+  const search=(document.getElementById('schedSearch')?.value||'').toLowerCase().trim();
+  const venue=document.getElementById('schedFilterVenue')?.value||'';
+  const host=document.getElementById('schedFilterHost')?.value||'';
+  const statusF=document.getElementById('schedFilterStatus')?.value||'';
+  const from=document.getElementById('schedFrom')?.value||'';
+  const to=document.getElementById('schedTo')?.value||'';
+  return gigSchedule.filter(g=>{
+    if(venue&&g.venue!==venue)return false;
+    if(host&&g.host!==host)return false;
+    if(from&&g.date<from)return false;
+    if(to&&g.date>to)return false;
+    if(search&&!(g.venue||'').toLowerCase().includes(search)&&!(g.host||'').toLowerCase().includes(search)&&!(g.notes||'').toLowerCase().includes(search))return false;
+    if(statusF&&getGigStatus(g).key!==statusF)return false;
+    return true;
+  }).sort((a,b)=>(a.date+(a.time||'')).localeCompare(b.date+(b.time||'')));
+}
+function renderScheduleSpreadsheet(){
+  const el=document.getElementById('schedTableWrap');
+  if(!el)return;
+  const gigs=filteredGigs();
+  if(!gigs.length){el.innerHTML='<div class="empty-state">No gigs match these filters. Click "+ Schedule Gig" to add one.</div>';return;}
+  el.innerHTML=`<table class="log-table"><thead><tr><th></th><th>Date</th><th>Time</th><th>Venue</th><th>Assigned Host</th><th>Status</th><th></th></tr></thead><tbody>
+    ${gigs.map(g=>{
+      const st=getGigStatus(g);
+      const signedBy=st.key==='signedin'?gigSignedInBy(g):'';
+      const mismatch=signedBy&&signedBy.toLowerCase()!==(g.host||'').toLowerCase();
+      return `<tr>
+        <td><span class="sched-status-dot" style="background:${st.color};display:inline-block"></span></td>
+        <td>${formatDateShort(g.date)}</td>
+        <td>${g.time||'—'}</td>
+        <td>${g.venue}</td>
+        <td>${g.host||'Unassigned'}${mismatch?` <span style="color:var(--text3);font-size:0.7rem">(signed in: ${signedBy})</span>`:''}</td>
+        <td><span class="sched-status-label" style="color:${st.color};border:1px solid ${st.color};background:${st.color}22">${st.label}</span></td>
+        <td><button class="action-btn edit" onclick="openGigModal('${g.id}')">✎</button></td>
+      </tr>`;
+    }).join('')}
+  </tbody></table>`;
+}
+function renderGigCalendar(){
+  const scroll=document.getElementById('gigCalScroll');
+  if(!scroll)return;
+  const today=new Date();
+  const startYear=today.getFullYear();
+  const startMonth=today.getMonth();
+  let html='';
+  for(let m=0;m<3;m++){
+    let yr=startYear,mo=startMonth+m;
+    if(mo>11){mo-=12;yr++;}
+    const isCurrentMonth=(mo===today.getMonth()&&yr===today.getFullYear());
+    const rawFirst=new Date(yr,mo,1).getDay();
+    const firstDay=(rawFirst+6)%7;
+    const daysInMonth=new Date(yr,mo+1,0).getDate();
+    const daysInPrev=new Date(yr,mo,0).getDate();
+    const totalCells=Math.ceil((firstDay+daysInMonth)/7)*7;
+    html+=`<div class="cal-month-block">
+      <div class="cal-month-heading${isCurrentMonth?' is-today-month':''}">${MONTHS[mo]} ${yr}</div>
+      <div class="cal-grid-header">
+        <div class="cal-day-name">Mon</div><div class="cal-day-name">Tue</div><div class="cal-day-name">Wed</div>
+        <div class="cal-day-name">Thu</div><div class="cal-day-name">Fri</div><div class="cal-day-name">Sat</div><div class="cal-day-name" style="color:#4aaa5a">Sun</div>
+      </div>
+      <div class="cal-grid">`;
+    for(let i=0;i<totalCells;i++){
+      let day,otherMonth=false,cellMo=mo,cellYr=yr;
+      if(i<firstDay){day=daysInPrev-firstDay+i+1;otherMonth=true;cellMo=mo-1;if(cellMo<0){cellMo=11;cellYr--;}}
+      else if(i>=firstDay+daysInMonth){day=i-firstDay-daysInMonth+1;otherMonth=true;cellMo=mo+1;if(cellMo>11){cellMo=0;cellYr++;}}
+      else{day=i-firstDay+1;}
+      const dateStr=cellYr+'-'+String(cellMo+1).padStart(2,'0')+'-'+String(day).padStart(2,'0');
+      const isToday=!otherMonth&&day===today.getDate()&&mo===today.getMonth()&&yr===today.getFullYear();
+      const dayGigs=gigSchedule.filter(g=>g.date===dateStr);
+      let entriesHtml='';
+      dayGigs.forEach(g=>{
+        const st=getGigStatus(g);
+        entriesHtml+=`<div class="gig-event" style="background:${st.color}22;border:1px solid ${st.color};color:${st.color}" onclick="event.stopPropagation();openGigModal('${g.id}')">${g.venue}</div>`;
+      });
+      html+=`<div class="cal-cell${otherMonth?' other-month':''}${isToday?' today':''}" onclick="openGigModalOnDate('${dateStr}')"><div class="cal-date-num">${day}</div><div class="cal-entries">${entriesHtml}</div></div>`;
+    }
+    html+=`</div></div>`;
+  }
+  scroll.innerHTML=html;
+}
+function renderScheduleAll(){renderScheduleSpreadsheet();renderGigCalendar();}
+function populateGigVenueChips(sel){
+  selectedGigVenue=sel||'';
+  document.getElementById('gigVenueChips').innerHTML=getVenueNames().map(v=>`<div class="chip${v===selectedGigVenue?' selected-skill':''}" onclick="selectGigVenue(this,'${v}')">${v}</div>`).join('');
+}
+function selectGigVenue(el,v){selectedGigVenue=v;document.querySelectorAll('#gigVenueChips .chip').forEach(c=>c.classList.remove('selected-skill'));el.classList.add('selected-skill');}
+function populateGigHostChips(sel){
+  selectedGigHost=sel||'Unassigned';
+  document.getElementById('gigHostChips').innerHTML=['Unassigned',...roster.map(h=>h.name)].map(n=>`<div class="chip${n===selectedGigHost?' selected-skill':''}" onclick="selectGigHost(this,'${n}')">${n}</div>`).join('');
+}
+function selectGigHost(el,n){selectedGigHost=n;document.querySelectorAll('#gigHostChips .chip').forEach(c=>c.classList.remove('selected-skill'));el.classList.add('selected-skill');}
+function openGigModal(id){
+  editingGigId=id||null;
+  const g=id?gigSchedule.find(x=>x.id===id):null;
+  document.getElementById('gigModalTitle').textContent=id?'Edit Gig':'Schedule Gig';
+  document.getElementById('gigDate').value=g?g.date:(pendingGigDate||'');
+  document.getElementById('gigTime').value=g?g.time||'':'';
+  document.getElementById('gigNotes').value=g?g.notes||'':'';
+  populateGigVenueChips(g?g.venue:null);
+  populateGigHostChips(g?g.host:null);
+  document.getElementById('gigCancelRow').style.display=id?'block':'none';
+  document.getElementById('gigCancelCheckbox').checked=!!(g&&g.status==='cancelled');
+  document.getElementById('gigDeleteBtn').style.display=id?'inline-block':'none';
+  pendingGigDate=null;
+  document.getElementById('gigModal').classList.add('open');
+}
+function openGigModalOnDate(dateStr){pendingGigDate=dateStr;openGigModal(null);}
+function closeGigModal(){document.getElementById('gigModal').classList.remove('open');editingGigId=null;}
+function saveGig(){
+  const date=document.getElementById('gigDate').value;
+  const time=document.getElementById('gigTime').value;
+  const notes=document.getElementById('gigNotes').value.trim();
+  const cancelled=document.getElementById('gigCancelCheckbox').checked;
+  if(!date||!selectedGigVenue){alert('Please set a date and venue.');return;}
+  if(editingGigId){
+    const g=gigSchedule.find(x=>x.id===editingGigId);
+    if(g){g.date=date;g.time=time;g.venue=selectedGigVenue;g.host=selectedGigHost;g.notes=notes;g.status=cancelled?'cancelled':'scheduled';}
+    persistGig(g,false);
+  }else{
+    const id=Date.now().toString();
+    const entry={id,date,time,venue:selectedGigVenue,host:selectedGigHost,status:'scheduled',notes};
+    gigSchedule.push(entry);
+    persistGig(entry,false);
+  }
+  renderScheduleAll();closeGigModal();
+}
+function deleteGig(){
+  if(!editingGigId)return;
+  if(!confirm('Delete this scheduled gig?'))return;
+  const g=gigSchedule.find(x=>x.id===editingGigId);
+  gigSchedule=gigSchedule.filter(x=>x.id!==editingGigId);
+  saveGigScheduleLocal();
+  if(g)persistGig(g,true);
+  renderScheduleAll();closeGigModal();
 }
 
 // ── RANKS & ADMIN ──
@@ -1018,7 +1396,7 @@ async function loadVenueStats(){
     if(!vm[v])vm[v]={shifts:0,crowdTotal:0,crowdCount:0,energyTotal:0,energyCount:0,tips:[],paid:0};
     vm[v].shifts++;
     const m=(r.crowd_size||'').match(/(\d+)/);if(m){vm[v].crowdTotal+=parseInt(m[1]);vm[v].crowdCount++;}
-    const em=(r.energy||'').match(/(\d)/);if(em){vm[v].energyTotal+=parseInt(em[1]);vm[v].energyCount++;}
+    const em=(r.energy_level||'').match(/(\d)/);if(em){vm[v].energyTotal+=parseInt(em[1]);vm[v].energyCount++;}
     const tip=r.tip_scale||'';if(tip&&tip!=='Not specified'&&tip!=='No tips')vm[v].tips.push(tip);
     if((r.got_paid||'').toLowerCase()==='yes')vm[v].paid++;
   });
@@ -1049,72 +1427,6 @@ async function loadStats(){
     <div class="insight-card"><div class="insight-title">Top Venues</div>${topV.map(([n,c])=>`<div class="insight-row"><span class="insight-name">${n}</span><span class="insight-val">${c}</span></div>`).join('')}</div>
     <div class="insight-card"><div class="insight-title">Busiest Nights</div>${topD.length?topD.map(([d,c])=>`<div class="insight-row"><span class="insight-name">${d}</span><span class="insight-val">${c} shifts</span></div>`).join(''):'<div class="insight-row"><span class="insight-name">Not enough data</span></div>'}</div>
     <div class="insight-card"><div class="insight-title">Pay &amp; Tips</div><div class="insight-row"><span class="insight-name">Pay rate</span><span class="insight-val">${Math.round(paid/checkoutData.length*100)}%</span></div><div class="insight-row"><span class="insight-name">Total shifts</span><span class="insight-val">${checkoutData.length}</span></div><div class="insight-row"><span class="insight-name">Paid on time</span><span class="insight-val">${paid}</span></div></div>`;
-}
-
-async function loadHistory(){
-  const typed=document.getElementById('historySearch').value.trim().toLowerCase();
-  const picked=document.getElementById('historyPick').value.toLowerCase();
-  const search=typed||picked;
-  const el=document.getElementById('historyResults');
-  const selBar=document.getElementById('historySelBar');
-  if(!search){el.innerHTML='<div class="empty-state">Enter a name to search.</div>';selBar.style.display='none';return;}
-  await fetchCheckoutData();
-  const allHosts=search==='__all__';
-  const results=checkoutData.filter(r=>allHosts||(r.host||'').toLowerCase().includes(search)).reverse();
-  if(!results.length){el.innerHTML=`<div class="empty-state">No shift history found for "${search}".</div>`;selBar.style.display='none';return;}
-  selBar.style.display='flex';
-  document.getElementById('historySelectAll').checked=false;
-  document.getElementById('historySelCount').textContent='0 selected';
-  el.innerHTML=`<table class="log-table"><thead><tr>
-    <th style="width:28px"></th>
-    <th>Host</th><th>Date</th><th>Venue</th><th>Gig</th><th>Crowd</th><th>Energy</th><th>Paid</th><th>Tips</th>
-  </tr></thead><tbody>${results.map((r,i)=>{
-    const paid=(r.got_paid||'').toLowerCase()==='yes';
-    const gig=r.gig_type||r.gig||r.type||r.game_type||'—';
-    return `<tr>
-      <td><input type="checkbox" class="history-row-check" data-idx="${i}" onchange="historyUpdateSelCount()" style="accent-color:var(--gold);width:14px;height:14px;cursor:pointer"></td>
-      <td style="color:var(--text);font-weight:400">${r.host||'—'}</td>
-      <td>${r.date||'—'}</td>
-      <td>${r.venue||'—'}</td>
-      <td><span style="font-size:0.75rem;letter-spacing:0.08em;text-transform:uppercase;padding:0.15rem 0.5rem;border-radius:20px;background:rgba(58,160,138,0.1);color:var(--teal2);border:1px solid rgba(58,160,138,0.25)">${gig}</span></td>
-      <td>${r.crowd_size||'—'}</td>
-      <td>${r.energy||'—'}</td>
-      <td style="color:${paid?'var(--teal2)':'var(--rose2)'}">${r.got_paid||'—'}</td>
-      <td style="font-size:0.81rem">${r.tip_scale||'—'}</td>
-    </tr>`;
-  }).join('')}</tbody></table>`;
-}
-function historyToggleAll(checked){
-  document.querySelectorAll('.history-row-check').forEach(cb=>cb.checked=checked);
-  historyUpdateSelCount();
-}
-function historyUpdateSelCount(){
-  const all=document.querySelectorAll('.history-row-check');
-  const sel=document.querySelectorAll('.history-row-check:checked');
-  document.getElementById('historySelCount').textContent=sel.length+' selected';
-  document.getElementById('historySelectAll').checked=sel.length===all.length&&all.length>0;
-  document.getElementById('historySelectAll').indeterminate=sel.length>0&&sel.length<all.length;
-}
-function historyCopySelected(){
-  const rows=document.querySelectorAll('.history-row-check:checked');
-  if(!rows.length){return;}
-  const headers=['Host','Date','Venue','Gig','Crowd','Energy','Paid','Tips'];
-  const lines=[headers.join('\t')];
-  rows.forEach(cb=>{
-    const tr=cb.closest('tr');
-    const cells=Array.from(tr.querySelectorAll('td')).slice(1).map(td=>td.textContent.trim());
-    lines.push(cells.join('\t'));
-  });
-  navigator.clipboard.writeText(lines.join('\n')).then(()=>{
-    const btn=document.querySelector('#historySelBar button');
-    const orig=btn.textContent; btn.textContent='Copied!';
-    setTimeout(()=>btn.textContent=orig,1800);
-  });
-}
-function populateHistoryDropdown(){
-  const sel=document.getElementById('historyPick');
-  sel.innerHTML='<option value="">— or pick a host —</option><option value="__all__">★ All hosts</option>';
-  roster.forEach(h=>{const o=document.createElement('option');o.value=h.name.toLowerCase();o.textContent=h.name;sel.appendChild(o);});
 }
 
 // ── GAMES ──
@@ -1983,11 +2295,13 @@ function init(){
   loadTrackerAnswers();
   loadCalEntries();
   loadMonthNotes();
+  loadGigSchedule();
+  loadSigninReviewed();
   renderRoster();
   renderGames();
   renderVenueManage();
-  populateHistoryDropdown();
   populateRosterFilters();
+  populateSchedFilters();
   renderThisWeek();
   renderCalendar();
   fetchSheetData();
