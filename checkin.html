@@ -5,23 +5,23 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Belladonna Check-In</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300&family=Josefin+Sans:wght@200;300;400&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300&family=Josefin+Sans:wght@200;300;400&display=swap');
   * { margin: 0; padding: 0; box-sizing: border-box; }
   :root {
-    --bg: #0a0a0f; --surface: #111118; --surface2: #18181f; --surface3: #1e1e28;
-    --border: rgba(180,140,200,0.15); --border2: rgba(180,140,200,0.3);
-    --gold: #c9a96e; --rose2: #b05070;
-    --text: #e8e0f0; --text2: #a090b8; --text3: #9a8aaa;
+    --bg: #000000; --surface: #0d0d0d; --surface2: #141414; --surface3: #1a1a1a;
+    --border: rgba(180,150,100,0.16); --border2: rgba(180,150,100,0.32);
+    --gold: #c9a96e; --rose2: #b0505a;
+    --text: #f0ece0; --text2: #b0a890; --text3: #8a8272;
     --live: #3aaa6a; --live-dim: rgba(58,170,106,0.15);
-    --purple-btn: #d4c0e8;
+    --purple-btn: #c9a96e;
   }
   body { background: var(--bg); color: var(--text); font-family: 'Josefin Sans', sans-serif; font-weight: 300; min-height: 100vh; padding: 2rem 1rem; letter-spacing: 0.04em; }
   .form-wrap { max-width: 480px; margin: 0 auto; }
   .form-header { text-align: center; margin-bottom: 2.5rem; position: relative; padding-bottom: 1.5rem; }
   .form-header::after { content: ''; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 80px; height: 1px; background: linear-gradient(90deg, transparent, var(--gold), transparent); }
-  .brand { font-family: 'Cormorant Garamond', serif; font-size: 2rem; font-weight: 300; color: var(--gold); letter-spacing: 0.18em; text-transform: uppercase; padding-right: 0.18em; }
+  .brand { font-family: 'Playfair Display', serif; font-size: 2rem; font-weight: 700; color: var(--gold); letter-spacing: 0.14em; text-transform: uppercase; padding-right: 0.14em; }
   .form-subtitle { font-size: 0.65rem; letter-spacing: 0.4em; text-transform: uppercase; color: var(--text3); margin-top: 0.3rem; }
-  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 2rem; position: relative; overflow: hidden; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 2rem; position: relative; overflow: hidden; }
   .card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, var(--gold), var(--rose2), transparent); }
   .field { margin-bottom: 1.4rem; }
   .field-label { font-size: 0.6rem; letter-spacing: 0.25em; text-transform: uppercase; color: var(--text3); display: block; margin-bottom: 0.5rem; }
@@ -41,14 +41,14 @@
   .add-btn:hover { background: rgba(201,169,110,0.25); color: var(--text); }
   .divider { height: 1px; background: var(--border); margin: 1.2rem 0; }
   .required { color: var(--rose2); margin-left: 2px; }
-  .time-now-btn { display: inline-block; margin-top: 0.5rem; font-size: 0.65rem; font-family: 'Josefin Sans', sans-serif; font-weight: 400; letter-spacing: 0.15em; text-transform: uppercase; color: var(--purple-btn); background: rgba(180,140,200,0.12); border: 1px solid rgba(180,140,200,0.35); border-radius: 20px; padding: 0.4rem 1rem; cursor: pointer; transition: all 0.2s; }
-  .time-now-btn:hover { background: rgba(180,140,200,0.22); color: var(--text); }
+  .time-now-btn { display: inline-block; margin-top: 0.5rem; font-size: 0.65rem; font-family: 'Josefin Sans', sans-serif; font-weight: 400; letter-spacing: 0.15em; text-transform: uppercase; color: var(--purple-btn); background: rgba(201,169,110,0.1); border: 1px solid rgba(201,169,110,0.3); border-radius: 6px; padding: 0.4rem 1rem; cursor: pointer; transition: all 0.2s; }
+  .time-now-btn:hover { background: rgba(201,169,110,0.2); color: var(--text); }
   .status-toggle { display: flex; gap: 0.5rem; }
-  .status-btn { flex: 1; padding: 0.8rem; border-radius: 8px; font-size: 0.7rem; font-weight: 400; letter-spacing: 0.2em; text-transform: uppercase; cursor: pointer; font-family: 'Josefin Sans', sans-serif; transition: all 0.2s; border: 1px solid rgba(180,140,200,0.3); background: var(--surface2); color: var(--purple-btn); }
-  .status-btn:hover { color: var(--text); border-color: rgba(180,140,200,0.5); }
+  .status-btn { flex: 1; padding: 0.8rem; border-radius: 8px; font-size: 0.7rem; font-weight: 400; letter-spacing: 0.2em; text-transform: uppercase; cursor: pointer; font-family: 'Josefin Sans', sans-serif; transition: all 0.2s; border: 1px solid var(--border2); background: var(--surface2); color: var(--purple-btn); }
+  .status-btn:hover { color: var(--text); border-color: rgba(201,169,110,0.5); }
   .status-btn.active-sel { border-color: var(--live); color: var(--purple-btn); background: rgba(58,170,106,0.15); }
   .status-btn.inactive-sel { border-color: var(--rose2); color: var(--purple-btn); background: rgba(176,80,112,0.15); }
-  .submit-btn { width: 100%; background: rgba(201,169,110,0.1); border: 1px solid var(--gold); color: var(--purple-btn); padding: 1rem; border-radius: 40px; font-size: 0.72rem; font-weight: 400; letter-spacing: 0.35em; text-transform: uppercase; cursor: pointer; font-family: 'Josefin Sans', sans-serif; transition: all 0.25s; margin-top: 0.5rem; }
+  .submit-btn { width: 100%; background: rgba(201,169,110,0.1); border: 1px solid var(--gold); color: var(--purple-btn); padding: 1rem; border-radius: 8px; font-size: 0.72rem; font-weight: 400; letter-spacing: 0.35em; text-transform: uppercase; cursor: pointer; font-family: 'Josefin Sans', sans-serif; transition: all 0.25s; margin-top: 0.5rem; }
   .submit-btn:hover { background: rgba(201,169,110,0.2); color: var(--text); }
   .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
   .msg { border-radius: 8px; padding: 0.9rem 1rem; font-size: 0.75rem; letter-spacing: 0.05em; margin-top: 1rem; display: none; line-height: 1.5; }
