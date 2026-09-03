@@ -5,25 +5,25 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Belladonna HQ</title>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400&family=Josefin+Sans:wght@200;300;400;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800;900&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400&family=Josefin+Sans:wght@200;300;400;600&display=swap');
 *{margin:0;padding:0;box-sizing:border-box;}
 :root{
-  --bg:#08060a;--surface:#13101a;--surface2:#1a1525;--surface3:#211c2e;--surface4:#2a2438;
-  --border:rgba(155,106,191,0.18);--border2:rgba(155,106,191,0.38);--border-gold:rgba(201,168,76,0.35);
-  --gold:#c9a84c;--gold2:#e8c96a;--gold-dim:rgba(201,168,76,0.12);
-  --purple:#9b6abf;--purple2:#7a4a9a;--purple3:#4a2a6a;--purple-dim:rgba(155,106,191,0.1);
-  --rose:#a03858;--teal:#2a8870;--live:#3a9a5a;--live-dim:rgba(58,154,90,0.12);
-  --text:#f0eaf8;--text2:#b8a8d0;--text3:#6a5a80;--text4:#3a2a50;
-  --purple-btn:#c8b0e8;
+  --bg:#000000;--surface:#0d0d0d;--surface2:#141414;--surface3:#1a1a1a;--surface4:#212121;
+  --border:rgba(180,150,100,0.16);--border2:rgba(180,150,100,0.34);--border-gold:rgba(201,169,110,0.4);
+  --gold:#c9a96e;--gold2:#e0bc7e;--gold-dim:rgba(201,169,110,0.12);
+  --purple:#a68a5c;--purple2:#8f7550;--purple3:#5c4b32;--purple-dim:rgba(180,150,100,0.1);
+  --rose:#b0505a;--teal:#5a8a78;--live:#3a9a5a;--live-dim:rgba(58,154,90,0.12);
+  --text:#f0ece0;--text2:#b8ad98;--text3:#8a8272;--text4:#4a4638;
+  --purple-btn:#c9a96e;
 }
 body{background:var(--bg);color:var(--text);font-family:'Josefin Sans',sans-serif;font-weight:300;min-height:100vh;letter-spacing:0.04em;overflow-x:hidden;}
 
-.header{background:linear-gradient(180deg,#060408 0%,var(--bg) 100%);border-bottom:2px solid rgba(155,106,191,0.25);padding:1.2rem 1.5rem 0;position:relative;}
-.header::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,var(--purple2),var(--gold),var(--purple),transparent);}
+.header{background:var(--bg);border-bottom:2px solid rgba(180,150,100,0.22);padding:1.2rem 1.5rem 0;position:relative;}
+.header::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,var(--gold),var(--gold2),var(--gold),transparent);}
 .header-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.2rem;}
 .logo-group{display:flex;align-items:center;gap:0.8rem;}
 .logo-img{width:44px;height:44px;object-fit:contain;opacity:0.95;flex-shrink:0;}
-.logo{font-family:'Cormorant Garamond',serif;font-size:2rem;font-weight:300;letter-spacing:0.15em;color:var(--gold);text-transform:uppercase;padding-right:0.15em;}
+.logo{font-family:'Playfair Display',serif;font-size:1.7rem;font-weight:700;letter-spacing:0.08em;color:var(--gold);text-transform:uppercase;padding-right:0.08em;}
 .logo small{color:var(--text3);font-size:0.98rem;display:block;letter-spacing:0.35em;font-family:'Josefin Sans',sans-serif;font-weight:200;margin-top:-2px;}
 .live-badge{display:flex;align-items:center;gap:8px;background:var(--live-dim);border:1px solid rgba(58,154,90,0.3);border-radius:4px;padding:0.45rem 1rem;}
 .live-dot{width:7px;height:7px;border-radius:50%;background:var(--live);animation:pulse 2s infinite;}
@@ -53,7 +53,7 @@ body{background:var(--bg);color:var(--text);font-family:'Josefin Sans',sans-seri
 .btn-gold:hover{background:rgba(201,168,76,0.2);}
 
 .stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:0.8rem;margin-bottom:1.2rem;}
-.stat-card{background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--purple2);padding:1rem;position:relative;}
+.stat-card{background:var(--surface);border:1px solid var(--border);padding:1rem;position:relative;}
 .stat-label{font-size:0.6rem;letter-spacing:0.22em;text-transform:uppercase;color:var(--text3);margin-bottom:0.3rem;font-weight:400;}
 .stat-value{font-family:'Cormorant Garamond',serif;font-size:3rem;font-weight:300;line-height:1;color:var(--gold);}
 .stat-sub{font-size:0.65rem;color:var(--text3);margin-top:0.2rem;letter-spacing:0.08em;}
@@ -64,13 +64,13 @@ body{background:var(--bg);color:var(--text);font-family:'Josefin Sans',sans-seri
 .hub-trigger-desc{font-size:0.78rem;color:var(--text3);}
 
 .host-list{display:flex;flex-direction:column;gap:0.6rem;}
-.host-row{display:flex;align-items:center;justify-content:space-between;background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--purple);padding:0.8rem 1rem;}
+.host-row{display:flex;align-items:center;justify-content:space-between;background:var(--surface);border:1px solid var(--border);padding:0.8rem 1rem;}
 .host-info{display:flex;align-items:center;gap:10px;}
 .host-avatar{width:34px;height:34px;background:var(--surface3);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-size:0.95rem;color:var(--gold);}
 .host-name-text{font-size:0.88rem;color:var(--text);letter-spacing:0.04em;}
 .host-time{font-size:0.65rem;color:var(--text3);margin-top:1px;letter-spacing:0.06em;}
 .status-pill{font-size:0.6rem;letter-spacing:0.12em;text-transform:uppercase;padding:0.2rem 0.65rem;border-radius:2px;background:var(--live-dim);color:var(--live);border:1px solid rgba(58,154,90,0.3);}
-.empty-state{text-align:center;padding:2rem;color:var(--text3);font-size:0.78rem;letter-spacing:0.12em;line-height:2;border:1px dashed rgba(155,106,191,0.12);}
+.empty-state{text-align:center;padding:2rem;color:var(--text3);font-size:0.78rem;letter-spacing:0.12em;line-height:2;border:1px dashed rgba(180,150,100,0.14);}
 .error-msg{background:rgba(160,56,88,0.1);border:1px solid rgba(160,56,88,0.3);border-left:3px solid var(--rose);padding:0.75rem 1rem;font-size:0.78rem;color:var(--rose);margin-bottom:1rem;display:none;line-height:1.6;}
 
 .roster-search{display:flex;gap:0.5rem;margin-bottom:1rem;flex-wrap:wrap;}
@@ -81,7 +81,7 @@ body{background:var(--bg);color:var(--text);font-family:'Josefin Sans',sans-seri
 .roster-filter-select option{background:var(--surface2);}
 
 .roster-grid{display:flex;flex-direction:column;gap:0.6rem;}
-.roster-card{background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--purple2);padding:1rem 1.2rem;}
+.roster-card{background:var(--surface);border:1px solid var(--border);padding:1rem 1.2rem;}
 .roster-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:0.6rem;}
 .roster-name{font-family:'Cormorant Garamond',serif;font-size:1.5rem;color:var(--gold);letter-spacing:0.08em;}
 .roster-actions{display:flex;gap:0.4rem;}
@@ -98,7 +98,7 @@ body{background:var(--bg);color:var(--text);font-family:'Josefin Sans',sans-seri
 .game-item.glow-gold{border-color:rgba(201,168,76,0.45);box-shadow:0 0 0 1px rgba(201,168,76,0.1);}
 .game-item.glow-rose{border-color:rgba(160,56,88,0.45);box-shadow:0 0 0 1px rgba(160,56,88,0.1);}
 .game-item.glow-teal{border-color:rgba(42,136,112,0.45);box-shadow:0 0 0 1px rgba(42,136,112,0.1);}
-.game-item.glow-purple{border-color:rgba(122,74,154,0.45);box-shadow:0 0 0 1px rgba(122,74,154,0.1);}
+.game-item.glow-purple{border-color:rgba(143,117,80,0.45);box-shadow:0 0 0 1px rgba(143,117,80,0.1);}
 .game-header{display:flex;flex-direction:column;padding:1rem;cursor:pointer;flex:1;}
 .drag-handle{color:var(--text3);font-size:0.91rem;cursor:grab;letter-spacing:-1px;line-height:1;margin-bottom:0.5rem;opacity:0.5;}
 .game-header-text{flex:1;}
@@ -116,16 +116,16 @@ body{background:var(--bg);color:var(--text);font-family:'Josefin Sans',sans-seri
 .bingo-link:hover{color:var(--gold);}
 .fav-label{font-size:0.6rem;letter-spacing:0.22em;text-transform:uppercase;color:var(--gold);margin-bottom:0.4rem;padding-left:0.2rem;}
 
-.venue-manage-card{background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--teal);padding:1rem 1.2rem;margin-bottom:0.7rem;position:relative;}
+.venue-manage-card{background:var(--surface);border:1px solid var(--border);padding:1rem 1.2rem;margin-bottom:0.7rem;position:relative;}
 .venue-manage-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:0.5rem;}
 .venue-manage-name{font-family:'Cormorant Garamond',serif;font-size:1.4rem;color:var(--gold);letter-spacing:0.08em;}
 .venue-gig-tags{display:flex;flex-wrap:wrap;gap:0.35rem;}
 .venue-gig-tag{font-size:0.6rem;letter-spacing:0.12em;text-transform:uppercase;padding:0.2rem 0.6rem;border-radius:2px;background:rgba(42,136,112,0.1);color:var(--teal);border:1px solid rgba(42,136,112,0.3);}
 .gig-karaoke{background:var(--gold-dim);color:var(--gold);border-color:var(--border-gold);}
 .gig-bingo{background:rgba(42,136,112,0.1);color:var(--teal);border-color:rgba(42,136,112,0.3);}
-.gig-trivia{background:var(--purple-dim);color:var(--purple-btn);border-color:var(--border);}
+.gig-trivia{background:var(--purple-dim);color:var(--purple);border-color:var(--border);}
 .gig-events{background:rgba(160,56,88,0.1);color:var(--rose);border-color:rgba(160,56,88,0.3);}
-.gig-private{background:rgba(122,74,154,0.12);color:var(--purple-btn);border-color:var(--border2);}
+.gig-private{background:rgba(143,117,80,0.14);color:var(--purple2);border-color:var(--border2);}
 .venue-perf-card{background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--gold);padding:1.1rem 1.2rem;margin-bottom:0.7rem;position:relative;}
 .venue-perf-name{font-family:'Cormorant Garamond',serif;font-size:1.1rem;color:var(--gold);margin-bottom:0.6rem;letter-spacing:0.08em;}
 .venue-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0.6rem;margin-bottom:0.6rem;}
@@ -134,7 +134,7 @@ body{background:var(--bg);color:var(--text);font-family:'Josefin Sans',sans-seri
 .venue-stat-label{font-size:0.58rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--text3);margin-top:0.2rem;}
 
 .stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:0.8rem;}
-.insight-card{background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--purple);padding:1rem;}
+.insight-card{background:var(--surface);border:1px solid var(--border);padding:1rem;}
 .insight-title{font-size:0.6rem;letter-spacing:0.22em;text-transform:uppercase;color:var(--text3);margin-bottom:0.5rem;}
 .insight-row{display:flex;justify-content:space-between;align-items:center;padding:0.3rem 0;border-bottom:1px solid var(--border);font-size:0.82rem;}
 .insight-row:last-child{border:none;}
@@ -150,7 +150,7 @@ body{background:var(--bg);color:var(--text);font-family:'Josefin Sans',sans-seri
 .history-btn{background:var(--gold-dim);border:1px solid var(--border-gold);color:var(--gold);padding:0.6rem 1rem;font-size:0.72rem;letter-spacing:0.18em;cursor:pointer;font-family:'Josefin Sans',sans-serif;white-space:nowrap;text-transform:uppercase;}
 .log-table{width:100%;border-collapse:collapse;font-size:0.82rem;}
 .log-table th{font-size:0.6rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--text3);text-align:left;padding:0.5rem 0.7rem;border-bottom:2px solid var(--border);font-weight:400;}
-.log-table td{padding:0.65rem 0.7rem;border-bottom:1px solid rgba(155,106,191,0.08);color:var(--text2);}
+.log-table td{padding:0.65rem 0.7rem;border-bottom:1px solid rgba(180,150,100,0.1);color:var(--text2);}
 .log-table tr:last-child td{border-bottom:none;}
 .log-table tr:hover td{background:var(--surface2);}
 
@@ -204,7 +204,7 @@ body{background:var(--bg);color:var(--text);font-family:'Josefin Sans',sans-seri
 .cal-grid-header{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:2px;}
 .cal-day-name{text-align:center;font-size:0.6rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--text3);padding:0.4rem 0;}
 .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;}
-.cal-cell{background:var(--surface);border:1px solid rgba(155,106,191,0.1);min-height:90px;padding:0.4rem;position:relative;transition:border-color 0.2s;vertical-align:top;cursor:pointer;}
+.cal-cell{background:var(--surface);border:1px solid rgba(180,150,100,0.12);min-height:90px;padding:0.4rem;position:relative;transition:border-color 0.2s;vertical-align:top;cursor:pointer;}
 .cal-cell:hover{border-color:var(--border2);}
 .cal-cell.today{border-color:rgba(201,168,76,0.4);background:rgba(201,168,76,0.03);}
 .cal-cell.other-month{opacity:0.3;}
@@ -213,8 +213,8 @@ body{background:var(--bg);color:var(--text);font-family:'Josefin Sans',sans-seri
 .cal-entries{display:flex;flex-direction:column;gap:2px;}
 .cal-event{background:rgba(201,168,76,0.15);border:1px solid rgba(201,168,76,0.35);padding:0.18rem 0.4rem;font-size:0.6rem;color:var(--gold);letter-spacing:0.03em;cursor:pointer;line-height:1.3;transition:background 0.15s;}
 .cal-event:hover{background:rgba(201,168,76,0.28);}
-.cal-task-social{background:rgba(122,74,154,0.12);border:1px solid rgba(122,74,154,0.3);padding:0.15rem 0.4rem;font-size:0.58rem;color:var(--purple-btn);letter-spacing:0.03em;cursor:pointer;line-height:1.3;}
-.cal-task-social:hover{background:rgba(122,74,154,0.22);}
+.cal-task-social{background:rgba(143,117,80,0.14);border:1px solid rgba(143,117,80,0.32);padding:0.15rem 0.4rem;font-size:0.58rem;color:var(--purple);letter-spacing:0.03em;cursor:pointer;line-height:1.3;}
+.cal-task-social:hover{background:rgba(143,117,80,0.24);}
 .cal-task-delegation{background:rgba(42,136,112,0.1);border:1px solid rgba(42,136,112,0.28);padding:0.15rem 0.4rem;font-size:0.58rem;color:var(--teal);letter-spacing:0.03em;cursor:pointer;line-height:1.3;}
 .cal-task-delegation:hover{background:rgba(42,136,112,0.2);}
 .cal-legend{display:flex;gap:1rem;flex-wrap:wrap;margin-top:1rem;}
@@ -328,16 +328,15 @@ body{background:var(--bg);color:var(--text);font-family:'Josefin Sans',sans-seri
 .tracker-edit-btn{background:none;border:none;color:var(--text3);cursor:pointer;font-size:0.65rem;padding:2px 4px;transition:color 0.2s;opacity:0;}
 .tracker-q-row:hover .tracker-edit-btn{opacity:1;}
 .tracker-edit-btn:hover{color:var(--gold);}
-.tracker-add-q-btn{background:none;border:1px dashed rgba(155,106,191,0.25);color:var(--text3);padding:0.45rem 1rem;font-size:0.62rem;letter-spacing:0.14em;text-transform:uppercase;cursor:pointer;font-family:'Josefin Sans',sans-serif;margin-top:0.75rem;width:100%;transition:all 0.2s;}
+.tracker-add-q-btn{background:none;border:1px dashed rgba(180,150,100,0.25);color:var(--text3);padding:0.45rem 1rem;font-size:0.62rem;letter-spacing:0.14em;text-transform:uppercase;cursor:pointer;font-family:'Josefin Sans',sans-serif;margin-top:0.75rem;width:100%;transition:all 0.2s;}
 .tracker-add-q-btn:hover{border-color:var(--border2);color:var(--text2);}
 #trackerSaveDot{font-size:0.6rem;color:var(--teal);letter-spacing:0.08em;opacity:0;transition:opacity 0.3s;}
 #trackerSaveDot.show{opacity:1;}
 
 /* SIGN-IN LOG */
 .signin-filters{display:flex;gap:0.5rem;margin-bottom:1rem;flex-wrap:wrap;}
-.signin-card{background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--purple2);padding:1rem 1.2rem;margin-bottom:0.6rem;}
-.signin-card.type-checkout{border-left-color:var(--teal);}
-.signin-card.cancelled{border-left-color:var(--rose);}
+.signin-card{background:var(--surface);border:1px solid var(--border);padding:1rem 1.2rem;margin-bottom:0.6rem;}
+.signin-card.cancelled{border-left:3px solid var(--rose);}
 .signin-top{display:flex;align-items:flex-start;justify-content:space-between;gap:0.75rem;margin-bottom:0.5rem;flex-wrap:wrap;}
 .signin-host{font-family:'Cormorant Garamond',serif;font-size:1.25rem;color:var(--gold);letter-spacing:0.06em;}
 .signin-meta{font-size:0.65rem;color:var(--text3);letter-spacing:0.08em;margin-top:0.15rem;}
@@ -575,7 +574,7 @@ body{background:var(--bg);color:var(--text);font-family:'Josefin Sans',sans-seri
   <div id="calScroll"></div>
   <div class="cal-legend">
     <div class="cal-legend-item"><div class="cal-legend-dot" style="background:rgba(201,169,110,0.4);border:1px solid var(--gold);"></div>Event / Gig</div>
-    <div class="cal-legend-item"><div class="cal-legend-dot" style="background:rgba(122,90,170,0.3);border:1px solid var(--purple2);"></div>Social Media Post</div>
+    <div class="cal-legend-item"><div class="cal-legend-dot" style="background:rgba(143,117,80,0.3);border:1px solid var(--purple2);"></div>Social Media Post</div>
     <div class="cal-legend-item"><div class="cal-legend-dot" style="background:rgba(60,180,80,0.25);border:1px solid #4aaa5a;"></div>Delegation</div>
   </div>
 </div>
@@ -1137,7 +1136,7 @@ function deleteGig(){
 
 // ── RANKS & ADMIN ──
 const DEFAULT_RANKS = [
-  {id:'r1', name:'In Training',    color:'#6a5a7a'},
+  {id:'r1', name:'In Training',    color:'#8a8272'},
   {id:'r2', name:'Novice Host',    color:'#3aa08a'},
   {id:'r3', name:'Main Host',      color:'#c9a96e'},
   {id:'r4', name:'Audio Alchemist',color:'#b05070'},
@@ -1194,7 +1193,7 @@ function adminRankDrop(e,el){
 function adminRankDragEnd(){document.querySelectorAll('.admin-rank-row').forEach(el=>{el.style.opacity='1';el.style.outline='none';});}
 
 function adminAddRank(){
-  ranks.push({id:'r'+Date.now(),name:'New Rank',color:'#7a5aaa'});
+  ranks.push({id:'r'+Date.now(),name:'New Rank',color:'#8a7355'});
   renderAdminRanks();
 }
 function adminDeleteRank(id){
@@ -1728,7 +1727,7 @@ const DEFAULT_TRACKER_CATEGORIES=[
     {id:"multiv",label:"3+ active venue partners"},
     {id:"revshare",label:"Revenue share or flat fee model clearly defined"},
   ]},
-  {id:"talent",name:"Talent & Team",icon:"🌟",color:"#7a5aaa",items:[
+  {id:"talent",name:"Talent & Team",icon:"🌟",color:"#8a7355",items:[
     {id:"solo",label:"You can fully run a show solo without issues"},
     {id:"sop",label:"Standard operating procedures written for running a show"},
     {id:"hostapp",label:"Application/intake process for new hosts"},
@@ -1767,7 +1766,7 @@ const DEFAULT_TRACKER_CATEGORIES=[
     {id:"profitloss",label:"Aware of profit/loss per event on average"},
     {id:"accountant",label:"Accountant or tax software being used"},
   ]},
-  {id:"legal",name:"Legal & Contracts",icon:"📋",color:"#7a5aaa",items:[
+  {id:"legal",name:"Legal & Contracts",icon:"📋",color:"#8a7355",items:[
     {id:"llc",label:"LLC formally registered and active"},
     {id:"ein",label:"EIN obtained from IRS"},
     {id:"liability",label:"General liability insurance active"},
