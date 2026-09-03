@@ -5,15 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Belladonna Host Hub</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Josefin+Sans:wght@200;300;400&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Josefin+Sans:wght@200;300;400&display=swap');
   *{margin:0;padding:0;box-sizing:border-box;}
   :root{
-    --bg:#000000;--surface:#111118;--surface2:#18181f;--surface3:#1e1e28;
+    --bg:#000000;--surface:#0d0d0d;--surface2:#141414;--surface3:#1a1a1a;
     --border:rgba(201,169,110,0.2);--border2:rgba(201,169,110,0.4);
-    --gold:#c9a96e;--rose2:#b05070;--teal2:#3aa08a;--purple2:#7a5aaa;
-    --text:#e8e0f0;--text2:#a090b8;--text3:#6a5a7a;
+    --gold:#c9a96e;--rose2:#b0505a;--teal2:#3aa08a;--purple2:#a68a5c;
+    --text:#f0ece0;--text2:#b0a890;--text3:#8a8272;
     --live:#3aaa6a;--live-dim:rgba(58,170,106,0.12);
-    --purple-btn:#d4c0e8;
+    --purple-btn:#c9a96e;
   }
   body{background:var(--bg);color:var(--text);font-family:'Josefin Sans',sans-serif;font-weight:300;min-height:100vh;letter-spacing:0.04em;overflow-x:hidden;}
 
@@ -24,13 +24,13 @@
   .wotd-block{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1.1rem 1.4rem;margin-bottom:1.8rem;position:relative;overflow:hidden;text-align:center;}
   .wotd-block::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);}
   .wotd-label{font-size:0.52rem;letter-spacing:0.4em;text-transform:uppercase;color:var(--text3);margin-bottom:0.4rem;}
-  .wotd-word{font-family:'Cormorant Garamond',serif;font-size:3rem;font-weight:300;color:var(--gold);letter-spacing:0.25em;line-height:1;}
+  .wotd-word{font-family:'Playfair Display',serif;font-size:2.8rem;font-weight:700;color:var(--gold);letter-spacing:0.18em;line-height:1;}
   .wotd-sub{font-size:0.6rem;letter-spacing:0.15em;color:var(--text3);margin-top:0.35rem;text-transform:uppercase;}
 
   /* ── BRAND ── */
-  .hub-brand{font-family:'Cormorant Garamond',serif;font-size:2.6rem;font-weight:300;color:var(--gold);letter-spacing:0.28em;text-transform:uppercase;}
+  .hub-brand{font-family:'Playfair Display',serif;font-size:2.4rem;font-weight:700;color:var(--gold);letter-spacing:0.2em;text-transform:uppercase;}
   .hub-sub{font-size:0.73rem;letter-spacing:0.5em;text-transform:uppercase;color:var(--text3);margin-top:0.2rem;}
-  .hub-ornament{color:#2a1a2a;font-family:'Cormorant Garamond',serif;font-size:1.17rem;letter-spacing:0.4em;margin:0.8rem 0 2rem;}
+  .hub-ornament{color:#3a3428;font-family:'Cormorant Garamond',serif;font-size:1.17rem;letter-spacing:0.4em;margin:0.8rem 0 2rem;}
 
   /* ── SECTIONS ── */
   .hub-section-label{font-size:0.68rem;letter-spacing:0.38em;text-transform:uppercase;color:var(--text3);margin-bottom:0.7rem;text-align:left;}
