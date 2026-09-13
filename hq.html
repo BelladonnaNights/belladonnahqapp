@@ -322,6 +322,18 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
 .bulk-add-row .bulk-input{flex:1;min-width:110px;}
 .bulk-repeat-label{display:flex;align-items:center;gap:0.35rem;font-size:0.65rem;color:var(--text3);letter-spacing:0.04em;white-space:nowrap;}
 .bulk-repeat-label input{accent-color:var(--gold);width:14px;height:14px;cursor:pointer;}
+
+/* DASHBOARD — "This Week" day-box grid, styled to match the Trivia planner app */
+.dashboard-week-label{font-size:0.68rem;color:var(--text3);letter-spacing:0.08em;margin-bottom:0.9rem;}
+.daybox-grid{display:grid;grid-template-columns:repeat(7,minmax(130px,1fr));gap:10px;overflow-x:auto;padding-bottom:6px;}
+.daybox{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px;}
+.daybox.is-today{border-color:var(--border-gold);}
+.daybox h4{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:0.05em;color:var(--gold2);margin-bottom:10px;font-weight:400;}
+.daybox-item{padding:7px 0;border-bottom:1px solid var(--border);font-size:12.5px;cursor:pointer;}
+.daybox-item:last-child{border-bottom:none;}
+.daybox-item small{display:block;color:var(--text3);font-size:10px;}
+.daybox-item.cancelled{color:var(--rose);opacity:0.75;}
+.daybox-kind-tag{font-size:9px;letter-spacing:0.08em;text-transform:uppercase;color:var(--gold);}
 </style>
 </head>
 <body>
@@ -364,7 +376,8 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
     </div>
   </div>
   <div class="tabs">
-    <button class="tab active" onclick="showTab('hosts',this)">Hosts</button>
+    <button class="tab active" onclick="showTab('dashboard',this)">Dashboard</button>
+    <button class="tab" onclick="showTab('hosts',this)">Hosts</button>
     <button class="tab" onclick="showTab('venues',this)">Venues</button>
     <button class="tab" onclick="showTab('schedule',this)">Schedule</button>
     <button class="tab" onclick="showTab('stats',this)">Stats</button>
@@ -374,8 +387,27 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
   </div>
 </div>
 
+<!-- DASHBOARD -->
+<div class="panel active" id="panel-dashboard">
+  <div class="section-header">
+    <div class="section-title">This Week</div>
+    <button class="btn-sm" onclick="renderDashboardWeek()">↻ Refresh</button>
+  </div>
+  <div class="dashboard-week-label" id="dashboardWeekLabel"></div>
+  <div class="daybox-grid" id="dashboardDayboxGrid"></div>
+  <div style="font-size:0.62rem;color:var(--text3);letter-spacing:0.04em;margin-top:0.8rem;">Pulls in gigs from HQ's own schedule and the Trivia planner app. Bingo app gigs aren't wired in yet — click for details.</div>
+</div>
+
+<!-- DASHBOARD GIG DETAIL MODAL -->
+<div class="modal-bg" id="dashGigDetailModal">
+  <div class="modal" style="max-width:380px;">
+    <div id="dashGigDetailBody"></div>
+    <div class="modal-actions"><button class="modal-cancel" onclick="document.getElementById('dashGigDetailModal').classList.remove('open')">Close</button></div>
+  </div>
+</div>
+
 <!-- HOSTS -->
-<div class="panel active" id="panel-hosts">
+<div class="panel" id="panel-hosts">
   <div class="subtabs">
     <button class="subtab active" onclick="showSub('hosts','live',this)">Live Feed</button>
     <button class="subtab" onclick="showSub('hosts','roster',this)">Host Roster</button>
@@ -584,18 +616,25 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
   <div class="modal">
     <div class="modal-title" id="gigModalTitle">Schedule Gig</div>
     <div class="form-group"><label class="form-label">Date</label><input type="date" class="form-input" id="gigDate"></div>
-    <div class="form-group"><label class="form-label">Time (optional)</label><input type="time" class="form-input" id="gigTime"></div>
+    <div class="form-group" style="display:flex;gap:0.6rem;">
+      <div style="flex:1;"><label class="form-label">Start Time (optional)</label><input type="time" class="form-input" id="gigTime"></div>
+      <div style="flex:1;"><label class="form-label">End Time (optional)</label><input type="time" class="form-input" id="gigEndTime"></div>
+    </div>
+    <div class="form-group" style="font-size:0.65rem;color:var(--text3);margin-top:-0.6rem;">Setting an end time lets auto sign-out kick in a few hours after the gig actually ends, instead of guessing from check-in time alone.</div>
+    <div class="form-group"><label class="form-label">Gig Type</label><div class="chip-grid" id="gigKindChips"></div></div>
     <div class="form-group"><label class="form-label">Venue</label><div class="chip-grid" id="gigVenueChips"></div></div>
     <div class="form-group"><label class="form-label">Assigned Host</label><div class="chip-grid" id="gigHostChips"></div></div>
     <div class="form-group"><label class="form-label">Notes (optional)</label><textarea class="form-textarea" id="gigNotes" placeholder="Any details about this gig..." style="min-height:60px;"></textarea></div>
     <div class="form-group" id="gigRepeatRow">
-      <label style="display:flex;align-items:center;gap:0.5rem;font-size:0.75rem;color:var(--text2);cursor:pointer;">
-        <input type="checkbox" id="gigRepeatCheckbox" style="accent-color:var(--gold);width:16px;height:16px;cursor:pointer;" onchange="document.getElementById('gigRepeatWeeksRow').style.display=this.checked?'flex':'none';">
-        Repeats every week
-      </label>
+      <label class="form-label">Repeat</label>
+      <select class="form-input" id="gigRepeatMode" onchange="document.getElementById('gigRepeatCountRow').style.display=this.value==='none'?'none':'flex';document.getElementById('gigRepeatUnitLabel').textContent=this.value==='monthly'?'months':'weeks';">
+        <option value="none">Does not repeat</option>
+        <option value="weekly">Repeats every week</option>
+        <option value="monthly">Repeats every month</option>
+      </select>
     </div>
-    <div class="form-group" id="gigRepeatWeeksRow" style="display:none;align-items:center;gap:0.6rem;">
-      <label class="form-label" style="margin:0;">For</label><input type="number" class="form-input" id="gigRepeatWeeks" value="12" min="2" max="52" style="width:70px;"><span style="font-size:0.75rem;color:var(--text3);">weeks</span>
+    <div class="form-group" id="gigRepeatCountRow" style="display:none;align-items:center;gap:0.6rem;">
+      <label class="form-label" style="margin:0;">For</label><input type="number" class="form-input" id="gigRepeatCount" value="12" min="2" max="52" style="width:70px;"><span id="gigRepeatUnitLabel" style="font-size:0.75rem;color:var(--text3);">weeks</span>
     </div>
     <div class="form-group" id="gigSeriesNote" style="display:none;font-size:0.7rem;color:var(--text3);">This gig is part of a repeating series — you'll be asked whether changes apply to just this one or to future gigs too.</div>
     <div class="form-group" id="gigCancelRow" style="display:none;">
@@ -655,16 +694,19 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 <script>
 const SHEETS_KEY="AIzaSyACMjXQCXjVo75hbMXtag_JctR4SoX70So";
 const SHEET_ID="1-MkZoNKkPqjAoJggahKiUsDUgjUhMTkoQ8rUBG4W-w0";
 const SCRIPT_URL="https://script.google.com/macros/s/AKfycbye_Vv3kGcmPhforDf73jQ-7NIOaLbg4jwTPI9_VTspEIU4nNK_NxTY14KYyQsUDe2GYQ/exec";
 let db=null;
 let authInst=null;
+let rtdb=null; // Realtime Database — this is what the Trivia planner app stores its schedule in
 try{
-  firebase.initializeApp({apiKey:"AIzaSyCIfAE1JGHsUGzzVH2pz1Vyj5b5OhA0tDQ",authDomain:"belladonna-hq.firebaseapp.com",projectId:"belladonna-hq",storageBucket:"belladonna-hq.firebasestorage.app",messagingSenderId:"1021873183587",appId:"1:1021873183587:web:def283bb7b5ca48e4f9156"});
+  firebase.initializeApp({apiKey:"AIzaSyCIfAE1JGHsUGzzVH2pz1Vyj5b5OhA0tDQ",authDomain:"belladonna-hq.firebaseapp.com",databaseURL:"https://belladonna-hq-default-rtdb.firebaseio.com",projectId:"belladonna-hq",storageBucket:"belladonna-hq.firebasestorage.app",messagingSenderId:"1021873183587",appId:"1:1021873183587:web:def283bb7b5ca48e4f9156"});
   db=firebase.firestore();
   authInst=firebase.auth();
+  rtdb=firebase.database();
 }catch(e){console.warn('Firebase init failed:',e);}
 
 // localStorage helpers
@@ -709,6 +751,7 @@ function showTab(id,el){
   document.getElementById('panel-'+id).classList.add('active');el.classList.add('active');
   if(id==='stats')loadStats();
   if(id==='tracker')renderTracker();
+  if(id==='dashboard')renderDashboardWeek();
   if(id==='schedule'){populateSchedFilters();Promise.all([fetchCheckinHistory(),fetchCheckoutHistory()]).then(renderScheduleAll);}
   if(id==='accounts')loadAccounts();
 }
@@ -894,31 +937,109 @@ function markAllSigninReviewed(){
   renderSigninLog();
 }
 
+// ── DASHBOARD (This Week) ──
+// Pulls in: HQ's own gig schedule, and the Trivia planner app (same Firebase
+// project, but a Realtime Database, not Firestore — different product, same
+// account). Bingo app isn't wired in yet — that app's data structure hasn't
+// been shared, so it's a clear no-op below rather than a guess that might
+// silently fail. Give me its Firebase path or the bingo.html file and this
+// slots in the same way the planner did.
+const PLANNER_DAY_MAP={Sun:0,Mon:1,Tue:2,Wed:3,Thu:4,Fri:5,Sat:6};
+let plannerVenues=null,plannerGigs=null,dashboardItemsFlat=[];
+function loadPlannerData(){
+  if(!rtdb)return;
+  rtdb.ref('trivia/planner/venues').once('value').then(snap=>{plannerVenues=snap.val()||{};renderDashboardWeek();}).catch(()=>{plannerVenues={};});
+  rtdb.ref('trivia/planner/gigs').once('value').then(snap=>{plannerGigs=snap.val()||{};renderDashboardWeek();}).catch(()=>{plannerGigs={};});
+}
+function fetchBingoGigsForDate(dk,dow){
+  // Stub — no data source configured yet. Returns nothing rather than guessing.
+  return [];
+}
+function startOfWeekSunday(d){const x=new Date(d);x.setHours(0,0,0,0);x.setDate(x.getDate()-x.getDay());return x;}
+function dateToKey(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function getDashboardGigsForDate(dk,dow){
+  const out=[];
+  gigSchedule.filter(g=>g.date===dk).forEach(g=>{
+    out.push({venue:g.venue,host:g.host||'Unassigned',kind:g.kind||'Gig',cancelled:g.status==='cancelled'||gigCheckoutCancelled(g),source:'HQ Schedule',notes:g.notes||''});
+  });
+  if(plannerVenues){
+    Object.entries(plannerVenues).forEach(([id,v])=>{
+      if(v.status!=='active'&&v.status!=='seasonal')return;
+      if(PLANNER_DAY_MAP[v.day]!==dow)return;
+      const override=(plannerGigs&&plannerGigs[id])?plannerGigs[id][dk]:null;
+      const cancelled=!!(override&&override.status==='cancelled');
+      out.push({venue:v.name,host:v.host||'Unassigned',kind:'Trivia',cancelled,source:'Trivia Planner',notes:override&&override.themeName?('Theme: '+override.themeName):(override&&override.note?override.note:'')});
+    });
+  }
+  out.push(...fetchBingoGigsForDate(dk,dow));
+  return out;
+}
+function renderDashboardWeek(){
+  const grid=document.getElementById('dashboardDayboxGrid');
+  if(!grid)return;
+  const start=startOfWeekSunday(new Date());
+  const dayNames=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const today=dateToKey(new Date());
+  const endLabel=new Date(start.getFullYear(),start.getMonth(),start.getDate()+6);
+  document.getElementById('dashboardWeekLabel').textContent=start.toLocaleDateString('en-US',{month:'short',day:'numeric'})+' – '+endLabel.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+  dashboardItemsFlat=[];
+  let html='';
+  for(let i=0;i<7;i++){
+    const d=new Date(start);d.setDate(d.getDate()+i);
+    const dk=dateToKey(d);
+    const items=getDashboardGigsForDate(dk,d.getDay());
+    html+=`<div class="daybox${dk===today?' is-today':''}"><h4>${dayNames[i]} ${d.getDate()}</h4>
+      ${items.length?items.map(it=>{
+        const idx=dashboardItemsFlat.length;dashboardItemsFlat.push(it);
+        return `<div class="daybox-item${it.cancelled?' cancelled':''}" onclick="showDashGigDetail(${idx})">
+          <span class="daybox-kind-tag">${it.kind}</span><br>${it.venue}<small>${it.host}${it.cancelled?' · CANCELLED':''}</small>
+        </div>`;
+      }).join(''):'<div class="daybox-item" style="color:var(--text3);cursor:default;">Nothing scheduled</div>'}
+    </div>`;
+  }
+  grid.innerHTML=html;
+}
+function showDashGigDetail(idx){
+  const it=dashboardItemsFlat[idx];
+  if(!it)return;
+  document.getElementById('dashGigDetailBody').innerHTML=`
+    <div class="modal-title">${it.venue}</div>
+    <div style="font-size:0.8rem;color:var(--text2);line-height:1.9;">
+      <div><b style="color:var(--text3)">Type:</b> ${it.kind}</div>
+      <div><b style="color:var(--text3)">Host:</b> ${it.host}</div>
+      <div><b style="color:var(--text3)">Source:</b> ${it.source}</div>
+      ${it.cancelled?'<div style="color:var(--rose)"><b>Cancelled</b></div>':''}
+      ${it.notes?`<div><b style="color:var(--text3)">Notes:</b> ${it.notes}</div>`:''}
+    </div>`;
+  document.getElementById('dashGigDetailModal').classList.add('open');
+}
+
 // ── GIG SCHEDULE ──
 const MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
-let gigSchedule=[],editingGigId=null,pendingGigDate=null,selectedGigVenue='',selectedGigHost='Unassigned';
+let gigSchedule=[],editingGigId=null,pendingGigDate=null,selectedGigVenue='',selectedGigHost='Unassigned',selectedGigKind='';
 function loadGigSchedule(){
   try{const g=LS.get('gig-schedule');if(g)gigSchedule=JSON.parse(g);}catch(e){}
-  if(db){db.collection('gig_schedule').get().then(snap=>{if(!snap.empty){gigSchedule=snap.docs.map(d=>({id:d.id,...d.data()}));renderScheduleAll();}}).catch(()=>{});}
+  if(db){db.collection('gig_schedule').get().then(snap=>{if(!snap.empty){gigSchedule=snap.docs.map(d=>({id:d.id,...d.data()}));renderScheduleAll();renderDashboardWeek();}}).catch(()=>{});}
 }
 function saveGigScheduleLocal(){LS.set('gig-schedule',JSON.stringify(gigSchedule));}
 function persistGig(entry,isDelete){
   saveGigScheduleLocal();
-  if(db){try{if(isDelete)db.collection('gig_schedule').doc(entry.id).delete();else db.collection('gig_schedule').doc(entry.id).set({date:entry.date,time:entry.time||'',venue:entry.venue,host:entry.host||'Unassigned',status:entry.status||'scheduled',notes:entry.notes||'',seriesId:entry.seriesId||null});}catch(e){}}
-  // mirror to the Sheet so the Apps Script no-show trigger can read it
-  try{fetch(SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({form_type:'schedule',action:isDelete?'delete':'upsert',id:entry.id,date:entry.date,time:entry.time||'',venue:entry.venue,host:entry.host||'Unassigned',status:entry.status||'scheduled',notes:entry.notes||''})});}catch(e){}
+  if(db){try{if(isDelete)db.collection('gig_schedule').doc(entry.id).delete();else db.collection('gig_schedule').doc(entry.id).set({date:entry.date,time:entry.time||'',endTime:entry.endTime||'',kind:entry.kind||'',venue:entry.venue,host:entry.host||'Unassigned',status:entry.status||'scheduled',notes:entry.notes||'',seriesId:entry.seriesId||null});}catch(e){}}
+  // mirror to the Sheet so the Apps Script triggers (no-show + auto sign-out) can read it
+  try{fetch(SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({form_type:'schedule',action:isDelete?'delete':'upsert',id:entry.id,date:entry.date,time:entry.time||'',endTime:entry.endTime||'',venue:entry.venue,host:entry.host||'Unassigned',status:entry.status||'scheduled',notes:entry.notes||''})});}catch(e){}
 }
-// Creates one gig, or (if repeatWeekly) a whole series of weekly occurrences sharing a seriesId.
-function createGigEntry(base,repeatWeekly,weeks){
-  weeks=weeks||12;
-  const seriesId=repeatWeekly?('series_'+Date.now()+'_'+Math.random().toString(36).slice(2,7)):null;
-  const count=repeatWeekly?weeks:1;
+// Creates one gig, or (if repeatMode is 'weekly'/'monthly') a whole series of occurrences sharing a seriesId.
+function createGigEntry(base,repeatMode,count){
+  repeatMode=repeatMode||'none';
+  count=(repeatMode==='none')?1:(count||12);
+  const seriesId=(repeatMode!=='none')?('series_'+Date.now()+'_'+Math.random().toString(36).slice(2,7)):null;
   const baseDate=new Date(base.date+'T12:00:00');
   for(let w=0;w<count;w++){
     const d=new Date(baseDate);
-    d.setDate(d.getDate()+w*7);
+    if(repeatMode==='monthly')d.setMonth(d.getMonth()+w);
+    else d.setDate(d.getDate()+w*7);
     const dateStr=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
-    const entry={id:Date.now().toString()+'_'+w+'_'+Math.random().toString(36).slice(2,6),date:dateStr,time:base.time||'',venue:base.venue,host:base.host||'Unassigned',status:'scheduled',notes:base.notes||'',seriesId};
+    const entry={id:Date.now().toString()+'_'+w+'_'+Math.random().toString(36).slice(2,6),date:dateStr,time:base.time||'',endTime:base.endTime||'',kind:base.kind||'',venue:base.venue,host:base.host||'Unassigned',status:'scheduled',notes:base.notes||'',seriesId};
     gigSchedule.push(entry);
     persistGig(entry,false);
   }
@@ -1010,8 +1131,9 @@ function renderGigCalendar(){
       const dayGigs=gigSchedule.filter(g=>g.date===dateStr);
       let entriesHtml='';
       dayGigs.forEach(g=>{
-        const st=getGigStatus(g);
-        entriesHtml+=`<div class="gig-event" style="background:${st.color}22;border:1px solid ${st.color};color:${st.color}" onclick="event.stopPropagation();openGigModal('${g.id}')">${g.seriesId?'↻ ':''}${g.venue}</div>`;
+        const isCancelled=g.status==='cancelled'||gigCheckoutCancelled(g);
+        const c=isCancelled?'var(--rose)':'var(--gold)';
+        entriesHtml+=`<div class="gig-event" style="background:${c}22;border:1px solid ${c};color:${c}" onclick="event.stopPropagation();openGigModal('${g.id}')">${g.seriesId?'↻ ':''}${g.venue}</div>`;
       });
       html+=`<div class="cal-cell${otherMonth?' other-month':''}${isToday?' today':''}" onclick="openGigModalOnDate('${dateStr}')"><div class="cal-date-num">${day}</div><div class="cal-entries">${entriesHtml}</div></div>`;
     }
@@ -1030,23 +1152,31 @@ function populateGigHostChips(sel){
   document.getElementById('gigHostChips').innerHTML=['Unassigned',...roster.map(h=>h.name)].map(n=>`<div class="chip${n===selectedGigHost?' selected-skill':''}" onclick="selectGigHost(this,'${n}')">${n}</div>`).join('');
 }
 function selectGigHost(el,n){selectedGigHost=n;document.querySelectorAll('#gigHostChips .chip').forEach(c=>c.classList.remove('selected-skill'));el.classList.add('selected-skill');}
+function populateGigKindChips(sel){
+  selectedGigKind=sel||'';
+  document.getElementById('gigKindChips').innerHTML=SKILLS.map(k=>`<div class="chip${k===selectedGigKind?' selected-skill':''}" onclick="selectGigKind(this,'${k}')">${k}</div>`).join('');
+}
+function selectGigKind(el,k){selectedGigKind=k;document.querySelectorAll('#gigKindChips .chip').forEach(c=>c.classList.remove('selected-skill'));el.classList.add('selected-skill');}
 function openGigModal(id){
   editingGigId=id||null;
   const g=id?gigSchedule.find(x=>x.id===id):null;
   document.getElementById('gigModalTitle').textContent=id?'Edit Gig':'Schedule Gig';
   document.getElementById('gigDate').value=g?g.date:(pendingGigDate||'');
   document.getElementById('gigTime').value=g?g.time||'':'';
+  document.getElementById('gigEndTime').value=g?g.endTime||'':'';
   document.getElementById('gigNotes').value=g?g.notes||'':'';
+  populateGigKindChips(g?g.kind:null);
   populateGigVenueChips(g?g.venue:null);
   populateGigHostChips(g?g.host:null);
   document.getElementById('gigCancelRow').style.display=id?'block':'none';
   document.getElementById('gigCancelCheckbox').checked=!!(g&&g.status==='cancelled');
   document.getElementById('gigDeleteBtn').style.display=id?'inline-block':'none';
-  // "Repeats weekly" only makes sense when creating a brand new gig
+  // Repeat options only make sense when creating a brand new gig
   document.getElementById('gigRepeatRow').style.display=id?'none':'block';
-  document.getElementById('gigRepeatCheckbox').checked=false;
-  document.getElementById('gigRepeatWeeksRow').style.display='none';
-  document.getElementById('gigRepeatWeeks').value=12;
+  document.getElementById('gigRepeatMode').value='none';
+  document.getElementById('gigRepeatCountRow').style.display='none';
+  document.getElementById('gigRepeatCount').value=12;
+  document.getElementById('gigRepeatUnitLabel').textContent='weeks';
   document.getElementById('gigSeriesNote').style.display=(id&&g&&g.seriesId)?'block':'none';
   pendingGigDate=null;
   document.getElementById('gigModal').classList.add('open');
@@ -1056,13 +1186,14 @@ function closeGigModal(){document.getElementById('gigModal').classList.remove('o
 function saveGig(){
   const date=document.getElementById('gigDate').value;
   const time=document.getElementById('gigTime').value;
+  const endTime=document.getElementById('gigEndTime').value;
   const notes=document.getElementById('gigNotes').value.trim();
   const cancelled=document.getElementById('gigCancelCheckbox').checked;
   if(!date||!selectedGigVenue){alert('Please set a date and venue.');return;}
   if(editingGigId){
     const g=gigSchedule.find(x=>x.id===editingGigId);
     if(!g)return;
-    const changes={date,time,venue:selectedGigVenue,host:selectedGigHost,notes,status:cancelled?'cancelled':'scheduled'};
+    const changes={date,time,endTime,kind:selectedGigKind,venue:selectedGigVenue,host:selectedGigHost,notes,status:cancelled?'cancelled':'scheduled'};
     const seriesMates=g.seriesId?gigSchedule.filter(x=>x.seriesId===g.seriesId):[];
     if(g.seriesId&&seriesMates.length>1){
       pendingGigScopeAction={type:'edit',gig:g,changes,origDate:g.date};
@@ -1074,9 +1205,9 @@ function saveGig(){
     persistGig(g,false);
     renderScheduleAll();closeGigModal();
   }else{
-    const repeatWeekly=document.getElementById('gigRepeatCheckbox').checked;
-    const weeks=parseInt(document.getElementById('gigRepeatWeeks').value)||12;
-    createGigEntry({date,time,venue:selectedGigVenue,host:selectedGigHost,notes},repeatWeekly,weeks);
+    const repeatMode=document.getElementById('gigRepeatMode').value;
+    const count=parseInt(document.getElementById('gigRepeatCount').value)||12;
+    createGigEntry({date,time,endTime,kind:selectedGigKind,venue:selectedGigVenue,host:selectedGigHost,notes},repeatMode,count);
     renderScheduleAll();closeGigModal();
   }
 }
@@ -1117,11 +1248,11 @@ function resolveGigScope(scope){
     }else{
       // This occurrence can move its own date; every other future occurrence in the
       // series keeps its own date and only picks up the non-date fields.
-      g.date=action.changes.date;g.time=action.changes.time;g.venue=action.changes.venue;g.host=action.changes.host;g.notes=action.changes.notes;g.status=action.changes.status;
+      g.date=action.changes.date;g.time=action.changes.time;g.endTime=action.changes.endTime;g.kind=action.changes.kind;g.venue=action.changes.venue;g.host=action.changes.host;g.notes=action.changes.notes;g.status=action.changes.status;
       persistGig(g,false);
       const mates=gigSchedule.filter(x=>x.seriesId===g.seriesId&&x.id!==g.id&&x.date>=action.origDate);
       mates.forEach(m=>{
-        m.time=action.changes.time;m.venue=action.changes.venue;m.host=action.changes.host;m.notes=action.changes.notes;m.status=action.changes.status;
+        m.time=action.changes.time;m.endTime=action.changes.endTime;m.kind=action.changes.kind;m.venue=action.changes.venue;m.host=action.changes.host;m.notes=action.changes.notes;m.status=action.changes.status;
         persistGig(m,false);
       });
     }
@@ -1154,14 +1285,20 @@ function addBulkRow(){
   const id=bulkRowCount++;
   const venueOpts=getVenueNames().map(v=>`<option value="${v}">${v}</option>`).join('');
   const hostOpts=['Unassigned',...roster.map(h=>h.name)].map(n=>`<option value="${n}">${n}</option>`).join('');
+  const kindOpts=SKILLS.map(k=>`<option value="${k}">${k}</option>`).join('');
   const row=document.createElement('div');
   row.className='bulk-add-row';
   row.id='bulkRow'+id;
   row.innerHTML=`
     <input type="date" class="form-input bulk-input" id="bulkDate${id}">
+    <select class="form-input bulk-input" id="bulkKind${id}"><option value="">Type...</option>${kindOpts}</select>
     <select class="form-input bulk-input" id="bulkVenue${id}"><option value="">Venue...</option>${venueOpts}</select>
     <select class="form-input bulk-input" id="bulkHost${id}">${hostOpts}</select>
-    <label class="bulk-repeat-label"><input type="checkbox" id="bulkRepeat${id}"> Weekly</label>
+    <select class="form-input bulk-input" id="bulkRepeat${id}" style="max-width:110px;">
+      <option value="none">No repeat</option>
+      <option value="weekly">Weekly</option>
+      <option value="monthly">Monthly</option>
+    </select>
     <button class="action-btn delete" onclick="document.getElementById('bulkRow${id}').remove()">✕</button>
   `;
   document.getElementById('bulkAddRows').appendChild(row);
@@ -1174,9 +1311,10 @@ function saveBulkGigs(){
     const date=document.getElementById('bulkDate'+id).value;
     const venue=document.getElementById('bulkVenue'+id).value;
     const host=document.getElementById('bulkHost'+id).value||'Unassigned';
-    const repeat=document.getElementById('bulkRepeat'+id).checked;
+    const kind=document.getElementById('bulkKind'+id).value||'';
+    const repeatMode=document.getElementById('bulkRepeat'+id).value;
     if(!date||!venue)return;
-    createGigEntry({date,time:'',venue,host,notes:''},repeat,12);
+    createGigEntry({date,time:'',venue,host,kind,notes:''},repeatMode,12);
     count++;
   });
   renderScheduleAll();closeBulkAddModal();
@@ -1855,10 +1993,12 @@ function init(){
   loadTrackerAnswers();
   loadGigSchedule();
   loadSigninReviewed();
+  loadPlannerData();
   renderRoster();
   renderVenueManage();
   populateRosterFilters();
   populateSchedFilters();
+  renderDashboardWeek();
   fetchSheetData();
   setInterval(fetchSheetData,60000);
 }
