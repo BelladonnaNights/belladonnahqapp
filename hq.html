@@ -343,6 +343,8 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
 <body>
 
 <div class="admin-bar" id="adminBar">
+  <span id="gatewayUserBar" style="font-size:0.62rem;color:var(--text3);letter-spacing:0.06em;margin-right:0.7rem;align-self:center;"></span>
+  <button class="btn-sm" onclick="gatewaySignOut()" style="margin-right:0.5rem;">Sign Out</button>
   <button class="admin-bar-toggle" onclick="toggleAdmin()">
     <div class="admin-bar-label">Admin Panel</div>
     <div class="admin-bar-arrow" id="adminArrow">▼</div>
@@ -730,6 +732,25 @@ try{
   authInst=firebase.auth();
   rtdb=firebase.database();
 }catch(e){console.warn('Firebase init failed:',e);}
+
+// ── GATEWAY LOGIN GATE ──
+// HQ reads Trivia/Bingo data out of Realtime Database now, and those rules
+// require a signed-in Belladonna Gateway account (any account — this isn't
+// checking for admin here, just "is anyone logged in"). Bounce to the shared
+// login page if not, and come straight back here afterward.
+if(authInst){
+  authInst.onAuthStateChanged(function(user){
+    if(!user){
+      window.location.href='accounts.html?return='+encodeURIComponent(window.location.href)+'&app=hq';
+    }else{
+      const bar=document.getElementById('gatewayUserBar');
+      if(bar)bar.textContent='Signed in as '+(user.email||'account');
+    }
+  });
+}
+function gatewaySignOut(){
+  if(authInst)authInst.signOut().then(()=>{window.location.href='accounts.html?return='+encodeURIComponent(window.location.href)+'&app=hq';});
+}
 
 // localStorage helpers
 const LS={
@@ -1969,6 +1990,19 @@ function renderTrackerResults(){
 let accounts=[];
 const ENT_APPS=[{key:'bingo',label:'Bingo'},{key:'trivia',label:'Trivia'},{key:'mediaPlayer',label:'Media Player'},{key:'training',label:'Training'}];
 
+// Realtime Database's security rules can't see Firestore — they can only check
+// other Realtime Database data. So `entitlements` (Firestore, what apps' own UI
+// reads) and `programAccess` (Realtime Database, what the RTDB write rules
+// actually check) have to be kept in sync by hand every time either changes.
+function mirrorProgramAccess(uid,entitlements){
+  if(!rtdb)return;
+  try{rtdb.ref('users/'+uid+'/programAccess').set({bingo:!!entitlements.bingo,trivia:!!entitlements.trivia,mediaPlayer:!!entitlements.mediaPlayer,training:!!entitlements.training});}catch(e){console.warn('Could not mirror programAccess:',e);}
+}
+function mirrorIsAdmin(uid,isAdmin){
+  if(!rtdb)return;
+  try{rtdb.ref('users/'+uid+'/isAdmin').set(!!isAdmin);}catch(e){console.warn('Could not mirror isAdmin:',e);}
+}
+
 function loadAccounts(){
   if(!db){document.getElementById('accountsGrid').innerHTML='<div class="empty-state">Firebase not connected.</div>';return;}
   document.getElementById('accountsGrid').innerHTML='<div class="empty-state">Loading accounts...</div>';
@@ -2000,6 +2034,7 @@ function renderAccounts(){
 
   grid.innerHTML=list.map(a=>{
     const isBanned=a.status==='banned';
+    const isAdmin=!!a.isAdmin;
     const entChips=ENT_APPS.map(app=>{
       const on=!!(a.entitlements&&a.entitlements[app.key]);
       return `<button class="acct-ent-chip ${on?'on':''}" onclick="toggleEntitlement('${a.uid}','${app.key}')">${on?'✓ ':''}${app.label}</button>`;
@@ -2014,9 +2049,12 @@ function renderAccounts(){
         <div class="acct-badges">
           <span class="acct-type-badge ${a.accountType==='host'?'host':''}">${(a.accountType||'subscriber').replace('_',' ')}</span>
           <span class="acct-status-badge ${isBanned?'banned':''}">${isBanned?'Banned':'Active'}</span>
+          ${isAdmin?'<span class="acct-status-badge" style="background:var(--gold-dim);color:var(--gold);border-color:var(--border-gold);">Admin</span>':''}
         </div>
       </div>
-      <div class="acct-entitlements">${entChips}</div>
+      <div class="acct-entitlements">${entChips}
+        <button class="acct-ent-chip ${isAdmin?'on':''}" style="${isAdmin?'border-color:var(--gold);':''}" onclick="toggleAcctAdmin('${a.uid}')">${isAdmin?'✓ ':''}Admin</button>
+      </div>
       <div class="acct-actions">
         <button class="btn-sm" onclick="sendReset('${a.email}',this)">Send Password Reset</button>
         ${isBanned
@@ -2041,10 +2079,27 @@ function toggleEntitlement(uid,appKey){
   const newVal=!acct.entitlements[appKey];
   acct.entitlements[appKey]=newVal;
   renderAccounts();
-  db.collection('users').doc(uid).set({entitlements:acct.entitlements},{merge:true}).catch(e=>{
+  db.collection('users').doc(uid).set({entitlements:acct.entitlements},{merge:true}).then(()=>{
+    mirrorProgramAccess(uid,acct.entitlements);
+  }).catch(e=>{
     acct.entitlements[appKey]=!newVal; // revert on failure
     renderAccounts();
     alert('Failed to update access: '+e.message);
+  });
+}
+
+function toggleAcctAdmin(uid){
+  const acct=accounts.find(a=>a.uid===uid);if(!acct)return;
+  const newVal=!acct.isAdmin;
+  if(newVal&&!confirm(`Make ${acct.name||acct.email} an admin? Admins can access Belladonna HQ and manage other accounts.`))return;
+  acct.isAdmin=newVal;
+  renderAccounts();
+  db.collection('users').doc(uid).set({isAdmin:newVal},{merge:true}).then(()=>{
+    mirrorIsAdmin(uid,newVal);
+  }).catch(e=>{
+    acct.isAdmin=!newVal;
+    renderAccounts();
+    alert('Failed to update admin status: '+e.message);
   });
 }
 
