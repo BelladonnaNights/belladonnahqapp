@@ -734,22 +734,33 @@ try{
 }catch(e){console.warn('Firebase init failed:',e);}
 
 // ── GATEWAY LOGIN GATE ──
-// HQ reads Trivia/Bingo data out of Realtime Database now, and those rules
-// require a signed-in Belladonna Gateway account (any account — this isn't
-// checking for admin here, just "is anyone logged in"). Bounce to the shared
-// login page if not, and come straight back here afterward.
+// HQ has its own independent 6-hour "stay signed in" window, tracked locally
+// just for HQ — signing into another app never resets or extends this one.
+// A quick local check first (instant, no network) so a valid session never
+// even flickers a redirect; only kicks to the gateway if that's actually
+// expired or missing.
+const GATEWAY_APP_KEY='hq';
+const GATEWAY_SESSION_MS=6*60*60*1000;
+function hasValidGatewaySession(){
+  try{
+    const raw=localStorage.getItem('gatewaySession_'+GATEWAY_APP_KEY);
+    if(!raw)return false;
+    const s=JSON.parse(raw);
+    return (Date.now()-s.ts)<GATEWAY_SESSION_MS;
+  }catch(e){return false;}
+}
+if(!hasValidGatewaySession()){
+  window.location.href='accounts.html?return='+encodeURIComponent(window.location.href)+'&app='+GATEWAY_APP_KEY;
+}
 if(authInst){
   authInst.onAuthStateChanged(function(user){
-    if(!user){
-      window.location.href='accounts.html?return='+encodeURIComponent(window.location.href)+'&app=hq';
-    }else{
-      const bar=document.getElementById('gatewayUserBar');
-      if(bar)bar.textContent='Signed in as '+(user.email||'account');
-    }
+    const bar=document.getElementById('gatewayUserBar');
+    if(user&&bar)bar.textContent='Signed in as '+(user.email||'account');
   });
 }
 function gatewaySignOut(){
-  if(authInst)authInst.signOut().then(()=>{window.location.href='accounts.html?return='+encodeURIComponent(window.location.href)+'&app=hq';});
+  try{Object.keys(localStorage).filter(k=>k.startsWith('gatewaySession_')).forEach(k=>localStorage.removeItem(k));}catch(e){}
+  if(authInst)authInst.signOut().then(()=>{window.location.href='accounts.html?return='+encodeURIComponent(window.location.href)+'&app='+GATEWAY_APP_KEY;});
 }
 
 // localStorage helpers
@@ -1989,6 +2000,7 @@ function renderTrackerResults(){
 // ── ACCOUNTS ──
 let accounts=[];
 const ENT_APPS=[{key:'bingo',label:'Bingo'},{key:'trivia',label:'Trivia'},{key:'mediaPlayer',label:'Media Player'},{key:'training',label:'Training'}];
+const ADMIN_APPS=[{key:'hq',label:'HQ'},{key:'trivia',label:'Trivia'},{key:'bingo',label:'Bingo'},{key:'mediaPlayer',label:'Media Player'},{key:'training',label:'Training'}];
 
 // Realtime Database's security rules can't see Firestore — they can only check
 // other Realtime Database data. So `entitlements` (Firestore, what apps' own UI
@@ -1998,9 +2010,9 @@ function mirrorProgramAccess(uid,entitlements){
   if(!rtdb)return;
   try{rtdb.ref('users/'+uid+'/programAccess').set({bingo:!!entitlements.bingo,trivia:!!entitlements.trivia,mediaPlayer:!!entitlements.mediaPlayer,training:!!entitlements.training});}catch(e){console.warn('Could not mirror programAccess:',e);}
 }
-function mirrorIsAdmin(uid,isAdmin){
+function mirrorAdminAccess(uid,adminAccess){
   if(!rtdb)return;
-  try{rtdb.ref('users/'+uid+'/isAdmin').set(!!isAdmin);}catch(e){console.warn('Could not mirror isAdmin:',e);}
+  try{rtdb.ref('users/'+uid+'/adminAccess').set({hq:!!adminAccess.hq,trivia:!!adminAccess.trivia,bingo:!!adminAccess.bingo,mediaPlayer:!!adminAccess.mediaPlayer,training:!!adminAccess.training});}catch(e){console.warn('Could not mirror adminAccess:',e);}
 }
 
 function loadAccounts(){
@@ -2034,10 +2046,14 @@ function renderAccounts(){
 
   grid.innerHTML=list.map(a=>{
     const isBanned=a.status==='banned';
-    const isAdmin=!!a.isAdmin;
+    const anyAdmin=!!(a.adminAccess&&ADMIN_APPS.some(app=>a.adminAccess[app.key]));
     const entChips=ENT_APPS.map(app=>{
       const on=!!(a.entitlements&&a.entitlements[app.key]);
       return `<button class="acct-ent-chip ${on?'on':''}" onclick="toggleEntitlement('${a.uid}','${app.key}')">${on?'✓ ':''}${app.label}</button>`;
+    }).join('');
+    const adminChips=ADMIN_APPS.map(app=>{
+      const on=!!(a.adminAccess&&a.adminAccess[app.key]);
+      return `<button class="acct-ent-chip ${on?'on':''}" style="${on?'border-color:var(--gold);':''}" onclick="toggleAdminAccess('${a.uid}','${app.key}')">${on?'✓ ':''}${app.label}</button>`;
     }).join('');
 
     return `<div class="acct-card">
@@ -2049,12 +2065,13 @@ function renderAccounts(){
         <div class="acct-badges">
           <span class="acct-type-badge ${a.accountType==='host'?'host':''}">${(a.accountType||'subscriber').replace('_',' ')}</span>
           <span class="acct-status-badge ${isBanned?'banned':''}">${isBanned?'Banned':'Active'}</span>
-          ${isAdmin?'<span class="acct-status-badge" style="background:var(--gold-dim);color:var(--gold);border-color:var(--border-gold);">Admin</span>':''}
+          ${anyAdmin?'<span class="acct-status-badge" style="background:var(--gold-dim);color:var(--gold);border-color:var(--border-gold);">Admin</span>':''}
         </div>
       </div>
-      <div class="acct-entitlements">${entChips}
-        <button class="acct-ent-chip ${isAdmin?'on':''}" style="${isAdmin?'border-color:var(--gold);':''}" onclick="toggleAcctAdmin('${a.uid}')">${isAdmin?'✓ ':''}Admin</button>
-      </div>
+      <div style="font-size:0.6rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--text3);margin-bottom:0.3rem;">Can Use</div>
+      <div class="acct-entitlements">${entChips}</div>
+      <div style="font-size:0.6rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--text3);margin:0.6rem 0 0.3rem;">Admin Access</div>
+      <div class="acct-entitlements">${adminChips}</div>
       <div class="acct-actions">
         <button class="btn-sm" onclick="sendReset('${a.email}',this)">Send Password Reset</button>
         ${isBanned
@@ -2088,18 +2105,20 @@ function toggleEntitlement(uid,appKey){
   });
 }
 
-function toggleAcctAdmin(uid){
+function toggleAdminAccess(uid,appKey){
   const acct=accounts.find(a=>a.uid===uid);if(!acct)return;
-  const newVal=!acct.isAdmin;
-  if(newVal&&!confirm(`Make ${acct.name||acct.email} an admin? Admins can access Belladonna HQ and manage other accounts.`))return;
-  acct.isAdmin=newVal;
+  if(!acct.adminAccess)acct.adminAccess={};
+  const newVal=!acct.adminAccess[appKey];
+  const appLabel=(ADMIN_APPS.find(a=>a.key===appKey)||{}).label||appKey;
+  if(newVal&&!confirm(`Give ${acct.name||acct.email} admin access to ${appLabel}?`))return;
+  acct.adminAccess[appKey]=newVal;
   renderAccounts();
-  db.collection('users').doc(uid).set({isAdmin:newVal},{merge:true}).then(()=>{
-    mirrorIsAdmin(uid,newVal);
+  db.collection('users').doc(uid).set({adminAccess:acct.adminAccess},{merge:true}).then(()=>{
+    mirrorAdminAccess(uid,acct.adminAccess);
   }).catch(e=>{
-    acct.isAdmin=!newVal;
+    acct.adminAccess[appKey]=!newVal;
     renderAccounts();
-    alert('Failed to update admin status: '+e.message);
+    alert('Failed to update admin access: '+e.message);
   });
 }
 
