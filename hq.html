@@ -329,6 +329,10 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
 
 /* DASHBOARD — "This Week" day-box grid, styled to match the Trivia planner app */
 .dashboard-week-label{font-size:0.68rem;color:var(--text3);letter-spacing:0.08em;margin-bottom:0.9rem;}
+.dash-filter-pills{display:flex;gap:0.5rem;margin-bottom:0.9rem;flex-wrap:wrap;}
+.dash-filter-pill{background:var(--surface2);border:1px solid var(--border);color:var(--text3);padding:0.35rem 1rem;border-radius:999px;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.2s;}
+.dash-filter-pill:hover{border-color:var(--border2);color:var(--text2);}
+.dash-filter-pill.active{background:var(--gold-dim);border-color:var(--border-gold);color:var(--gold);}
 .daybox-grid{display:grid;grid-template-columns:repeat(7,minmax(130px,1fr));gap:10px;overflow-x:auto;padding-bottom:6px;}
 .daybox{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px;}
 .daybox.is-today{border-color:var(--border-gold);}
@@ -399,9 +403,15 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
     <div class="section-title">This Week</div>
     <button class="btn-sm" onclick="renderDashboardWeek()">↻ Refresh</button>
   </div>
+  <div class="dash-filter-pills">
+    <button class="dash-filter-pill active" onclick="setDashboardKindFilter('all',this)">All</button>
+    <button class="dash-filter-pill" onclick="setDashboardKindFilter('trivia',this)">Trivia</button>
+    <button class="dash-filter-pill" onclick="setDashboardKindFilter('bingo',this)">Bingo</button>
+    <button class="dash-filter-pill" onclick="setDashboardKindFilter('karaoke',this)">Karaoke</button>
+  </div>
   <div class="dashboard-week-label" id="dashboardWeekLabel"></div>
   <div class="daybox-grid" id="dashboardDayboxGrid"></div>
-  <div style="font-size:0.62rem;color:var(--text3);letter-spacing:0.04em;margin-top:0.8rem;">Pulls in gigs from HQ's own schedule and the Trivia planner app. Bingo app gigs aren't wired in yet — click for details.</div>
+  <div style="font-size:0.62rem;color:var(--text3);letter-spacing:0.04em;margin-top:0.8rem;">Pulls in gigs from HQ's own schedule, the Trivia planner app, and the Bingo app. Click any gig for details.</div>
 </div>
 
 <!-- DASHBOARD GIG DETAIL MODAL -->
@@ -1059,27 +1069,34 @@ function exportSigninCSV(){
 }
 
 // ── DASHBOARD (This Week) ──
-// Pulls in: HQ's own gig schedule, and the Trivia planner app (same Firebase
-// project, but a Realtime Database, not Firestore — different product, same
-// account). Bingo app isn't wired in yet — that app's data structure hasn't
-// been shared, so it's a clear no-op below rather than a guess that might
-// silently fail. Give me its Firebase path or the bingo.html file and this
-// slots in the same way the planner did.
+// Pulls in: HQ's own gig schedule, the Trivia planner app (Realtime Database,
+// same Firebase project, different product than Firestore), and now the
+// Bingo app's own scheduling too (same pattern, different data shape — Bingo
+// has no assigned-host concept at the schedule level, so those entries show
+// as Unassigned until a host actually starts a live session).
 const PLANNER_DAY_MAP={Sun:0,Mon:1,Tue:2,Wed:3,Thu:4,Fri:5,Sat:6};
-let plannerVenues=null,plannerGigs=null,dashboardItemsFlat=[];
+let plannerVenues=null,plannerGigs=null,bingoVenuesMap=null,bingoScheduleList=null,bingoCategoriesMap=null,dashboardItemsFlat=[];
+let dashboardKindFilter='all';
 function loadPlannerData(){
   if(!rtdb)return;
   rtdb.ref('trivia/planner/venues').once('value').then(snap=>{plannerVenues=snap.val()||{};renderDashboardWeek();}).catch(()=>{plannerVenues={};});
   rtdb.ref('trivia/planner/gigs').once('value').then(snap=>{plannerGigs=snap.val()||{};renderDashboardWeek();}).catch(()=>{plannerGigs={};});
+  rtdb.ref('bingo/landing/venues').once('value').then(snap=>{bingoVenuesMap=snap.val()||{};renderDashboardWeek();}).catch(()=>{bingoVenuesMap={};});
+  rtdb.ref('bingo/landing/schedule').once('value').then(snap=>{bingoScheduleList=Object.values(snap.val()||{});renderDashboardWeek();}).catch(()=>{bingoScheduleList=[];});
+  rtdb.ref('bingo/landing/categories').once('value').then(snap=>{bingoCategoriesMap=snap.val()||{};renderDashboardWeek();}).catch(()=>{bingoCategoriesMap={};});
 }
 function fetchBingoGigsForDate(dk,dow){
-  // Stub — no data source configured yet. Returns nothing rather than guessing.
-  return [];
+  if(!bingoScheduleList)return [];
+  return bingoScheduleList.filter(e=>e.date===dk).map(e=>{
+    const venue=(bingoVenuesMap&&bingoVenuesMap[e.venueId])?bingoVenuesMap[e.venueId].name:'Unknown Venue';
+    const roundNames=(e.rounds||e.categoryIds||[]).map(cid=>(bingoCategoriesMap&&bingoCategoriesMap[cid])?bingoCategoriesMap[cid].title:null).filter(Boolean);
+    return {venue,host:'Unassigned',kind:'Bingo',cancelled:false,source:'Bingo App',notes:(roundNames.length?'Rounds: '+roundNames.join(', '):'')+(e.notes?(roundNames.length?' — ':'')+e.notes:'')};
+  });
 }
 function startOfWeekSunday(d){const x=new Date(d);x.setHours(0,0,0,0);x.setDate(x.getDate()-x.getDay());return x;}
 function dateToKey(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
-// Gigs from OTHER apps (Trivia planner now, Bingo once it's linked) — not HQ's own
-// gigSchedule. Shared by the Dashboard's week view and the Schedule tab's calendar.
+// Gigs from OTHER apps (Trivia planner, Bingo) — not HQ's own gigSchedule.
+// Shared by the Dashboard's week view and the Schedule tab's calendar.
 function getExternalGigsForDate(dk,dow){
   const out=[];
   if(plannerVenues){
@@ -1100,7 +1117,14 @@ function getDashboardGigsForDate(dk,dow){
     out.push({venue:g.venue,host:g.host||'Unassigned',kind:g.kind||'Gig',cancelled:g.status==='cancelled'||gigCheckoutCancelled(g),source:'HQ Schedule',notes:g.notes||''});
   });
   out.push(...getExternalGigsForDate(dk,dow));
+  if(dashboardKindFilter!=='all')return out.filter(it=>(it.kind||'').toLowerCase()===dashboardKindFilter);
   return out;
+}
+function setDashboardKindFilter(kind,el){
+  dashboardKindFilter=kind;
+  document.querySelectorAll('.dash-filter-pill').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');
+  renderDashboardWeek();
 }
 function renderDashboardWeek(){
   const grid=document.getElementById('dashboardDayboxGrid');
@@ -2001,6 +2025,13 @@ function renderTrackerResults(){
 let accounts=[];
 const ENT_APPS=[{key:'bingo',label:'Bingo'},{key:'trivia',label:'Trivia'},{key:'mediaPlayer',label:'Media Player'},{key:'training',label:'Training'}];
 const ADMIN_APPS=[{key:'hq',label:'HQ'},{key:'trivia',label:'Trivia'},{key:'bingo',label:'Bingo'},{key:'mediaPlayer',label:'Media Player'},{key:'training',label:'Training'}];
+// Schedule access is a middle tier, between regular use and full admin — right
+// now only Bingo actually gates anything on it (its Schedule tool was
+// admin-only; this carves it out for specific hosts without making them full
+// admins). Trivia's own scheduling already lives in the Planner, open to any
+// regular Trivia host, so this flag is here for consistency/future use but
+// doesn't currently gate anything extra there.
+const SCHED_APPS=[{key:'trivia',label:'Trivia'},{key:'bingo',label:'Bingo'}];
 
 // Realtime Database's security rules can't see Firestore — they can only check
 // other Realtime Database data. So `entitlements` (Firestore, what apps' own UI
@@ -2013,6 +2044,10 @@ function mirrorProgramAccess(uid,entitlements){
 function mirrorAdminAccess(uid,adminAccess){
   if(!rtdb)return;
   try{rtdb.ref('users/'+uid+'/adminAccess').set({hq:!!adminAccess.hq,trivia:!!adminAccess.trivia,bingo:!!adminAccess.bingo,mediaPlayer:!!adminAccess.mediaPlayer,training:!!adminAccess.training});}catch(e){console.warn('Could not mirror adminAccess:',e);}
+}
+function mirrorScheduleAccess(uid,scheduleAccess){
+  if(!rtdb)return;
+  try{rtdb.ref('users/'+uid+'/scheduleAccess').set({trivia:!!scheduleAccess.trivia,bingo:!!scheduleAccess.bingo});}catch(e){console.warn('Could not mirror scheduleAccess:',e);}
 }
 
 function loadAccounts(){
@@ -2055,6 +2090,10 @@ function renderAccounts(){
       const on=!!(a.adminAccess&&a.adminAccess[app.key]);
       return `<button class="acct-ent-chip ${on?'on':''}" style="${on?'border-color:var(--gold);':''}" onclick="toggleAdminAccess('${a.uid}','${app.key}')">${on?'✓ ':''}${app.label}</button>`;
     }).join('');
+    const schedChips=SCHED_APPS.map(app=>{
+      const on=!!(a.scheduleAccess&&a.scheduleAccess[app.key]);
+      return `<button class="acct-ent-chip ${on?'on':''}" style="${on?'border-color:var(--teal2);color:var(--teal2);':''}" onclick="toggleScheduleAccess('${a.uid}','${app.key}')">${on?'✓ ':''}${app.label}</button>`;
+    }).join('');
 
     return `<div class="acct-card">
       <div class="acct-header">
@@ -2070,6 +2109,8 @@ function renderAccounts(){
       </div>
       <div style="font-size:0.6rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--text3);margin-bottom:0.3rem;">Can Use</div>
       <div class="acct-entitlements">${entChips}</div>
+      <div style="font-size:0.6rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--text3);margin:0.6rem 0 0.3rem;">Schedule Access <span style="opacity:0.7;">— can edit the schedule, not full admin</span></div>
+      <div class="acct-entitlements">${schedChips}</div>
       <div style="font-size:0.6rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--text3);margin:0.6rem 0 0.3rem;">Admin Access</div>
       <div class="acct-entitlements">${adminChips}</div>
       <div class="acct-actions">
@@ -2119,6 +2160,21 @@ function toggleAdminAccess(uid,appKey){
     acct.adminAccess[appKey]=!newVal;
     renderAccounts();
     alert('Failed to update admin access: '+e.message);
+  });
+}
+
+function toggleScheduleAccess(uid,appKey){
+  const acct=accounts.find(a=>a.uid===uid);if(!acct)return;
+  if(!acct.scheduleAccess)acct.scheduleAccess={};
+  const newVal=!acct.scheduleAccess[appKey];
+  acct.scheduleAccess[appKey]=newVal;
+  renderAccounts();
+  db.collection('users').doc(uid).set({scheduleAccess:acct.scheduleAccess},{merge:true}).then(()=>{
+    mirrorScheduleAccess(uid,acct.scheduleAccess);
+  }).catch(e=>{
+    acct.scheduleAccess[appKey]=!newVal;
+    renderAccounts();
+    alert('Failed to update schedule access: '+e.message);
   });
 }
 
