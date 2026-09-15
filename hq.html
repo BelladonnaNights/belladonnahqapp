@@ -394,6 +394,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
     <button class="tab" onclick="showTab('tracker',this)">Growth Tracker</button>
     <button class="tab" onclick="showTab('accounts',this)">Accounts</button>
     <a href="command-center.html" class="tab" style="text-decoration:none;border-bottom:2px solid rgba(201,168,76,0.35);color:var(--gold);opacity:0.75;">Command Center</a>
+    <a href="https://belladonnanights.github.io/belladonnatrivia/planner.html" class="tab" style="text-decoration:none;border-bottom:2px solid rgba(201,168,76,0.35);color:var(--gold);opacity:0.75;">Planner</a>
   </div>
 </div>
 
@@ -661,11 +662,14 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
     <div class="form-group"><label class="form-label">Notes (optional)</label><textarea class="form-textarea" id="gigNotes" placeholder="Any details about this gig..." style="min-height:60px;"></textarea></div>
     <div class="form-group" id="gigRepeatRow">
       <label class="form-label">Repeat</label>
-      <select class="form-input" id="gigRepeatMode" onchange="document.getElementById('gigRepeatCountRow').style.display=this.value==='none'?'none':'flex';document.getElementById('gigRepeatUnitLabel').textContent=this.value==='monthly'?'months':'weeks';">
+      <select class="form-input" id="gigRepeatMode" onchange="const v=this.value;document.getElementById('gigRepeatCountRow').style.display=(v==='none'||v==='weekly-forever'||v==='monthly-forever')?'none':'flex';document.getElementById('gigRepeatUnitLabel').textContent=v==='monthly'?'months':'weeks';">
         <option value="none">Does not repeat</option>
         <option value="weekly">Repeats every week</option>
         <option value="monthly">Repeats every month</option>
+        <option value="weekly-forever">Repeats every week, indefinitely</option>
+        <option value="monthly-forever">Repeats every month, indefinitely</option>
       </select>
+      <div style="font-size:0.65rem;color:var(--text3);margin-top:0.4rem;">"Indefinitely" schedules 2 years out — long enough that you'll never notice it end, without literally being infinite in the database. Re-open this gig later to extend it further whenever you want.</div>
     </div>
     <div class="form-group" id="gigRepeatCountRow" style="display:none;align-items:center;gap:0.6rem;">
       <label class="form-label" style="margin:0;">For</label><input type="number" class="form-input" id="gigRepeatCount" value="12" min="2" max="52" style="width:70px;"><span id="gigRepeatUnitLabel" style="font-size:0.75rem;color:var(--text3);">weeks</span>
@@ -1180,15 +1184,18 @@ function persistGig(entry,isDelete){
   // mirror to the Sheet so the Apps Script triggers (no-show + auto sign-out) can read it
   try{fetch(SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({form_type:'schedule',action:isDelete?'delete':'upsert',id:entry.id,date:entry.date,time:entry.time||'',endTime:entry.endTime||'',venue:entry.venue,host:entry.host||'Unassigned',status:entry.status||'scheduled',notes:entry.notes||''})});}catch(e){}
 }
-// Creates one gig, or (if repeatMode is 'weekly'/'monthly') a whole series of occurrences sharing a seriesId.
+// Creates one gig, or (if repeatMode is weekly/monthly, optionally "-forever") a whole series sharing a seriesId.
 function createGigEntry(base,repeatMode,count){
   repeatMode=repeatMode||'none';
-  count=(repeatMode==='none')?1:(count||12);
+  const isMonthly=repeatMode.indexOf('monthly')===0;
+  const isForever=repeatMode.indexOf('forever')!==-1;
+  if(isForever)count=isMonthly?24:104; // ~2 years out, re-open the gig later to extend further
+  else count=(repeatMode==='none')?1:(count||12);
   const seriesId=(repeatMode!=='none')?('series_'+Date.now()+'_'+Math.random().toString(36).slice(2,7)):null;
   const baseDate=new Date(base.date+'T12:00:00');
   for(let w=0;w<count;w++){
     const d=new Date(baseDate);
-    if(repeatMode==='monthly')d.setMonth(d.getMonth()+w);
+    if(isMonthly)d.setMonth(d.getMonth()+w);
     else d.setDate(d.getDate()+w*7);
     const dateStr=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
     const entry={id:Date.now().toString()+'_'+w+'_'+Math.random().toString(36).slice(2,6),date:dateStr,time:base.time||'',endTime:base.endTime||'',kind:base.kind||'',venue:base.venue,host:base.host||'Unassigned',status:'scheduled',notes:base.notes||'',seriesId};
