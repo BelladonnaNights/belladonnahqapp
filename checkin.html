@@ -106,14 +106,19 @@
     <div class="msg msg-error" id="errorMsg"></div>
   </div>
 </div>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 <script>
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbye_Vv3kGcmPhforDf73jQ-7NIOaLbg4jwTPI9_VTspEIU4nNK_NxTY14KYyQsUDe2GYQ/exec';
+firebase.initializeApp({apiKey:"AIzaSyCIfAE1JGHsUGzzVH2pz1Vyj5b5OhA0tDQ",authDomain:"belladonna-hq.firebaseapp.com",projectId:"belladonna-hq",storageBucket:"belladonna-hq.firebasestorage.app",messagingSenderId:"1021873183587",appId:"1:1021873183587:web:def283bb7b5ca48e4f9156"});
+const db = firebase.firestore();
 let selectedVenue = '', currentStatus = 'Active';
 document.getElementById('date').value = new Date().toISOString().split('T')[0];
 function setNow() { const n = new Date(); document.getElementById('checkinTime').value = String(n.getHours()).padStart(2,'0') + ':' + String(n.getMinutes()).padStart(2,'0'); }
 function selectVenue(el) { document.querySelectorAll('.venue-chip').forEach(c => c.classList.remove('selected')); el.classList.add('selected'); selectedVenue = el.textContent.trim(); }
 function addVenue() { const input = document.getElementById('newVenueInput'); const val = input.value.trim(); if (!val) return; const chip = document.createElement('div'); chip.className = 'venue-chip'; chip.textContent = val; chip.onclick = function() { selectVenue(this); }; document.getElementById('venueGrid').appendChild(chip); selectVenue(chip); input.value = ''; }
 function setStatus(s) { currentStatus = s; document.getElementById('statusActive').className = 'status-btn' + (s === 'Active' ? ' active-sel' : ''); document.getElementById('statusInactive').className = 'status-btn' + (s === 'Inactive' ? ' inactive-sel' : ''); }
+function slugify(s){ return (s||'').toLowerCase().trim().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,''); }
+function shiftDocId(date,venue,host){ return date+'__'+slugify(venue)+'__'+slugify(host); }
 async function submitForm() {
   const host = document.getElementById('host').value.trim();
   const date = document.getElementById('date').value;
@@ -126,7 +131,20 @@ async function submitForm() {
   btn.disabled = true; btn.textContent = 'Checking in...';
   document.getElementById('errorMsg').style.display = 'none';
   try {
-    await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ form_type: 'checkin', host, venue: selectedVenue, date, checkin_time: time, status: currentStatus, notes: document.getElementById('notes').value.trim() }) });
+    const docId = shiftDocId(date, selectedVenue, host);
+    await db.collection('shifts').doc(docId).set({
+      hostName: host,
+      venue: selectedVenue,
+      date: date,
+      status: 'ON',
+      availability: currentStatus,
+      checkinTime: time,
+      checkinNotes: document.getElementById('notes').value.trim(),
+      cancelled: false,
+      reviewed: false,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }, {merge:true});
     document.getElementById('successMsg').style.display = 'block'; btn.textContent = 'Checked In ✓';
   } catch(e) { showError('Submission failed. Please try again.'); btn.disabled = false; btn.textContent = 'Check In'; }
 }
