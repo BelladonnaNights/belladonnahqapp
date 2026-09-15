@@ -820,7 +820,7 @@ function showTab(id,el){
   if(id==='stats')loadStats();
   if(id==='tracker')renderTracker();
   if(id==='dashboard')renderDashboardWeek();
-  if(id==='schedule'){populateSchedFilters();Promise.all([fetchCheckinHistory(),fetchCheckoutHistory()]).then(renderScheduleAll);}
+  if(id==='schedule'){populateSchedFilters();loadShiftsData().then(renderScheduleAll);}
   if(id==='accounts')loadAccounts();
 }
 function showSub(tab,id,el){
@@ -833,17 +833,21 @@ function showSub(tab,id,el){
 }
 
 // ── SHEETS ──
+// ── LIVE STATUS (who's on shift right now) — reads shifts where status=='ON'.
+// Nothing here depends on Eddy's old Sheet1 row at all anymore, which is why
+// switching to this stops showing him: his stale entry only ever existed in
+// the abandoned old system, not because anything "signed him out."
 async function fetchSheetData(){
   try{
-    const res=await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/Sheet1?key=${SHEETS_KEY}`);
-    const data=await res.json();if(data.error)throw new Error(data.error.message);
-    const rows=data.values||[];if(rows.length<2){renderHosts([]);return;}
-    const h=rows[0].map(x=>x.toLowerCase().trim());
-    const ni=h.indexOf('host_name'),si=h.indexOf('status'),ti=h.indexOf('sign_in_time'),pi=h.indexOf('paid'),li=h.indexOf('location');
-    renderHosts(rows.slice(1).map(r=>({name:r[ni]||'',status:(r[si]||'').toUpperCase(),signIn:r[ti]||'',paid:(r[pi]||'').toUpperCase()})));
+    if(!db)throw new Error('Firebase not connected');
+    const snap=await db.collection('shifts').get();
+    const all=snap.docs.map(d=>({id:d.id,...d.data()}));
+    shiftsData=all; // keep the shared cache fresh too
+    const hosts=all.map(s=>({name:s.hostName||'',status:s.status||'OFF',signIn:s.date&&s.checkinTime?(s.date+' '+s.checkinTime):(s.checkinTime||''),paid:s.gotPaid==='Yes'?'TRUE':(s.status==='OFF'?'FALSE':'')}));
+    renderHosts(hosts);
     document.getElementById('homeError').style.display='none';
   }catch(e){
-    const err=document.getElementById('homeError');err.style.display='block';err.textContent='Could not load Google Sheet: '+e.message;
+    const err=document.getElementById('homeError');err.style.display='block';err.textContent='Could not load shift data: '+e.message;
     ['liveCount','statOn','statTotal','statToday','statUnpaid'].forEach(id=>document.getElementById(id).textContent='0');
     document.getElementById('hostList').innerHTML='<div class="empty-state">No data loaded.</div>';
   }
@@ -871,56 +875,30 @@ async function fetchCheckoutData(){
   }catch(e){checkoutData=[];}
 }
 
-// ── SIGN-IN LOG + GIG SCHEDULE: clean-normalized reads of the check-in/check-out tabs ──
-let checkinHistory=[],checkoutHistory=[];
-// New Firestore-native checkout data (shifts collection) — running alongside
-// the old Google Sheets checkoutHistory during the migration. Both are
-// checked for a cancellation match so nothing already recorded gets missed
-// while the Sign-In Log itself is still being moved over.
+// ── SIGN-IN LOG + GIG SCHEDULE ──
+// Each shifts doc already holds both the check-in AND check-out side of one
+// shift together (that's the whole point of the docId being date+venue+host),
+// so there's no more separate pairing step needed here at all.
 let shiftsData=[];
 function loadShiftsData(){
-  if(!db)return;
-  db.collection('shifts').get().then(snap=>{
+  if(!db)return Promise.resolve();
+  return db.collection('shifts').get().then(snap=>{
     shiftsData=snap.docs.map(d=>({id:d.id,...d.data()}));
-  }).catch(e=>console.warn('Could not load shifts:',e));
-}
-function normalizeSheetHeader(h){return h.toLowerCase().trim().replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'');}
-async function fetchCheckinHistory(){
-  try{
-    const res=await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent('belladonna check-in')}?key=${SHEETS_KEY}`);
-    const data=await res.json();
-    if(data.error||!data.values||data.values.length<2){checkinHistory=[];return;}
-    const headers=data.values[0].map(normalizeSheetHeader);
-    checkinHistory=data.values.slice(1).map(row=>{const obj={};headers.forEach((h,i)=>obj[h]=row[i]||'');return obj;});
-  }catch(e){checkinHistory=[];}
-}
-async function fetchCheckoutHistory(){
-  try{
-    const res=await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent('belladonna host check out')}?key=${SHEETS_KEY}`);
-    const data=await res.json();
-    if(data.error||!data.values||data.values.length<2){checkoutHistory=[];return;}
-    const headers=data.values[0].map(normalizeSheetHeader);
-    checkoutHistory=data.values.slice(1).map(row=>{const obj={};headers.forEach((h,i)=>obj[h]=row[i]||'');return obj;});
-  }catch(e){checkoutHistory=[];}
+  }).catch(e=>{console.warn('Could not load shifts:',e);shiftsData=[];});
 }
 function normVenueName(v){return (v||'').toString().toLowerCase().trim();}
 function formatDateShort(str){if(!str)return '—';const d=new Date(str+'T12:00:00');if(isNaN(d))return str;return d.toLocaleDateString('en-US',{month:'short',day:'numeric'});}
 function formatDateLong(str){if(!str)return '—';const d=new Date(str+'T12:00:00');if(isNaN(d))return str;return d.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});}
 
-// ── SIGN-IN LOG ──
-let signinReviewed={}; // keyed by host+venue+date pair, so check-in and check-out share one reviewed state
-function loadSigninReviewed(){
-  if(db){db.collection('hq_data').doc('signin-reviewed').get().then(snap=>{if(snap.exists){signinReviewed=snap.data()||{};renderSigninLog();}}).catch(()=>{});}
+function setReviewed(id,val){
+  const s=shiftsData.find(x=>x.id===id);
+  if(s)s.reviewed=val;
+  if(db){try{db.collection('shifts').doc(id).set({reviewed:val},{merge:true});}catch(e){}}
 }
-function setReviewed(key,val){
-  signinReviewed[key]=val;
-  if(db){try{db.collection('hq_data').doc('signin-reviewed').set(signinReviewed,{merge:true});}catch(e){}}
-}
-function pairKey(host,venue,date){return (host+'|'+venue+'|'+date).toLowerCase().replace(/[^a-z0-9|]+/g,'_');}
 async function refreshSigninLog(){
   const el=document.getElementById('signinResults');
   if(el)el.innerHTML='<div class="empty-state">Loading sign-in log...</div>';
-  await Promise.all([fetchCheckinHistory(),fetchCheckoutHistory()]);
+  await loadShiftsData();
   populateVenueFilterOptions('signinVenueFilter');
   renderSigninLog();
 }
@@ -931,11 +909,10 @@ function populateVenueFilterOptions(selectId){
   sel.innerHTML='<option value="">All Venues</option>'+getVenueNames().map(v=>`<option value="${v}">${v}</option>`).join('');
   sel.value=cur;
 }
-// Pairs each host's check-in with their check-out for the same venue+date, filtered
-// by the log's search/type/venue/date controls. Defaults to the last 90 days when no
-// explicit date range is set, purely to keep the view readable — nothing is ever
-// deleted, so any date range can always be pulled back up. "Unreviewed" ignores that
-// default and searches everything, since the whole point is finding old unread notes.
+// Filtered/sorted view of shiftsData — most recent date first, same as before.
+// Defaults to the last 90 days when no explicit range is set, purely to keep
+// the view readable — nothing is ever deleted, so any range can be pulled
+// back up. "Unreviewed" ignores that default and searches everything.
 function getFilteredSigninGroups(){
   const search=(document.getElementById('signinSearch').value||'').toLowerCase().trim();
   const typeF=document.getElementById('signinTypeFilter').value;
@@ -944,31 +921,30 @@ function getFilteredSigninGroups(){
   const to=document.getElementById('signinTo').value;
   const defaultFrom=(from||typeF==='unreviewed')?null:(()=>{const d=new Date();d.setDate(d.getDate()-90);return d.toISOString().slice(0,10);})();
 
-  const groups={};
-  checkinHistory.forEach(r=>{
-    const key=pairKey(r.host,r.venue,r.date);
-    if(!groups[key])groups[key]={key,host:r.host||'',venue:r.venue||'',date:r.date||'',checkin:null,checkout:null};
-    groups[key].checkin=r;
-  });
-  checkoutHistory.forEach(r=>{
-    const key=pairKey(r.host,r.venue,r.date);
-    if(!groups[key])groups[key]={key,host:r.host||'',venue:r.venue||'',date:r.date||'',checkin:null,checkout:null};
-    groups[key].checkout=r;
-  });
-
-  let entries=Object.values(groups).map(g=>({...g,cancelled:!!(g.checkout&&(g.checkout.gig_canceled||'').toLowerCase()==='yes')}));
+  let entries=shiftsData.map(s=>({
+    key:s.id, host:s.hostName||'', venue:s.venue||'', date:s.date||'',
+    hasCheckin:!!s.checkinTime, hasCheckout:s.status==='OFF',
+    checkinTime:s.checkinTime||'', checkoutTime:s.checkoutTime||'',
+    cancelled:!!s.cancelled, cancelReason:s.cancelReason||'',
+    notPaid:s.status==='OFF'&&(s.gotPaid||'').toLowerCase()!=='yes',
+    crowdSize:s.crowdSize||'', singers:s.singers||'', energyLevel:s.energyLevel||'',
+    venueBusy:s.venueBusy||'', gotPaid:s.gotPaid||'', tipScale:s.tipScale||'',
+    availability:s.checkoutAvailability||s.availability||'', issues:s.issues||'',
+    checkinNotes:s.checkinNotes||'', checkoutNotes:s.checkoutNotes||'', photoUrl:s.photoUrl||'',
+    reviewed:!!s.reviewed
+  }));
   entries=entries.filter(g=>{
     if(typeF==='cancelled'&&!g.cancelled)return false;
-    if(typeF==='checkin'&&!g.checkin)return false;
-    if(typeF==='checkout'&&!g.checkout)return false;
-    if(typeF==='notpaid'&&!(g.checkout&&(g.checkout.got_paid||'').toLowerCase()==='no'))return false;
-    if(typeF==='unreviewed'&&signinReviewed[g.key])return false;
+    if(typeF==='checkin'&&!g.hasCheckin)return false;
+    if(typeF==='checkout'&&!g.hasCheckout)return false;
+    if(typeF==='notpaid'&&!g.notPaid)return false;
+    if(typeF==='unreviewed'&&g.reviewed)return false;
     if(venueF&&g.venue!==venueF)return false;
     if(from&&g.date<from)return false;
     if(to&&g.date>to)return false;
     if(!from&&defaultFrom&&g.date<defaultFrom)return false;
     if(search){
-      const hay=(g.host+' '+g.venue+' '+(g.checkin?.notes||'')+' '+(g.checkout?.notes||'')+' '+(g.checkout?.issues||'')).toLowerCase();
+      const hay=(g.host+' '+g.venue+' '+g.checkinNotes+' '+g.checkoutNotes+' '+g.issues).toLowerCase();
       if(!hay.includes(search))return false;
     }
     return true;
@@ -994,9 +970,6 @@ function renderSigninLog(){
   `).join('');
 }
 function renderSigninCard(g){
-  const reviewed=!!signinReviewed[g.key];
-  const co=g.checkout;
-  const notPaid=!!(co&&(co.got_paid||'').toLowerCase()==='no');
   return `<div class="signin-card${g.cancelled?' cancelled':''}">
     <div class="signin-top">
       <div class="host-avatar" style="flex-shrink:0;">${(g.host||'?').charAt(0).toUpperCase()}</div>
@@ -1005,30 +978,30 @@ function renderSigninCard(g){
         <div class="signin-meta">${g.venue||'—'}</div>
       </div>
       <div style="display:flex;flex-direction:column;align-items:flex-end;gap:0.25rem;">
-        <span class="signin-badge checkin"${g.checkin?'':' style="opacity:0.4"'}>In${g.checkin&&g.checkin.check_in_time?' · '+g.checkin.check_in_time:''}${g.checkin?'':' — none'}</span>
-        <span class="signin-badge checkout"${co?'':' style="opacity:0.4"'}>Out${co&&co.check_out_time?' · '+co.check_out_time:''}${co?'':' — none'}</span>
+        <span class="signin-badge checkin"${g.hasCheckin?'':' style="opacity:0.4"'}>In${g.checkinTime?' · '+g.checkinTime:''}${g.hasCheckin?'':' — none'}</span>
+        <span class="signin-badge checkout"${g.hasCheckout?'':' style="opacity:0.4"'}>Out${g.checkoutTime?' · '+g.checkoutTime:''}${g.hasCheckout?'':' — none'}</span>
       </div>
     </div>
     <div style="display:flex;gap:0.4rem;flex-wrap:wrap;margin:0.4rem 0;">
       ${g.cancelled?'<span class="signin-badge cancelled-badge">Cancelled</span>':''}
-      ${notPaid?'<span class="signin-badge cancelled-badge">Not Paid</span>':''}
+      ${g.notPaid?'<span class="signin-badge cancelled-badge">Not Paid</span>':''}
     </div>
-    ${co&&!g.cancelled?`<div class="signin-detail-row">
-      <span><b>Crowd:</b> ${co.crowd_size||'—'}</span>
-      <span><b>Singers:</b> ${co.singers||'—'}</span>
-      <span><b>Energy:</b> ${co.energy_level||'—'}</span>
-      <span><b>Venue Busy:</b> ${co.venue_busy||'—'}</span>
-      <span><b>Paid:</b> ${co.got_paid||'—'}</span>
-      <span><b>Tips:</b> ${co.tip_scale||'—'}</span>
-      <span><b>Status:</b> ${co.status||'—'}</span>
+    ${g.hasCheckout&&!g.cancelled?`<div class="signin-detail-row">
+      <span><b>Crowd:</b> ${g.crowdSize||'—'}</span>
+      <span><b>Singers:</b> ${g.singers||'—'}</span>
+      <span><b>Energy:</b> ${g.energyLevel||'—'}</span>
+      <span><b>Venue Busy:</b> ${g.venueBusy||'—'}</span>
+      <span><b>Paid:</b> ${g.gotPaid||'—'}</span>
+      <span><b>Tips:</b> ${g.tipScale||'—'}</span>
+      <span><b>Status:</b> ${g.availability||'—'}</span>
     </div>`:''}
-    ${co&&co.issues&&!g.cancelled?`<div class="signin-notes"><b style="color:var(--rose)">Issues: </b>${co.issues}</div>`:''}
-    ${g.checkin&&g.checkin.notes?`<div class="signin-notes"><b style="color:var(--text3)">Check-in note: </b>${g.checkin.notes}</div>`:''}
-    ${g.cancelled?`<div class="signin-notes"><b style="color:var(--rose)">Reason: </b>${co.cancel_reason||''}</div>`:(co&&co.notes?`<div class="signin-notes"><b style="color:var(--text3)">Check-out note: </b>${co.notes}</div>`:'')}
-    ${co&&(co.photo_url||'').startsWith('http')?`<img src="${co.photo_url}" class="signin-photo" onclick="window.open('${co.photo_url}','_blank')" alt="Shift photo">`:''}
-    <label class="signin-reviewed${reviewed?' is-reviewed':''}">
-      <input type="checkbox" ${reviewed?'checked':''} onchange="setReviewed('${g.key}',this.checked);this.closest('.signin-reviewed').classList.toggle('is-reviewed',this.checked);this.nextElementSibling.textContent=this.checked?'Reviewed':'Mark Reviewed';">
-      <span>${reviewed?'Reviewed':'Mark Reviewed'}</span>
+    ${g.issues&&!g.cancelled?`<div class="signin-notes"><b style="color:var(--rose)">Issues: </b>${g.issues}</div>`:''}
+    ${g.checkinNotes?`<div class="signin-notes"><b style="color:var(--text3)">Check-in note: </b>${g.checkinNotes}</div>`:''}
+    ${g.cancelled?`<div class="signin-notes"><b style="color:var(--rose)">Reason: </b>${g.cancelReason||''}</div>`:(g.checkoutNotes?`<div class="signin-notes"><b style="color:var(--text3)">Check-out note: </b>${g.checkoutNotes}</div>`:'')}
+    ${(g.photoUrl||'').startsWith('http')?`<img src="${g.photoUrl}" class="signin-photo" onclick="window.open('${g.photoUrl}','_blank')" alt="Shift photo">`:''}
+    <label class="signin-reviewed${g.reviewed?' is-reviewed':''}">
+      <input type="checkbox" ${g.reviewed?'checked':''} onchange="setReviewed('${g.key}',this.checked);this.closest('.signin-reviewed').classList.toggle('is-reviewed',this.checked);this.nextElementSibling.textContent=this.checked?'Reviewed':'Mark Reviewed';">
+      <span>${g.reviewed?'Reviewed':'Mark Reviewed'}</span>
     </label>
   </div>`;
 }
@@ -1036,8 +1009,13 @@ function markAllSigninReviewed(){
   const entries=getFilteredSigninGroups();
   if(!entries.length)return;
   if(!confirm('Mark all '+entries.length+' currently-shown sign-in/out records as reviewed?'))return;
-  entries.forEach(g=>{signinReviewed[g.key]=true;});
-  if(db){try{db.collection('hq_data').doc('signin-reviewed').set(signinReviewed,{merge:true});}catch(e){}}
+  const batch=db.batch();
+  entries.forEach(g=>{
+    const s=shiftsData.find(x=>x.id===g.key);
+    if(s)s.reviewed=true;
+    batch.set(db.collection('shifts').doc(g.key),{reviewed:true},{merge:true});
+  });
+  batch.commit().catch(e=>console.warn('Batch reviewed update failed:',e));
   renderSigninLog();
 }
 
@@ -1057,21 +1035,15 @@ function exportSigninCSV(){
   const from=document.getElementById('exportFrom').value;
   const to=document.getElementById('exportTo').value;
   if(!from||!to){alert('Please set both a from and to date.');return;}
-  const groups={};
-  checkinHistory.forEach(r=>{const key=pairKey(r.host,r.venue,r.date);if(!groups[key])groups[key]={key,host:r.host||'',venue:r.venue||'',date:r.date||'',checkin:null,checkout:null};groups[key].checkin=r;});
-  checkoutHistory.forEach(r=>{const key=pairKey(r.host,r.venue,r.date);if(!groups[key])groups[key]={key,host:r.host||'',venue:r.venue||'',date:r.date||'',checkin:null,checkout:null};groups[key].checkout=r;});
-  const rows=Object.values(groups).filter(g=>g.date>=from&&g.date<=to).sort((a,b)=>a.date.localeCompare(b.date)||a.host.localeCompare(b.host));
+  const rows=shiftsData.filter(s=>s.date>=from&&s.date<=to).sort((a,b)=>a.date.localeCompare(b.date)||(a.hostName||'').localeCompare(b.hostName||''));
   if(!rows.length){alert('No records in that date range.');return;}
   const headers=['Date','Host','Venue','Check-In Time','Check-Out Time','Crowd Size','Singers','Energy','Venue Busy','Got Paid','Tips','Status','Cancelled','Cancel Reason','Issues','Check-In Notes','Check-Out Notes','Photo URL','Reviewed'];
   const lines=[headers.join(',')];
-  rows.forEach(g=>{
-    const co=g.checkout||{};
-    const ci=g.checkin||{};
-    const cancelled=(co.gig_canceled||'').toLowerCase()==='yes';
+  rows.forEach(s=>{
     lines.push([
-      g.date,g.host,g.venue,ci.check_in_time||'',co.check_out_time||'',co.crowd_size||'',co.singers||'',co.energy_level||'',
-      co.venue_busy||'',co.got_paid||'',co.tip_scale||'',co.status||'',cancelled?'Yes':'No',co.cancel_reason||'',co.issues||'',
-      ci.notes||'',co.notes||'',co.photo_url||'',signinReviewed[g.key]?'Yes':'No'
+      s.date,s.hostName||'',s.venue||'',s.checkinTime||'',s.checkoutTime||'',s.crowdSize||'',s.singers||'',s.energyLevel||'',
+      s.venueBusy||'',s.gotPaid||'',s.tipScale||'',s.checkoutAvailability||s.availability||'',s.cancelled?'Yes':'No',s.cancelReason||'',s.issues||'',
+      s.checkinNotes||'',s.checkoutNotes||'',s.photoUrl||'',s.reviewed?'Yes':'No'
     ].map(csvEscape).join(','));
   });
   const blob=new Blob([lines.join('\n')],{type:'text/csv;charset=utf-8;'});
@@ -1214,11 +1186,10 @@ function createGigEntry(base,repeatMode,count){
     persistGig(entry,false);
   }
 }
-function gigSignedIn(entry){return checkinHistory.some(r=>normVenueName(r.venue)===normVenueName(entry.venue)&&r.date===entry.date);}
-function gigSignedInBy(entry){return [...new Set(checkinHistory.filter(r=>normVenueName(r.venue)===normVenueName(entry.venue)&&r.date===entry.date).map(r=>r.host))].join(', ');}
+function gigSignedIn(entry){return shiftsData.some(s=>normVenueName(s.venue)===normVenueName(entry.venue)&&s.date===entry.date);}
+function gigSignedInBy(entry){return [...new Set(shiftsData.filter(s=>normVenueName(s.venue)===normVenueName(entry.venue)&&s.date===entry.date).map(s=>s.hostName))].join(', ');}
 function gigCheckoutCancelled(entry){
-  if(shiftsData.some(s=>normVenueName(s.venue)===normVenueName(entry.venue)&&s.date===entry.date&&s.cancelled===true))return true;
-  return checkoutHistory.some(r=>normVenueName(r.venue)===normVenueName(entry.venue)&&r.date===entry.date&&(r.gig_canceled||'').toLowerCase()==='yes');
+  return shiftsData.some(s=>normVenueName(s.venue)===normVenueName(entry.venue)&&s.date===entry.date&&s.cancelled===true);
 }
 function getGigStatus(entry){
   if(entry.status==='cancelled'||gigCheckoutCancelled(entry))return{key:'cancelled',label:'Cancelled',color:'var(--text3)'};
@@ -2247,7 +2218,6 @@ function init(){
   loadHostOrder();
   loadTrackerAnswers();
   loadGigSchedule();
-  loadSigninReviewed();
   loadPlannerData();
   loadShiftsData();
   renderRoster();
