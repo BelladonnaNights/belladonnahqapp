@@ -115,11 +115,10 @@
   <div class="card" id="cancelCard" style="border-color:rgba(176,80,112,0.3);">
     <div class="card-title">Gig Status</div>
     <div class="field" style="margin-bottom:0;">
-      <label class="field-label">Was This Gig Canceled?</label>
-      <div class="yn-toggle">
-        <button class="yn-btn yes-sel" id="cancelNo" onclick="setCanceled(false)">No, It Happened</button>
-        <button class="yn-btn" id="cancelYes" onclick="setCanceled(true)">Yes, Canceled</button>
-      </div>
+      <label style="display:flex;align-items:center;gap:0.6rem;cursor:pointer;font-size:0.8rem;color:var(--text);">
+        <input type="checkbox" id="cancelCheck" onchange="setCanceled(this.checked)" style="width:18px;height:18px;accent-color:var(--rose2);cursor:pointer;">
+        Gig Canceled
+      </label>
     </div>
     <div class="field" id="cancelReasonField" style="display:none;margin-top:1.2rem;margin-bottom:0;">
       <label class="field-label">What Happened? <span class="required">*</span></label>
@@ -238,8 +237,6 @@ function setYN(field,val){if(field==='busy'){venueBusy=val;document.getElementBy
 function setStatus(s){currentStatus=s;document.getElementById('statusActive').className='status-btn'+(s==='Active'?' active-sel':'');document.getElementById('statusInactive').className='status-btn'+(s==='Inactive'?' inactive-sel':'');}
 function setCanceled(val){
   gigCanceled=val;
-  document.getElementById('cancelNo').className='yn-btn'+(!val?' yes-sel':'');
-  document.getElementById('cancelYes').className='yn-btn'+(val?' no-sel':'');
   document.getElementById('cancelReasonField').style.display=val?'block':'none';
   document.getElementById('shiftIntelCard').style.display=val?'none':'block';
   document.getElementById('payTipsCard').style.display=val?'none':'block';
