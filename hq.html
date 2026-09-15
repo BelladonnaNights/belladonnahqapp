@@ -873,6 +873,17 @@ async function fetchCheckoutData(){
 
 // ── SIGN-IN LOG + GIG SCHEDULE: clean-normalized reads of the check-in/check-out tabs ──
 let checkinHistory=[],checkoutHistory=[];
+// New Firestore-native checkout data (shifts collection) — running alongside
+// the old Google Sheets checkoutHistory during the migration. Both are
+// checked for a cancellation match so nothing already recorded gets missed
+// while the Sign-In Log itself is still being moved over.
+let shiftsData=[];
+function loadShiftsData(){
+  if(!db)return;
+  db.collection('shifts').get().then(snap=>{
+    shiftsData=snap.docs.map(d=>({id:d.id,...d.data()}));
+  }).catch(e=>console.warn('Could not load shifts:',e));
+}
 function normalizeSheetHeader(h){return h.toLowerCase().trim().replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'');}
 async function fetchCheckinHistory(){
   try{
@@ -1205,7 +1216,10 @@ function createGigEntry(base,repeatMode,count){
 }
 function gigSignedIn(entry){return checkinHistory.some(r=>normVenueName(r.venue)===normVenueName(entry.venue)&&r.date===entry.date);}
 function gigSignedInBy(entry){return [...new Set(checkinHistory.filter(r=>normVenueName(r.venue)===normVenueName(entry.venue)&&r.date===entry.date).map(r=>r.host))].join(', ');}
-function gigCheckoutCancelled(entry){return checkoutHistory.some(r=>normVenueName(r.venue)===normVenueName(entry.venue)&&r.date===entry.date&&(r.gig_canceled||'').toLowerCase()==='yes');}
+function gigCheckoutCancelled(entry){
+  if(shiftsData.some(s=>normVenueName(s.venue)===normVenueName(entry.venue)&&s.date===entry.date&&s.cancelled===true))return true;
+  return checkoutHistory.some(r=>normVenueName(r.venue)===normVenueName(entry.venue)&&r.date===entry.date&&(r.gig_canceled||'').toLowerCase()==='yes');
+}
 function getGigStatus(entry){
   if(entry.status==='cancelled'||gigCheckoutCancelled(entry))return{key:'cancelled',label:'Cancelled',color:'var(--text3)'};
   if(gigSignedIn(entry))return{key:'signedin',label:'Signed In',color:'var(--live)'};
@@ -2235,6 +2249,7 @@ function init(){
   loadGigSchedule();
   loadSigninReviewed();
   loadPlannerData();
+  loadShiftsData();
   renderRoster();
   renderVenueManage();
   populateRosterFilters();
