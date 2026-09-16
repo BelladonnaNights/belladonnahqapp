@@ -778,6 +778,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
   <div class="modal">
     <div class="modal-title" id="venueModalTitle">Add Venue</div>
     <div class="form-group"><label class="form-label">Venue Name</label><input type="text" class="form-input" id="vmName" placeholder="Venue name"></div>
+    <div class="form-group"><label class="form-label">Location</label><select class="form-input" id="vmLocation"></select></div>
     <div class="form-group"><label class="form-label">Type of Gig / What We Do There</label><div class="chip-grid" id="gigChips"></div></div>
     <div class="form-group"><label class="form-label">Notes (optional)</label><textarea class="form-textarea" id="vmNotes" placeholder="Any notes about this venue..." style="min-height:60px;"></textarea></div>
     <div class="modal-actions">
@@ -883,6 +884,12 @@ let dragSrc=null,dragTabId=null,checkoutData=[];
 function loadStorage(){
   try{const r=LS.get('host-roster');if(r)roster=JSON.parse(r);}catch(e){}
   try{const v=LS.get('venues-list');if(v)venues=JSON.parse(v);}catch(e){}
+}
+function loadVenuesList(){
+  if(!db)return;
+  db.collection('hq_data').doc('venues-list').get().then(snap=>{
+    if(snap.exists){try{venues=JSON.parse(snap.data().value);renderVenueManage();populateRosterFilters();}catch(e){}}
+  }).catch(()=>{});
 }
 function persist(key,val,dotId){
   LS.set(key,JSON.stringify(val));
@@ -1702,6 +1709,7 @@ function refreshAllLocationScopedData(){
   loadShiftsData().then(()=>{ renderSigninLog(); fetchSheetData(); });
   loadGigSchedule();
   loadRecruits();
+  renderVenueManage();
 }
 
 // ── HOST ONBOARDING ──
@@ -2041,15 +2049,19 @@ function deleteHost(id){if(!confirm('Remove this host?'))return;roster=roster.fi
 // ── VENUES ──
 function renderVenueManage(){
   const el=document.getElementById('venueManageList');
-  if(!venues.length){el.innerHTML='<div class="empty-state">No venues yet.</div>';return;}
+  const scoped=venues.filter(v=>locationScopeMatches(v.locationId));
+  if(!scoped.length){el.innerHTML='<div class="empty-state">No venues yet.</div>';return;}
   function gigClass(g){const m={'Karaoke':'gig-karaoke','Bingo':'gig-bingo','Trivia':'gig-trivia','Events':'gig-events','Private Events':'gig-private'};return m[g]||'';}
-  el.innerHTML=venues.map(v=>`<div class="venue-manage-card"><div class="venue-manage-header"><div class="venue-manage-name">${v.name}</div><div style="display:flex;gap:0.4rem;"><button class="action-btn edit" onclick="openVenueModal('${v.id}')">✎</button><button class="action-btn delete" onclick="deleteVenue('${v.id}')">✕</button></div></div><div class="venue-gig-tags">${(v.gigs||[]).map(g=>`<span class="venue-gig-tag ${gigClass(g)}">${g}</span>`).join('')}</div>${v.notes?`<div style="font-size:0.81rem;color:var(--text3);margin-top:0.5rem;">${v.notes}</div>`:''}</div>`).join('');
+  el.innerHTML=scoped.map(v=>`<div class="venue-manage-card"><div class="venue-manage-header"><div class="venue-manage-name">${v.name}${v.locationId?` <span style="font-size:0.65rem;color:var(--text3);font-weight:400;">· ${locationLabel(v.locationId)}</span>`:''}</div><div style="display:flex;gap:0.4rem;"><button class="action-btn edit" onclick="openVenueModal('${v.id}')">✎</button><button class="action-btn delete" onclick="deleteVenue('${v.id}')">✕</button></div></div><div class="venue-gig-tags">${(v.gigs||[]).map(g=>`<span class="venue-gig-tag ${gigClass(g)}">${g}</span>`).join('')}</div>${v.notes?`<div style="font-size:0.81rem;color:var(--text3);margin-top:0.5rem;">${v.notes}</div>`:''}</div>`).join('');
 }
 function openVenueModal(id=null){
   editVenueId=id;const venue=id?venues.find(v=>v.id===id):null;
   document.getElementById('venueModalTitle').textContent=id?'Edit Venue':'Add Venue';
   document.getElementById('vmName').value=venue?venue.name:'';
   document.getElementById('vmNotes').value=venue?venue.notes||'':'';
+  const locSel=document.getElementById('vmLocation');
+  locSel.innerHTML=locations.map(l=>`<option value="${l.code}">${l.label}</option>`).join('');
+  locSel.value=(venue&&venue.locationId)?venue.locationId:(currentLocationScope!=='ALL'?currentLocationScope:((locations[0]&&locations[0].code)||''));
   document.getElementById('gigChips').innerHTML=['Karaoke','Bingo','Trivia','Events','Private Events'].map(g=>{const sel=venue&&(venue.gigs||[]).includes(g);return`<div class="chip${sel?' selected-skill':''}" onclick="toggleChip(this,'skill')">${g}</div>`;}).join('');
   document.getElementById('venueModal').classList.add('open');
 }
@@ -2058,8 +2070,9 @@ function saveVenue(){
   const name=document.getElementById('vmName').value.trim();if(!name)return;
   const gigs=[...document.querySelectorAll('#gigChips .selected-skill')].map(el=>el.textContent);
   const notes=document.getElementById('vmNotes').value.trim();
-  if(editVenueId){const v=venues.find(x=>x.id===editVenueId);if(v){v.name=name;v.gigs=gigs;v.notes=notes;}}
-  else venues.push({id:Date.now().toString(),name,gigs,notes});
+  const locationId=document.getElementById('vmLocation').value;
+  if(editVenueId){const v=venues.find(x=>x.id===editVenueId);if(v){v.name=name;v.gigs=gigs;v.notes=notes;v.locationId=locationId;}}
+  else venues.push({id:Date.now().toString(),name,gigs,notes,locationId});
   persist('venues-list',venues,'venuesSave');
   renderVenueManage();populateRosterFilters();closeVenueModal();
 }
@@ -2590,6 +2603,7 @@ function init(){
   loadPlannerData();
   loadShiftsData();
   loadOnboardingLinks();
+  loadVenuesList();
   renderRoster();
   renderVenueManage();
   populateRosterFilters();
