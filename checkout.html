@@ -86,25 +86,18 @@
   <div class="card">
     <div class="card-title">Shift Details</div>
     <div class="field">
-      <label class="field-label">Location <span class="required">*</span></label>
-      <select class="field-input" id="locationSelect"></select>
-    </div>
-    <div class="field">
       <label class="field-label">Host Name <span class="required">*</span></label>
       <input type="text" class="field-input" id="host" placeholder="Your name">
     </div>
     <div class="field">
+      <label class="field-label">Location <span class="required">*</span></label>
+      <select class="field-input" id="locationSelect" onchange="renderVenueChips()"></select>
+    </div>
+    <div class="field">
       <label class="field-label">Venue <span class="required">*</span></label>
-      <div class="venue-grid" id="venueGrid">
-        <div class="venue-chip" onclick="selectVenue(this)">The Coaster</div>
-        <div class="venue-chip" onclick="selectVenue(this)">Action Bar & Grill</div>
-        <div class="venue-chip" onclick="selectVenue(this)">McMillins Farm</div>
-        <div class="venue-chip" onclick="selectVenue(this)">The Forum</div>
-      </div>
-      <div class="add-venue-row">
-        <input type="text" class="add-venue-input" id="newVenueInput" placeholder="Add a venue...">
-        <button class="add-btn" onclick="addVenue()">+ Add</button>
-      </div>
+      <input type="text" class="field-input" id="venueSearch" placeholder="Search venues..." oninput="filterVenues()" style="margin-bottom:0.6rem;">
+      <div class="venue-grid" id="venueGrid"></div>
+      <div id="noVenueMatch" style="display:none;font-size:0.7rem;color:var(--text3);padding:0.4rem 0;font-style:italic;">No venues found for this location yet.</div>
     </div>
     <div class="field">
       <label class="field-label">Date <span class="required">*</span></label>
@@ -233,15 +226,48 @@ db.collection('hq_data').doc('locations').get().then(snap=>{
   const list=(snap.exists&&Array.isArray(snap.data().list)&&snap.data().list.length)?snap.data().list:[{code:'wa-southsound',label:'WA - South Sound'}];
   const sel=document.getElementById('locationSelect');
   sel.innerHTML=list.map(l=>`<option value="${l.code}">${l.label}</option>`).join('');
+  loadAllVenues();
 }).catch(()=>{
   document.getElementById('locationSelect').innerHTML='<option value="wa-southsound">WA - South Sound</option>';
+  loadAllVenues();
 });
+// Reads the exact same venue list HQ's own Venues tab manages — nothing
+// hardcoded here. Filtered to whichever location is selected; venues with no
+// location tag yet stay visible everywhere rather than disappearing.
+let allVenues=[];
+function loadAllVenues(){
+  db.collection('hq_data').doc('venues-list').get().then(snap=>{
+    if(snap.exists){try{allVenues=JSON.parse(snap.data().value)||[];}catch(e){allVenues=[];}}
+    renderVenueChips();
+  }).catch(()=>{ renderVenueChips(); });
+}
+function renderVenueChips(){
+  const loc=document.getElementById('locationSelect').value;
+  const grid=document.getElementById('venueGrid');
+  const matches=allVenues.filter(v=>!v.locationId||v.locationId===loc);
+  selectedVenue='';
+  if(!matches.length){grid.innerHTML='';document.getElementById('noVenueMatch').style.display='block';return;}
+  document.getElementById('noVenueMatch').style.display='none';
+  grid.innerHTML=matches.map(v=>`<div class="venue-chip" onclick="selectVenue(this)">${v.name}</div>`).join('');
+  filterVenues();
+}
 
 let selectedVenue='',selectedCrowd='',starRating=0,venueBusy='',gotPaid='',currentStatus='Active',selectedPhotoFile=null,gigCanceled=false;
-document.getElementById('date').value=new Date().toISOString().split('T')[0];
+function localDateStr(d){ d=d||new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+document.getElementById('date').value=localDateStr();
 function setNow(){const n=new Date();document.getElementById('checkoutTime').value=String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0');}
 function selectVenue(el){document.querySelectorAll('.venue-chip').forEach(c=>c.classList.remove('selected'));el.classList.add('selected');selectedVenue=el.textContent.trim();}
-function addVenue(){const input=document.getElementById('newVenueInput');const val=input.value.trim();if(!val)return;const chip=document.createElement('div');chip.className='venue-chip';chip.textContent=val;chip.onclick=function(){selectVenue(this);};document.getElementById('venueGrid').appendChild(chip);selectVenue(chip);input.value='';}
+function filterVenues(){
+  const q=(document.getElementById('venueSearch').value||'').toLowerCase().trim();
+  const chips=document.querySelectorAll('.venue-chip');
+  let anyVisible=false;
+  chips.forEach(c=>{
+    const match=!q||c.textContent.toLowerCase().includes(q);
+    c.style.display=match?'':'none';
+    if(match)anyVisible=true;
+  });
+  document.getElementById('noVenueMatch').style.display=(chips.length&&q&&!anyVisible)?'block':(chips.length?'none':'block');
+}
 function selectCrowd(el){document.querySelectorAll('.crowd-chip').forEach(c=>c.classList.remove('selected'));el.classList.add('selected');selectedCrowd=el.textContent.trim();}
 function setStar(n){starRating=n;document.querySelectorAll('.star').forEach((s,i)=>s.classList.toggle('lit',i<n));}
 function setYN(field,val){if(field==='busy'){venueBusy=val;document.getElementById('busyYes').className='yn-btn'+(val==='Yes'?' yes-sel':'');document.getElementById('busyNo').className='yn-btn'+(val==='No'?' no-sel':'');}else{gotPaid=val;document.getElementById('paidYes').className='yn-btn'+(val==='Yes'?' yes-sel':'');document.getElementById('paidNo').className='yn-btn'+(val==='No'?' no-sel':'');}}
