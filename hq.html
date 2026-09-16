@@ -355,6 +355,15 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
   </button>
   <div class="admin-content" id="adminContent">
     <div class="admin-section">
+      <div class="admin-section-title">Locations <span style="font-size:0.55rem;color:var(--text3)">(code + display label — add a location once here, it's available everywhere)</span></div>
+      <div class="admin-ranks-list" id="adminLocationsList"></div>
+      <div style="display:flex;gap:0.4rem;margin-top:0.5rem;">
+        <input type="text" id="newLocationCode" placeholder="wa-southsound" style="flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:0.4rem 0.6rem;font-size:0.72rem;">
+        <input type="text" id="newLocationLabel" placeholder="WA - South Sound" style="flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:0.4rem 0.6rem;font-size:0.72rem;">
+      </div>
+      <button class="admin-add-btn" onclick="adminAddLocation()">+ Add Location</button>
+    </div>
+    <div class="admin-section">
       <div class="admin-section-title">Host Ranks <span style="font-size:0.55rem;color:var(--text3)">(drag to reorder · click name to edit)</span></div>
       <div class="admin-ranks-list" id="adminRanksList"></div>
       <button class="admin-add-btn" onclick="adminAddRank()">+ Add Rank</button>
@@ -367,6 +376,11 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
       <button class="admin-danger-btn" onclick="openResetStatsModal()">⚠ Reset Stats Data</button>
     </div>
   </div>
+</div>
+
+<div id="locationScopeBar" style="display:none;background:var(--surface2);border-bottom:1px solid var(--border);padding:0.5rem 1.2rem;align-items:center;gap:0.6rem;font-size:0.68rem;color:var(--text3);letter-spacing:0.04em;">
+  <span>Viewing:</span>
+  <select id="locationScopeSelect" onchange="setLocationScope(this.value)" style="background:var(--surface3);border:1px solid var(--border);border-radius:6px;color:var(--gold);padding:0.3rem 0.6rem;font-size:0.7rem;"></select>
 </div>
 
 <div class="header">
@@ -770,6 +784,26 @@ if(authInst){
   authInst.onAuthStateChanged(function(user){
     const bar=document.getElementById('gatewayUserBar');
     if(user&&bar)bar.textContent='Signed in as '+(user.email||'account');
+    if(user&&db){
+      db.collection('users').doc(user.uid).get().then(function(snap){
+        const profile=snap.exists?snap.data():{};
+        myLocationId=profile.locationId||null;
+        myAllLocations=!!profile.allLocations;
+        loadLocations().then(function(){
+          if(myAllLocations){
+            currentLocationScope='ALL';
+            const bar2=document.getElementById('locationScopeBar');
+            if(bar2)bar2.style.display='flex';
+            populateLocationScopeSelect();
+          }else{
+            currentLocationScope=myLocationId||(locations[0]&&locations[0].code)||'ALL';
+            const bar2=document.getElementById('locationScopeBar');
+            if(bar2)bar2.style.display='none';
+          }
+          refreshAllLocationScopedData();
+        });
+      }).catch(function(){ loadLocations(); });
+    }
   });
 }
 function gatewaySignOut(){
@@ -841,9 +875,9 @@ async function fetchSheetData(){
   try{
     if(!db)throw new Error('Firebase not connected');
     const snap=await db.collection('shifts').get();
-    const all=snap.docs.map(d=>({id:d.id,...d.data()}));
+    const all=snap.docs.map(d=>({id:d.id,...d.data()})).filter(s=>locationScopeMatches(s.locationId));
     shiftsData=all; // keep the shared cache fresh too
-    const hosts=all.map(s=>({name:s.hostName||'',status:s.status||'OFF',signIn:s.date&&s.checkinTime?(s.date+' '+s.checkinTime):(s.checkinTime||''),paid:s.gotPaid==='Yes'?'TRUE':(s.status==='OFF'?'FALSE':'')}));
+    const hosts=all.map(s=>({name:s.hostName||'',status:s.status||'OFF',signIn:s.date&&s.checkinTime?(s.date+' '+formatTime12(s.checkinTime)):(s.checkinTime?formatTime12(s.checkinTime):''),paid:s.gotPaid==='Yes'?'TRUE':(s.status==='OFF'?'FALSE':'')}));
     renderHosts(hosts);
     document.getElementById('homeError').style.display='none';
   }catch(e){
@@ -883,12 +917,24 @@ let shiftsData=[];
 function loadShiftsData(){
   if(!db)return Promise.resolve();
   return db.collection('shifts').get().then(snap=>{
-    shiftsData=snap.docs.map(d=>({id:d.id,...d.data()}));
+    shiftsData=snap.docs.map(d=>({id:d.id,...d.data()})).filter(s=>locationScopeMatches(s.locationId));
   }).catch(e=>{console.warn('Could not load shifts:',e);shiftsData=[];});
 }
 function normVenueName(v){return (v||'').toString().toLowerCase().trim();}
 function formatDateShort(str){if(!str)return '—';const d=new Date(str+'T12:00:00');if(isNaN(d))return str;return d.toLocaleDateString('en-US',{month:'short',day:'numeric'});}
 function formatDateLong(str){if(!str)return '—';const d=new Date(str+'T12:00:00');if(isNaN(d))return str;return d.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});}
+// Time inputs always store/submit 24-hour "HH:MM" regardless of what the
+// picker widget itself displays — this converts that stored value to a
+// normal 12-hour clock for anywhere HQ actually shows a time to a person.
+function formatTime12(t){
+  if(!t)return '';
+  const m=t.match(/^(\d{1,2}):(\d{2})/);
+  if(!m)return t;
+  let h=parseInt(m[1],10);const min=m[2];
+  const ampm=h>=12?'PM':'AM';
+  h=h%12;if(h===0)h=12;
+  return h+':'+min+' '+ampm;
+}
 
 function setReviewed(id,val){
   const s=shiftsData.find(x=>x.id===id);
@@ -978,13 +1024,14 @@ function renderSigninCard(g){
         <div class="signin-meta">${g.venue||'—'}</div>
       </div>
       <div style="display:flex;flex-direction:column;align-items:flex-end;gap:0.25rem;">
-        <span class="signin-badge checkin"${g.hasCheckin?'':' style="opacity:0.4"'}>In${g.checkinTime?' · '+g.checkinTime:''}${g.hasCheckin?'':' — none'}</span>
-        <span class="signin-badge checkout"${g.hasCheckout?'':' style="opacity:0.4"'}>Out${g.checkoutTime?' · '+g.checkoutTime:''}${g.hasCheckout?'':' — none'}</span>
+        <span class="signin-badge checkin"${g.hasCheckin?'':' style="opacity:0.4"'}>In${g.checkinTime?' · '+formatTime12(g.checkinTime):''}${g.hasCheckin?'':' — none'}</span>
+        <span class="signin-badge checkout"${g.hasCheckout?'':' style="opacity:0.4"'}>Out${g.checkoutTime?' · '+formatTime12(g.checkoutTime):''}${g.hasCheckout?'':' — none'}</span>
       </div>
     </div>
     <div style="display:flex;gap:0.4rem;flex-wrap:wrap;margin:0.4rem 0;">
       ${g.cancelled?'<span class="signin-badge cancelled-badge">Cancelled</span>':''}
       ${g.notPaid?'<span class="signin-badge cancelled-badge">Not Paid</span>':''}
+      ${g.photoUrl?'<span class="signin-badge" style="background:var(--gold-dim);color:var(--gold);border-color:var(--border-gold);">📷 Photo</span>':''}
     </div>
     ${g.hasCheckout&&!g.cancelled?`<div class="signin-detail-row">
       <span><b>Crowd:</b> ${g.crowdSize||'—'}</span>
@@ -1158,12 +1205,12 @@ const MONTHS=['January','February','March','April','May','June','July','August',
 let gigSchedule=[],editingGigId=null,pendingGigDate=null,selectedGigVenue='',selectedGigHost='Unassigned',selectedGigKind='';
 function loadGigSchedule(){
   try{const g=LS.get('gig-schedule');if(g)gigSchedule=JSON.parse(g);}catch(e){}
-  if(db){db.collection('gig_schedule').get().then(snap=>{if(!snap.empty){gigSchedule=snap.docs.map(d=>({id:d.id,...d.data()}));renderScheduleAll();renderDashboardWeek();}}).catch(()=>{});}
+  if(db){db.collection('gig_schedule').get().then(snap=>{if(!snap.empty){gigSchedule=snap.docs.map(d=>({id:d.id,...d.data()})).filter(g=>locationScopeMatches(g.locationId));renderScheduleAll();renderDashboardWeek();}}).catch(()=>{});}
 }
 function saveGigScheduleLocal(){LS.set('gig-schedule',JSON.stringify(gigSchedule));}
 function persistGig(entry,isDelete){
   saveGigScheduleLocal();
-  if(db){try{if(isDelete)db.collection('gig_schedule').doc(entry.id).delete();else db.collection('gig_schedule').doc(entry.id).set({date:entry.date,time:entry.time||'',endTime:entry.endTime||'',kind:entry.kind||'',venue:entry.venue,host:entry.host||'Unassigned',status:entry.status||'scheduled',notes:entry.notes||'',seriesId:entry.seriesId||null});}catch(e){}}
+  if(db){try{if(isDelete)db.collection('gig_schedule').doc(entry.id).delete();else db.collection('gig_schedule').doc(entry.id).set({date:entry.date,time:entry.time||'',endTime:entry.endTime||'',kind:entry.kind||'',venue:entry.venue,host:entry.host||'Unassigned',status:entry.status||'scheduled',notes:entry.notes||'',seriesId:entry.seriesId||null,locationId:entry.locationId||(currentLocationScope!=='ALL'?currentLocationScope:(locations[0]&&locations[0].code)||null)});}catch(e){}}
   // mirror to the Sheet so the Apps Script triggers (no-show + auto sign-out) can read it
   try{fetch(SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({form_type:'schedule',action:isDelete?'delete':'upsert',id:entry.id,date:entry.date,time:entry.time||'',endTime:entry.endTime||'',venue:entry.venue,host:entry.host||'Unassigned',status:entry.status||'scheduled',notes:entry.notes||''})});}catch(e){}
 }
@@ -1492,6 +1539,76 @@ function saveRanks(){
   if(db){try{db.collection('hq_data').doc('host-ranks').set({value:JSON.stringify(ranks)});}catch(e){}}
 }
 function getRankById(id){return ranks.find(r=>r.id===id);}
+
+// ── LOCATIONS ──
+// A shared, admin-editable list — the whole point is that adding a new
+// territory later is a data change made from inside HQ, not a code change
+// across every app file. Every picker (here, checkin.html, checkout.html,
+// and eventually planner/index) reads from this same source.
+let locations = [{code:'wa-southsound',label:'WA - South Sound'}];
+function loadLocations(){
+  if(!db)return Promise.resolve();
+  return db.collection('hq_data').doc('locations').get().then(snap=>{
+    if(snap.exists&&Array.isArray(snap.data().list)&&snap.data().list.length){locations=snap.data().list;}
+    renderAdminLocations();
+  }).catch(()=>{renderAdminLocations();});
+}
+function saveLocations(){
+  if(db){try{db.collection('hq_data').doc('locations').set({list:locations});}catch(e){}}
+}
+function locationLabel(code){const l=locations.find(x=>x.code===code);return l?l.label:(code||'—');}
+function renderAdminLocations(){
+  const el=document.getElementById('adminLocationsList');
+  if(!el)return;
+  el.innerHTML=locations.map(l=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:0.3rem 0;font-size:0.72rem;"><span><b style="color:var(--gold);">${l.code}</b> — ${l.label}</span><button class="btn-sm" onclick="adminRemoveLocation('${l.code}')" style="padding:0.1rem 0.5rem;">✕</button></div>`).join('')||'<div style="font-size:0.68rem;color:var(--text3);">No locations yet.</div>';
+  populateLocationScopeSelect();
+}
+function adminAddLocation(){
+  const codeEl=document.getElementById('newLocationCode'),labelEl=document.getElementById('newLocationLabel');
+  const code=codeEl.value.trim().toLowerCase();const label=labelEl.value.trim();
+  if(!code||!label){alert('Enter both a code (e.g. or-portland) and a display label (e.g. OR - Portland).');return;}
+  if(locations.some(l=>l.code===code)){alert('That code already exists.');return;}
+  locations.push({code,label});
+  saveLocations();renderAdminLocations();
+  codeEl.value='';labelEl.value='';
+}
+function adminRemoveLocation(code){
+  if(!confirm('Remove this location from the list? Records already tagged with it are not affected.'))return;
+  locations=locations.filter(l=>l.code!==code);
+  saveLocations();renderAdminLocations();
+}
+
+// ── LOCATION SCOPE — who can see what ──
+// Every account is either locked to one location or, for accounts flagged
+// allLocations, can pick any single one or "All Locations" combined. This is
+// resolved once at load from the signed-in account's own Firestore profile —
+// not something the account itself can change, same as every other
+// permission tonight.
+let myLocationId=null, myAllLocations=false, currentLocationScope='ALL';
+function populateLocationScopeSelect(){
+  const sel=document.getElementById('locationScopeSelect');
+  if(!sel)return;
+  const cur=sel.value||currentLocationScope;
+  sel.innerHTML='<option value="ALL">All Locations</option>'+locations.map(l=>`<option value="${l.code}">${l.label}</option>`).join('');
+  sel.value=cur;
+}
+function setLocationScope(val){
+  currentLocationScope=val;
+  refreshAllLocationScopedData();
+}
+function locationScopeMatches(recordLocationId){
+  // Untagged records (from before this feature existed) stay visible under
+  // whichever single location is currently selected — nothing old silently
+  // disappears — but they're hidden from a combined "All Locations" total
+  // once more than one location actually exists, since a record with no tag
+  // can't honestly be counted as "every location" once that's no longer one place.
+  if(currentLocationScope==='ALL')return locations.length<=1;
+  return recordLocationId===currentLocationScope||!recordLocationId;
+}
+function refreshAllLocationScopedData(){
+  loadShiftsData().then(()=>{ renderSigninLog(); fetchSheetData(); });
+  loadGigSchedule();
+}
 
 function toggleAdmin(){
   const content=document.getElementById('adminContent');
@@ -2105,6 +2222,13 @@ function renderAccounts(){
       <div class="acct-entitlements">${schedChips}</div>
       <div style="font-size:0.6rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--text3);margin:0.6rem 0 0.3rem;">Admin Access</div>
       <div class="acct-entitlements">${adminChips}</div>
+      <div style="font-size:0.6rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--text3);margin:0.6rem 0 0.3rem;">Location</div>
+      <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;">
+        <select onchange="setAcctLocation('${a.uid}',this.value)" ${a.allLocations?'disabled':''} style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:0.3rem 0.5rem;font-size:0.72rem;">
+          ${locations.map(l=>`<option value="${l.code}" ${a.locationId===l.code?'selected':''}>${l.label}</option>`).join('')}
+        </select>
+        <button class="acct-ent-chip ${a.allLocations?'on':''}" style="${a.allLocations?'border-color:var(--gold);':''}" onclick="toggleAllLocations('${a.uid}')">${a.allLocations?'✓ ':''}Sees All Locations</button>
+      </div>
       <div class="acct-actions">
         <button class="btn-sm" onclick="sendReset('${a.email}',this)">Send Password Reset</button>
         ${isBanned
@@ -2167,6 +2291,27 @@ function toggleScheduleAccess(uid,appKey){
     acct.scheduleAccess[appKey]=!newVal;
     renderAccounts();
     alert('Failed to update schedule access: '+e.message);
+  });
+}
+
+function setAcctLocation(uid,code){
+  const acct=accounts.find(a=>a.uid===uid);if(!acct)return;
+  const prev=acct.locationId;
+  acct.locationId=code;
+  db.collection('users').doc(uid).set({locationId:code},{merge:true}).catch(e=>{
+    acct.locationId=prev;renderAccounts();
+    alert('Failed to update location: '+e.message);
+  });
+}
+function toggleAllLocations(uid){
+  const acct=accounts.find(a=>a.uid===uid);if(!acct)return;
+  const newVal=!acct.allLocations;
+  if(newVal&&!confirm(`Give ${acct.name||acct.email} visibility into every location, not just one?`))return;
+  acct.allLocations=newVal;
+  renderAccounts();
+  db.collection('users').doc(uid).set({allLocations:newVal},{merge:true}).catch(e=>{
+    acct.allLocations=!newVal;renderAccounts();
+    alert('Failed to update: '+e.message);
   });
 }
 
