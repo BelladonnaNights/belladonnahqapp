@@ -479,6 +479,8 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
     <div class="section-header">
       <div class="section-title">Sign-In/Out Log</div>
       <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+        <button class="dash-filter-pill active" id="signinViewCards" onclick="setSigninView('cards')">Cards</button>
+        <button class="dash-filter-pill" id="signinViewSheet" onclick="setSigninView('sheet')">Spreadsheet</button>
         <button class="btn-sm" onclick="markAllSigninReviewed()">✓ Mark All Reviewed</button>
         <button class="btn-sm btn-gold" onclick="openSigninExportModal()">⬇ Export CSV</button>
         <button class="btn-sm" onclick="refreshSigninLog()">↻ Refresh</button>
@@ -500,6 +502,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
     </div>
     <div style="font-size:0.62rem;color:var(--text3);letter-spacing:0.04em;margin:-0.5rem 0 0.8rem;">Showing the last 90 days by default — set a "From" date above to look further back. Every record is kept forever; this is just a view filter. "Unreviewed Only" always searches your full history regardless of date.</div>
     <div id="signinResults"><div class="empty-state">Loading sign-in log...</div></div>
+    <div id="signinSheetWrap" style="display:none;overflow-x:auto;"></div>
   </div>
   <div class="subpanel" id="sub-hosts-onboarding">
     <div class="mode-pill-row" style="display:flex;gap:0.5rem;margin-bottom:1.2rem;">
@@ -929,7 +932,7 @@ async function fetchSheetData(){
 }
 function renderHosts(hosts){
   const on=hosts.filter(h=>h.status==='ON');
-  const today=new Date().toISOString().slice(0,10);
+  const today=dateToKey(new Date());
   document.getElementById('liveCount').textContent=on.length;
   document.getElementById('statOn').textContent=on.length;
   document.getElementById('statTotal').textContent=hosts.length;
@@ -1006,7 +1009,7 @@ function getFilteredSigninGroups(){
   const venueF=document.getElementById('signinVenueFilter').value;
   const from=document.getElementById('signinFrom').value;
   const to=document.getElementById('signinTo').value;
-  const defaultFrom=(from||typeF==='unreviewed')?null:(()=>{const d=new Date();d.setDate(d.getDate()-90);return d.toISOString().slice(0,10);})();
+  const defaultFrom=(from||typeF==='unreviewed')?null:(()=>{const d=new Date();d.setDate(d.getDate()-90);return dateToKey(d);})();
 
   let entries=shiftsData.map(s=>({
     key:s.id, host:s.hostName||'', venue:s.venue||'', date:s.date||'',
@@ -1039,10 +1042,29 @@ function getFilteredSigninGroups(){
   entries.sort((a,b)=>b.date.localeCompare(a.date)||a.host.localeCompare(b.host));
   return entries;
 }
+let signinView='cards';
+function setSigninView(v){
+  signinView=v;
+  document.getElementById('signinViewCards').classList.toggle('active',v==='cards');
+  document.getElementById('signinViewSheet').classList.toggle('active',v==='sheet');
+  document.getElementById('signinResults').style.display=v==='cards'?'':'none';
+  document.getElementById('signinSheetWrap').style.display=v==='sheet'?'':'none';
+  renderSigninLog();
+}
+function deleteSigninEntry(id){
+  const s=shiftsData.find(x=>x.id===id);
+  if(!s)return;
+  if(!confirm(`Permanently delete this sign-in/out record for ${s.hostName||'this host'} at ${s.venue||'this venue'} on ${s.date}?\n\nThis cannot be undone.`))return;
+  db.collection('shifts').doc(id).delete().then(()=>{
+    shiftsData=shiftsData.filter(x=>x.id!==id);
+    renderSigninLog();
+  }).catch(e=>alert('Failed to delete: '+e.message));
+}
 function renderSigninLog(){
+  const entries=getFilteredSigninGroups();
+  if(signinView==='sheet'){ renderSigninSpreadsheet(entries); return; }
   const el=document.getElementById('signinResults');
   if(!el)return;
-  const entries=getFilteredSigninGroups();
   if(!entries.length){el.innerHTML='<div class="empty-state">No sign-in records match these filters.</div>';return;}
   // Group by day so the log reads as a timeline instead of one long undifferentiated list
   const days=[];
@@ -1055,6 +1077,33 @@ function renderSigninLog(){
     <div class="signin-day-heading">${formatDateLong(day.date)}</div>
     <div class="signin-day-group">${day.items.map(renderSigninCard).join('')}</div>
   `).join('');
+}
+function renderSigninSpreadsheet(entries){
+  const el=document.getElementById('signinSheetWrap');
+  if(!el)return;
+  if(!entries.length){el.innerHTML='<div class="empty-state">No sign-in records match these filters.</div>';return;}
+  const cols=['Date','Host','Venue','In','Out','Crowd','Energy','Paid','Tips','Cancelled','Reviewed',''];
+  el.innerHTML=`<table style="width:100%;border-collapse:collapse;font-size:0.72rem;">
+    <thead><tr style="border-bottom:1px solid var(--border-gold);">
+      ${cols.map(c=>`<th style="text-align:left;padding:0.5rem 0.6rem;color:var(--gold);white-space:nowrap;">${c}</th>`).join('')}
+    </tr></thead>
+    <tbody>
+      ${entries.map(g=>`<tr style="border-bottom:1px solid var(--border);${g.cancelled?'opacity:0.55;':''}">
+        <td style="padding:0.45rem 0.6rem;white-space:nowrap;">${formatDateShort(g.date)}</td>
+        <td style="padding:0.45rem 0.6rem;white-space:nowrap;">${g.host||'—'}</td>
+        <td style="padding:0.45rem 0.6rem;white-space:nowrap;">${g.venue||'—'}</td>
+        <td style="padding:0.45rem 0.6rem;white-space:nowrap;">${g.checkinTime?formatTime12(g.checkinTime):'—'}</td>
+        <td style="padding:0.45rem 0.6rem;white-space:nowrap;">${g.checkoutTime?formatTime12(g.checkoutTime):'—'}</td>
+        <td style="padding:0.45rem 0.6rem;white-space:nowrap;">${g.crowdSize||'—'}</td>
+        <td style="padding:0.45rem 0.6rem;white-space:nowrap;">${g.energyLevel||'—'}</td>
+        <td style="padding:0.45rem 0.6rem;white-space:nowrap;">${g.gotPaid||'—'}</td>
+        <td style="padding:0.45rem 0.6rem;white-space:nowrap;">${g.tipScale||'—'}</td>
+        <td style="padding:0.45rem 0.6rem;white-space:nowrap;">${g.cancelled?'Yes':'No'}</td>
+        <td style="padding:0.45rem 0.6rem;white-space:nowrap;">${g.reviewed?'✓':'—'}</td>
+        <td style="padding:0.45rem 0.6rem;white-space:nowrap;"><button class="btn-sm" style="color:var(--rose);" onclick="deleteSigninEntry('${g.key}')">Delete</button></td>
+      </tr>`).join('')}
+    </tbody>
+  </table>`;
 }
 function renderSigninCard(g){
   return `<div class="signin-card${g.cancelled?' cancelled':''}">
@@ -1087,10 +1136,13 @@ function renderSigninCard(g){
     ${g.checkinNotes?`<div class="signin-notes"><b style="color:var(--text3)">Check-in note: </b>${g.checkinNotes}</div>`:''}
     ${g.cancelled?`<div class="signin-notes"><b style="color:var(--rose)">Reason: </b>${g.cancelReason||''}</div>`:(g.checkoutNotes?`<div class="signin-notes"><b style="color:var(--text3)">Check-out note: </b>${g.checkoutNotes}</div>`:'')}
     ${(g.photoUrl||'').startsWith('http')?`<img src="${g.photoUrl}" class="signin-photo" onclick="window.open('${g.photoUrl}','_blank')" alt="Shift photo">`:''}
-    <label class="signin-reviewed${g.reviewed?' is-reviewed':''}">
-      <input type="checkbox" ${g.reviewed?'checked':''} onchange="setReviewed('${g.key}',this.checked);this.closest('.signin-reviewed').classList.toggle('is-reviewed',this.checked);this.nextElementSibling.textContent=this.checked?'Reviewed':'Mark Reviewed';">
-      <span>${g.reviewed?'Reviewed':'Mark Reviewed'}</span>
-    </label>
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:0.6rem;margin-top:0.5rem;">
+      <label class="signin-reviewed${g.reviewed?' is-reviewed':''}" style="margin:0;">
+        <input type="checkbox" ${g.reviewed?'checked':''} onchange="setReviewed('${g.key}',this.checked);this.closest('.signin-reviewed').classList.toggle('is-reviewed',this.checked);this.nextElementSibling.textContent=this.checked?'Reviewed':'Mark Reviewed';">
+        <span>${g.reviewed?'Reviewed':'Mark Reviewed'}</span>
+      </label>
+      <button class="btn-sm" style="color:var(--rose);" onclick="deleteSigninEntry('${g.key}')">Delete</button>
+    </div>
   </div>`;
 }
 function markAllSigninReviewed(){
