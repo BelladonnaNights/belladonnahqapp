@@ -18,9 +18,9 @@
 }
 body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-weight:300;min-height:100vh;letter-spacing:0.04em;overflow-x:hidden;}
 
-.header{background:var(--bg);border-bottom:2px solid rgba(180,150,100,0.22);padding:1.2rem 1.5rem 0;position:relative;}
-.header::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,var(--gold),var(--gold2),var(--gold),transparent);}
-.header-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.2rem;}
+.header{background:var(--bg);padding:0 1.5rem;position:relative;}
+.header-brand{background:var(--bg);padding:1.2rem 1.5rem 1.2rem;position:relative;}
+.header-top{display:flex;align-items:center;justify-content:space-between;}
 .logo-group{display:flex;align-items:center;gap:0.8rem;}
 .logo-img{width:44px;height:44px;object-fit:contain;opacity:0.95;flex-shrink:0;}
 .logo{font-family:'Bebas Neue',sans-serif;font-size:1.9rem;font-weight:400;letter-spacing:0.06em;color:var(--text);text-transform:uppercase;padding-right:0.08em;}
@@ -44,6 +44,10 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
 .subtab{padding:0.32rem 0.95rem;font-size:0.65rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--text3);cursor:pointer;border:1px solid var(--border);border-radius:999px;background:none;font-family:'DM Sans',sans-serif;transition:all 0.2s;font-weight:400;}
 .subtab:hover{border-color:var(--border2);color:var(--text2);}
 .subtab.active{border-color:var(--gold);color:var(--gold);background:var(--gold-dim);}
+.inner-tab-row{display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:1.2rem;}
+.inner-tab{background:none;border:none;border-bottom:2px solid transparent;color:var(--text3);padding:0.5rem 0.2rem;margin-right:1.6rem;margin-bottom:-1px;font-size:0.72rem;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.2s;}
+.inner-tab:hover{color:var(--text2);}
+.inner-tab.active{border-bottom-color:var(--gold);color:var(--gold);}
 .subpanel{display:none;}
 .subpanel.active{display:block;}
 
@@ -206,7 +210,9 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
 .cal-entries{display:flex;flex-direction:column;gap:2px;}
 
 /* ADMIN */
-.admin-bar{position:relative;display:flex;justify-content:flex-end;padding:0.7rem 1.5rem 0;background:var(--bg);}
+.admin-bar{position:relative;display:flex;justify-content:flex-end;align-items:center;padding:0.7rem 1.5rem 1rem;background:var(--bg);}
+.admin-bar::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,var(--gold),var(--gold2),var(--gold),transparent);}
+.gateway-user-label{font-family:'EB Garamond',serif;font-style:italic;font-size:0.85rem;color:var(--text3);letter-spacing:0.01em;margin-right:0.9rem;align-self:center;}
 .admin-bar-toggle{display:inline-flex;align-items:center;gap:0.6rem;background:var(--gold-dim);border:1px solid var(--border-gold);color:var(--gold);padding:0.5rem 1.1rem;border-radius:6px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.2s;}
 .admin-bar-toggle:hover{background:rgba(201,169,110,0.2);}
 .admin-bar-label{font-size:0.62rem;letter-spacing:0.18em;text-transform:uppercase;}
@@ -286,8 +292,26 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
 </head>
 <body>
 
+<div class="header-brand">
+  <div class="header-top">
+    <div class="logo-group">
+      <img src="logo.png" alt="Belladonna" class="logo-img" onerror="this.style.display='none'">
+      <div class="logo">BELLADONNA <span class="logo-accent">HQ</span></div>
+      <span class="header-divider">|</span>
+      <span class="header-tagline">Command center for hosts, venues &amp; operations</span>
+    </div>
+    <div class="live-badge">
+      <div class="live-dot"></div>
+      <div>
+        <div class="live-count" id="liveCount">—</div>
+        <div class="live-label">On Shift<br>Now</div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="admin-bar" id="adminBar">
-  <span id="gatewayUserBar" style="font-size:0.62rem;color:var(--text3);letter-spacing:0.06em;margin-right:0.7rem;align-self:center;"></span>
+  <span id="gatewayUserBar" class="gateway-user-label"></span>
   <button class="btn-sm" onclick="gatewaySignOut()" style="margin-right:0.5rem;">Sign Out</button>
   <button class="admin-bar-toggle" onclick="toggleAdmin()">
     <div class="admin-bar-label">Admin Panel</div>
@@ -324,21 +348,6 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
 </div>
 
 <div class="header">
-  <div class="header-top">
-    <div class="logo-group">
-      <img src="logo.png" alt="Belladonna" class="logo-img" onerror="this.style.display='none'">
-      <div class="logo">BELLADONNA <span class="logo-accent">HQ</span></div>
-      <span class="header-divider">|</span>
-      <span class="header-tagline">Command center for hosts, venues &amp; operations</span>
-    </div>
-    <div class="live-badge">
-      <div class="live-dot"></div>
-      <div>
-        <div class="live-count" id="liveCount">—</div>
-        <div class="live-label">On Shift<br>Now</div>
-      </div>
-    </div>
-  </div>
   <div class="tabs">
     <button class="tab active" onclick="showTab('dashboard',this)">Dashboard</button>
     <button class="tab" onclick="showTab('hosts',this)">Hosts</button>
@@ -442,9 +451,9 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
     <div id="signinSheetWrap" style="display:none;overflow-x:auto;"></div>
   </div>
   <div class="subpanel" id="sub-hosts-onboarding">
-    <div class="mode-pill-row" style="display:flex;gap:0.5rem;margin-bottom:1.2rem;">
-      <button class="dash-filter-pill active" id="onbTabLinks" onclick="showOnboardingSub('links')">Onboarding Links</button>
-      <button class="dash-filter-pill" id="onbTabProgress" onclick="showOnboardingSub('progress')">Host Progress</button>
+    <div class="inner-tab-row">
+      <button class="inner-tab active" id="onbTabLinks" onclick="showOnboardingSub('links')">Onboarding Links</button>
+      <button class="inner-tab" id="onbTabProgress" onclick="showOnboardingSub('progress')">Host Progress</button>
     </div>
 
     <div id="onb-panel-links">
@@ -570,6 +579,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
           <option value="new">New Lead</option>
           <option value="contact">First Contact</option>
           <option value="interview">Interview</option>
+          <option value="negotiation">Negotiations</option>
           <option value="contract">Contract Sent</option>
           <option value="signed">Signed</option>
           <option value="transferred">Transferred (archive)</option>
@@ -616,6 +626,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
           <option value="new">New Lead</option>
           <option value="contact">First Contact</option>
           <option value="interview">Interview</option>
+          <option value="negotiation">Negotiations</option>
           <option value="contract">Contract Sent</option>
           <option value="signed">Signed</option>
         </select>
@@ -1965,6 +1976,18 @@ const ONBOARDING_LINK_FIELDS=[
   {key:'academy',label:'Belladonna Academy'},
   {key:'contract',label:'Host Contract'}
 ];
+const HOST_ONB_STEPS=[
+  {title:'Capture the lead',
+   desc:'Found a potential host out in the wild, or someone reached out on their own? Log them with the Lead Capture Form.',
+   links:['leadCaptureForm']},
+  {title:'Send the Interview Invite',
+   desc:'Once you\'re ready to talk, send them the Interview Invite.', links:['interviewInvite']},
+  {title:'Interview',
+   desc:'Meet with them and see if they\'re a fit.', links:[]},
+  {title:'If approved, send them to the New Host Page',
+   desc:'That page carries them through the rest — the Welcome Sheet, the Host Bible, the Training App, Belladonna Academy, and the Contract.',
+   links:['newHostPage','welcomeSheet','hostBible','trainingApp','academy','contract']}
+];
 let onboardingLinks={};
 function loadOnboardingLinks(){
   if(!db)return;
@@ -1976,13 +1999,22 @@ function loadOnboardingLinks(){
 function renderOnboardingLinks(){
   const el=document.getElementById('onbLinksList');
   if(!el)return;
-  el.innerHTML=ONBOARDING_LINK_FIELDS.map(f=>`
-    <div class="form-group" style="margin-bottom:0.8rem;">
-      <label class="form-label">${f.label}</label>
-      <div style="display:flex;gap:0.4rem;">
-        <input type="text" class="form-input" id="onbLink-${f.key}" value="${(onboardingLinks[f.key]||'').replace(/"/g,'&quot;')}" placeholder="https://...">
-        ${onboardingLinks[f.key]?`<a href="${onboardingLinks[f.key]}" target="_blank" class="btn-sm" style="text-decoration:none;white-space:nowrap;">Open</a>`:''}
-        <button class="btn-sm btn-gold" onclick="saveOnboardingLink('${f.key}')">Save</button>
+  const labelFor=key=>(ONBOARDING_LINK_FIELDS.find(f=>f.key===key)||{}).label||key;
+  el.innerHTML=HOST_ONB_STEPS.map((s,i)=>`
+    <div style="display:flex;gap:0.8rem;padding:0.8rem 0;${i<HOST_ONB_STEPS.length-1?'border-bottom:1px solid var(--border);':''}">
+      <div style="flex-shrink:0;width:26px;height:26px;border-radius:50%;background:var(--gold-dim);color:var(--gold);display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:700;">${i+1}</div>
+      <div style="flex:1;">
+        <div style="font-size:0.85rem;color:var(--text);font-weight:600;margin-bottom:0.2rem;">${s.title}</div>
+        <div style="font-size:0.75rem;color:var(--text3);line-height:1.5;margin-bottom:${s.links.length?'0.6rem':'0'};">${s.desc}</div>
+        ${s.links.map(key=>{
+          const val=onboardingLinks[key]||'';
+          return `<div style="display:flex;gap:0.4rem;margin-bottom:0.4rem;align-items:center;">
+            <span style="font-size:0.68rem;color:var(--text3);min-width:150px;">${labelFor(key)}</span>
+            <input type="text" class="form-input" id="onbLink-${key}" value="${val.replace(/"/g,'&quot;')}" placeholder="https://..." style="flex:1;font-size:0.75rem;padding:0.4rem 0.6rem;">
+            ${val?`<a href="${val}" target="_blank" class="btn-sm" style="text-decoration:none;white-space:nowrap;">Open</a>`:''}
+            <button class="btn-sm btn-gold" onclick="saveOnboardingLink('${key}')">Save</button>
+          </div>`;
+        }).join('')}
       </div>
     </div>
   `).join('');
@@ -2079,6 +2111,7 @@ const LEAD_STAGES=[
   {key:'new',label:'New Lead',color:'var(--text3)'},
   {key:'contact',label:'First Contact',color:'var(--teal2)'},
   {key:'interview',label:'Interview',color:'var(--gold)'},
+  {key:'negotiation',label:'Negotiations',color:'var(--purple)'},
   {key:'contract',label:'Contract Sent',color:'var(--rose)'},
   {key:'signed',label:'Signed',color:'#3aaa6a'},
   {key:'transferred',label:'Transferred',color:'var(--text3)'}
