@@ -443,6 +443,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
     <button class="subtab active" onclick="showSub('hosts','live',this)">Live Feed</button>
     <button class="subtab" onclick="showSub('hosts','roster',this)">Host Roster</button>
     <button class="subtab" onclick="showSub('hosts','history',this)">Sign-In/Out Log</button>
+    <button class="subtab" onclick="showSub('hosts','onboarding',this)">Host Onboarding</button>
   </div>
   <div class="subpanel active" id="sub-hosts-live">
     <div id="homeError" class="error-msg"></div>
@@ -499,6 +500,46 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
     </div>
     <div style="font-size:0.62rem;color:var(--text3);letter-spacing:0.04em;margin:-0.5rem 0 0.8rem;">Showing the last 90 days by default — set a "From" date above to look further back. Every record is kept forever; this is just a view filter. "Unreviewed Only" always searches your full history regardless of date.</div>
     <div id="signinResults"><div class="empty-state">Loading sign-in log...</div></div>
+  </div>
+  <div class="subpanel" id="sub-hosts-onboarding">
+    <div class="mode-pill-row" style="display:flex;gap:0.5rem;margin-bottom:1.2rem;">
+      <button class="dash-filter-pill active" id="onbTabLinks" onclick="showOnboardingSub('links')">Onboarding Links</button>
+      <button class="dash-filter-pill" id="onbTabProgress" onclick="showOnboardingSub('progress')">Host Progress</button>
+    </div>
+
+    <div id="onb-panel-links">
+      <div style="font-size:0.68rem;color:var(--text3);margin-bottom:1rem;line-height:1.6;">Paste the real link for each of these once, and every recruiter uses the same up-to-date set — no more hunting down the current Google Doc link.</div>
+      <div class="onb-link-list" id="onbLinksList"></div>
+    </div>
+
+    <div id="onb-panel-progress" style="display:none;">
+      <div class="section-header">
+        <div class="section-title">Host Progress</div>
+        <button class="btn-sm btn-gold" onclick="openRecruitModal()">+ Add Recruit</button>
+      </div>
+      <div style="font-size:0.68rem;color:var(--text3);margin-bottom:1rem;line-height:1.6;">Tracked manually by whoever's recruiting — check off each milestone as it actually happens. Nothing here updates itself.</div>
+      <div id="recruitList"></div>
+    </div>
+  </div>
+</div>
+
+<!-- RECRUIT MODAL -->
+<div class="modal-bg" id="recruitModal">
+  <div class="modal" style="max-width:420px;">
+    <div class="modal-title" id="recruitModalTitle">Add Recruit</div>
+    <div class="form-group"><label class="form-label">Name</label><input type="text" class="form-input" id="recruitName"></div>
+    <div class="form-group"><label class="form-label">Contact (phone or email)</label><input type="text" class="form-input" id="recruitContact"></div>
+    <div class="form-group"><label class="form-label">Notes</label><textarea class="form-input" id="recruitNotes" rows="2"></textarea></div>
+    <div class="form-group">
+      <label class="form-label">Milestones</label>
+      <div id="recruitMilestoneChecks" style="display:flex;flex-direction:column;gap:0.4rem;"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-sm" id="recruitDeleteBtn" onclick="deleteRecruit()" style="color:var(--rose);display:none;">Delete</button>
+      <div style="flex:1;"></div>
+      <button class="btn-sm" onclick="closeModal('recruitModal')">Cancel</button>
+      <button class="btn-sm btn-gold" onclick="saveRecruit()">Save</button>
+    </div>
   </div>
 </div>
 
@@ -1280,7 +1321,7 @@ function renderScheduleSpreadsheet(){
       const mismatch=signedBy&&signedBy.toLowerCase()!==(g.host||'').toLowerCase();
       return `<tr>
         <td><span class="sched-status-dot" style="background:${st.color};display:inline-block"></span></td>
-        <td>${formatDateShort(g.date)}${g.seriesId?' <span title="Repeating weekly" style="color:var(--text3)">↻</span>':''}</td>
+        <td>${formatDateShort(g.date)}</td>
         <td>${g.time||'—'}</td>
         <td>${g.venue}</td>
         <td>${g.host||'Unassigned'}${mismatch?` <span style="color:var(--text3);font-size:0.7rem">(signed in: ${signedBy})</span>`:''}</td>
@@ -1326,7 +1367,7 @@ function renderGigCalendar(){
       dayGigs.forEach(g=>{
         const isCancelled=g.status==='cancelled'||gigCheckoutCancelled(g);
         const c=isCancelled?'var(--rose)':'var(--gold)';
-        entriesHtml+=`<div class="gig-event" style="background:${c}22;border:1px solid ${c};color:${c}" onclick="event.stopPropagation();openGigModal('${g.id}')">${g.seriesId?'↻ ':''}${g.kind?g.kind+': ':''}${g.venue}</div>`;
+        entriesHtml+=`<div class="gig-event" style="background:${c}22;border:1px solid ${c};color:${c}" onclick="event.stopPropagation();openGigModal('${g.id}')">${g.kind?g.kind+': ':''}${g.venue}</div>`;
       });
       getExternalGigsForDate(dateStr,new Date(dateStr+'T12:00:00').getDay()).forEach(it=>{
         const c=it.cancelled?'var(--rose)':'var(--teal)';
@@ -1608,8 +1649,139 @@ function locationScopeMatches(recordLocationId){
 function refreshAllLocationScopedData(){
   loadShiftsData().then(()=>{ renderSigninLog(); fetchSheetData(); });
   loadGigSchedule();
+  loadRecruits();
 }
 
+// ── HOST ONBOARDING ──
+function showOnboardingSub(which){
+  document.getElementById('onbTabLinks').classList.toggle('active',which==='links');
+  document.getElementById('onbTabProgress').classList.toggle('active',which==='progress');
+  document.getElementById('onb-panel-links').style.display=which==='links'?'':'none';
+  document.getElementById('onb-panel-progress').style.display=which==='progress'?'':'none';
+  if(which==='progress')renderRecruits();
+}
+
+// ── Onboarding Links — a small shared set of reference URLs, so every
+// recruiter always sends the current version instead of an old copy-paste. ──
+const ONBOARDING_LINK_FIELDS=[
+  {key:'interviewInvite',label:'Interview Invite'},
+  {key:'newHostPage',label:'New Host Page'},
+  {key:'welcomeSheet',label:'New Host Welcome Sheet'},
+  {key:'hostBible',label:'The Host Bible'},
+  {key:'trainingApp',label:'Belladonna Training App'},
+  {key:'academy',label:'Belladonna Academy'},
+  {key:'contract',label:'Host Contract'}
+];
+let onboardingLinks={};
+function loadOnboardingLinks(){
+  if(!db)return;
+  db.collection('hq_data').doc('onboardingLinks').get().then(snap=>{
+    if(snap.exists)onboardingLinks=snap.data()||{};
+    renderOnboardingLinks();
+  }).catch(()=>{renderOnboardingLinks();});
+}
+function renderOnboardingLinks(){
+  const el=document.getElementById('onbLinksList');
+  if(!el)return;
+  el.innerHTML=ONBOARDING_LINK_FIELDS.map(f=>`
+    <div class="form-group" style="margin-bottom:0.8rem;">
+      <label class="form-label">${f.label}</label>
+      <div style="display:flex;gap:0.4rem;">
+        <input type="text" class="form-input" id="onbLink-${f.key}" value="${(onboardingLinks[f.key]||'').replace(/"/g,'&quot;')}" placeholder="https://...">
+        ${onboardingLinks[f.key]?`<a href="${onboardingLinks[f.key]}" target="_blank" class="btn-sm" style="text-decoration:none;white-space:nowrap;">Open</a>`:''}
+        <button class="btn-sm btn-gold" onclick="saveOnboardingLink('${f.key}')">Save</button>
+      </div>
+    </div>
+  `).join('');
+}
+function saveOnboardingLink(key){
+  const val=document.getElementById('onbLink-'+key).value.trim();
+  onboardingLinks[key]=val;
+  if(db){try{db.collection('hq_data').doc('onboardingLinks').set(onboardingLinks,{merge:true});}catch(e){}}
+  renderOnboardingLinks();
+}
+
+// ── Host Progress — manually tracked recruits, one card per person, scoped
+// to whichever location is currently selected same as everything else. ──
+const RECRUIT_MILESTONES=[
+  {key:'interviewInviteSent',label:'Interview invite sent'},
+  {key:'interviewed',label:'Interviewed'},
+  {key:'approved',label:'Approved'},
+  {key:'academyAccount',label:'Created Academy account'},
+  {key:'contractSigned',label:'Signed contract'},
+  {key:'w9Uploaded',label:'Uploaded W-9'}
+];
+let recruits=[];
+let editingRecruitId=null;
+function loadRecruits(){
+  if(!db)return;
+  db.collection('recruits').get().then(snap=>{
+    recruits=snap.docs.map(d=>({id:d.id,...d.data()})).filter(r=>locationScopeMatches(r.locationId));
+    renderRecruits();
+  }).catch(()=>{recruits=[];renderRecruits();});
+}
+function renderRecruits(){
+  const el=document.getElementById('recruitList');
+  if(!el)return;
+  if(!recruits.length){el.innerHTML='<div class="empty-state">No recruits being tracked yet.</div>';return;}
+  el.innerHTML=recruits.map(r=>{
+    const done=RECRUIT_MILESTONES.filter(m=>r.milestones&&r.milestones[m.key]).length;
+    return `<div class="acct-card" style="cursor:pointer;" onclick="openRecruitModal('${r.id}')">
+      <div class="acct-header">
+        <div class="acct-name-group">
+          <div class="acct-name">${r.name||'(no name)'}</div>
+          <div class="acct-meta">${r.contact||''}</div>
+        </div>
+        <div class="acct-badges"><span class="acct-status-badge">${done} / ${RECRUIT_MILESTONES.length}</span></div>
+      </div>
+      <div style="display:flex;gap:0.4rem;flex-wrap:wrap;margin-top:0.5rem;">
+        ${RECRUIT_MILESTONES.map(m=>`<span class="acct-ent-chip${r.milestones&&r.milestones[m.key]?' on':''}" style="pointer-events:none;">${r.milestones&&r.milestones[m.key]?'✓ ':''}${m.label}</span>`).join('')}
+      </div>
+    </div>`;
+  }).join('');
+}
+function openRecruitModal(id){
+  editingRecruitId=id||null;
+  const r=id?recruits.find(x=>x.id===id):null;
+  document.getElementById('recruitModalTitle').textContent=r?'Edit Recruit':'Add Recruit';
+  document.getElementById('recruitName').value=r?r.name||'':'';
+  document.getElementById('recruitContact').value=r?r.contact||'':'';
+  document.getElementById('recruitNotes').value=r?r.notes||'':'';
+  document.getElementById('recruitDeleteBtn').style.display=r?'':'none';
+  document.getElementById('recruitMilestoneChecks').innerHTML=RECRUIT_MILESTONES.map(m=>`
+    <label style="display:flex;align-items:center;gap:0.5rem;font-size:0.75rem;cursor:pointer;">
+      <input type="checkbox" id="recruitM-${m.key}" ${r&&r.milestones&&r.milestones[m.key]?'checked':''} style="width:16px;height:16px;">
+      ${m.label}
+    </label>
+  `).join('');
+  document.getElementById('recruitModal').classList.add('open');
+}
+function saveRecruit(){
+  const name=document.getElementById('recruitName').value.trim();
+  if(!name){alert('Enter a name.');return;}
+  const milestones={};
+  RECRUIT_MILESTONES.forEach(m=>{milestones[m.key]=document.getElementById('recruitM-'+m.key).checked;});
+  const data={
+    name, contact:document.getElementById('recruitContact').value.trim(),
+    notes:document.getElementById('recruitNotes').value.trim(),
+    milestones,
+    locationId: currentLocationScope!=='ALL' ? currentLocationScope : ((locations[0]&&locations[0].code)||null),
+    updatedAt: new Date().toISOString()
+  };
+  const id=editingRecruitId||db.collection('recruits').doc().id;
+  db.collection('recruits').doc(id).set(data,{merge:true}).then(()=>{
+    closeModal('recruitModal'); loadRecruits();
+  }).catch(e=>alert('Failed to save: '+e.message));
+}
+function deleteRecruit(){
+  if(!editingRecruitId)return;
+  if(!confirm('Remove this recruit from tracking? This cannot be undone.'))return;
+  db.collection('recruits').doc(editingRecruitId).delete().then(()=>{
+    closeModal('recruitModal'); loadRecruits();
+  }).catch(e=>alert('Failed to delete: '+e.message));
+}
+
+function closeModal(id){document.getElementById(id).classList.remove('open');}
 function toggleAdmin(){
   const content=document.getElementById('adminContent');
   const arrow=document.getElementById('adminArrow');
@@ -2365,6 +2537,7 @@ function init(){
   loadGigSchedule();
   loadPlannerData();
   loadShiftsData();
+  loadOnboardingLinks();
   renderRoster();
   renderVenueManage();
   populateRosterFilters();
