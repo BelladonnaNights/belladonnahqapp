@@ -483,6 +483,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
         <button class="dash-filter-pill" id="signinViewSheet" onclick="setSigninView('sheet')">Spreadsheet</button>
         <button class="btn-sm" onclick="markAllSigninReviewed()">✓ Mark All Reviewed</button>
         <button class="btn-sm btn-gold" onclick="openSigninExportModal()">⬇ Export CSV</button>
+        <button class="btn-sm" onclick="openImportModal()">⬆ Import History</button>
         <button class="btn-sm" onclick="refreshSigninLog()">↻ Refresh</button>
       </div>
     </div>
@@ -556,6 +557,33 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
     <div class="modal-actions">
       <button class="modal-cancel" onclick="document.getElementById('signinExportModal').classList.remove('open')">Cancel</button>
       <button class="modal-save" onclick="exportSigninCSV()">Download CSV</button>
+    </div>
+  </div>
+</div>
+
+<!-- IMPORT HISTORY MODAL -->
+<div class="modal-bg" id="importModal">
+  <div class="modal" style="max-width:480px;">
+    <div class="modal-title">Import History from CSV</div>
+    <div id="importStep1">
+      <div class="form-group"><label class="form-label">These records belong to which location?</label><select class="form-input" id="importLocation"></select></div>
+      <div class="form-group"><label class="form-label">Sign-Ins CSV</label><input type="file" class="form-input" id="importCheckinFile" accept=".csv"></div>
+      <div class="form-group"><label class="form-label">Sign-Outs CSV</label><input type="file" class="form-input" id="importCheckoutFile" accept=".csv"></div>
+      <div class="form-group" style="font-size:0.7rem;color:var(--text3);line-height:1.6;">Both are optional — import just one if that's all you have. Rows are matched by date + host name (case-insensitive). A sign-in with no matching sign-out (or vice versa) still gets imported, just with the other half blank. Nothing existing is touched or deleted.</div>
+      <div id="importError" style="display:none;font-size:0.72rem;color:var(--rose);margin-bottom:0.6rem;"></div>
+      <div class="modal-actions">
+        <button class="modal-cancel" onclick="closeModal('importModal')">Cancel</button>
+        <button class="modal-save" onclick="parseImportFiles()">Preview</button>
+      </div>
+    </div>
+    <div id="importStep2" style="display:none;">
+      <div id="importSummary" style="font-size:0.8rem;color:var(--text);margin-bottom:0.8rem;line-height:1.7;"></div>
+      <div id="importPreviewTable" style="max-height:280px;overflow-y:auto;overflow-x:auto;margin-bottom:0.8rem;font-size:0.68rem;"></div>
+      <div class="form-group" style="font-size:0.7rem;color:var(--rose);">This will create the records shown above. This cannot be automatically undone — you'd need to delete them one by one from the Sign-In Log afterward.</div>
+      <div class="modal-actions">
+        <button class="modal-cancel" onclick="document.getElementById('importStep1').style.display='';document.getElementById('importStep2').style.display='none';">Back</button>
+        <button class="modal-save" onclick="confirmImportShifts(this)">Import These Records</button>
+      </div>
     </div>
   </div>
 </div>
@@ -950,16 +978,6 @@ function renderHosts(hosts){
   list.innerHTML=on.map(h=>`<div class="host-row"><div class="host-info"><div class="host-avatar">${h.name.charAt(0).toUpperCase()}</div><div><div class="host-name-text">${h.name}</div><div class="host-time">${h.signIn?'Since '+h.signIn:'—'}</div></div></div><div class="status-pill">On Shift</div></div>`).join('');
 }
 
-async function fetchCheckoutData(){
-  try{
-    const res=await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent('belladonna host check out')}?key=${SHEETS_KEY}`);
-    const data=await res.json();
-    if(data.error||!data.values||data.values.length<2){checkoutData=[];return;}
-    const headers=data.values[0].map(h=>h.toLowerCase().trim().replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,''));
-    checkoutData=data.values.slice(1).map(row=>{const obj={};headers.forEach((h,i)=>obj[h]=row[i]||'');return obj;});
-  }catch(e){checkoutData=[];}
-}
-
 // ── SIGN-IN LOG + GIG SCHEDULE ──
 // Each shifts doc already holds both the check-in AND check-out side of one
 // shift together (that's the whole point of the docId being date+venue+host),
@@ -1200,6 +1218,189 @@ function exportSigninCSV(){
   document.body.appendChild(a);a.click();document.body.removeChild(a);
   URL.revokeObjectURL(url);
   document.getElementById('signinExportModal').classList.remove('open');
+}
+
+// ── IMPORT HISTORY FROM CSV ──
+// Parses two CSVs (sign-ins, sign-outs) independently, matches rows across
+// them by date + host name, and merges each match into one shifts record —
+// same shape a live check-in-then-checkout produces. Header names are
+// guessed from common variations rather than assumed exact, since we don't
+// control what your original export actually looks like.
+const IMPORT_FIELD_ALIASES={
+  host:['host','host_name','hostname','name'],
+  venue:['venue','location_venue'],
+  date:['date'],
+  checkin_time:['check_in_time','checkin_time','time_in','sign_in_time','in_time'],
+  checkout_time:['check_out_time','checkout_time','time_out','sign_out_time','out_time'],
+  notes:['notes','note'],
+  crowd_size:['crowd_size','crowd'],
+  singers:['singers'],
+  energy_level:['energy_level','energy'],
+  venue_busy:['venue_busy','busy'],
+  got_paid:['got_paid','paid'],
+  tip_scale:['tip_scale','tips'],
+  issues:['issues'],
+  photo_url:['photo_url','photo'],
+  gig_canceled:['gig_canceled','gig_cancelled','canceled','cancelled'],
+  cancel_reason:['cancel_reason']
+};
+let importParsedCheckins=[], importParsedCheckouts=[], importFinalRecords=[];
+
+function openImportModal(){
+  const sel=document.getElementById('importLocation');
+  sel.innerHTML=locations.map(l=>`<option value="${l.code}">${l.label}</option>`).join('');
+  document.getElementById('importCheckinFile').value='';
+  document.getElementById('importCheckoutFile').value='';
+  document.getElementById('importError').style.display='none';
+  document.getElementById('importStep1').style.display='';
+  document.getElementById('importStep2').style.display='none';
+  document.getElementById('importModal').classList.add('open');
+}
+
+// Minimal RFC4180-ish CSV line parser — handles quoted fields with embedded
+// commas/quotes, which a straight .split(',') would break on.
+function parseCSVText(text){
+  const rows=[];let row=[];let field='';let inQuotes=false;
+  for(let i=0;i<text.length;i++){
+    const c=text[i];
+    if(inQuotes){
+      if(c==='"'){ if(text[i+1]==='"'){field+='"';i++;} else inQuotes=false; }
+      else field+=c;
+    }else{
+      if(c==='"')inQuotes=true;
+      else if(c===','){row.push(field);field='';}
+      else if(c==='\r'){}
+      else if(c==='\n'){row.push(field);rows.push(row);row=[];field='';}
+      else field+=c;
+    }
+  }
+  if(field.length||row.length){row.push(field);rows.push(row);}
+  return rows.filter(r=>r.length>1||r[0]);
+}
+function normalizeCsvHeader(h){return (h||'').toLowerCase().trim().replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'');}
+function mapCsvRows(rows){
+  if(!rows.length)return [];
+  const headers=rows[0].map(normalizeCsvHeader);
+  const colFor={};
+  Object.entries(IMPORT_FIELD_ALIASES).forEach(([field,aliases])=>{
+    const idx=headers.findIndex(h=>aliases.includes(h));
+    if(idx>-1)colFor[field]=idx;
+  });
+  return rows.slice(1).map(r=>{
+    const obj={};
+    Object.entries(colFor).forEach(([field,idx])=>{obj[field]=(r[idx]||'').trim();});
+    return obj;
+  }).filter(o=>o.host&&o.date);
+}
+function readFileAsText(file){
+  return new Promise((resolve,reject)=>{
+    const reader=new FileReader();
+    reader.onload=()=>resolve(reader.result);
+    reader.onerror=reject;
+    reader.readAsText(file);
+  });
+}
+function matchKey(host,venue,date){return date+'|'+(host||'').toLowerCase().trim()+'|'+(venue||'').toLowerCase().trim();}
+
+async function parseImportFiles(){
+  const errEl=document.getElementById('importError');
+  errEl.style.display='none';
+  const ciFile=document.getElementById('importCheckinFile').files[0];
+  const coFile=document.getElementById('importCheckoutFile').files[0];
+  if(!ciFile&&!coFile){errEl.textContent='Choose at least one CSV file.';errEl.style.display='block';return;}
+  try{
+    importParsedCheckins=ciFile?mapCsvRows(parseCSVText(await readFileAsText(ciFile))):[];
+    importParsedCheckouts=coFile?mapCsvRows(parseCSVText(await readFileAsText(coFile))):[];
+  }catch(e){errEl.textContent='Could not read that file: '+e.message;errEl.style.display='block';return;}
+  if(!importParsedCheckins.length&&!importParsedCheckouts.length){
+    errEl.textContent='No usable rows found — check that each file has Host and Date columns.';errEl.style.display='block';return;
+  }
+
+  const locationId=document.getElementById('importLocation').value;
+  const byKey={};
+  importParsedCheckins.forEach(r=>{
+    const key=matchKey(r.host,r.venue,r.date);
+    byKey[key]={hostName:r.host,venue:r.venue||'',date:r.date,locationId,
+      checkinTime:r.checkin_time||'',checkinNotes:r.notes||'',
+      checkoutTime:'',crowdSize:'',singers:'',energyLevel:'',venueBusy:'',gotPaid:'',tipScale:'',issues:'',checkoutNotes:'',photoUrl:'',
+      cancelled:false,cancelReason:'',hasCheckin:true,hasCheckout:false};
+  });
+  importParsedCheckouts.forEach(r=>{
+    const key=matchKey(r.host,r.venue,r.date);
+    const cancelled=['yes','y','true'].includes((r.gig_canceled||'').toLowerCase());
+    if(byKey[key]){
+      Object.assign(byKey[key],{
+        checkoutTime:r.checkout_time||'',crowdSize:r.crowd_size||'',singers:r.singers||'',energyLevel:r.energy_level||'',
+        venueBusy:r.venue_busy||'',gotPaid:r.got_paid||'',tipScale:r.tip_scale||'',issues:r.issues||'',
+        checkoutNotes:r.notes||'',photoUrl:r.photo_url||'',cancelled,cancelReason:r.cancel_reason||'',hasCheckout:true
+      });
+    }else{
+      byKey[key]={hostName:r.host,venue:r.venue||'',date:r.date,locationId,
+        checkinTime:'',checkinNotes:'',
+        checkoutTime:r.checkout_time||'',crowdSize:r.crowd_size||'',singers:r.singers||'',energyLevel:r.energy_level||'',
+        venueBusy:r.venue_busy||'',gotPaid:r.got_paid||'',tipScale:r.tip_scale||'',issues:r.issues||'',
+        checkoutNotes:r.notes||'',photoUrl:r.photo_url||'',cancelled,cancelReason:r.cancel_reason||'',
+        hasCheckin:false,hasCheckout:true};
+    }
+  });
+  importFinalRecords=Object.values(byKey).sort((a,b)=>a.date.localeCompare(b.date)||a.hostName.localeCompare(b.hostName));
+
+  const matched=importFinalRecords.filter(r=>r.hasCheckin&&r.hasCheckout).length;
+  const ciOnly=importFinalRecords.filter(r=>r.hasCheckin&&!r.hasCheckout).length;
+  const coOnly=importFinalRecords.filter(r=>!r.hasCheckin&&r.hasCheckout).length;
+  document.getElementById('importSummary').innerHTML=
+    `<b>${importFinalRecords.length}</b> record${importFinalRecords.length===1?'':'s'} will be created — `+
+    `${matched} matched (both sign-in and sign-out), ${ciOnly} sign-in only, ${coOnly} sign-out only.`;
+  document.getElementById('importPreviewTable').innerHTML=
+    `<table style="width:100%;border-collapse:collapse;"><thead><tr style="border-bottom:1px solid var(--border-gold);">
+      <th style="text-align:left;padding:0.3rem 0.4rem;color:var(--gold);">Date</th>
+      <th style="text-align:left;padding:0.3rem 0.4rem;color:var(--gold);">Host</th>
+      <th style="text-align:left;padding:0.3rem 0.4rem;color:var(--gold);">Venue</th>
+      <th style="text-align:left;padding:0.3rem 0.4rem;color:var(--gold);">In</th>
+      <th style="text-align:left;padding:0.3rem 0.4rem;color:var(--gold);">Out</th>
+    </tr></thead><tbody>${importFinalRecords.slice(0,200).map(r=>`<tr style="border-bottom:1px solid var(--border);">
+      <td style="padding:0.3rem 0.4rem;">${r.date}</td><td style="padding:0.3rem 0.4rem;">${r.hostName}</td><td style="padding:0.3rem 0.4rem;">${r.venue||'—'}</td>
+      <td style="padding:0.3rem 0.4rem;">${r.checkinTime||'—'}</td><td style="padding:0.3rem 0.4rem;">${r.checkoutTime||'—'}</td>
+    </tr>`).join('')}</tbody></table>${importFinalRecords.length>200?`<div style="padding:0.4rem;color:var(--text3);">…and ${importFinalRecords.length-200} more, not shown here but will still be imported.</div>`:''}`;
+  document.getElementById('importStep1').style.display='none';
+  document.getElementById('importStep2').style.display='';
+}
+
+function confirmImportShifts(btn){
+  if(!importFinalRecords.length)return;
+  btn.disabled=true;btn.textContent='Importing...';
+  const CHUNK=400; // stay under Firestore's 500-writes-per-batch limit
+  const chunks=[];
+  for(let i=0;i<importFinalRecords.length;i+=CHUNK)chunks.push(importFinalRecords.slice(i,i+CHUNK));
+  let chain=Promise.resolve();
+  chunks.forEach(chunk=>{
+    chain=chain.then(()=>{
+      const batch=db.batch();
+      chunk.forEach(r=>{
+        const id='import_'+Date.now()+'_'+Math.random().toString(36).slice(2,8);
+        batch.set(db.collection('shifts').doc(id),{
+          hostName:r.hostName,venue:r.venue,date:r.date,locationId:r.locationId,
+          status:'OFF', // historical import — never treated as a currently-active shift
+          imported:true,
+          checkinTime:r.checkinTime,checkinNotes:r.checkinNotes,
+          checkoutTime:r.checkoutTime,crowdSize:r.crowdSize,singers:r.singers,energyLevel:r.energyLevel,
+          venueBusy:r.venueBusy,gotPaid:r.gotPaid,tipScale:r.tipScale,issues:r.issues,checkoutNotes:r.checkoutNotes,photoUrl:r.photoUrl,
+          cancelled:r.cancelled,cancelReason:r.cancelReason,reviewed:false,
+          createdAt:firebase.firestore.FieldValue.serverTimestamp(),updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+        });
+      });
+      return batch.commit();
+    });
+  });
+  chain.then(()=>{
+    alert(`Imported ${importFinalRecords.length} record(s).`);
+    closeModal('importModal');
+    importFinalRecords=[];importParsedCheckins=[];importParsedCheckouts=[];
+    refreshSigninLog();
+  }).catch(e=>{
+    alert('Import failed partway through: '+e.message+'\n\nSome records may have already been saved — check the Sign-In Log before re-importing to avoid duplicates.');
+    btn.disabled=false;btn.textContent='Import These Records';
+  });
 }
 
 // ── DASHBOARD (This Week) ──
@@ -1706,7 +1907,7 @@ function locationScopeMatches(recordLocationId){
   return recordLocationId===currentLocationScope||!recordLocationId;
 }
 function refreshAllLocationScopedData(){
-  loadShiftsData().then(()=>{ renderSigninLog(); fetchSheetData(); });
+  loadShiftsData().then(()=>{ renderSigninLog(); fetchSheetData(); renderStatsGrid(); renderVenueStats(); });
   loadGigSchedule();
   loadRecruits();
   renderVenueManage();
@@ -1895,12 +2096,11 @@ function closeResetStatsModal(){
   document.getElementById('resetStatsModal').classList.remove('open');
 }
 function confirmResetStats(){
-  // Clear all checkout/stats cached data
-  checkoutData = [];
-  LS.set('checkout-cache', '[]');
-  // Reset stats grid to empty state
+  // Stats now compute live from shiftsData every time the tab loads — there's
+  // no separate cache to clear anymore, so this just re-renders.
+  renderVenueStats();loadStats();
   const grid = document.getElementById('statsGrid');
-  if(grid) grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1">Stats cleared. Refresh the Stats tab to reload from Google Sheets.</div>';
+  if(grid && !shiftsData.length) grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1">No checkout data yet.</div>';
   // Reset venue performance
   const vperf = document.getElementById('venuesList');
   if(vperf) vperf.innerHTML = '<div class="empty-state">Stats cleared. Refresh to reload.</div>';
@@ -2079,17 +2279,17 @@ function saveVenue(){
 function deleteVenue(id){if(!confirm('Remove this venue?'))return;venues=venues.filter(v=>v.id!==id);persist('venues-list',venues,'venuesSave');renderVenueManage();populateRosterFilters();}
 
 const TIP_BRACKET_VALUE={'No tips':0,'Under $10':5,'$10–$25':17.5,'$25–$50':37.5,'$50–$75':62.5,'$75–$100':87.5,'$100+':110};
-async function loadVenueStats(){
-  await fetchCheckoutData();
-  renderVenueStats();
+function loadVenueStats(){
+  loadShiftsData().then(renderVenueStats);
 }
 function renderVenueStats(){
   const el=document.getElementById('venuesList');
-  if(!checkoutData.length){el.innerHTML='<div class="empty-state">No checkout data yet.</div>';return;}
+  const completed=shiftsData.filter(s=>s.status==='OFF');
+  if(!completed.length){el.innerHTML='<div class="empty-state">No checkout data yet.</div>';return;}
   const from=document.getElementById('perfFrom')?.value||'';
   const to=document.getElementById('perfTo')?.value||'';
   const sortBy=document.getElementById('perfSort')?.value||'gigs';
-  const rows=checkoutData.filter(r=>{
+  const rows=completed.filter(r=>{
     if(from&&r.date<from)return false;
     if(to&&r.date>to)return false;
     return true;
@@ -2100,9 +2300,9 @@ function renderVenueStats(){
     const v=r.venue||'Unknown';
     if(!vm[v])vm[v]={shifts:0,crowdTotal:0,crowdCount:0,energyTotal:0,energyCount:0,tips:[],tipDollarTotal:0,tipDollarCount:0,bestTip:null,bestTipVal:-1,paid:0};
     vm[v].shifts++;
-    const m=(r.crowd_size||'').match(/(\d+)/);if(m){vm[v].crowdTotal+=parseInt(m[1]);vm[v].crowdCount++;}
-    const em=(r.energy_level||'').match(/(\d)/);if(em){vm[v].energyTotal+=parseInt(em[1]);vm[v].energyCount++;}
-    const tip=r.tip_scale||'';
+    const m=(r.crowdSize||'').match(/(\d+)/);if(m){vm[v].crowdTotal+=parseInt(m[1]);vm[v].crowdCount++;}
+    const em=(r.energyLevel||'').match(/(\d)/);if(em){vm[v].energyTotal+=parseInt(em[1]);vm[v].energyCount++;}
+    const tip=r.tipScale||'';
     if(tip&&tip!=='Not specified'&&tip!=='N/A'){
       vm[v].tips.push(tip);
       const dollarVal=TIP_BRACKET_VALUE[tip];
@@ -2111,7 +2311,7 @@ function renderVenueStats(){
         if(dollarVal>vm[v].bestTipVal){vm[v].bestTipVal=dollarVal;vm[v].bestTip=tip;}
       }
     }
-    if((r.got_paid||'').toLowerCase()==='yes')vm[v].paid++;
+    if((r.gotPaid||'').toLowerCase()==='yes')vm[v].paid++;
   });
   let entries=Object.entries(vm).map(([name,d])=>{
     const avgCrowd=d.crowdCount?Math.round(d.crowdTotal/d.crowdCount):0;
@@ -2140,17 +2340,20 @@ function renderVenueStats(){
   }).join('');
 }
 
-async function loadStats(){
-  await fetchCheckoutData();
+function loadStats(){
+  loadShiftsData().then(renderStatsGrid);
+}
+function renderStatsGrid(){
   const grid=document.getElementById('statsGrid');
-  if(!checkoutData.length){grid.innerHTML='<div class="empty-state" style="grid-column:1/-1">No checkout data yet.</div>';return;}
+  const completed=shiftsData.filter(s=>s.status==='OFF');
+  if(!completed.length){grid.innerHTML='<div class="empty-state" style="grid-column:1/-1">No checkout data yet.</div>';return;}
   const hc={},vc={},dc={};
-  checkoutData.forEach(r=>{
-    const n=r.host||'Unknown';hc[n]=(hc[n]||0)+1;
+  completed.forEach(r=>{
+    const n=r.hostName||'Unknown';hc[n]=(hc[n]||0)+1;
     const v=r.venue||'Unknown';vc[v]=(vc[v]||0)+1;
-    if(r.date){const d=new Date(r.date);if(!isNaN(d)){const day=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d.getDay()];dc[day]=(dc[day]||0)+1;}}
+    if(r.date){const d=new Date(r.date+'T12:00:00');if(!isNaN(d)){const day=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d.getDay()];dc[day]=(dc[day]||0)+1;}}
   });
-  const paid=checkoutData.filter(r=>(r.got_paid||'').toLowerCase()==='yes').length;
+  const paid=completed.filter(r=>(r.gotPaid||'').toLowerCase()==='yes').length;
   const topH=Object.entries(hc).sort((a,b)=>b[1]-a[1]).slice(0,5);
   const topV=Object.entries(vc).sort((a,b)=>b[1]-a[1]).slice(0,5);
   const topD=Object.entries(dc).sort((a,b)=>b[1]-a[1]).slice(0,5);
@@ -2158,7 +2361,7 @@ async function loadStats(){
     <div class="insight-card"><div class="insight-title">Most Active Hosts</div>${topH.map(([n,c])=>`<div class="insight-row"><span class="insight-name">${n}</span><span class="insight-val">${c}</span></div>`).join('')}</div>
     <div class="insight-card"><div class="insight-title">Top Venues</div>${topV.map(([n,c])=>`<div class="insight-row"><span class="insight-name">${n}</span><span class="insight-val">${c}</span></div>`).join('')}</div>
     <div class="insight-card"><div class="insight-title">Busiest Nights</div>${topD.length?topD.map(([d,c])=>`<div class="insight-row"><span class="insight-name">${d}</span><span class="insight-val">${c} shifts</span></div>`).join(''):'<div class="insight-row"><span class="insight-name">Not enough data</span></div>'}</div>
-    <div class="insight-card"><div class="insight-title">Pay &amp; Tips</div><div class="insight-row"><span class="insight-name">Pay rate</span><span class="insight-val">${Math.round(paid/checkoutData.length*100)}%</span></div><div class="insight-row"><span class="insight-name">Total shifts</span><span class="insight-val">${checkoutData.length}</span></div><div class="insight-row"><span class="insight-name">Paid on time</span><span class="insight-val">${paid}</span></div></div>`;
+    <div class="insight-card"><div class="insight-title">Pay &amp; Tips</div><div class="insight-row"><span class="insight-name">Pay rate</span><span class="insight-val">${Math.round(paid/completed.length*100)}%</span></div><div class="insight-row"><span class="insight-name">Total shifts</span><span class="insight-val">${completed.length}</span></div><div class="insight-row"><span class="insight-name">Paid on time</span><span class="insight-val">${paid}</span></div></div>`;
 }
 
 // ── GROWTH TRACKER ──
