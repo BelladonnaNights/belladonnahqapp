@@ -86,6 +86,10 @@
   <div class="card">
     <div class="card-title">Shift Details</div>
     <div class="field">
+      <label class="field-label">Location <span class="required">*</span></label>
+      <select class="field-input" id="locationSelect"></select>
+    </div>
+    <div class="field">
       <label class="field-label">Host Name <span class="required">*</span></label>
       <input type="text" class="field-input" id="host" placeholder="Your name">
     </div>
@@ -225,6 +229,13 @@
 firebase.initializeApp({apiKey:"AIzaSyCIfAE1JGHsUGzzVH2pz1Vyj5b5OhA0tDQ",authDomain:"belladonna-hq.firebaseapp.com",projectId:"belladonna-hq",storageBucket:"belladonna-hq.firebasestorage.app",messagingSenderId:"1021873183587",appId:"1:1021873183587:web:def283bb7b5ca48e4f9156"});
 const db = firebase.firestore();
 const storage = firebase.storage();
+db.collection('hq_data').doc('locations').get().then(snap=>{
+  const list=(snap.exists&&Array.isArray(snap.data().list)&&snap.data().list.length)?snap.data().list:[{code:'wa-southsound',label:'WA - South Sound'}];
+  const sel=document.getElementById('locationSelect');
+  sel.innerHTML=list.map(l=>`<option value="${l.code}">${l.label}</option>`).join('');
+}).catch(()=>{
+  document.getElementById('locationSelect').innerHTML='<option value="wa-southsound">WA - South Sound</option>';
+});
 
 let selectedVenue='',selectedCrowd='',starRating=0,venueBusy='',gotPaid='',currentStatus='Active',selectedPhotoFile=null,gigCanceled=false;
 document.getElementById('date').value=new Date().toISOString().split('T')[0];
@@ -276,11 +287,30 @@ function compressPhoto(file,maxDim=1600,quality=0.75){
   });
 }
 function slugify(s){ return (s||'').toLowerCase().trim().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,''); }
-function shiftDocId(date,venue,host){ return date+'__'+slugify(venue)+'__'+slugify(host); }
-async function uploadPhotoIfAny(date,venue,host){
+function newShiftDocId(date,venue,host){ return date+'__'+slugify(venue)+'__'+slugify(host)+'__'+Date.now(); }
+// Finds the matching OPEN shift to attach this checkout to, by searching
+// rather than recomputing a fixed ID — the fixed-ID approach was the bug
+// that made a second same-day check-in silently overwrite the first. If two
+// happen to be open at once (shouldn't normally happen), takes the one with
+// the latest check-in. Returns null if there's no open shift to attach to —
+// e.g. someone checking out without ever checking in.
+async function findOpenShiftId(date,venue,host,locationId){
+  const snap=await db.collection('shifts')
+    .where('date','==',date).where('venue','==',venue)
+    .where('hostName','==',host).where('status','==','ON').get();
+  if(snap.empty)return null;
+  let best=null;
+  snap.forEach(doc=>{
+    const d=doc.data();
+    if(locationId&&d.locationId&&d.locationId!==locationId)return; // different location, same names — not a match
+    if(!best||(d.createdAt&&best.createdAt&&d.createdAt.toMillis()>best.createdAt.toMillis()))best={id:doc.id,createdAt:d.createdAt};
+  });
+  return best?best.id:snap.docs[0].id;
+}
+async function uploadPhotoIfAny(shiftId,locationId){
   if(!selectedPhotoFile)return '';
   const blob=await compressPhoto(selectedPhotoFile);
-  const path='checkout-photos/'+shiftDocId(date,venue,host)+'-'+Date.now()+'.jpg';
+  const path='uploads/'+(locationId||'wa-southsound')+'/checkout-photos/'+shiftId+'-'+Date.now()+'.jpg';
   const ref=storage.ref().child(path);
   await ref.put(blob,{contentType:'image/jpeg'});
   return await ref.getDownloadURL();
@@ -289,20 +319,23 @@ async function submitForm(){
   const host=document.getElementById('host').value.trim();
   const date=document.getElementById('date').value;
   const time=document.getElementById('checkoutTime').value;
+  const locationId=document.getElementById('locationSelect').value||'wa-southsound';
   if(!host){showError('Please enter your host name.');return;}
   if(!selectedVenue){showError('Please select or add a venue.');return;}
   if(!date||!time){showError('Please fill in date and check-out time.');return;}
   if(gigCanceled&&!document.getElementById('cancelReason').value.trim()){showError('Please briefly say what happened.');return;}
   const btn=document.getElementById('submitBtn');
-  btn.disabled=true;btn.textContent=selectedPhotoFile?'Uploading photo...':'Submitting...';
+  btn.disabled=true;btn.textContent='Finding your shift...';
   document.getElementById('errorMsg').style.display='none';
   try{
+    let docId=await findOpenShiftId(date,selectedVenue,host,locationId);
+    if(!docId)docId=newShiftDocId(date,selectedVenue,host); // no matching check-in — start a checkout-only record
+    btn.textContent=selectedPhotoFile?'Uploading photo...':'Submitting...';
     let photoUrl='';
-    try{photoUrl=await uploadPhotoIfAny(date,selectedVenue,host);}catch(photoErr){console.warn('Photo upload failed:',photoErr);}
+    try{photoUrl=await uploadPhotoIfAny(docId,locationId);}catch(photoErr){console.warn('Photo upload failed:',photoErr);}
     btn.textContent='Submitting...';
-    const docId=shiftDocId(date,selectedVenue,host);
     await db.collection('shifts').doc(docId).set({
-      hostName:host,venue:selectedVenue,date:date,status:'OFF',
+      hostName:host,venue:selectedVenue,date:date,locationId:locationId,status:'OFF',
       checkoutTime:time,
       crowdSize:gigCanceled?'N/A':(selectedCrowd||'Not specified'),
       singers:gigCanceled?'N/A':(document.getElementById('singers').value||'0'),
