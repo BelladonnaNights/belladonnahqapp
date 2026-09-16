@@ -593,7 +593,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
   <div class="subtabs">
     <button class="subtab active" onclick="showSub('venues','manage',this)">Our Venues</button>
     <button class="subtab" onclick="showSub('venues','perf',this);loadVenueStats()">Performance</button>
-    <button class="subtab" onclick="showSub('venues','leads',this);renderLeads()">Leads</button>
+    <button class="subtab" onclick="showSub('venues','leads',this);renderLeads()" id="leadsTabBtn" style="display:none;">Leads</button>
     <button class="subtab" onclick="showSub('venues','onboarding',this);renderVenueOnboardingChecklist()">Onboarding</button>
   </div>
   <div class="subpanel active" id="sub-venues-manage">
@@ -952,6 +952,9 @@ if(authInst){
         const profile=snap.exists?snap.data():{};
         myLocationId=profile.locationId||null;
         myAllLocations=!!profile.allLocations;
+        myLeadsAccess=!!(profile.leadsAccess||(profile.adminAccess&&profile.adminAccess.hq));
+        const leadsTabBtn=document.getElementById('leadsTabBtn');
+        if(leadsTabBtn)leadsTabBtn.style.display=myLeadsAccess?'':'none';
         loadLocations().then(function(){
           if(myAllLocations){
             currentLocationScope='ALL';
@@ -1975,7 +1978,7 @@ function adminRemoveLocation(code){
 // resolved once at load from the signed-in account's own Firestore profile —
 // not something the account itself can change, same as every other
 // permission tonight.
-let myLocationId=null, myAllLocations=false, currentLocationScope='ALL';
+let myLocationId=null, myAllLocations=false, myLeadsAccess=false, currentLocationScope='ALL';
 function populateLocationScopeSelect(){
   const sel=document.getElementById('locationScopeSelect');
   if(!sel)return;
@@ -2960,6 +2963,10 @@ function renderAccounts(){
       <div class="acct-entitlements">${schedChips}</div>
       <div style="font-size:0.6rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--text3);margin:0.6rem 0 0.3rem;">Admin Access</div>
       <div class="acct-entitlements">${adminChips}</div>
+      <div style="font-size:0.6rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--text3);margin:0.6rem 0 0.3rem;">Venue Leads <span style="opacity:0.7;">— can see and edit the Leads tab</span></div>
+      <div class="acct-entitlements">
+        <button class="acct-ent-chip ${a.leadsAccess?'on':''}" style="${a.leadsAccess?'border-color:var(--gold);':''}" onclick="toggleLeadsAccess('${a.uid}')">${a.leadsAccess?'✓ ':''}Leads Access</button>
+      </div>
       <div style="font-size:0.6rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--text3);margin:0.6rem 0 0.3rem;">Location</div>
       <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;">
         <select onchange="setAcctLocation('${a.uid}',this.value)" ${a.allLocations?'disabled':''} style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:0.3rem 0.5rem;font-size:0.72rem;">
@@ -3014,6 +3021,18 @@ function toggleAdminAccess(uid,appKey){
     acct.adminAccess[appKey]=!newVal;
     renderAccounts();
     alert('Failed to update admin access: '+e.message);
+  });
+}
+
+function toggleLeadsAccess(uid){
+  const acct=accounts.find(a=>a.uid===uid);if(!acct)return;
+  const newVal=!acct.leadsAccess;
+  acct.leadsAccess=newVal;
+  renderAccounts();
+  db.collection('users').doc(uid).set({leadsAccess:newVal},{merge:true}).catch(e=>{
+    acct.leadsAccess=!newVal;
+    renderAccounts();
+    alert('Failed to update leads access: '+e.message);
   });
 }
 
