@@ -232,66 +232,6 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
 .admin-danger-btn{background:rgba(160,56,88,0.1);border:1px solid rgba(160,56,88,0.35);color:var(--rose);padding:0.5rem 1.1rem;font-size:0.63rem;letter-spacing:0.14em;text-transform:uppercase;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.2s;}
 .admin-danger-btn:hover{background:rgba(160,56,88,0.2);}
 
-/* GROWTH TRACKER */
-.tracker-intro{text-align:center;padding:3rem 1rem;}
-.tracker-intro-icon{font-size:2.5rem;margin-bottom:1rem;}
-.tracker-intro-title{font-family:'Cormorant Garamond',serif;font-size:2.2rem;font-weight:300;color:var(--gold);letter-spacing:0.15em;margin-bottom:0.75rem;}
-.tracker-intro-body{font-size:0.82rem;color:var(--text3);max-width:420px;margin:0 auto 2rem;line-height:1.8;letter-spacing:0.04em;}
-.tracker-start-btn{background:var(--gold-dim);border:1px solid var(--border-gold);color:var(--gold);padding:0.9rem 2.5rem;font-size:0.7rem;letter-spacing:0.28em;text-transform:uppercase;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.2s;}
-.tracker-start-btn:hover{background:rgba(201,168,76,0.2);}
-.tracker-quiz-card{background:var(--surface);border:1px solid var(--border);border-top:3px solid var(--purple);padding:1.8rem;position:relative;margin-bottom:1rem;}
-.tracker-cat-header{display:flex;align-items:center;gap:0.75rem;margin-bottom:0.4rem;}
-.tracker-cat-icon{font-size:1.3rem;}
-.tracker-cat-name{font-family:'Cormorant Garamond',serif;font-size:1.4rem;font-weight:300;letter-spacing:0.1em;}
-.tracker-cat-sub{font-size:0.65rem;color:var(--text3);margin-bottom:1.2rem;letter-spacing:0.06em;}
-.tracker-meter-wrap{height:4px;background:var(--surface2);overflow:hidden;margin:0.5rem 0 1.5rem;}
-.tracker-meter-fill{height:100%;transition:width 0.5s ease;}
-.tracker-meter-label{display:flex;justify-content:space-between;font-size:0.6rem;color:var(--text3);letter-spacing:0.12em;}
-.tracker-q-row{margin-bottom:1.2rem;padding-bottom:1.2rem;border-bottom:1px solid var(--border);}
-.tracker-q-row:last-of-type{border-bottom:none;margin-bottom:0;padding-bottom:0;}
-.tracker-q-label{font-size:0.82rem;color:var(--text2);margin-bottom:0.6rem;line-height:1.6;letter-spacing:0.03em;}
-.tracker-btn-group{display:flex;gap:0.4rem;flex-wrap:wrap;}
-.tracker-ans-btn{padding:0.4rem 0.9rem;border:1px solid var(--border);background:none;color:var(--text3);font-size:0.65rem;cursor:pointer;transition:all 0.2s;font-family:'DM Sans',sans-serif;letter-spacing:0.08em;white-space:nowrap;}
-.tracker-nav{display:flex;justify-content:space-between;align-items:center;margin-top:1.5rem;gap:0.75rem;}
-.tracker-nav-prev{background:none;border:1px solid var(--border);color:var(--text3);padding:0.6rem 1.2rem;font-size:0.65rem;cursor:pointer;font-family:'DM Sans',sans-serif;letter-spacing:0.12em;text-transform:uppercase;transition:all 0.2s;}
-.tracker-nav-prev:hover{border-color:var(--border2);color:var(--text2);}
-.tracker-nav-prev:disabled{opacity:0.3;cursor:not-allowed;}
-.tracker-nav-next{background:var(--gold-dim);border:1px solid var(--border-gold);color:var(--gold);padding:0.6rem 1.5rem;font-size:0.65rem;cursor:pointer;font-family:'DM Sans',sans-serif;letter-spacing:0.18em;text-transform:uppercase;transition:all 0.2s;}
-.tracker-nav-next:hover{background:rgba(201,168,76,0.2);}
-.tracker-nav-next:disabled{opacity:0.3;cursor:not-allowed;}
-.tracker-nav-count{font-size:0.6rem;color:var(--text3);letter-spacing:0.12em;}
-.tracker-overall{background:var(--surface);border:1px solid var(--border);border-top:3px solid var(--gold);padding:1.8rem;text-align:center;margin-bottom:1.2rem;}
-.tracker-big-pct{font-family:'Cormorant Garamond',serif;font-size:5rem;font-weight:300;line-height:1;}
-.tracker-overall-label{font-size:0.6rem;letter-spacing:0.28em;text-transform:uppercase;color:var(--text3);margin-bottom:0.5rem;}
-.tracker-overall-msg{font-size:0.82rem;color:var(--text3);margin-top:0.75rem;line-height:1.6;max-width:380px;margin-left:auto;margin-right:auto;}
-.tracker-retake-btn{background:none;border:1px solid var(--border2);color:var(--purple-btn);padding:0.5rem 1.2rem;font-size:0.65rem;letter-spacing:0.18em;text-transform:uppercase;cursor:pointer;font-family:'DM Sans',sans-serif;margin-top:1rem;transition:all 0.2s;}
-.tracker-retake-btn:hover{border-color:var(--gold);color:var(--gold);}
-.tracker-results-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:0.75rem;}
-.tracker-result-card{background:var(--surface);border:1px solid var(--border);padding:1.2rem;cursor:pointer;transition:all 0.2s;border-left-width:3px;}
-.tracker-result-card:hover{border-color:var(--border2);transform:translateY(-1px);}
-.tracker-result-card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:0.6rem;}
-.tracker-result-cat-name{font-size:0.78rem;color:var(--text);letter-spacing:0.06em;display:flex;align-items:center;gap:0.5rem;}
-.tracker-result-pct{font-family:'Cormorant Garamond',serif;font-size:1.6rem;font-weight:300;}
-.tracker-result-sub{font-size:0.6rem;color:var(--text3);margin-top:0.4rem;letter-spacing:0.06em;}
-.tracker-todo-list{margin-top:0.8rem;padding-top:0.8rem;border-top:1px solid var(--border);}
-.tracker-todo-item{display:flex;gap:0.5rem;font-size:0.7rem;color:var(--text2);padding:0.35rem 0;border-bottom:1px solid var(--border);line-height:1.5;}
-.tracker-todo-item:last-child{border-bottom:none;}
-.tracker-glance-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:0.6rem;margin-top:1.2rem;}
-.tracker-glance-card{background:var(--surface);border:1px solid var(--border);padding:0.85rem;position:relative;overflow:hidden;cursor:pointer;transition:all 0.2s;}
-.tracker-glance-card:hover{border-color:var(--border2);}
-.tracker-glance-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem;}
-.tracker-glance-name{font-size:0.68rem;letter-spacing:0.1em;color:var(--text2);}
-.tracker-glance-pct{font-family:'Cormorant Garamond',serif;font-size:1.3rem;font-weight:300;}
-.tracker-glance-items{display:flex;flex-direction:column;gap:0.25rem;}
-.tracker-glance-item{font-size:0.62rem;color:var(--text3);letter-spacing:0.02em;line-height:1.4;}
-.tracker-edit-btn{background:none;border:none;color:var(--text3);cursor:pointer;font-size:0.65rem;padding:2px 4px;transition:color 0.2s;opacity:0;}
-.tracker-q-row:hover .tracker-edit-btn{opacity:1;}
-.tracker-edit-btn:hover{color:var(--gold);}
-.tracker-add-q-btn{background:none;border:1px dashed rgba(180,150,100,0.25);color:var(--text3);padding:0.45rem 1rem;font-size:0.62rem;letter-spacing:0.14em;text-transform:uppercase;cursor:pointer;font-family:'DM Sans',sans-serif;margin-top:0.75rem;width:100%;transition:all 0.2s;}
-.tracker-add-q-btn:hover{border-color:var(--border2);color:var(--text2);}
-#trackerSaveDot{font-size:0.6rem;color:var(--teal);letter-spacing:0.08em;opacity:0;transition:opacity 0.3s;}
-#trackerSaveDot.show{opacity:1;}
-
 /* SIGN-IN LOG */
 .signin-filters{display:flex;gap:0.5rem;margin-bottom:1rem;flex-wrap:wrap;}
 .signin-day-heading{font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:0.08em;color:var(--gold2);margin:1.4rem 0 0.6rem;padding-bottom:0.4rem;border-bottom:1px solid var(--border);}
@@ -404,11 +344,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
     <button class="tab" onclick="showTab('hosts',this)">Hosts</button>
     <button class="tab" onclick="showTab('venues',this)">Venues</button>
     <button class="tab" onclick="showTab('schedule',this)">Schedule</button>
-    <button class="tab" onclick="showTab('stats',this)">Stats</button>
-    <button class="tab" onclick="showTab('tracker',this)">Growth Tracker</button>
     <button class="tab" onclick="showTab('accounts',this)">Accounts</button>
-    <a href="command-center.html" class="tab" style="text-decoration:none;border-bottom:2px solid rgba(201,168,76,0.35);color:var(--gold);opacity:0.75;">Command Center</a>
-    <a href="https://belladonnanights.github.io/belladonnatrivia/planner.html" class="tab" style="text-decoration:none;border-bottom:2px solid rgba(201,168,76,0.35);color:var(--gold);opacity:0.75;">Planner</a>
   </div>
 </div>
 
@@ -595,6 +531,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
     <button class="subtab" onclick="showSub('venues','perf',this);loadVenueStats()">Performance</button>
     <button class="subtab" onclick="showSub('venues','leads',this);renderLeads()" id="leadsTabBtn" style="display:none;">Leads</button>
     <button class="subtab" onclick="showSub('venues','onboarding',this);renderVenueOnboardingChecklist()">Onboarding</button>
+    <button class="subtab" onclick="showSub('venues','stats',this);loadStats()">Stats</button>
   </div>
   <div class="subpanel active" id="sub-venues-manage">
     <div class="section-header">
@@ -650,6 +587,13 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
     <div style="font-size:0.68rem;color:var(--text3);margin-bottom:1rem;line-height:1.6;">The process, start to finish, with the actual links you need at each step. Paste each one in once — it's shared everywhere from then on.</div>
     <div id="venueOnbChecklist"></div>
   </div>
+  <div class="subpanel" id="sub-venues-stats">
+    <div class="section-header" style="margin-bottom:1.2rem;">
+      <div class="section-title">Insights &amp; Stats</div>
+      <button class="btn-sm" onclick="loadStats()">↻ Refresh</button>
+    </div>
+    <div class="stats-grid" id="statsGrid"><div class="empty-state" style="grid-column:1/-1">Loading stats...</div></div>
+  </div>
 </div>
 
 <!-- LEAD MODAL -->
@@ -684,12 +628,22 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
         </select>
       </div>
     </div>
-    <div class="form-group"><label class="form-label">Interested In</label>
-      <div style="display:flex;gap:1rem;flex-wrap:wrap;font-size:0.75rem;">
-        <label style="display:flex;align-items:center;gap:0.3rem;cursor:pointer;"><input type="checkbox" id="leadIntTrivia"> Trivia</label>
-        <label style="display:flex;align-items:center;gap:0.3rem;cursor:pointer;"><input type="checkbox" id="leadIntBingo"> Bingo</label>
-        <label style="display:flex;align-items:center;gap:0.3rem;cursor:pointer;"><input type="checkbox" id="leadIntKaraoke"> Karaoke</label>
+    <div class="form-group"><label class="form-label">What They're Looking For</label>
+      <div id="leadInterestRows" style="display:flex;flex-direction:column;gap:0.4rem;margin-bottom:0.5rem;"></div>
+      <button class="btn-sm" onclick="addLeadInterestRow()" type="button">+ Add Night</button>
+    </div>
+    <div style="display:flex;gap:0.6rem;">
+      <div class="form-group" style="flex:1;"><label class="form-label">How They Contacted Us</label>
+        <select class="form-input" id="leadContactMethod" onchange="document.getElementById('leadContactMethodOtherWrap').style.display=this.value==='other'?'':'none';">
+          <option value="email">Email</option>
+          <option value="instagram">Instagram</option>
+          <option value="facebook">Facebook</option>
+          <option value="in_person">In Person</option>
+          <option value="phone">Phone</option>
+          <option value="other">Other</option>
+        </select>
       </div>
+      <div class="form-group" style="flex:1;" id="leadContactMethodOtherWrap"><label class="form-label">Which Other</label><input type="text" class="form-input" id="leadContactMethodOther"></div>
     </div>
     <div style="display:flex;gap:0.6rem;">
       <div class="form-group" style="flex:1;"><label class="form-label">Source</label>
@@ -719,6 +673,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
   <div class="subtabs">
     <button class="subtab active" onclick="showSub('schedule','cal',this)">Calendar</button>
     <button class="subtab" onclick="showSub('schedule','table',this)">Spreadsheet</button>
+    <a href="https://belladonnanights.github.io/belladonnatrivia/planner.html" class="subtab" style="text-decoration:none;">Planner</a>
   </div>
   <div class="subpanel active" id="sub-schedule-cal">
     <div class="sched-toolbar"><button class="add-entry-btn" onclick="openGigModal()">+ Schedule Gig</button><button class="btn-sm" onclick="openBulkAddModal()">+ Bulk Add</button></div>
@@ -750,22 +705,6 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
     <div class="sched-legend-item"><div class="sched-legend-dot" style="background:var(--text3);"></div>Cancelled</div>
     <div class="sched-legend-item"><div class="sched-legend-dot" style="background:var(--teal);"></div>From Trivia Planner / Bingo (view only)</div>
   </div>
-</div>
-
-<!-- STATS -->
-<div class="panel" id="panel-stats">
-  <div class="section-header" style="margin-bottom:1.2rem;">
-    <div class="section-title">Insights &amp; Stats</div>
-    <button class="btn-sm" onclick="loadStats()">↻ Refresh</button>
-  </div>
-  <div class="stats-grid" id="statsGrid"><div class="empty-state" style="grid-column:1/-1">Loading stats...</div></div>
-</div>
-
-
-
-<!-- GROWTH TRACKER -->
-<div class="panel" id="panel-tracker">
-  <div id="trackerView"></div>
 </div>
 
 <!-- ACCOUNTS -->
@@ -1023,8 +962,6 @@ function showTab(id,el){
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   document.getElementById('panel-'+id).classList.add('active');el.classList.add('active');
-  if(id==='stats')loadStats();
-  if(id==='tracker')renderTracker();
   if(id==='dashboard')renderDashboardWeek();
   if(id==='schedule'){populateSchedFilters();loadShiftsData().then(renderScheduleAll);}
   if(id==='accounts')loadAccounts();
@@ -2146,9 +2083,7 @@ const LEAD_STAGES=[
   {key:'signed',label:'Signed',color:'#3aaa6a'},
   {key:'transferred',label:'Transferred',color:'var(--text3)'}
 ];
-const LEAD_TEMP_ICON={hot:'🔥',warm:'🌤',cold:'❄'};
 function leadStageLabel(k){const s=LEAD_STAGES.find(x=>x.key===k);return s?s.label:k;}
-function leadStageColor(k){const s=LEAD_STAGES.find(x=>x.key===k);return s?s.color:'var(--text3)';}
 
 let leads=[];
 let editingLeadId=null;
@@ -2159,6 +2094,17 @@ function loadLeads(){
     leads=snap.docs.map(d=>({id:d.id,...d.data()})).filter(l=>locationScopeMatches(l.locationId));
     renderLeads();
   }).catch(()=>{leads=[];renderLeads();});
+}
+function setLeadStage(id,stageKey,evt){
+  if(evt)evt.stopPropagation();
+  const l=leads.find(x=>x.id===id);if(!l)return;
+  const prev=l.stage;
+  l.stage=stageKey;
+  renderLeads();
+  db.collection('leads').doc(id).set({stage:stageKey,updatedAt:new Date().toISOString()},{merge:true}).catch(e=>{
+    l.stage=prev;renderLeads();
+    alert('Failed to update stage: '+e.message);
+  });
 }
 function renderLeads(){
   const el=document.getElementById('leadsList');
@@ -2179,21 +2125,27 @@ function renderLeads(){
   el.innerHTML=shown.map(l=>{
     const expanded=expandedLeadId===l.id;
     const overdue=l.nextFollowUp&&l.nextFollowUp<today&&l.stage!=='signed'&&l.stage!=='transferred';
-    const interests=[l.interestedIn&&l.interestedIn.includes('trivia')?'Trivia':null,l.interestedIn&&l.interestedIn.includes('bingo')?'Bingo':null,l.interestedIn&&l.interestedIn.includes('karaoke')?'Karaoke':null].filter(Boolean).join(', ');
+    const curStage=l.stage||'new';
+    const interests=Array.isArray(l.interests)?l.interests.map(formatLeadInterest).join(', '):
+      [l.interestedIn&&l.interestedIn.includes('trivia')?'Trivia':null,l.interestedIn&&l.interestedIn.includes('bingo')?'Bingo':null,l.interestedIn&&l.interestedIn.includes('karaoke')?'Karaoke':null].filter(Boolean).join(', ');
+    const contactMethodLabel={email:'Email',instagram:'Instagram',facebook:'Facebook',in_person:'In Person',phone:'Phone',other:l.contactMethodOther||'Other'}[l.contactMethod]||'';
     return `<div class="acct-card" style="cursor:pointer;" onclick="toggleLeadExpand('${l.id}')">
       <div class="acct-header">
         <div class="acct-name-group">
-          <div class="acct-name">${LEAD_TEMP_ICON[l.temperature]||''} ${l.name||'(no name)'}</div>
+          <div class="acct-name">${l.name||'(no name)'}</div>
           <div class="acct-meta">${l.city?l.city+' · ':''}${l.contactName||''}</div>
         </div>
         <div class="acct-badges">
-          <span class="acct-status-badge" style="background:${leadStageColor(l.stage)}22;color:${leadStageColor(l.stage)};border-color:${leadStageColor(l.stage)};">${leadStageLabel(l.stage||'new')}</span>
           ${l.nextFollowUp?`<span class="acct-status-badge${overdue?' banned':''}">${overdue?'Overdue: ':'Follow up: '}${formatDateShort(l.nextFollowUp)}</span>`:''}
         </div>
       </div>
+      <div style="display:flex;gap:0.35rem;flex-wrap:wrap;margin-top:0.6rem;" onclick="event.stopPropagation();">
+        ${LEAD_STAGES.filter(s=>s.key!=='transferred').map(s=>`<button class="acct-ent-chip${s.key===curStage?' on':''}" style="${s.key===curStage?'border-color:var(--gold);color:var(--gold);':''}" onclick="setLeadStage('${l.id}','${s.key}',event)">${s.label}</button>`).join('')}
+      </div>
       ${expanded?`<div onclick="event.stopPropagation();" style="margin-top:0.7rem;padding-top:0.7rem;border-top:1px solid var(--border);font-size:0.75rem;color:var(--text2);display:flex;flex-direction:column;gap:0.4rem;">
         <div><b>Phone:</b> ${l.phone||'—'} &nbsp; <b>Email:</b> ${l.email||'—'}</div>
-        <div><b>Interested in:</b> ${interests||'—'}</div>
+        <div><b>Looking for:</b> ${interests||'—'}</div>
+        <div><b>Contacted us via:</b> ${contactMethodLabel||'—'}</div>
         <div><b>Source:</b> ${l.source==='outbound'?'We found them':'They found us'}${l.foundBy?' · '+l.foundBy:''}</div>
         ${l.usingCompetitor?'<div style="color:var(--rose);">Currently using a competitor</div>':''}
         ${l.notes?`<div><b>Notes:</b> ${l.notes}</div>`:''}
@@ -2209,6 +2161,39 @@ function toggleLeadExpand(id){
   expandedLeadId=expandedLeadId===id?null:id;
   renderLeads();
 }
+const LEAD_INTEREST_DAYS=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+function addLeadInterestRow(row){
+  row=row||{type:'Trivia',day:'',time:''};
+  const wrap=document.getElementById('leadInterestRows');
+  const rowId='li_'+Date.now()+'_'+Math.random().toString(36).slice(2,6);
+  const div=document.createElement('div');
+  div.id=rowId;
+  div.style.cssText='display:flex;gap:0.4rem;align-items:center;';
+  div.innerHTML=`
+    <select class="form-input li-type" style="flex:1;font-size:0.75rem;padding:0.4rem 0.5rem;">
+      <option value="Trivia" ${row.type==='Trivia'?'selected':''}>Trivia</option>
+      <option value="Bingo" ${row.type==='Bingo'?'selected':''}>Bingo</option>
+      <option value="Karaoke" ${row.type==='Karaoke'?'selected':''}>Karaoke</option>
+    </select>
+    <select class="form-input li-day" style="flex:1;font-size:0.75rem;padding:0.4rem 0.5rem;">
+      <option value="">Any day</option>
+      ${LEAD_INTEREST_DAYS.map(d=>`<option value="${d}" ${row.day===d?'selected':''}>${d}</option>`).join('')}
+    </select>
+    <input type="time" class="form-input li-time" value="${row.time||''}" style="flex:1;font-size:0.75rem;padding:0.4rem 0.5rem;">
+    <button class="btn-sm" type="button" onclick="document.getElementById('${rowId}').remove()" style="color:var(--rose);">✕</button>
+  `;
+  wrap.appendChild(div);
+}
+function collectLeadInterests(){
+  return [...document.querySelectorAll('#leadInterestRows > div')].map(row=>({
+    type:row.querySelector('.li-type').value,
+    day:row.querySelector('.li-day').value,
+    time:row.querySelector('.li-time').value
+  }));
+}
+function formatLeadInterest(i){
+  return i.type+(i.day?' on '+i.day:'')+(i.time?' at '+formatTime12(i.time):'');
+}
 function openLeadModal(id){
   editingLeadId=id||null;
   const l=id?leads.find(x=>x.id===id):null;
@@ -2223,9 +2208,12 @@ function openLeadModal(id){
   locSel.value=(l&&l.locationId)?l.locationId:(currentLocationScope!=='ALL'?currentLocationScope:((locations[0]&&locations[0].code)||''));
   document.getElementById('leadStage').value=l?l.stage||'new':'new';
   document.getElementById('leadTemp').value=l?l.temperature||'warm':'warm';
-  document.getElementById('leadIntTrivia').checked=!!(l&&l.interestedIn&&l.interestedIn.includes('trivia'));
-  document.getElementById('leadIntBingo').checked=!!(l&&l.interestedIn&&l.interestedIn.includes('bingo'));
-  document.getElementById('leadIntKaraoke').checked=!!(l&&l.interestedIn&&l.interestedIn.includes('karaoke'));
+  document.getElementById('leadInterestRows').innerHTML='';
+  if(l&&Array.isArray(l.interests)&&l.interests.length){l.interests.forEach(addLeadInterestRow);}
+  else addLeadInterestRow();
+  document.getElementById('leadContactMethod').value=l?l.contactMethod||'email':'email';
+  document.getElementById('leadContactMethodOther').value=l?l.contactMethodOther||'':'';
+  document.getElementById('leadContactMethodOtherWrap').style.display=(l&&l.contactMethod==='other')?'':'none';
   document.getElementById('leadSource').value=l?l.source||'inbound':'inbound';
   document.getElementById('leadFoundBy').value=l?l.foundBy||'':'';
   document.getElementById('leadFollowUp').value=l?l.nextFollowUp||'':'';
@@ -2237,16 +2225,16 @@ function openLeadModal(id){
 function saveLead(){
   const name=document.getElementById('leadName').value.trim();
   if(!name){alert('Enter a venue or company name.');return;}
-  const interestedIn=[];
-  if(document.getElementById('leadIntTrivia').checked)interestedIn.push('trivia');
-  if(document.getElementById('leadIntBingo').checked)interestedIn.push('bingo');
-  if(document.getElementById('leadIntKaraoke').checked)interestedIn.push('karaoke');
+  const interests=collectLeadInterests().filter(i=>i.type);
   const data={
     name, contactName:document.getElementById('leadContactName').value.trim(),
     phone:document.getElementById('leadPhone').value.trim(), email:document.getElementById('leadEmail').value.trim(),
     city:document.getElementById('leadCity').value.trim(), locationId:document.getElementById('leadLocation').value,
     stage:document.getElementById('leadStage').value, temperature:document.getElementById('leadTemp').value,
-    interestedIn, source:document.getElementById('leadSource').value, foundBy:document.getElementById('leadFoundBy').value.trim(),
+    interests,
+    contactMethod:document.getElementById('leadContactMethod').value,
+    contactMethodOther:document.getElementById('leadContactMethod').value==='other'?document.getElementById('leadContactMethodOther').value.trim():'',
+    source:document.getElementById('leadSource').value, foundBy:document.getElementById('leadFoundBy').value.trim(),
     nextFollowUp:document.getElementById('leadFollowUp').value, usingCompetitor:document.getElementById('leadCompetitor').checked,
     notes:document.getElementById('leadNotes').value.trim(), updatedAt:new Date().toISOString()
   };
@@ -2266,13 +2254,12 @@ function transferLeadToVenue(id){
   const l=leads.find(x=>x.id===id);
   if(!l)return;
   if(!confirm(`Move "${l.name}" to Our Venues? The lead stays here too, marked Transferred, for your records.`))return;
-  const gigs=[];
-  if(l.interestedIn&&l.interestedIn.includes('trivia'))gigs.push('Trivia');
-  if(l.interestedIn&&l.interestedIn.includes('bingo'))gigs.push('Bingo');
-  if(l.interestedIn&&l.interestedIn.includes('karaoke'))gigs.push('Karaoke');
+  const interests=Array.isArray(l.interests)?l.interests:[];
+  const gigs=[...new Set(interests.map(i=>i.type).filter(Boolean))];
+  const scheduleNote=interests.length?('Wants: '+interests.map(formatLeadInterest).join('; ')):'';
   venues.push({
     id:Date.now().toString(), name:l.name, gigs,
-    notes:[l.city?('City: '+l.city):'',l.contactName?('Contact: '+l.contactName+(l.phone?' · '+l.phone:'')+(l.email?' · '+l.email:'')):'',l.notes||''].filter(Boolean).join('\n'),
+    notes:[l.city?('City: '+l.city):'',l.contactName?('Contact: '+l.contactName+(l.phone?' · '+l.phone:'')+(l.email?' · '+l.email:'')):'',scheduleNote,l.notes||''].filter(Boolean).join('\n'),
     locationId:l.locationId
   });
   persist('venues-list',venues,'venuesSave');
@@ -2665,211 +2652,6 @@ function renderStatsGrid(){
     <div class="insight-card"><div class="insight-title">Pay &amp; Tips</div><div class="insight-row"><span class="insight-name">Pay rate</span><span class="insight-val">${Math.round(paid/completed.length*100)}%</span></div><div class="insight-row"><span class="insight-name">Total shifts</span><span class="insight-val">${completed.length}</span></div><div class="insight-row"><span class="insight-name">Paid on time</span><span class="insight-val">${paid}</span></div></div>`;
 }
 
-// ── GROWTH TRACKER ──
-// NOTE: this whole feature was accidentally deleted during an earlier cleanup pass
-// and had to be rebuilt from the surviving CSS. The categories/icons/colors below
-// are recovered, but the actual question wording is new — Bella's original
-// questions were not recoverable. Any answers she'd already given may still be
-// sitting in Firestore under 'tracker-answers' but won't line up with new question
-// text, since the two weren't stored together.
-const TRACKER_ANSWER_OPTIONS=[{label:'Not Yet',val:0},{label:'Started',val:33},{label:'Mostly There',val:66},{label:'Nailed It',val:100}];
-const DEFAULT_TRACKER_CATEGORIES=[
-  {id:"operations",name:"Operations & Event Execution",icon:"🎤",color:"#c9a96e",items:[
-    "Do you have a standard pre-show checklist every host follows?",
-    "Is there a clear backup plan if a host can't make their gig?",
-    "Do hosts have everything they need (equipment, playlists, question banks) without contacting you day-of?",
-    "Is equipment maintenance or replacement handled on a schedule, not just when something breaks?"
-  ]},
-  {id:"venues",name:"Venue Relationships & Sales",icon:"🍺",color:"#b05070",items:[
-    "Do all active venues have a signed, current contract?",
-    "Do you have a repeatable pitch or process for landing new venues?",
-    "Are venue rates reviewed on a regular schedule?",
-    "Do you track which venues are your most profitable?"
-  ]},
-  {id:"talent",name:"Talent & Team",icon:"🌟",color:"#8a7355",items:[
-    "Is there a written onboarding process for new hosts?",
-    "Do hosts get regular feedback or check-ins?",
-    "Is there a clear path for hosts to grow (ranks, pay increases, more venues)?",
-    "Could the business keep running smoothly if you were out for two weeks?"
-  ]},
-  {id:"delegation",name:"Marketing & Audience Building",icon:"📣",color:"#3aa08a",items:[
-    "Do you post consistently on social media, not just when you remember?",
-    "Do you know which channels actually bring you new venues or hosts?",
-    "Is there a plan for growing your following, not just maintaining it?"
-  ]},
-  {id:"booking",name:"Booking & Scheduling",icon:"📅",color:"#c9a96e",items:[
-    "Is your gig schedule centralized somewhere everyone can see it?",
-    "Do you know at a glance if a gig doesn't have a host assigned?",
-    "Is there a system for handling cancellations and rescheduling?"
-  ]},
-  {id:"finance",name:"Finance & Pricing",icon:"💰",color:"#b05070",items:[
-    "Do you know your profit margin per gig, not just revenue?",
-    "Are host payments handled on a consistent, documented schedule?",
-    "Do you track tips and pay data well enough to spot underpaying venues?"
-  ]},
-  {id:"legal",name:"Legal & Contracts",icon:"📋",color:"#8a7355",items:[
-    "Are hosts onboarded as documented independent contractors (W9, signed agreement)?",
-    "Do venue contracts spell out cancellation and payment terms?",
-    "Is there a plan for what happens if a venue or host disputes payment?"
-  ]},
-  {id:"tech",name:"Tech & Tools",icon:"💻",color:"#3aa08a",items:[
-    "Are your check-in/check-out and scheduling tools something hosts actually use without confusion?",
-    "Is your data backed up somewhere beyond one device?",
-    "Could someone else step in and run the tech side if needed?"
-  ]},
-  {id:"brand",name:"Brand & Experience Design",icon:"✨",color:"#c9a96e",items:[
-    "Is the guest experience consistent across venues, or does it depend heavily on which host is there?",
-    "Do you have branded materials hosts can rely on at every gig?",
-    "Is there a distinct Belladonna feel guests would recognize at any venue?"
-  ]},
-  {id:"growth",name:"Growth & Partnerships",icon:"🚀",color:"#b05070",items:[
-    "Do you have a clear picture of how many more venues or hosts you can take on before something breaks?",
-    "Are you tracking competitors or acquisition opportunities proactively?",
-    "Is there a plan for the next 6-12 months, not just reacting as things come up?"
-  ]},
-];
-let trackerCategories=JSON.parse(JSON.stringify(DEFAULT_TRACKER_CATEGORIES));
-let trackerAnswers={};
-let trackerMode='glance';
-let trackerQuizIndex=0;
-
-function loadTrackerAnswers(){
-  try{const t=LS.get('tracker-answers');if(t)trackerAnswers=JSON.parse(t);}catch(e){}
-  try{const c=LS.get('tracker-categories');if(c)trackerCategories=JSON.parse(c);}catch(e){}
-  if(db){
-    db.collection('hq_data').doc('tracker-answers').get().then(snap=>{if(snap.exists){try{trackerAnswers=JSON.parse(snap.data().value);if(document.getElementById('panel-tracker').classList.contains('active'))renderTracker();}catch(e){}}}).catch(()=>{});
-    db.collection('hq_data').doc('tracker-categories').get().then(snap=>{if(snap.exists){try{trackerCategories=JSON.parse(snap.data().value);if(document.getElementById('panel-tracker').classList.contains('active'))renderTracker();}catch(e){}}}).catch(()=>{});
-  }
-}
-function saveTrackerAnswers(){persist('tracker-answers',trackerAnswers,'trackerSaveDot');}
-function trackerKey(catId,idx){return catId+'::'+idx;}
-function trackerCatScore(cat){
-  if(!cat.items.length)return 0;
-  const total=cat.items.reduce((sum,_,i)=>sum+(trackerAnswers[trackerKey(cat.id,i)]||0),0);
-  return Math.round(total/cat.items.length);
-}
-function trackerOverallScore(){
-  if(!trackerCategories.length)return 0;
-  return Math.round(trackerCategories.reduce((sum,c)=>sum+trackerCatScore(c),0)/trackerCategories.length);
-}
-function trackerHasAnyAnswers(){return Object.keys(trackerAnswers).length>0;}
-function trackerScoreColor(pct){if(pct>=75)return 'var(--live)';if(pct>=40)return 'var(--gold)';return 'var(--rose)';}
-function trackerOverallMessage(pct){
-  if(pct>=85)return "Belladonna's running like a well-oiled machine. Keep an eye on the few soft spots below.";
-  if(pct>=60)return "Solid foundation — a handful of areas are worth shoring up before you scale further.";
-  if(pct>=30)return "The bones are there. A few focused pushes in the categories below will make a big difference.";
-  return "Early days — pick one category below and start there. No need to fix everything at once.";
-}
-
-function renderTracker(){
-  if(trackerMode==='quiz'){renderTrackerQuiz();return;}
-  if(trackerMode==='results'){renderTrackerResults();return;}
-  renderTrackerGlance();
-}
-function renderTrackerGlance(){
-  const el=document.getElementById('trackerView');
-  if(!trackerHasAnyAnswers()){
-    el.innerHTML=`<div class="tracker-intro">
-      <div class="tracker-intro-icon">🌱</div>
-      <div class="tracker-intro-title">Growth Tracker</div>
-      <div class="tracker-intro-body">A quick self-check across ${trackerCategories.length} areas of the business — where things are solid, and where there's room to grow. Takes a few minutes, and you can retake it or edit answers any time.</div>
-      <button class="tracker-start-btn" onclick="startTrackerQuiz(0)">Begin Assessment</button>
-    </div>`;
-    return;
-  }
-  const overall=trackerOverallScore();
-  el.innerHTML=`
-    <div class="tracker-overall">
-      <div class="tracker-overall-label">Overall <span id="trackerSaveDot">Saved ✓</span></div>
-      <div class="tracker-big-pct" style="color:${trackerScoreColor(overall)}">${overall}%</div>
-      <div class="tracker-overall-msg">${trackerOverallMessage(overall)}</div>
-      <button class="tracker-retake-btn" onclick="startTrackerQuiz(0)">Retake Full Assessment</button>
-    </div>
-    <div class="tracker-glance-grid">
-      ${trackerCategories.map((c,ci)=>{
-        const pct=trackerCatScore(c);
-        return `<div class="tracker-glance-card" style="border-top:3px solid ${c.color}" onclick="startTrackerQuiz(${ci})">
-          <div class="tracker-glance-header"><div class="tracker-glance-name">${c.icon} ${c.name}</div><div class="tracker-glance-pct" style="color:${trackerScoreColor(pct)}">${pct}%</div></div>
-          <div class="tracker-glance-items">${c.items.slice(0,3).map((q,qi)=>{
-            const ans=trackerAnswers[trackerKey(c.id,qi)];
-            const opt=TRACKER_ANSWER_OPTIONS.find(o=>o.val===ans);
-            return `<div class="tracker-glance-item">${opt?'●':'○'} ${opt?opt.label:'Not answered'}</div>`;
-          }).join('')}${c.items.length>3?`<div class="tracker-glance-item">+ ${c.items.length-3} more</div>`:''}</div>
-        </div>`;
-      }).join('')}
-    </div>`;
-}
-function startTrackerQuiz(catIndex){trackerMode='quiz';trackerQuizIndex=catIndex;renderTracker();}
-function renderTrackerQuiz(){
-  const el=document.getElementById('trackerView');
-  const cat=trackerCategories[trackerQuizIndex];
-  if(!cat){trackerMode='results';renderTracker();return;}
-  const pct=trackerCatScore(cat);
-  el.innerHTML=`<div class="tracker-quiz-card" style="border-top-color:${cat.color}">
-    <div class="tracker-cat-header"><span class="tracker-cat-icon">${cat.icon}</span><span class="tracker-cat-name">${cat.name}</span></div>
-    <div class="tracker-cat-sub">Category ${trackerQuizIndex+1} of ${trackerCategories.length}</div>
-    <div class="tracker-meter-wrap"><div class="tracker-meter-fill" style="width:${pct}%;background:${cat.color}"></div></div>
-    <div class="tracker-meter-label"><span>${pct}% complete</span><span id="trackerSaveDot">Saved ✓</span></div>
-    ${cat.items.map((q,qi)=>{
-      const ans=trackerAnswers[trackerKey(cat.id,qi)];
-      return `<div class="tracker-q-row">
-        <div class="tracker-q-label">${q} <button class="tracker-edit-btn" onclick="editTrackerQuestion('${cat.id}',${qi})">✎ edit</button></div>
-        <div class="tracker-btn-group">${TRACKER_ANSWER_OPTIONS.map(o=>`<button class="tracker-ans-btn" style="${ans===o.val?`border-color:${cat.color};color:${cat.color};background:${cat.color}22`:''}" onclick="answerTrackerQuestion('${cat.id}',${qi},${o.val})">${o.label}</button>`).join('')}</div>
-      </div>`;
-    }).join('')}
-    <button class="tracker-add-q-btn" onclick="addTrackerQuestion('${cat.id}')">+ Add a question to this category</button>
-    <div class="tracker-nav">
-      <button class="tracker-nav-prev" ${trackerQuizIndex===0?'disabled':''} onclick="trackerPrev()">‹ Previous</button>
-      <span class="tracker-nav-count">${trackerQuizIndex+1} / ${trackerCategories.length}</span>
-      <button class="tracker-nav-next" onclick="trackerNext()">${trackerQuizIndex===trackerCategories.length-1?'See Results':'Next ›'}</button>
-    </div>
-  </div>
-  <div style="text-align:center;margin-top:1rem;"><button class="btn-sm" onclick="trackerMode='glance';renderTracker();">← Back to overview</button></div>`;
-}
-function answerTrackerQuestion(catId,idx,val){trackerAnswers[trackerKey(catId,idx)]=val;saveTrackerAnswers();renderTrackerQuiz();}
-function editTrackerQuestion(catId,idx){
-  const cat=trackerCategories.find(c=>c.id===catId);if(!cat)return;
-  const newText=prompt('Edit question:',cat.items[idx]);
-  if(newText===null||!newText.trim())return;
-  cat.items[idx]=newText.trim();
-  persist('tracker-categories',trackerCategories,'trackerSaveDot');
-  renderTrackerQuiz();
-}
-function addTrackerQuestion(catId){
-  const cat=trackerCategories.find(c=>c.id===catId);if(!cat)return;
-  const text=prompt('New question for '+cat.name+':');
-  if(!text||!text.trim())return;
-  cat.items.push(text.trim());
-  persist('tracker-categories',trackerCategories,'trackerSaveDot');
-  renderTrackerQuiz();
-}
-function trackerNext(){
-  if(trackerQuizIndex<trackerCategories.length-1){trackerQuizIndex++;renderTracker();}
-  else{trackerMode='results';renderTracker();}
-}
-function trackerPrev(){if(trackerQuizIndex>0){trackerQuizIndex--;renderTracker();}}
-function renderTrackerResults(){
-  const el=document.getElementById('trackerView');
-  const overall=trackerOverallScore();
-  el.innerHTML=`<div class="tracker-overall">
-      <div class="tracker-overall-label">Overall</div>
-      <div class="tracker-big-pct" style="color:${trackerScoreColor(overall)}">${overall}%</div>
-      <div class="tracker-overall-msg">${trackerOverallMessage(overall)}</div>
-      <button class="tracker-retake-btn" onclick="startTrackerQuiz(0)">Retake Full Assessment</button>
-    </div>
-    <div class="tracker-results-grid">
-      ${trackerCategories.map((c,ci)=>{
-        const pct=trackerCatScore(c);
-        const todo=c.items.map((q,qi)=>({q,ans:trackerAnswers[trackerKey(c.id,qi)]})).filter(x=>x.ans===undefined||x.ans<66);
-        return `<div class="tracker-result-card" style="border-left-color:${c.color}" onclick="startTrackerQuiz(${ci})">
-          <div class="tracker-result-card-header"><div class="tracker-result-cat-name">${c.icon} ${c.name}</div><div class="tracker-result-pct" style="color:${trackerScoreColor(pct)}">${pct}%</div></div>
-          <div class="tracker-result-sub">${c.items.length} question${c.items.length===1?'':'s'}</div>
-          ${todo.length?`<div class="tracker-todo-list">${todo.slice(0,3).map(t=>`<div class="tracker-todo-item">→ ${t.q}</div>`).join('')}${todo.length>3?`<div class="tracker-todo-item">+ ${todo.length-3} more</div>`:''}</div>`:''}
-        </div>`;
-      }).join('')}
-    </div>
-    <div style="text-align:center;margin-top:1rem;"><button class="btn-sm" onclick="trackerMode='glance';renderTracker();">← Back to overview</button></div>`;
-}
 
 // ── ACCOUNTS ──
 let accounts=[];
@@ -3118,7 +2900,6 @@ function init(){
   loadStorage();
   loadRanks();
   loadHostOrder();
-  loadTrackerAnswers();
   loadGigSchedule();
   loadPlannerData();
   loadShiftsData();
