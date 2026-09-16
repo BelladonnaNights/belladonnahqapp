@@ -64,6 +64,10 @@
   </div>
   <div class="card">
     <div class="field">
+      <label class="field-label">Location <span class="required">*</span></label>
+      <select class="field-input" id="locationSelect"></select>
+    </div>
+    <div class="field">
       <label class="field-label">Host Name <span class="required">*</span></label>
       <input type="text" class="field-input" id="host" placeholder="Your name">
     </div>
@@ -113,12 +117,24 @@ firebase.initializeApp({apiKey:"AIzaSyCIfAE1JGHsUGzzVH2pz1Vyj5b5OhA0tDQ",authDom
 const db = firebase.firestore();
 let selectedVenue = '', currentStatus = 'Active';
 document.getElementById('date').value = new Date().toISOString().split('T')[0];
+// Reads the same shared location list HQ manages — so a new territory shows
+// up here automatically the moment it's added in HQ, no code change needed.
+db.collection('hq_data').doc('locations').get().then(snap=>{
+  const list=(snap.exists&&Array.isArray(snap.data().list)&&snap.data().list.length)?snap.data().list:[{code:'wa-southsound',label:'WA - South Sound'}];
+  const sel=document.getElementById('locationSelect');
+  sel.innerHTML=list.map(l=>`<option value="${l.code}">${l.label}</option>`).join('');
+}).catch(()=>{
+  document.getElementById('locationSelect').innerHTML='<option value="wa-southsound">WA - South Sound</option>';
+});
 function setNow() { const n = new Date(); document.getElementById('checkinTime').value = String(n.getHours()).padStart(2,'0') + ':' + String(n.getMinutes()).padStart(2,'0'); }
 function selectVenue(el) { document.querySelectorAll('.venue-chip').forEach(c => c.classList.remove('selected')); el.classList.add('selected'); selectedVenue = el.textContent.trim(); }
 function addVenue() { const input = document.getElementById('newVenueInput'); const val = input.value.trim(); if (!val) return; const chip = document.createElement('div'); chip.className = 'venue-chip'; chip.textContent = val; chip.onclick = function() { selectVenue(this); }; document.getElementById('venueGrid').appendChild(chip); selectVenue(chip); input.value = ''; }
 function setStatus(s) { currentStatus = s; document.getElementById('statusActive').className = 'status-btn' + (s === 'Active' ? ' active-sel' : ''); document.getElementById('statusInactive').className = 'status-btn' + (s === 'Inactive' ? ' inactive-sel' : ''); }
 function slugify(s){ return (s||'').toLowerCase().trim().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,''); }
-function shiftDocId(date,venue,host){ return date+'__'+slugify(venue)+'__'+slugify(host); }
+// A truly unique ID every time — this is what fixes the bug where a second
+// check-in on the same day/venue overwrote the first instead of creating a
+// new record. Check-out finds this by querying, not by recomputing the ID.
+function shiftDocId(date,venue,host){ return date+'__'+slugify(venue)+'__'+slugify(host)+'__'+Date.now(); }
 async function submitForm() {
   const host = document.getElementById('host').value.trim();
   const date = document.getElementById('date').value;
@@ -136,6 +152,7 @@ async function submitForm() {
       hostName: host,
       venue: selectedVenue,
       date: date,
+      locationId: document.getElementById('locationSelect').value || 'wa-southsound',
       status: 'ON',
       availability: currentStatus,
       checkinTime: time,
@@ -144,7 +161,7 @@ async function submitForm() {
       reviewed: false,
       createdAt: firebase.firestore.FieldValue.serverTimestamp(),
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    }, {merge:true});
+    });
     document.getElementById('successMsg').style.display = 'block'; btn.textContent = 'Checked In ✓';
   } catch(e) { showError('Submission failed. Please try again.'); btn.disabled = false; btn.textContent = 'Check In'; }
 }
