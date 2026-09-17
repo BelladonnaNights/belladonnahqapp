@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Equipment Checkout — Belladonna Host Hub</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Josefin+Sans:wght@200;300;400&display=swap');
+  *{margin:0;padding:0;box-sizing:border-box;}
+  :root{
+    --bg:#000000;--surface:#0d0d0d;--surface2:#141414;--surface3:#1a1a1a;
+    --border:rgba(201,169,110,0.2);--border2:rgba(201,169,110,0.4);
+    --gold:#c9a96e;--rose2:#b0505a;--teal2:#3aa08a;--purple2:#a68a5c;
+    --text:#f0ece0;--text2:#b0a890;--text3:#8a8272;
+    --live:#3aaa6a;--live-dim:rgba(58,170,106,0.12);
+    --purple-btn:#c9a96e;
+  }
+  body{background:var(--bg);color:var(--text);font-family:'Josefin Sans',sans-serif;font-weight:300;min-height:100vh;letter-spacing:0.04em;overflow-x:hidden;}
+  .page{max-width:440px;margin:0 auto;padding:2.5rem 1.5rem 3rem;}
+  .hub-brand{font-family:'Playfair Display',serif;font-size:1.9rem;font-weight:700;color:var(--gold);letter-spacing:0.14em;text-transform:uppercase;text-align:center;}
+  .hub-sub{font-size:0.68rem;letter-spacing:0.4em;text-transform:uppercase;color:var(--text3);margin-top:0.2rem;text-align:center;}
+  .hub-ornament{color:#3a3428;font-family:'Cormorant Garamond',serif;font-size:1.1rem;letter-spacing:0.4em;margin:0.7rem 0 1.8rem;text-align:center;}
+  .back-link{display:block;text-align:center;font-size:0.65rem;letter-spacing:0.14em;color:var(--text3);text-decoration:none;margin-bottom:1.2rem;text-transform:uppercase;}
+  .back-link:hover{color:var(--gold);}
+
+  .field{margin-bottom:1rem;}
+  .field-label{display:block;font-size:0.62rem;letter-spacing:0.16em;text-transform:uppercase;color:var(--text3);margin-bottom:0.4rem;}
+  .field-input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:0.7rem 0.9rem;font-size:0.85rem;font-family:'Josefin Sans',sans-serif;}
+  .field-input:focus{outline:none;border-color:var(--border2);}
+
+  .section-label{font-size:0.66rem;letter-spacing:0.3em;text-transform:uppercase;color:var(--text3);margin:1.6rem 0 0.7rem;}
+  .empty-hint{font-size:0.78rem;color:var(--text3);text-align:center;padding:1.2rem 0.5rem;line-height:1.6;}
+
+  .item-card{background:var(--surface);border:1px solid rgba(201,169,110,0.22);border-radius:11px;padding:0.9rem 1.1rem;margin-bottom:0.6rem;position:relative;overflow:hidden;}
+  .item-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);}
+  .item-top{display:flex;justify-content:space-between;align-items:flex-start;gap:0.6rem;}
+  .item-name{font-size:0.88rem;color:var(--text);}
+  .item-meta{font-size:0.68rem;color:var(--text3);margin-top:0.15rem;}
+  .item-status{font-size:0.6rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--gold);margin-top:0.3rem;}
+  .item-btn{background:none;border:1px solid var(--border2);color:var(--gold);border-radius:999px;padding:0.4rem 0.9rem;font-size:0.65rem;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;font-family:'Josefin Sans',sans-serif;white-space:nowrap;flex-shrink:0;}
+  .item-btn:hover{background:rgba(201,169,110,0.12);}
+
+  .inline-form{margin-top:0.8rem;padding-top:0.8rem;border-top:1px solid var(--border);}
+  .check-row{display:flex;align-items:flex-start;gap:0.5rem;font-size:0.72rem;color:var(--text2);line-height:1.5;margin:0.7rem 0;}
+  .check-row input{margin-top:0.2rem;width:16px;height:16px;flex-shrink:0;}
+  .photo-input-label{display:inline-block;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:0.5rem 0.9rem;font-size:0.7rem;color:var(--text3);cursor:pointer;margin-bottom:0.6rem;}
+  .photo-preview{max-width:100%;border-radius:8px;margin-bottom:0.6rem;display:none;}
+  .confirm-btn{width:100%;background:linear-gradient(135deg,var(--purple-btn),#d4b57e);border:none;border-radius:8px;color:#1a1410;padding:0.75rem;font-size:0.75rem;letter-spacing:0.14em;text-transform:uppercase;cursor:pointer;font-family:'Josefin Sans',sans-serif;font-weight:400;}
+  .confirm-btn:disabled{opacity:0.5;}
+  .cancel-link{display:block;text-align:center;font-size:0.65rem;color:var(--text3);margin-top:0.6rem;cursor:pointer;text-decoration:underline;}
+
+  .msg{font-size:0.72rem;padding:0.6rem 0.8rem;border-radius:8px;margin-bottom:1rem;display:none;}
+  .msg.err{background:rgba(176,80,90,0.12);border:1px solid rgba(176,80,90,0.3);color:#d68a91;}
+  .msg.ok{background:var(--live-dim);border:1px solid rgba(58,170,106,0.3);color:var(--live);}
+</style>
+</head>
+<body>
+<div class="page">
+  <a href="host-hub.html" class="back-link">‹ Back to Host Hub</a>
+  <div class="hub-brand">Belladonna</div>
+  <div class="hub-sub">Equipment Checkout</div>
+  <div class="hub-ornament">✦ ✦ ✦</div>
+
+  <div class="field">
+    <label class="field-label">Your Name</label>
+    <input type="text" class="field-input" id="hostName" placeholder="Type your name" oninput="onNameChange()">
+  </div>
+  <div class="field">
+    <label class="field-label">Location</label>
+    <select class="field-input" id="locationSelect" onchange="renderAll()"></select>
+  </div>
+
+  <div id="msg" class="msg"></div>
+
+  <div class="section-label">What You Currently Have</div>
+  <div id="mineList"><div class="empty-hint">Type your name above to see what's checked out to you.</div></div>
+
+  <div class="section-label">Available Equipment</div>
+  <div class="field" style="margin-bottom:0.8rem;">
+    <input type="text" class="field-input" id="searchBox" placeholder="Search equipment..." oninput="renderAvailable()">
+  </div>
+  <div id="availableList"><div class="empty-hint">Loading...</div></div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-storage-compat.js"></script>
+<script>
+firebase.initializeApp({apiKey:"AIzaSyCIfAE1JGHsUGzzVH2pz1Vyj5b5OhA0tDQ",authDomain:"belladonna-hq.firebaseapp.com",databaseURL:"https://belladonna-hq-default-rtdb.firebaseio.com",projectId:"belladonna-hq",storageBucket:"belladonna-hq.firebasestorage.app",messagingSenderId:"1021873183587",appId:"1:1021873183587:web:def283bb7b5ca48e4f9156"});
+const db=firebase.firestore();
+const storage=firebase.storage();
+
+let items=[];
+let openFormId=null; // which item currently has its inline checkout/return form open
+let checkoutPhotoFile=null;
+let checkinPhotoFile=null;
+
+// Remembers your name across visits so you're not retyping it every time —
+// this page has no login, same as checkin/checkout.
+window.addEventListener('DOMContentLoaded',()=>{
+  const saved=localStorage.getItem('equipmentHostName');
+  if(saved)document.getElementById('hostName').value=saved;
+  loadLocations();
+});
+function onNameChange(){
+  localStorage.setItem('equipmentHostName',document.getElementById('hostName').value.trim());
+  renderAll();
+}
+function loadLocations(){
+  db.collection('hq_data').doc('locations').get().then(snap=>{
+    const list=(snap.exists&&Array.isArray(snap.data().list)&&snap.data().list.length)?snap.data().list:[{code:'wa-southsound',label:'WA - South Sound'}];
+    const sel=document.getElementById('locationSelect');
+    sel.innerHTML=list.map(l=>`<option value="${l.code}">${l.label}</option>`).join('');
+    loadInventory();
+  }).catch(()=>{
+    document.getElementById('locationSelect').innerHTML='<option value="wa-southsound">WA - South Sound</option>';
+    loadInventory();
+  });
+}
+function loadInventory(){
+  db.collection('inventory').get().then(snap=>{
+    items=snap.docs.map(d=>({id:d.id,...d.data()}));
+    renderAll();
+  }).catch(()=>{
+    document.getElementById('availableList').innerHTML='<div class="empty-hint">Could not load equipment. Check your connection and reload.</div>';
+  });
+}
+function renderAll(){ renderMine(); renderAvailable(); }
+function currentLocation(){ return document.getElementById('locationSelect').value; }
+function itemsAtLocation(){ return items.filter(i=>!i.locationId||i.locationId===currentLocation()); }
+
+function renderMine(){
+  const name=document.getElementById('hostName').value.trim();
+  const el=document.getElementById('mineList');
+  if(!name){el.innerHTML='<div class="empty-hint">Type your name above to see what\'s checked out to you.</div>';return;}
+  const mine=itemsAtLocation().filter(i=>i.assignType==='host'&&(i.hostName||'').toLowerCase()===name.toLowerCase());
+  if(!mine.length){el.innerHTML='<div class="empty-hint">Nothing currently checked out to you.</div>';return;}
+  el.innerHTML=mine.map(i=>itemCardHtml(i,'return')).join('');
+}
+function renderAvailable(){
+  const q=(document.getElementById('searchBox').value||'').toLowerCase().trim();
+  const el=document.getElementById('availableList');
+  let avail=itemsAtLocation().filter(i=>(i.assignType||'storage')==='storage');
+  if(q)avail=avail.filter(i=>(i.name||'').toLowerCase().includes(q)||(i.type||'').toLowerCase().includes(q));
+  avail.sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+  if(!avail.length){el.innerHTML='<div class="empty-hint">Nothing available right now.</div>';return;}
+  el.innerHTML=avail.map(i=>itemCardHtml(i,'checkout')).join('');
+}
+function itemCardHtml(i,action){
+  const isOpen=openFormId===i.id;
+  return `<div class="item-card">
+    <div class="item-top">
+      <div>
+        <div class="item-name">${i.name||'(unnamed)'}</div>
+        <div class="item-meta">${i.type||'Uncategorized'}${i.serial?' · '+i.serial:''}</div>
+        ${action==='return'?`<div class="item-status">Checked out ${i.checkedOutAt?('· '+formatWhen(i.checkedOutAt)):''}</div>`:''}
+      </div>
+      <button class="item-btn" onclick="toggleForm('${i.id}')">${isOpen?'Close':(action==='return'?'Return':'Check Out')}</button>
+    </div>
+    ${isOpen?inlineFormHtml(i,action):''}
+  </div>`;
+}
+function formatWhen(iso){
+  try{const d=new Date(iso);return d.toLocaleDateString('en-US',{month:'short',day:'numeric'});}catch(e){return '';}
+}
+function inlineFormHtml(i,action){
+  const name=document.getElementById('hostName').value.trim();
+  if(action==='checkout'){
+    return `<div class="inline-form">
+      <div class="field"><label class="field-label">Your Name</label><input type="text" class="field-input" id="co-name-${i.id}" value="${name.replace(/"/g,'&quot;')}" oninput="syncNameField(this.value)"></div>
+      <label class="photo-input-label" for="co-photo-${i.id}">📷 Add a photo (optional)</label>
+      <input type="file" accept="image/*" capture="environment" id="co-photo-${i.id}" style="display:none;" onchange="handlePhotoSelect(this,'checkout','${i.id}')">
+      <img id="co-preview-${i.id}" class="photo-preview">
+      <div class="check-row"><input type="checkbox" id="co-confirm-${i.id}"> I'm taking responsibility for this equipment and will return it in good condition.</div>
+      <button class="confirm-btn" onclick="submitCheckout('${i.id}',this)">Confirm Checkout</button>
+    </div>`;
+  }
+  return `<div class="inline-form">
+    <label class="photo-input-label" for="ci-photo-${i.id}">📷 Add a return photo (optional)</label>
+    <input type="file" accept="image/*" capture="environment" id="ci-photo-${i.id}" style="display:none;" onchange="handlePhotoSelect(this,'checkin','${i.id}')">
+    <img id="ci-preview-${i.id}" class="photo-preview">
+    <button class="confirm-btn" onclick="submitCheckin('${i.id}',this)">Confirm Return</button>
+  </div>`;
+}
+function toggleForm(id){
+  openFormId=openFormId===id?null:id;
+  checkoutPhotoFile=null;checkinPhotoFile=null;
+  renderAll();
+}
+function syncNameField(val){
+  document.getElementById('hostName').value=val;
+  localStorage.setItem('equipmentHostName',val.trim());
+}
+function handlePhotoSelect(input,mode,id){
+  const file=input.files[0];
+  if(!file)return;
+  if(mode==='checkout')checkoutPhotoFile=file; else checkinPhotoFile=file;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    const img=document.getElementById((mode==='checkout'?'co-preview-':'ci-preview-')+id);
+    img.src=e.target.result; img.style.display='block';
+  };
+  reader.readAsDataURL(file);
+}
+function compressPhoto(file,maxDim=1600,quality=0.75){
+  return new Promise((resolve,reject)=>{
+    const reader=new FileReader();
+    reader.onload=e=>{
+      const img=new Image();
+      img.onload=()=>{
+        let w=img.width,h=img.height;
+        if(w>maxDim||h>maxDim){ if(w>h){h=Math.round(h*maxDim/w);w=maxDim;}else{w=Math.round(w*maxDim/h);h=maxDim;} }
+        const canvas=document.createElement('canvas');
+        canvas.width=w;canvas.height=h;
+        canvas.getContext('2d').drawImage(img,0,0,w,h);
+        canvas.toBlob(blob=>resolve(blob),'image/jpeg',quality);
+      };
+      img.onerror=reject;
+      img.src=e.target.result;
+    };
+    reader.onerror=reject;
+    reader.readAsDataURL(file);
+  });
+}
+async function uploadInvPhoto(file,itemId,tag){
+  if(!file)return '';
+  const blob=await compressPhoto(file);
+  const path='uploads/'+currentLocation()+'/inventory-photos/'+itemId+'-'+tag+'-'+Date.now()+'.jpg';
+  const ref=storage.ref().child(path);
+  await ref.put(blob,{contentType:'image/jpeg'});
+  return await ref.getDownloadURL();
+}
+function showMsg(text,isErr){
+  const el=document.getElementById('msg');
+  el.textContent=text;
+  el.className='msg '+(isErr?'err':'ok');
+  el.style.display='block';
+  setTimeout(()=>{el.style.display='none';},4000);
+}
+async function submitCheckout(id,btn){
+  const name=document.getElementById('co-name-'+id).value.trim();
+  const confirmed=document.getElementById('co-confirm-'+id).checked;
+  if(!name){showMsg('Enter your name first.',true);return;}
+  if(!confirmed){showMsg('Check the responsibility box to continue.',true);return;}
+  btn.disabled=true;btn.textContent='Saving...';
+  try{
+    const photoUrl=await uploadInvPhoto(checkoutPhotoFile,id,'checkout');
+    await db.collection('inventory').doc(id).set({
+      assignType:'host', hostName:name,
+      checkedOutAt:new Date().toISOString(), checkedOutPhotoUrl:photoUrl,
+      checkedInAt:'', checkedInPhotoUrl:''
+    },{merge:true});
+    showMsg('Checked out to you. Take care of it!',false);
+    openFormId=null; checkoutPhotoFile=null;
+    loadInventory();
+  }catch(e){
+    showMsg('Could not save: '+e.message,true);
+    btn.disabled=false;btn.textContent='Confirm Checkout';
+  }
+}
+async function submitCheckin(id,btn){
+  btn.disabled=true;btn.textContent='Saving...';
+  try{
+    const item=items.find(x=>x.id===id);
+    const photoUrl=await uploadInvPhoto(checkinPhotoFile,id,'checkin');
+    const history=Array.isArray(item&&item.history)?item.history:[];
+    history.push({
+      hostName:item?item.hostName:'', checkedOutAt:item?item.checkedOutAt:'', checkedOutPhotoUrl:item?item.checkedOutPhotoUrl:'',
+      checkedInAt:new Date().toISOString(), checkedInPhotoUrl:photoUrl
+    });
+    await db.collection('inventory').doc(id).set({
+      assignType:'storage', hostName:'',
+      checkedOutAt:'', checkedOutPhotoUrl:'', checkedInAt:'', checkedInPhotoUrl:'',
+      history
+    },{merge:true});
+    showMsg('Returned — thanks!',false);
+    openFormId=null; checkinPhotoFile=null;
+    loadInventory();
+  }catch(e){
+    showMsg('Could not save: '+e.message,true);
+    btn.disabled=false;btn.textContent='Confirm Return';
+  }
+}
+</script>
+</body>
+</html>
