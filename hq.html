@@ -242,22 +242,25 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
 .signin-filters{display:flex;gap:0.5rem;margin-bottom:1rem;flex-wrap:wrap;}
 .signin-day-heading{font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:0.08em;color:var(--gold2);margin:1.4rem 0 0.6rem;padding-bottom:0.4rem;border-bottom:1px solid var(--border);}
 .signin-day-heading:first-child{margin-top:0;}
-.signin-day-group{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:0.7rem;align-items:start;}
-.signin-card{background:var(--surface);border:1px solid var(--border);padding:1rem 1.2rem;margin-bottom:0;}
-.signin-card.cancelled{border-left:3px solid var(--rose);}
-.signin-top{display:flex;align-items:flex-start;justify-content:space-between;gap:0.75rem;margin-bottom:0.5rem;flex-wrap:wrap;}
+.signin-day-group{display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:0.7rem;align-items:start;}
+.signin-card{background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--border2);padding:1.1rem 1.3rem;margin-bottom:0;}
+.signin-card.cancelled{border-left-color:var(--rose);opacity:0.85;}
+.signin-top{display:flex;align-items:flex-start;justify-content:space-between;gap:0.75rem;margin-bottom:0.7rem;flex-wrap:wrap;}
 .signin-host{font-family:'Cormorant Garamond',serif;font-size:1.25rem;color:var(--gold);letter-spacing:0.06em;}
 .signin-meta{font-size:0.65rem;color:var(--text3);letter-spacing:0.08em;margin-top:0.15rem;}
 .signin-badge{font-size:0.58rem;letter-spacing:0.14em;text-transform:uppercase;padding:0.2rem 0.6rem;border-radius:6px;white-space:nowrap;}
 .signin-badge.checkin{background:var(--purple-dim);color:var(--purple-btn);border:1px solid var(--border);}
 .signin-badge.checkout{background:rgba(58,160,138,0.1);color:var(--teal2);border:1px solid rgba(58,160,138,0.25);}
 .signin-badge.cancelled-badge{background:rgba(160,56,88,0.12);color:var(--rose);border:1px solid rgba(160,56,88,0.3);margin-left:0.4rem;}
-.signin-detail-row{display:flex;flex-wrap:wrap;gap:0.4rem 1rem;font-size:0.72rem;color:var(--text2);margin-bottom:0.5rem;}
-.signin-detail-row b{color:var(--text3);font-weight:400;}
-.signin-notes{font-size:0.78rem;color:var(--text2);line-height:1.6;background:var(--surface2);padding:0.6rem 0.75rem;margin-top:0.4rem;border-left:2px solid var(--border);}
-.signin-photo{margin-top:0.6rem;max-width:160px;border-radius:6px;display:block;cursor:pointer;border:1px solid var(--border);}
-.signin-reviewed{display:flex;align-items:center;gap:0.4rem;font-size:0.65rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--text3);margin-top:0.6rem;cursor:pointer;user-select:none;}
+.signin-detail-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(105px,1fr));gap:0.65rem 0.7rem;background:var(--surface2);border-radius:8px;padding:0.7rem 0.85rem;margin-bottom:0.6rem;}
+.signin-detail-item{display:flex;flex-direction:column;gap:0.15rem;}
+.signin-detail-label{font-size:0.55rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--text4);}
+.signin-detail-value{font-size:0.79rem;color:var(--text);}
+.signin-notes{font-size:0.78rem;color:var(--text2);line-height:1.6;padding:0.45rem 0 0.45rem 0.75rem;margin-top:0.4rem;border-left:2px solid var(--border);}
+.signin-photo{margin-top:0.6rem;max-width:140px;border-radius:6px;display:block;cursor:pointer;border:1px solid var(--border);}
+.signin-reviewed{display:flex;align-items:center;gap:0.4rem;font-size:0.65rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--text3);cursor:pointer;user-select:none;}
 .signin-reviewed input{accent-color:var(--gold);width:14px;height:14px;cursor:pointer;}
+.signin-card-actions{display:flex;align-items:center;justify-content:space-between;gap:0.6rem;margin-top:0.7rem;padding-top:0.6rem;border-top:1px solid var(--border);}
 .signin-reviewed.is-reviewed{color:var(--teal2);}
 
 /* SCHEDULE */
@@ -304,14 +307,6 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
 </div>
 
 <div class="admin-bar" id="adminBar">
-  <div class="live-badge">
-    <div class="live-dot"></div>
-    <div>
-      <div class="live-count" id="liveCount">—</div>
-      <div class="live-label">On Shift<br>Now</div>
-    </div>
-  </div>
-  <div style="flex:1;"></div>
   <span id="gatewayUserBar" class="gateway-user-label"></span>
   <a href="https://belladonnanights.github.io/belladonna-gateway/accounts.html?view=account" class="btn-sm" style="text-decoration:none;margin-right:0.5rem;display:inline-flex;align-items:center;">My Account</a>
   <button class="btn-sm" onclick="gatewaySignOut()" style="margin-right:0.5rem;">Sign Out</button>
@@ -319,6 +314,13 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
     <div class="admin-bar-label">Admin Panel</div>
     <div class="admin-bar-arrow" id="adminArrow">▼</div>
   </button>
+  <div class="live-badge" style="margin-left:0.8rem;">
+    <div class="live-dot"></div>
+    <div>
+      <div class="live-count" id="liveCount">—</div>
+      <div class="live-label">On Shift<br>Now</div>
+    </div>
+  </div>
   <div class="admin-content" id="adminContent">
     <div class="admin-section">
       <div class="admin-section-title">Locations <span style="font-size:0.55rem;color:var(--text3)">(code + display label — add a location once here, it's available everywhere)</span></div>
@@ -372,7 +374,12 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
     <button class="dash-filter-pill" onclick="setDashboardKindFilter('bingo',this)">Bingo</button>
     <button class="dash-filter-pill" onclick="setDashboardKindFilter('karaoke',this)">Karaoke</button>
   </div>
-  <div class="dashboard-week-label" id="dashboardWeekLabel"></div>
+  <div style="display:flex;align-items:center;justify-content:center;gap:0.8rem;margin-bottom:0.4rem;">
+    <button class="btn-sm" onclick="shiftDashboardWeek(-1)">‹ Prev</button>
+    <div class="dashboard-week-label" id="dashboardWeekLabel"></div>
+    <button class="btn-sm" onclick="shiftDashboardWeek(1)">Next ›</button>
+  </div>
+  <div style="text-align:center;margin-bottom:0.6rem;"><button class="btn-sm" id="dashThisWeekBtn" onclick="shiftDashboardWeek(0,true)" style="display:none;font-size:0.6rem;">Back to This Week</button></div>
   <div class="daybox-grid" id="dashboardDayboxGrid"></div>
   <div style="font-size:0.62rem;color:var(--text3);letter-spacing:0.04em;margin-top:0.8rem;">Pulls in gigs from HQ's own schedule, the Trivia planner app, and the Bingo app. Click any gig for details.</div>
 </div>
@@ -456,7 +463,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
   <div class="subpanel" id="sub-hosts-onboarding">
     <div class="inner-tab-row">
       <button class="inner-tab active" id="onbTabLinks" onclick="showOnboardingSub('links')">Onboarding Links</button>
-      <button class="inner-tab" id="onbTabProgress" onclick="showOnboardingSub('progress')">Host Progress</button>
+      <button class="inner-tab" id="onbTabProgress" onclick="showOnboardingSub('progress')">Leads Progress</button>
     </div>
 
     <div id="onb-panel-links">
@@ -466,8 +473,8 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
 
     <div id="onb-panel-progress" style="display:none;">
       <div class="section-header">
-        <div class="section-title">Host Progress</div>
-        <button class="btn-sm btn-gold" onclick="openRecruitModal()">+ Add Recruit</button>
+        <div class="section-title">Leads Progress</div>
+        <button class="btn-sm btn-gold" onclick="openRecruitModal()">+ Add Lead</button>
       </div>
       <div style="font-size:0.68rem;color:var(--text3);margin-bottom:1rem;line-height:1.6;">Tracked manually by whoever's recruiting — check off each milestone as it actually happens. Nothing here updates itself.</div>
       <div id="recruitList"></div>
@@ -478,9 +485,13 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
 <!-- RECRUIT MODAL -->
 <div class="modal-bg" id="recruitModal">
   <div class="modal" style="max-width:420px;">
-    <div class="modal-title" id="recruitModalTitle">Add Recruit</div>
+    <div class="modal-title" id="recruitModalTitle">Add Lead</div>
     <div class="form-group"><label class="form-label">Name</label><input type="text" class="form-input" id="recruitName"></div>
-    <div class="form-group"><label class="form-label">Contact (phone or email)</label><input type="text" class="form-input" id="recruitContact"></div>
+    <div style="display:flex;gap:0.6rem;">
+      <div class="form-group" style="flex:1;"><label class="form-label">Phone</label><input type="text" class="form-input" id="recruitPhone"></div>
+      <div class="form-group" style="flex:1;"><label class="form-label">Email</label><input type="text" class="form-input" id="recruitEmail"></div>
+    </div>
+    <div class="form-group"><label class="form-label">Location</label><select class="form-input" id="recruitLocation"></select></div>
     <div class="form-group"><label class="form-label">Notes</label><textarea class="form-input" id="recruitNotes" rows="2"></textarea></div>
     <div class="form-group">
       <label class="form-label">Milestones</label>
@@ -536,13 +547,48 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
   </div>
 </div>
 
+<!-- SIGN-IN EDIT MODAL -->
+<div class="modal-bg" id="signinEditModal">
+  <div class="modal" style="max-width:480px;max-height:85vh;overflow-y:auto;">
+    <div class="modal-title">Edit Entry</div>
+    <div style="display:flex;gap:0.6rem;">
+      <div class="form-group" style="flex:1;"><label class="form-label">Host Name</label><input type="text" class="form-input" id="seHost"></div>
+      <div class="form-group" style="flex:1;"><label class="form-label">Venue</label><input type="text" class="form-input" id="seVenue"></div>
+    </div>
+    <div style="display:flex;gap:0.6rem;">
+      <div class="form-group" style="flex:1;"><label class="form-label">Date</label><input type="date" class="form-input" id="seDate"></div>
+      <div class="form-group" style="flex:1;"><label class="form-label">Check-In Time</label><input type="time" class="form-input" id="seCheckinTime"></div>
+      <div class="form-group" style="flex:1;"><label class="form-label">Check-Out Time</label><input type="time" class="form-input" id="seCheckoutTime"></div>
+    </div>
+    <div style="display:flex;gap:0.6rem;">
+      <div class="form-group" style="flex:1;"><label class="form-label">Crowd Size</label><input type="text" class="form-input" id="seCrowd"></div>
+      <div class="form-group" style="flex:1;"><label class="form-label">Singers</label><input type="text" class="form-input" id="seSingers"></div>
+      <div class="form-group" style="flex:1;"><label class="form-label">Energy</label><input type="text" class="form-input" id="seEnergy"></div>
+    </div>
+    <div style="display:flex;gap:0.6rem;">
+      <div class="form-group" style="flex:1;"><label class="form-label">Venue Busy</label><input type="text" class="form-input" id="seVenueBusy"></div>
+      <div class="form-group" style="flex:1;"><label class="form-label">Got Paid</label><input type="text" class="form-input" id="seGotPaid"></div>
+      <div class="form-group" style="flex:1;"><label class="form-label">Tip Scale</label><input type="text" class="form-input" id="seTips"></div>
+    </div>
+    <div class="form-group"><label class="form-label">Issues</label><textarea class="form-input" id="seIssues" rows="2"></textarea></div>
+    <div class="form-group"><label class="form-label">Check-In Notes</label><textarea class="form-input" id="seCheckinNotes" rows="2"></textarea></div>
+    <div class="form-group"><label class="form-label">Check-Out Notes</label><textarea class="form-input" id="seCheckoutNotes" rows="2"></textarea></div>
+    <div class="form-group"><label style="display:flex;align-items:center;gap:0.4rem;cursor:pointer;font-size:0.75rem;color:var(--text2);"><input type="checkbox" id="seCancelled" onchange="document.getElementById('seCancelReasonWrap').style.display=this.checked?'':'none';"> Cancelled</label></div>
+    <div class="form-group" id="seCancelReasonWrap" style="display:none;"><label class="form-label">Cancel Reason</label><input type="text" class="form-input" id="seCancelReason"></div>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="closeModal('signinEditModal')">Cancel</button>
+      <button class="modal-save" onclick="saveSigninEdit()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
 <!-- VENUES -->
 <div class="panel" id="panel-venues">
   <div class="subtabs">
     <button class="subtab active" onclick="showSub('venues','manage',this)">Our Venues</button>
     <button class="subtab" onclick="showSub('venues','perf',this);loadVenueStats()">Performance</button>
     <button class="subtab" onclick="showSub('venues','leads',this);renderLeads()" id="leadsTabBtn" style="display:none;">Leads</button>
-    <button class="subtab" onclick="showSub('venues','onboarding',this);renderVenueOnboardingChecklist()">Onboarding</button>
+    <button class="subtab" onclick="showSub('venues','onboarding',this);renderOnbSteps('venue')">Onboarding</button>
     <button class="subtab" onclick="showSub('venues','stats',this);loadStats()">Stats</button>
   </div>
   <div class="subpanel active" id="sub-venues-manage">
@@ -840,6 +886,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
   <div class="modal">
     <div class="modal-title" id="rosterModalTitle">Add Host</div>
     <div class="form-group"><label class="form-label">Host Name</label><input type="text" class="form-input" id="rmName" placeholder="Full name"></div>
+    <div class="form-group"><label class="form-label">Location</label><select class="form-input" id="rmLocation"></select></div>
     <div class="form-group"><label class="form-label">Skills / Training</label><div class="chip-grid" id="skillChips"></div></div>
     <div class="form-group"><label class="form-label">Trained Venues</label><div class="chip-grid" id="venueChips"></div></div>
     <div class="form-group">
@@ -1207,6 +1254,56 @@ function deleteSigninEntry(id){
     renderSigninLog();
   }).catch(e=>alert('Failed to delete: '+e.message));
 }
+let editingSigninId=null;
+function openSigninEditModal(id){
+  const s=shiftsData.find(x=>x.id===id);
+  if(!s)return;
+  editingSigninId=id;
+  document.getElementById('seHost').value=s.hostName||'';
+  document.getElementById('seVenue').value=s.venue||'';
+  document.getElementById('seDate').value=s.date||'';
+  document.getElementById('seCheckinTime').value=s.checkinTime||'';
+  document.getElementById('seCheckoutTime').value=s.checkoutTime||'';
+  document.getElementById('seCrowd').value=s.crowdSize||'';
+  document.getElementById('seSingers').value=s.singers||'';
+  document.getElementById('seEnergy').value=s.energyLevel||'';
+  document.getElementById('seVenueBusy').value=s.venueBusy||'';
+  document.getElementById('seGotPaid').value=s.gotPaid||'';
+  document.getElementById('seTips').value=s.tipScale||'';
+  document.getElementById('seIssues').value=s.issues||'';
+  document.getElementById('seCheckinNotes').value=s.checkinNotes||'';
+  document.getElementById('seCheckoutNotes').value=s.checkoutNotes||'';
+  document.getElementById('seCancelled').checked=!!s.cancelled;
+  document.getElementById('seCancelReason').value=s.cancelReason||'';
+  document.getElementById('seCancelReasonWrap').style.display=s.cancelled?'':'none';
+  document.getElementById('signinEditModal').classList.add('open');
+}
+function saveSigninEdit(){
+  if(!editingSigninId)return;
+  const data={
+    hostName:document.getElementById('seHost').value.trim(),
+    venue:document.getElementById('seVenue').value.trim(),
+    date:document.getElementById('seDate').value,
+    checkinTime:document.getElementById('seCheckinTime').value,
+    checkoutTime:document.getElementById('seCheckoutTime').value,
+    crowdSize:document.getElementById('seCrowd').value.trim(),
+    singers:document.getElementById('seSingers').value.trim(),
+    energyLevel:document.getElementById('seEnergy').value.trim(),
+    venueBusy:document.getElementById('seVenueBusy').value.trim(),
+    gotPaid:document.getElementById('seGotPaid').value.trim(),
+    tipScale:document.getElementById('seTips').value.trim(),
+    issues:document.getElementById('seIssues').value.trim(),
+    checkinNotes:document.getElementById('seCheckinNotes').value.trim(),
+    checkoutNotes:document.getElementById('seCheckoutNotes').value.trim(),
+    cancelled:document.getElementById('seCancelled').checked,
+    cancelReason:document.getElementById('seCancelled').checked?document.getElementById('seCancelReason').value.trim():'',
+    updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+  };
+  db.collection('shifts').doc(editingSigninId).set(data,{merge:true}).then(()=>{
+    closeModal('signinEditModal');
+    loadShiftsData().then(renderSigninLog);
+  }).catch(e=>alert('Failed to save: '+e.message));
+}
 function renderSigninLog(){
   const entries=getFilteredSigninGroups();
   if(signinView==='sheet'){ renderSigninSpreadsheet(entries); return; }
@@ -1232,22 +1329,22 @@ function renderSigninSpreadsheet(entries){
   const cols=['Date','Host','Venue','In','Out','Crowd','Energy','Paid','Tips','Cancelled','Reviewed',''];
   el.innerHTML=`<table style="width:100%;border-collapse:collapse;font-size:0.72rem;">
     <thead><tr style="border-bottom:1px solid var(--border-gold);">
-      ${cols.map(c=>`<th style="text-align:left;padding:0.5rem 0.6rem;color:var(--gold);white-space:nowrap;">${c}</th>`).join('')}
+      ${cols.map(c=>`<th style="text-align:left;padding:0.55rem 0.7rem;color:var(--gold);white-space:nowrap;font-size:0.62rem;letter-spacing:0.08em;text-transform:uppercase;">${c}</th>`).join('')}
     </tr></thead>
     <tbody>
-      ${entries.map(g=>`<tr style="border-bottom:1px solid var(--border);${g.cancelled?'opacity:0.55;':''}">
-        <td style="padding:0.45rem 0.6rem;white-space:nowrap;">${formatDateShort(g.date)}</td>
-        <td style="padding:0.45rem 0.6rem;white-space:nowrap;">${g.host||'—'}</td>
-        <td style="padding:0.45rem 0.6rem;white-space:nowrap;">${g.venue||'—'}</td>
-        <td style="padding:0.45rem 0.6rem;white-space:nowrap;">${g.checkinTime?formatTime12(g.checkinTime):'—'}</td>
-        <td style="padding:0.45rem 0.6rem;white-space:nowrap;">${g.checkoutTime?formatTime12(g.checkoutTime):'—'}</td>
-        <td style="padding:0.45rem 0.6rem;white-space:nowrap;">${g.crowdSize||'—'}</td>
-        <td style="padding:0.45rem 0.6rem;white-space:nowrap;">${g.energyLevel||'—'}</td>
-        <td style="padding:0.45rem 0.6rem;white-space:nowrap;">${g.gotPaid||'—'}</td>
-        <td style="padding:0.45rem 0.6rem;white-space:nowrap;">${g.tipScale||'—'}</td>
-        <td style="padding:0.45rem 0.6rem;white-space:nowrap;">${g.cancelled?'Yes':'No'}</td>
-        <td style="padding:0.45rem 0.6rem;white-space:nowrap;">${g.reviewed?'✓':'—'}</td>
-        <td style="padding:0.45rem 0.6rem;white-space:nowrap;"><button class="btn-sm" style="color:var(--rose);" onclick="deleteSigninEntry('${g.key}')">Delete</button></td>
+      ${entries.map((g,i)=>`<tr style="border-bottom:1px solid var(--border);${g.cancelled?'opacity:0.55;':''}background:${i%2?'var(--surface2)':'transparent'};">
+        <td style="padding:0.5rem 0.7rem;white-space:nowrap;">${formatDateShort(g.date)}</td>
+        <td style="padding:0.5rem 0.7rem;white-space:nowrap;color:var(--gold);">${g.host||'—'}</td>
+        <td style="padding:0.5rem 0.7rem;white-space:nowrap;">${g.venue||'—'}</td>
+        <td style="padding:0.5rem 0.7rem;white-space:nowrap;">${g.checkinTime?formatTime12(g.checkinTime):'—'}</td>
+        <td style="padding:0.5rem 0.7rem;white-space:nowrap;">${g.checkoutTime?formatTime12(g.checkoutTime):'—'}</td>
+        <td style="padding:0.5rem 0.7rem;white-space:nowrap;">${g.crowdSize||'—'}</td>
+        <td style="padding:0.5rem 0.7rem;white-space:nowrap;">${g.energyLevel||'—'}</td>
+        <td style="padding:0.5rem 0.7rem;white-space:nowrap;">${g.gotPaid||'—'}</td>
+        <td style="padding:0.5rem 0.7rem;white-space:nowrap;">${g.tipScale||'—'}</td>
+        <td style="padding:0.5rem 0.7rem;white-space:nowrap;${g.cancelled?'color:var(--rose);':''}">${g.cancelled?'Yes':'No'}</td>
+        <td style="padding:0.5rem 0.7rem;white-space:nowrap;${g.reviewed?'color:var(--teal2);':'color:var(--text4);'}">${g.reviewed?'Yes':'No'}</td>
+        <td style="padding:0.5rem 0.7rem;white-space:nowrap;"><button class="btn-sm" style="margin-right:0.3rem;" onclick="openSigninEditModal('${g.key}')">Edit</button><button class="btn-sm" style="color:var(--rose);" onclick="deleteSigninEntry('${g.key}')">Delete</button></td>
       </tr>`).join('')}
     </tbody>
   </table>`;
@@ -1265,30 +1362,33 @@ function renderSigninCard(g){
         <span class="signin-badge checkout"${g.hasCheckout?'':' style="opacity:0.4"'}>Out${g.checkoutTime?' · '+formatTime12(g.checkoutTime):''}${g.hasCheckout?'':' — none'}</span>
       </div>
     </div>
-    <div style="display:flex;gap:0.4rem;flex-wrap:wrap;margin:0.4rem 0;">
+    ${(g.cancelled||g.notPaid||g.photoUrl)?`<div style="display:flex;gap:0.4rem;flex-wrap:wrap;margin-bottom:0.6rem;">
       ${g.cancelled?'<span class="signin-badge cancelled-badge">Cancelled</span>':''}
       ${g.notPaid?'<span class="signin-badge cancelled-badge">Not Paid</span>':''}
-      ${g.photoUrl?'<span class="signin-badge" style="background:var(--gold-dim);color:var(--gold);border-color:var(--border-gold);">📷 Photo</span>':''}
-    </div>
-    ${g.hasCheckout&&!g.cancelled?`<div class="signin-detail-row">
-      <span><b>Crowd:</b> ${g.crowdSize||'—'}</span>
-      <span><b>Singers:</b> ${g.singers||'—'}</span>
-      <span><b>Energy:</b> ${g.energyLevel||'—'}</span>
-      <span><b>Venue Busy:</b> ${g.venueBusy||'—'}</span>
-      <span><b>Paid:</b> ${g.gotPaid||'—'}</span>
-      <span><b>Tips:</b> ${g.tipScale||'—'}</span>
-      <span><b>Status:</b> ${g.availability||'—'}</span>
+      ${g.photoUrl?'<span class="signin-badge" style="background:var(--gold-dim);color:var(--gold);border-color:var(--border-gold);">Photo</span>':''}
     </div>`:''}
-    ${g.issues&&!g.cancelled?`<div class="signin-notes"><b style="color:var(--rose)">Issues: </b>${g.issues}</div>`:''}
+    ${g.hasCheckout&&!g.cancelled?`<div class="signin-detail-grid">
+      <div class="signin-detail-item"><span class="signin-detail-label">Crowd</span><span class="signin-detail-value">${g.crowdSize||'—'}</span></div>
+      <div class="signin-detail-item"><span class="signin-detail-label">Singers</span><span class="signin-detail-value">${g.singers||'—'}</span></div>
+      <div class="signin-detail-item"><span class="signin-detail-label">Energy</span><span class="signin-detail-value">${g.energyLevel||'—'}</span></div>
+      <div class="signin-detail-item"><span class="signin-detail-label">Venue Busy</span><span class="signin-detail-value">${g.venueBusy||'—'}</span></div>
+      <div class="signin-detail-item"><span class="signin-detail-label">Paid</span><span class="signin-detail-value">${g.gotPaid||'—'}</span></div>
+      <div class="signin-detail-item"><span class="signin-detail-label">Tips</span><span class="signin-detail-value">${g.tipScale||'—'}</span></div>
+      <div class="signin-detail-item"><span class="signin-detail-label">Status</span><span class="signin-detail-value">${g.availability||'—'}</span></div>
+    </div>`:''}
+    ${g.issues&&!g.cancelled?`<div class="signin-notes" style="border-left-color:var(--rose);"><b style="color:var(--rose)">Issues: </b>${g.issues}</div>`:''}
     ${g.checkinNotes?`<div class="signin-notes"><b style="color:var(--text3)">Check-in note: </b>${g.checkinNotes}</div>`:''}
-    ${g.cancelled?`<div class="signin-notes"><b style="color:var(--rose)">Reason: </b>${g.cancelReason||''}</div>`:(g.checkoutNotes?`<div class="signin-notes"><b style="color:var(--text3)">Check-out note: </b>${g.checkoutNotes}</div>`:'')}
+    ${g.cancelled?`<div class="signin-notes" style="border-left-color:var(--rose);"><b style="color:var(--rose)">Reason: </b>${g.cancelReason||''}</div>`:(g.checkoutNotes?`<div class="signin-notes"><b style="color:var(--text3)">Check-out note: </b>${g.checkoutNotes}</div>`:'')}
     ${(g.photoUrl||'').startsWith('http')?`<img src="${g.photoUrl}" class="signin-photo" onclick="window.open('${g.photoUrl}','_blank')" alt="Shift photo">`:''}
-    <div style="display:flex;align-items:center;justify-content:space-between;gap:0.6rem;margin-top:0.5rem;">
-      <label class="signin-reviewed${g.reviewed?' is-reviewed':''}" style="margin:0;">
+    <div class="signin-card-actions">
+      <label class="signin-reviewed${g.reviewed?' is-reviewed':''}">
         <input type="checkbox" ${g.reviewed?'checked':''} onchange="setReviewed('${g.key}',this.checked);this.closest('.signin-reviewed').classList.toggle('is-reviewed',this.checked);this.nextElementSibling.textContent=this.checked?'Reviewed':'Mark Reviewed';">
         <span>${g.reviewed?'Reviewed':'Mark Reviewed'}</span>
       </label>
-      <button class="btn-sm" style="color:var(--rose);" onclick="deleteSigninEntry('${g.key}')">Delete</button>
+      <div style="display:flex;gap:0.5rem;">
+        <button class="btn-sm" onclick="openSigninEditModal('${g.key}')">Edit</button>
+        <button class="btn-sm" style="color:var(--rose);" onclick="deleteSigninEntry('${g.key}')">Delete</button>
+      </div>
     </div>
   </div>`;
 }
@@ -1583,10 +1683,17 @@ function setDashboardKindFilter(kind,el){
   el.classList.add('active');
   renderDashboardWeek();
 }
+let dashWeekOffset=0;
+function shiftDashboardWeek(delta,reset){
+  dashWeekOffset=reset?0:dashWeekOffset+delta;
+  document.getElementById('dashThisWeekBtn').style.display=dashWeekOffset===0?'none':'';
+  renderDashboardWeek();
+}
 function renderDashboardWeek(){
   const grid=document.getElementById('dashboardDayboxGrid');
   if(!grid)return;
-  const start=startOfWeekSunday(new Date());
+  const anchor=new Date();anchor.setDate(anchor.getDate()+dashWeekOffset*7);
+  const start=startOfWeekSunday(anchor);
   const dayNames=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
   const today=dateToKey(new Date());
   const endLabel=new Date(start.getFullYear(),start.getMonth(),start.getDate()+6);
@@ -2035,6 +2142,7 @@ function refreshAllLocationScopedData(){
   loadLeads();
   loadInventory();
   renderVenueManage();
+  renderRoster();
 }
 
 // ── HOST ONBOARDING ──
@@ -2048,64 +2156,118 @@ function showOnboardingSub(which){
 
 // ── Onboarding Links — a small shared set of reference URLs, so every
 // recruiter always sends the current version instead of an old copy-paste. ──
-const ONBOARDING_LINK_FIELDS=[
-  {key:'leadCaptureForm',label:'Lead Capture Form'},
-  {key:'interviewInvite',label:'Interview Invite'},
-  {key:'newHostPage',label:'New Host Page'},
-  {key:'welcomeSheet',label:'New Host Welcome Sheet'},
-  {key:'hostBible',label:'The Host Bible'},
-  {key:'trainingApp',label:'Belladonna Training App'},
-  {key:'academy',label:'Belladonna Academy'},
-  {key:'contract',label:'Host Contract'}
-];
-const HOST_ONB_STEPS=[
-  {title:'Capture the lead',
-   desc:'Found a potential host out in the wild, or someone reached out on their own? Log them with the Lead Capture Form.',
-   links:['leadCaptureForm']},
-  {title:'Send the Interview Invite',
-   desc:'Once you\'re ready to talk, send them the Interview Invite.', links:['interviewInvite']},
-  {title:'Interview',
-   desc:'Meet with them and see if they\'re a fit.', links:[]},
-  {title:'If approved, send them to the New Host Page',
-   desc:'That page carries them through the rest — the Welcome Sheet, the Host Bible, the Training App, Belladonna Academy, and the Contract.',
-   links:['newHostPage','welcomeSheet','hostBible','trainingApp','academy','contract']}
-];
-let onboardingLinks={};
-function loadOnboardingLinks(){
+// ── ONBOARDING STEPS — a fully editable, reorderable list for both Host and
+// Venue onboarding. Each step is just {id, title, note, url} — add, remove,
+// reorder, and edit any of it right here. The raw URL stays hidden behind
+// an "Edit Link" toggle so the list itself reads clean; only an "Open"
+// button shows once a link is set. Seeded once from the old fixed steps so
+// nothing already entered gets lost, then fully custom from there.
+let hostOnbSteps=[];
+let venueOnbSteps=[];
+let onbLinkEditOpen={}; // stepId -> bool, which rows currently show their URL field
+function onbNewStep(title,note,url){return{id:'onb_'+Date.now()+'_'+Math.random().toString(36).slice(2,7),title:title||'',note:note||'',url:url||''};}
+function loadOnbSteps(kind){
   if(!db)return;
-  db.collection('hq_data').doc('onboardingLinks').get().then(snap=>{
-    if(snap.exists)onboardingLinks=snap.data()||{};
-    renderOnboardingLinks();
-  }).catch(()=>{renderOnboardingLinks();});
+  const docId=kind==='host'?'onbSteps_host':'onbSteps_venue';
+  db.collection('hq_data').doc(docId).get().then(snap=>{
+    if(snap.exists&&Array.isArray(snap.data().steps)&&snap.data().steps.length){
+      if(kind==='host')hostOnbSteps=snap.data().steps; else venueOnbSteps=snap.data().steps;
+      renderOnbSteps(kind);
+    }else{
+      seedOnbSteps(kind);
+    }
+  }).catch(()=>{seedOnbSteps(kind);});
 }
-function renderOnboardingLinks(){
-  const el=document.getElementById('onbLinksList');
+function seedOnbSteps(kind){
+  // One-time migration from the old fixed step lists + whatever links were
+  // already saved under the old key-value docs, so nothing gets lost.
+  db.collection('hq_data').doc('onboardingLinks').get().then(oldHostSnap=>{
+    const oh=oldHostSnap.exists?oldHostSnap.data()||{}:{};
+    if(kind==='host'){
+      hostOnbSteps=[
+        onbNewStep('Capture the lead','Found a potential host out in the wild, or someone reached out on their own? Log them with the Lead Capture Form.',oh.leadCaptureForm),
+        onbNewStep('Send the Interview Invite','Once you\'re ready to talk, send them the Interview Invite.',oh.interviewInvite),
+        onbNewStep('Interview','Meet with them and see if they\'re a fit.',''),
+        onbNewStep('New Host Page','',oh.newHostPage),
+        onbNewStep('New Host Welcome Sheet','',oh.welcomeSheet),
+        onbNewStep('The Host Bible','',oh.hostBible),
+        onbNewStep('Belladonna Training App','',oh.trainingApp),
+        onbNewStep('Belladonna Academy','',oh.academy),
+        onbNewStep('Host Contract','',oh.contract)
+      ];
+      persistOnbSteps('host');renderOnbSteps('host');
+    }else{
+      db.collection('hq_data').doc('venueOnboardingLinks').get().then(oldVenueSnap=>{
+        const ov=oldVenueSnap.exists?oldVenueSnap.data()||{}:{};
+        venueOnbSteps=[
+          onbNewStep('Capture the lead','Found one out in the wild, or got sent one through social media? Log it with the Lead Capture Form.',oh.leadCaptureForm),
+          onbNewStep('Venue Application Form','If they came to you directly, have them fill this out instead.',ov.venueApplication),
+          onbNewStep('First Contact','Reach out and find out what they\'re actually looking for.',''),
+          onbNewStep('Interview','Meet the venue in person — meet the owner, walk the space, see what equipment setup you\'d be working with.',''),
+          onbNewStep('Send the contract','If they want in, send the Venue Contract.',ov.contract),
+          onbNewStep('Done','Once it\'s signed, transfer them to Our Venues from their lead card.','')
+        ];
+        persistOnbSteps('venue');renderOnbSteps('venue');
+      }).catch(()=>{venueOnbSteps=[];renderOnbSteps('venue');});
+    }
+  }).catch(()=>{ if(kind==='host'){hostOnbSteps=[];renderOnbSteps('host');} else {venueOnbSteps=[];renderOnbSteps('venue');} });
+}
+function persistOnbSteps(kind){
+  const docId=kind==='host'?'onbSteps_host':'onbSteps_venue';
+  const steps=kind==='host'?hostOnbSteps:venueOnbSteps;
+  if(db){try{db.collection('hq_data').doc(docId).set({steps});}catch(e){}}
+}
+function onbAddStep(kind){
+  const steps=kind==='host'?hostOnbSteps:venueOnbSteps;
+  steps.push(onbNewStep('New step','',''));
+  persistOnbSteps(kind);renderOnbSteps(kind);
+}
+function onbRemoveStep(kind,id){
+  if(!confirm('Remove this step? This cannot be undone.'))return;
+  if(kind==='host')hostOnbSteps=hostOnbSteps.filter(s=>s.id!==id); else venueOnbSteps=venueOnbSteps.filter(s=>s.id!==id);
+  persistOnbSteps(kind);renderOnbSteps(kind);
+}
+function onbMoveStep(kind,id,dir){
+  const steps=kind==='host'?hostOnbSteps:venueOnbSteps;
+  const i=steps.findIndex(s=>s.id===id);
+  const j=i+dir;
+  if(i<0||j<0||j>=steps.length)return;
+  [steps[i],steps[j]]=[steps[j],steps[i]];
+  persistOnbSteps(kind);renderOnbSteps(kind);
+}
+function onbUpdateField(kind,id,field,value){
+  const steps=kind==='host'?hostOnbSteps:venueOnbSteps;
+  const s=steps.find(x=>x.id===id);
+  if(!s)return;
+  s[field]=value;
+  persistOnbSteps(kind);
+  if(field==='url')renderOnbSteps(kind); // only re-render on URL change, so title/note typing doesn't lose focus
+}
+function renderOnbSteps(kind){
+  const steps=kind==='host'?hostOnbSteps:venueOnbSteps;
+  const el=document.getElementById(kind==='host'?'onbLinksList':'venueOnbChecklist');
   if(!el)return;
-  const labelFor=key=>(ONBOARDING_LINK_FIELDS.find(f=>f.key===key)||{}).label||key;
-  el.innerHTML=HOST_ONB_STEPS.map((s,i)=>`
-    <div style="display:flex;gap:0.8rem;padding:0.8rem 0;${i<HOST_ONB_STEPS.length-1?'border-bottom:1px solid var(--border);':''}">
-      <div style="flex-shrink:0;width:26px;height:26px;border-radius:50%;background:var(--gold-dim);color:var(--gold);display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:700;">${i+1}</div>
+  el.innerHTML=steps.map((s,i)=>`
+    <div style="display:flex;gap:0.7rem;padding:0.8rem 0;${i<steps.length-1?'border-bottom:1px solid var(--border);':''}">
+      <div style="flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:0.3rem;">
+        <div style="width:26px;height:26px;border-radius:50%;background:var(--gold-dim);color:var(--gold);display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:700;">${i+1}</div>
+        <div style="display:flex;flex-direction:column;gap:0.1rem;">
+          <button class="btn-sm" style="padding:0.1rem 0.4rem;font-size:0.6rem;" onclick="onbMoveStep('${kind}','${s.id}',-1)" ${i===0?'disabled':''}>↑</button>
+          <button class="btn-sm" style="padding:0.1rem 0.4rem;font-size:0.6rem;" onclick="onbMoveStep('${kind}','${s.id}',1)" ${i===steps.length-1?'disabled':''}>↓</button>
+        </div>
+      </div>
       <div style="flex:1;">
-        <div style="font-size:0.85rem;color:var(--text);font-weight:600;margin-bottom:0.2rem;">${s.title}</div>
-        <div style="font-size:0.75rem;color:var(--text3);line-height:1.5;margin-bottom:${s.links.length?'0.6rem':'0'};">${s.desc}</div>
-        ${s.links.map(key=>{
-          const val=onboardingLinks[key]||'';
-          return `<div style="display:flex;gap:0.4rem;margin-bottom:0.4rem;align-items:center;">
-            <span style="font-size:0.68rem;color:var(--text3);min-width:150px;">${labelFor(key)}</span>
-            <input type="text" class="form-input" id="onbLink-${key}" value="${val.replace(/"/g,'&quot;')}" placeholder="https://..." style="flex:1;font-size:0.75rem;padding:0.4rem 0.6rem;">
-            ${val?`<a href="${val}" target="_blank" class="btn-sm" style="text-decoration:none;white-space:nowrap;">Open</a>`:''}
-            <button class="btn-sm btn-gold" onclick="saveOnboardingLink('${key}')">Save</button>
-          </div>`;
-        }).join('')}
+        <input type="text" class="form-input" value="${(s.title||'').replace(/"/g,'&quot;')}" placeholder="Step title" style="font-weight:600;margin-bottom:0.35rem;" onchange="onbUpdateField('${kind}','${s.id}','title',this.value)">
+        <textarea class="form-input" placeholder="Description (optional)" rows="1" style="font-size:0.75rem;color:var(--text3);margin-bottom:0.5rem;" onchange="onbUpdateField('${kind}','${s.id}','note',this.value)">${s.note||''}</textarea>
+        <div style="display:flex;gap:0.4rem;align-items:center;flex-wrap:wrap;">
+          ${s.url?`<a href="${s.url}" target="_blank" class="btn-sm btn-gold" style="text-decoration:none;">Open Link</a>`:''}
+          <button class="btn-sm" onclick="onbLinkEditOpen['${s.id}']=!onbLinkEditOpen['${s.id}'];renderOnbSteps('${kind}');">${s.url?'Edit Link':'+ Add Link'}</button>
+          <button class="btn-sm" style="color:var(--rose);margin-left:auto;" onclick="onbRemoveStep('${kind}','${s.id}')">Remove Step</button>
+        </div>
+        ${onbLinkEditOpen[s.id]?`<input type="text" class="form-input" value="${(s.url||'').replace(/"/g,'&quot;')}" placeholder="https://..." style="margin-top:0.4rem;font-size:0.75rem;" onchange="onbUpdateField('${kind}','${s.id}','url',this.value)">`:''}
       </div>
     </div>
-  `).join('');
-}
-function saveOnboardingLink(key){
-  const val=document.getElementById('onbLink-'+key).value.trim();
-  onboardingLinks[key]=val;
-  if(db){try{db.collection('hq_data').doc('onboardingLinks').set(onboardingLinks,{merge:true});}catch(e){}}
-  renderOnboardingLinks();
+  `).join('')+`<button class="btn-sm btn-gold" style="width:100%;margin-top:0.6rem;" onclick="onbAddStep('${kind}')">+ Add Step</button>`;
 }
 
 // ── Host Progress — manually tracked recruits, one card per person, scoped
@@ -2130,14 +2292,15 @@ function loadRecruits(){
 function renderRecruits(){
   const el=document.getElementById('recruitList');
   if(!el)return;
-  if(!recruits.length){el.innerHTML='<div class="empty-state">No recruits being tracked yet.</div>';return;}
+  if(!recruits.length){el.innerHTML='<div class="empty-state">No leads being tracked yet.</div>';return;}
   el.innerHTML=recruits.map(r=>{
     const done=RECRUIT_MILESTONES.filter(m=>r.milestones&&r.milestones[m.key]).length;
+    const contactBits=[r.phone,r.email].filter(Boolean).join(' · ')||r.contact||'';
     return `<div class="acct-card" style="cursor:pointer;" onclick="openRecruitModal('${r.id}')">
       <div class="acct-header">
         <div class="acct-name-group">
           <div class="acct-name">${r.name||'(no name)'}</div>
-          <div class="acct-meta">${r.contact||''}</div>
+          <div class="acct-meta">${contactBits}</div>
         </div>
         <div class="acct-badges"><span class="acct-status-badge">${done} / ${RECRUIT_MILESTONES.length}</span></div>
       </div>
@@ -2150,9 +2313,13 @@ function renderRecruits(){
 function openRecruitModal(id){
   editingRecruitId=id||null;
   const r=id?recruits.find(x=>x.id===id):null;
-  document.getElementById('recruitModalTitle').textContent=r?'Edit Recruit':'Add Recruit';
+  document.getElementById('recruitModalTitle').textContent=r?'Edit Lead':'Add Lead';
   document.getElementById('recruitName').value=r?r.name||'':'';
-  document.getElementById('recruitContact').value=r?r.contact||'':'';
+  document.getElementById('recruitPhone').value=r?r.phone||'':'';
+  document.getElementById('recruitEmail').value=r?r.email||'':'';
+  const locSel=document.getElementById('recruitLocation');
+  locSel.innerHTML=locations.map(l=>`<option value="${l.code}">${l.label}</option>`).join('');
+  locSel.value=(r&&r.locationId)?r.locationId:(currentLocationScope!=='ALL'?currentLocationScope:((locations[0]&&locations[0].code)||''));
   document.getElementById('recruitNotes').value=r?r.notes||'':'';
   document.getElementById('recruitDeleteBtn').style.display=r?'':'none';
   document.getElementById('recruitMilestoneChecks').innerHTML=RECRUIT_MILESTONES.map(m=>`
@@ -2169,10 +2336,10 @@ function saveRecruit(){
   const milestones={};
   RECRUIT_MILESTONES.forEach(m=>{milestones[m.key]=document.getElementById('recruitM-'+m.key).checked;});
   const data={
-    name, contact:document.getElementById('recruitContact').value.trim(),
+    name, phone:document.getElementById('recruitPhone').value.trim(), email:document.getElementById('recruitEmail').value.trim(),
     notes:document.getElementById('recruitNotes').value.trim(),
     milestones,
-    locationId: currentLocationScope!=='ALL' ? currentLocationScope : ((locations[0]&&locations[0].code)||null),
+    locationId: document.getElementById('recruitLocation').value,
     updatedAt: new Date().toISOString()
   };
   const id=editingRecruitId||db.collection('recruits').doc().id;
@@ -2182,7 +2349,7 @@ function saveRecruit(){
 }
 function deleteRecruit(){
   if(!editingRecruitId)return;
-  if(!confirm('Remove this recruit from tracking? This cannot be undone.'))return;
+  if(!confirm('Remove this lead from tracking? This cannot be undone.'))return;
   db.collection('recruits').doc(editingRecruitId).delete().then(()=>{
     closeModal('recruitModal'); loadRecruits();
   }).catch(e=>alert('Failed to delete: '+e.message));
@@ -2384,66 +2551,6 @@ function transferLeadToVenue(id){
 }
 
 // ── VENUE ONBOARDING CHECKLIST ──
-const VENUE_ONB_STEPS=[
-  {title:'Capture the lead',
-   desc:'Found one out in the wild, or got sent one through social media? Log it with the Lead Capture Form. If they came to you directly, have them fill out the Venue Application Form instead.',
-   links:['leadCaptureForm','venueApplication']},
-  {title:'First Contact',
-   desc:'Reach out and find out what they\'re actually looking for.', links:[]},
-  {title:'Interview',
-   desc:'Meet the venue in person — meet the owner, walk the space, see what equipment setup you\'d be working with.', links:[]},
-  {title:'Send the contract',
-   desc:'If they want in, send the Venue Contract.', links:['contract']},
-  {title:'Done',
-   desc:'Once it\'s signed, transfer them to Our Venues from their lead card.', links:[]}
-];
-const VENUE_ONB_LINK_LABELS={venueApplication:'Venue Application Form',contract:'Venue Contract'};
-let venueOnbLinks={};
-function loadVenueOnbLinks(){
-  if(!db)return;
-  db.collection('hq_data').doc('venueOnboardingLinks').get().then(snap=>{
-    if(snap.exists)venueOnbLinks=snap.data()||{};
-    renderVenueOnboardingChecklist();
-  }).catch(()=>{renderVenueOnboardingChecklist();});
-}
-function getVenueOnbLinkValue(key){
-  if(key==='leadCaptureForm')return onboardingLinks.leadCaptureForm||''; // shared with Host Onboarding
-  return venueOnbLinks[key]||'';
-}
-function saveVenueOnbLink(key){
-  const val=document.getElementById('vOnbLink-'+key).value.trim();
-  if(key==='leadCaptureForm'){
-    onboardingLinks.leadCaptureForm=val;
-    if(db){try{db.collection('hq_data').doc('onboardingLinks').set(onboardingLinks,{merge:true});}catch(e){}}
-  }else{
-    venueOnbLinks[key]=val;
-    if(db){try{db.collection('hq_data').doc('venueOnboardingLinks').set(venueOnbLinks,{merge:true});}catch(e){}}
-  }
-  renderVenueOnboardingChecklist();
-}
-function renderVenueOnboardingChecklist(){
-  const el=document.getElementById('venueOnbChecklist');
-  if(!el)return;
-  el.innerHTML=VENUE_ONB_STEPS.map((s,i)=>`
-    <div style="display:flex;gap:0.8rem;padding:0.8rem 0;${i<VENUE_ONB_STEPS.length-1?'border-bottom:1px solid var(--border);':''}">
-      <div style="flex-shrink:0;width:26px;height:26px;border-radius:50%;background:var(--gold-dim);color:var(--gold);display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:700;">${i+1}</div>
-      <div style="flex:1;">
-        <div style="font-size:0.85rem;color:var(--text);font-weight:600;margin-bottom:0.2rem;">${s.title}</div>
-        <div style="font-size:0.75rem;color:var(--text3);line-height:1.5;margin-bottom:${s.links.length?'0.6rem':'0'};">${s.desc}</div>
-        ${s.links.map(key=>{
-          const label=key==='leadCaptureForm'?'Lead Capture Form':VENUE_ONB_LINK_LABELS[key];
-          const val=getVenueOnbLinkValue(key);
-          return `<div style="display:flex;gap:0.4rem;margin-bottom:0.4rem;align-items:center;">
-            <span style="font-size:0.68rem;color:var(--text3);min-width:130px;">${label}</span>
-            <input type="text" class="form-input" id="vOnbLink-${key}" value="${val.replace(/"/g,'&quot;')}" placeholder="https://..." style="flex:1;font-size:0.75rem;padding:0.4rem 0.6rem;">
-            ${val?`<a href="${val}" target="_blank" class="btn-sm" style="text-decoration:none;white-space:nowrap;">Open</a>`:''}
-            <button class="btn-sm btn-gold" onclick="saveVenueOnbLink('${key}')">Save</button>
-          </div>`;
-        }).join('')}
-      </div>
-    </div>
-  `).join('');
-}
 
 // ── INVENTORY ──
 let inventory=[];
@@ -2772,33 +2879,32 @@ function filterRoster(){
     const matchName=!name||h.name.toLowerCase().includes(name);
     const matchSkill=!skill||(h.skills||[]).includes(skill);
     const matchVenue=!venue||(h.venues||[]).includes(venue);
-    return matchName&&matchSkill&&matchVenue;
+    return matchName&&matchSkill&&matchVenue&&locationScopeMatches(h.locationId);
   });
   renderRosterCards(filtered);
 }
-function renderRoster(){renderRosterCards(getOrderedRoster());}
+function renderRoster(){renderRosterCards(getOrderedRoster().filter(h=>locationScopeMatches(h.locationId)));}
 function renderRosterCards(list){
   const el=document.getElementById('rosterList');
   if(!list.length){el.innerHTML='<div class="no-results">No hosts match your search.</div>';return;}
   el.innerHTML=list.map(h=>{
     const rank=getRankById(h.rankId);
-    const rankBadge=rank?`<span class="rank-badge" style="color:${rank.color};border-color:${rank.color};background:${rank.color}18;">${rank.name}</span>`:'';
-    const rankLabel=rank?`<div class="host-rank-label">${rank.name}</div>`:'';
+    const rankBadge=rank?`<span class="acct-status-badge" style="color:${rank.color};border-color:${rank.color};background:${rank.color}18;">${rank.name}</span>`:'';
     return`<div class="roster-card" draggable="true" data-hostid="${h.id}"
       ondragstart="hostDragStart(event,this)"
       ondragover="hostDragOver(event,this)"
       ondrop="hostDrop(event,this)"
       ondragend="hostDragEnd()">
-      <div class="roster-header">
+      <div class="acct-header">
         <div style="display:flex;align-items:center;gap:0.6rem;">
           <span class="host-drag-handle">⠿</span>
           <div class="host-avatar">${(h.name||'?').charAt(0).toUpperCase()}</div>
-          <div>
-            <div class="roster-name">${h.name}</div>
-            ${rankLabel}
+          <div class="acct-name-group">
+            <div class="acct-name">${h.name}</div>
+            <div class="acct-meta">${h.locationId?locationLabel(h.locationId):'No location set'}</div>
           </div>
         </div>
-        <div class="roster-actions">
+        <div class="acct-badges">
           ${rankBadge}
           <button class="action-btn edit" onclick="openRosterModal('${h.id}')">✎</button>
           <button class="action-btn delete" onclick="deleteHost('${h.id}')">✕</button>
@@ -2826,6 +2932,9 @@ function openRosterModal(id=null){
   editRosterId=id;const host=id?roster.find(h=>h.id===id):null;
   document.getElementById('rosterModalTitle').textContent=id?'Edit Host':'Add Host';
   document.getElementById('rmName').value=host?host.name:'';
+  const locSel=document.getElementById('rmLocation');
+  locSel.innerHTML=locations.map(l=>`<option value="${l.code}">${l.label}</option>`).join('');
+  locSel.value=(host&&host.locationId)?host.locationId:(currentLocationScope!=='ALL'?currentLocationScope:((locations[0]&&locations[0].code)||''));
   const vnames=getVenueNames();
   document.getElementById('skillChips').innerHTML=SKILLS.map(s=>{const sel=host&&(host.skills||[]).includes(s);return`<div class="chip${sel?' selected-skill':''}" onclick="toggleChip(this,'skill')">${s}</div>`;}).join('');
   document.getElementById('venueChips').innerHTML=vnames.map(v=>{const sel=host&&(host.venues||[]).includes(v);return`<div class="chip${sel?' selected-venue':''}" onclick="toggleChip(this,'venue')">${v}</div>`;}).join('');
@@ -2836,12 +2945,13 @@ function toggleChip(el,type){el.classList.toggle(type==='skill'?'selected-skill'
 function closeRosterModal(){document.getElementById('rosterModal').classList.remove('open');editRosterId=null;}
 function saveRoster(){
   const name=document.getElementById('rmName').value.trim();if(!name)return;
+  const locationId=document.getElementById('rmLocation').value;
   const skills=[...document.querySelectorAll('#skillChips .selected-skill')].map(el=>el.textContent);
   const vs=[...document.querySelectorAll('#venueChips .selected-venue')].map(el=>el.textContent);
   const selRank=document.querySelector('#rankChips .selected-rank');
   const rankId=selRank?selRank.dataset.rankid:null;
-  if(editRosterId){const h=roster.find(x=>x.id===editRosterId);if(h){h.name=name;h.skills=skills;h.venues=vs;h.rankId=rankId;}}
-  else roster.push({id:Date.now().toString(),name,skills,venues:vs,rankId});
+  if(editRosterId){const h=roster.find(x=>x.id===editRosterId);if(h){h.name=name;h.skills=skills;h.venues=vs;h.rankId=rankId;h.locationId=locationId;}}
+  else roster.push({id:Date.now().toString(),name,skills,venues:vs,rankId,locationId});
   persist('host-roster',roster,'rosterSave');
   renderRoster();filterRoster();closeRosterModal();
 }
@@ -3216,9 +3326,9 @@ function init(){
   loadGigSchedule();
   loadPlannerData();
   loadShiftsData();
-  loadOnboardingLinks();
+  loadOnbSteps('host');
   loadVenuesList();
-  loadVenueOnbLinks();
+  loadOnbSteps('venue');
   renderRoster();
   renderVenueManage();
   populateRosterFilters();
