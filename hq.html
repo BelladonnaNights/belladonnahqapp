@@ -303,45 +303,44 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
       <span class="header-divider">|</span>
       <span class="header-tagline">Command center for hosts, venues &amp; operations</span>
     </div>
-  </div>
-</div>
-
-<div class="admin-bar" id="adminBar">
-  <span id="gatewayUserBar" class="gateway-user-label"></span>
-  <a href="https://belladonnanights.github.io/belladonna-gateway/accounts.html?view=account" class="btn-sm" style="text-decoration:none;margin-right:0.5rem;display:inline-flex;align-items:center;">My Account</a>
-  <button class="btn-sm" onclick="gatewaySignOut()" style="margin-right:0.5rem;">Sign Out</button>
-  <button class="admin-bar-toggle" onclick="toggleAdmin()">
-    <div class="admin-bar-label">Admin Panel</div>
-    <div class="admin-bar-arrow" id="adminArrow">▼</div>
-  </button>
-  <div class="live-badge" style="margin-left:0.8rem;">
-    <div class="live-dot"></div>
-    <div>
-      <div class="live-count" id="liveCount">—</div>
-      <div class="live-label">On Shift<br>Now</div>
-    </div>
-  </div>
-  <div class="admin-content" id="adminContent">
-    <div class="admin-section">
-      <div class="admin-section-title">Locations <span style="font-size:0.55rem;color:var(--text3)">(code + display label — add a location once here, it's available everywhere)</span></div>
-      <div class="admin-ranks-list" id="adminLocationsList"></div>
-      <div style="display:flex;gap:0.4rem;margin-top:0.5rem;">
-        <input type="text" id="newLocationCode" placeholder="wa-southsound" style="flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:0.4rem 0.6rem;font-size:0.72rem;">
-        <input type="text" id="newLocationLabel" placeholder="WA - South Sound" style="flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:0.4rem 0.6rem;font-size:0.72rem;">
+    <div class="admin-bar" id="adminBar">
+      <span id="gatewayUserBar" class="gateway-user-label"></span>
+      <a href="https://belladonnanights.github.io/belladonna-gateway/accounts.html?view=account" class="btn-sm" style="text-decoration:none;margin-right:0.5rem;display:inline-flex;align-items:center;">My Account</a>
+      <button class="btn-sm" onclick="gatewaySignOut()" style="margin-right:0.5rem;">Sign Out</button>
+      <button class="admin-bar-toggle" onclick="toggleAdmin()">
+        <div class="admin-bar-label">Admin Panel</div>
+        <div class="admin-bar-arrow" id="adminArrow">▼</div>
+      </button>
+      <div class="live-badge" style="margin-left:0.8rem;">
+        <div class="live-dot"></div>
+        <div>
+          <div class="live-count" id="liveCount">—</div>
+          <div class="live-label">On Shift<br>Now</div>
+        </div>
       </div>
-      <button class="admin-add-btn" onclick="adminAddLocation()">+ Add Location</button>
-    </div>
-    <div class="admin-section">
-      <div class="admin-section-title">Host Ranks <span style="font-size:0.55rem;color:var(--text3)">(drag to reorder · click name to edit)</span></div>
-      <div class="admin-ranks-list" id="adminRanksList"></div>
-      <button class="admin-add-btn" onclick="adminAddRank()">+ Add Rank</button>
-      <br>
-      <button class="admin-save-btn" onclick="adminSaveRanks()">Save Ranks</button>
-    </div>
-    <div class="admin-section">
-      <div class="admin-section-title">Stats & Data</div>
-      <div style="font-size:0.68rem;color:var(--text3);margin-bottom:0.6rem;line-height:1.6;">Reset clears all cached checkout data so the Stats page pulls fresh from Google Sheets on next load.</div>
-      <button class="admin-danger-btn" onclick="openResetStatsModal()">⚠ Reset Stats Data</button>
+      <div class="admin-content" id="adminContent">
+        <div class="admin-section">
+          <div class="admin-section-title">Locations <span style="font-size:0.55rem;color:var(--text3)">(code + display label — add a location once here, it's available everywhere)</span></div>
+          <div class="admin-ranks-list" id="adminLocationsList"></div>
+          <div style="display:flex;gap:0.4rem;margin-top:0.5rem;">
+            <input type="text" id="newLocationCode" placeholder="wa-southsound" style="flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:0.4rem 0.6rem;font-size:0.72rem;">
+            <input type="text" id="newLocationLabel" placeholder="WA - South Sound" style="flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:0.4rem 0.6rem;font-size:0.72rem;">
+          </div>
+          <button class="admin-add-btn" onclick="adminAddLocation()">+ Add Location</button>
+        </div>
+        <div class="admin-section">
+          <div class="admin-section-title">Host Ranks <span style="font-size:0.55rem;color:var(--text3)">(drag to reorder · click name to edit)</span></div>
+          <div class="admin-ranks-list" id="adminRanksList"></div>
+          <button class="admin-add-btn" onclick="adminAddRank()">+ Add Rank</button>
+          <br>
+          <button class="admin-save-btn" onclick="adminSaveRanks()">Save Ranks</button>
+        </div>
+        <div class="admin-section">
+          <div class="admin-section-title">Stats & Data</div>
+          <div style="font-size:0.68rem;color:var(--text3);margin-bottom:0.6rem;line-height:1.6;">Reset clears all cached checkout data so the Stats page pulls fresh from Google Sheets on next load.</div>
+          <button class="admin-danger-btn" onclick="openResetStatsModal()">⚠ Reset Stats Data</button>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -3079,7 +3078,7 @@ function renderStatsGrid(){
 // ── ACCOUNTS ──
 let accounts=[];
 const ENT_APPS=[{key:'bingo',label:'Bingo'},{key:'trivia',label:'Trivia'},{key:'mediaPlayer',label:'Media Player'},{key:'training',label:'Training'},{key:'venueMenu',label:'Venue Menu'}];
-const ADMIN_APPS=[{key:'hq',label:'HQ'},{key:'trivia',label:'Trivia'},{key:'bingo',label:'Bingo'},{key:'mediaPlayer',label:'Media Player'},{key:'training',label:'Training'}];
+const ADMIN_APPS=[{key:'hq',label:'HQ'},{key:'trivia',label:'Trivia'},{key:'bingo',label:'Bingo'},{key:'mediaPlayer',label:'Media Player'},{key:'training',label:'Training'},{key:'venueMenu',label:'Venue Menu'}];
 // Schedule access is a middle tier, between regular use and full admin — right
 // now only Bingo actually gates anything on it (its Schedule tool was
 // admin-only; this carves it out for specific hosts without making them full
