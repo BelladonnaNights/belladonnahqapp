@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Belladonna HQ</title>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=DM+Sans:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=DM+Sans:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400&family=Cinzel:wght@400;600;700&display=swap');
 *{margin:0;padding:0;box-sizing:border-box;}
 :root{
   --bg:#000000;--surface:#0d0d0d;--surface2:#141414;--surface3:#1a1a1a;--surface4:#212121;
@@ -34,9 +34,19 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
 .live-label{font-size:0.98rem;color:var(--text2);letter-spacing:0.12em;text-transform:uppercase;line-height:1.3;}
 .tabs{display:flex;gap:0;overflow-x:auto;scrollbar-width:none;}
 .tabs::-webkit-scrollbar{display:none;}
-.tab{padding:0.75rem 1.1rem;font-size:0.72rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--text3);cursor:pointer;border-bottom:2px solid transparent;transition:all 0.2s;background:none;border-top:none;border-left:none;border-right:none;font-family:'DM Sans',sans-serif;white-space:nowrap;font-weight:400;}
+.tab{padding:0.75rem 1.1rem;font-family:'Cinzel',serif;font-size:0.66rem;letter-spacing:0.13em;text-transform:uppercase;color:var(--text3);cursor:pointer;border-bottom:2px solid transparent;transition:all 0.2s;background:none;border-top:none;border-left:none;border-right:none;white-space:nowrap;font-weight:600;}
 .tab:hover{color:var(--text2);}
 .tab.active{color:var(--gold);border-bottom-color:var(--gold);}
+
+.hq-nav{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.7rem;padding:0.9rem 1.5rem;background:var(--bg);}
+.hq-nav-right{display:flex;align-items:center;gap:0.55rem;flex-wrap:wrap;}
+.hq-gold-line{height:3px;background:linear-gradient(90deg,transparent,var(--gold),var(--gold2,var(--gold)),var(--gold),transparent);}
+.hq-btn-ghost{font-family:'Cinzel',serif;font-size:0.62rem;letter-spacing:0.1em;text-transform:uppercase;font-weight:600;background:transparent;color:var(--gold);border:1px solid var(--border-gold);border-radius:8px;padding:0.55rem 1rem;cursor:pointer;transition:all 0.2s;white-space:nowrap;text-decoration:none;display:inline-flex;align-items:center;}
+.hq-btn-ghost:hover{background:var(--gold-dim);}
+.hq-loc-row{display:flex;justify-content:flex-end;padding:0.55rem 1.5rem;background:var(--surface2);border-bottom:1px solid var(--border);}
+.hq-loc-select{background:var(--surface3);border:1px solid var(--border);border-radius:999px;color:var(--gold);padding:0.45rem 1.1rem;font-size:0.72rem;font-weight:600;min-width:190px;}
+.hq-cal-nav-btn{font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:0.1em;text-transform:uppercase;font-weight:600;background:transparent;color:var(--gold);border:1px solid var(--border-gold);border-radius:8px;padding:0.4rem 0.85rem;cursor:pointer;transition:all 0.2s;white-space:nowrap;}
+.hq-cal-nav-btn:hover{background:var(--gold-dim);}
 
 .panel{display:none;padding:1.5rem;}
 .panel.active{display:block;}
@@ -159,7 +169,11 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
 
 .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:200;display:none;align-items:center;justify-content:center;padding:1rem;}
 .modal-bg.open{display:flex;}
-.modal{background:var(--surface);border:1px solid var(--border2);border-top:3px solid var(--gold);padding:1.6rem;width:100%;max-width:480px;position:relative;max-height:92vh;overflow-y:auto;}
+.modal{background:var(--surface);border:1px solid var(--border2);border-top:3px solid var(--gold);padding:1.6rem;width:100%;max-width:480px;position:relative;max-height:92vh;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--border2) transparent;}
+.modal::-webkit-scrollbar{width:7px;}
+.modal::-webkit-scrollbar-track{background:transparent;}
+.modal::-webkit-scrollbar-thumb{background:var(--border2);border-radius:10px;}
+.modal::-webkit-scrollbar-thumb:hover{background:var(--gold);}
 .modal-title{font-size:0.65rem;letter-spacing:0.32em;text-transform:uppercase;color:var(--text3);margin-bottom:1.1rem;font-weight:400;}
 .form-group{margin-bottom:0.9rem;}
 .form-label{font-size:0.6rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--text3);display:block;margin-bottom:0.4rem;font-weight:400;}
@@ -295,30 +309,20 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
 </head>
 <body>
 
-<div class="header-brand">
-  <div class="header-top">
-    <div class="logo-group">
-      <img src="logo.png" alt="Belladonna" class="logo-img" onerror="this.style.display='none'">
-      <div class="logo">BELLADONNA <span class="logo-accent">HQ</span></div>
-      <span class="header-divider">|</span>
-      <span class="header-tagline">Command center for hosts, venues &amp; operations</span>
-    </div>
-    <div class="admin-bar" id="adminBar">
-      <span id="gatewayUserBar" class="gateway-user-label"></span>
-      <a href="https://belladonnanights.github.io/belladonna-gateway/accounts.html?view=account" class="btn-sm" style="text-decoration:none;margin-right:0.5rem;display:inline-flex;align-items:center;">My Account</a>
-      <button class="btn-sm" onclick="gatewaySignOut()" style="margin-right:0.5rem;">Sign Out</button>
-      <button class="admin-bar-toggle" onclick="toggleAdmin()">
-        <div class="admin-bar-label">Admin Panel</div>
-        <div class="admin-bar-arrow" id="adminArrow">▼</div>
-      </button>
-      <div class="live-badge" style="margin-left:0.8rem;">
-        <div class="live-dot"></div>
-        <div>
-          <div class="live-count" id="liveCount">—</div>
-          <div class="live-label">On Shift<br>Now</div>
-        </div>
-      </div>
-      <div class="admin-content" id="adminContent">
+<div class="hq-nav">
+  <div class="logo-group">
+    <img src="logo.png" alt="Belladonna" class="logo-img" onerror="this.style.display='none'">
+    <div class="logo">BELLADONNA <span class="logo-accent">HQ</span></div>
+    <span class="header-divider">|</span>
+    <span class="header-tagline">Command center for hosts, venues &amp; operations</span>
+  </div>
+  <div class="hq-nav-right">
+    <span id="gatewayUserBar" class="gateway-user-label"></span>
+    <a href="https://belladonnanights.github.io/belladonna-gateway/accounts.html?view=account" class="hq-btn-ghost">My Account</a>
+    <button class="hq-btn-ghost" onclick="gatewaySignOut()">Sign Out</button>
+    <div style="position:relative;">
+      <button class="hq-btn-ghost" onclick="toggleAdmin()">Admin Panel</button>
+      <div class="admin-content" id="adminContent" style="right:0;">
         <div class="admin-section">
           <div class="admin-section-title">Locations <span style="font-size:0.55rem;color:var(--text3)">(code + display label — add a location once here, it's available everywhere)</span></div>
           <div class="admin-ranks-list" id="adminLocationsList"></div>
@@ -344,10 +348,10 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
     </div>
   </div>
 </div>
+<div class="hq-gold-line"></div>
 
-<div id="locationScopeBar" style="display:none;background:var(--surface2);border-bottom:1px solid var(--border);padding:0.5rem 1.2rem;align-items:center;gap:0.6rem;font-size:0.68rem;color:var(--text3);letter-spacing:0.04em;">
-  <span>Viewing:</span>
-  <select id="locationScopeSelect" onchange="setLocationScope(this.value)" style="background:var(--surface3);border:1px solid var(--border);border-radius:6px;color:var(--gold);padding:0.3rem 0.6rem;font-size:0.7rem;"></select>
+<div id="locationScopeBar" class="hq-loc-row" style="display:none;">
+  <select id="locationScopeSelect" onchange="setLocationScope(this.value)" class="hq-loc-select"></select>
 </div>
 
 <div class="header">
@@ -363,9 +367,18 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
 
 <!-- DASHBOARD -->
 <div class="panel active" id="panel-dashboard">
-  <div class="section-header">
+  <div class="section-header" style="align-items:flex-start;">
     <div class="section-title">This Week</div>
-    <button class="btn-sm" onclick="renderDashboardWeek()">↻ Refresh</button>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:0.5rem;">
+      <div class="live-badge">
+        <div class="live-dot"></div>
+        <div>
+          <div class="live-count" id="liveCount">—</div>
+          <div class="live-label">On Shift<br>Now</div>
+        </div>
+      </div>
+      <button class="hq-cal-nav-btn" onclick="renderDashboardWeek()">Refresh</button>
+    </div>
   </div>
   <div class="dash-filter-pills">
     <button class="dash-filter-pill active" onclick="setDashboardKindFilter('all',this)">All</button>
@@ -374,11 +387,11 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
     <button class="dash-filter-pill" onclick="setDashboardKindFilter('karaoke',this)">Karaoke</button>
   </div>
   <div style="display:flex;align-items:center;justify-content:center;gap:0.8rem;margin-bottom:0.4rem;">
-    <button class="btn-sm" onclick="shiftDashboardWeek(-1)">‹ Prev</button>
+    <button class="hq-cal-nav-btn" onclick="shiftDashboardWeek(-1)">‹ Prev</button>
     <div class="dashboard-week-label" id="dashboardWeekLabel"></div>
-    <button class="btn-sm" onclick="shiftDashboardWeek(1)">Next ›</button>
+    <button class="hq-cal-nav-btn" onclick="shiftDashboardWeek(1)">Next ›</button>
   </div>
-  <div style="text-align:center;margin-bottom:0.6rem;"><button class="btn-sm" id="dashThisWeekBtn" onclick="shiftDashboardWeek(0,true)" style="display:none;font-size:0.6rem;">Back to This Week</button></div>
+  <div style="text-align:center;margin-bottom:0.6rem;"><button class="hq-cal-nav-btn" id="dashThisWeekBtn" onclick="shiftDashboardWeek(0,true)" style="display:none;">Today</button></div>
   <div class="daybox-grid" id="dashboardDayboxGrid"></div>
   <div style="font-size:0.62rem;color:var(--text3);letter-spacing:0.04em;margin-top:0.8rem;">Pulls in gigs from HQ's own schedule, the Trivia planner app, and the Bingo app. Click any gig for details.</div>
 </div>
@@ -589,6 +602,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
     <button class="subtab" onclick="showSub('venues','leads',this);renderLeads()" id="leadsTabBtn" style="display:none;">Leads</button>
     <button class="subtab" onclick="showSub('venues','onboarding',this);renderOnbSteps('venue')">Onboarding</button>
     <button class="subtab" onclick="showSub('venues','stats',this);loadStats()">Stats</button>
+    <a href="https://belladonnanights.github.io/belladonna-tools/index.html" class="subtab" target="_self" style="text-decoration:none !important;color:var(--text3);">Venue Menu</a>
   </div>
   <div class="subpanel active" id="sub-venues-manage">
     <div class="section-header">
@@ -630,6 +644,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
           <option value="negotiation">Negotiations</option>
           <option value="contract">Contract Sent</option>
           <option value="signed">Signed</option>
+          <option value="paused">Paused</option>
           <option value="transferred">Transferred (archive)</option>
         </select>
         <button class="btn-sm btn-gold" onclick="openLeadModal()">+ Add Lead</button>
@@ -656,7 +671,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
 
 <!-- LEAD MODAL -->
 <div class="modal-bg" id="leadModal">
-  <div class="modal" style="max-width:480px;">
+  <div class="modal" style="max-width:640px;">
     <div class="modal-title" id="leadModalTitle">Add Lead</div>
     <div class="form-group"><label class="form-label">Venue / Company Name</label><input type="text" class="form-input" id="leadName"></div>
     <div class="form-group"><label class="form-label">Contact Person</label><input type="text" class="form-input" id="leadContactName"></div>
@@ -677,6 +692,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
           <option value="negotiation">Negotiations</option>
           <option value="contract">Contract Sent</option>
           <option value="signed">Signed</option>
+          <option value="paused">Paused</option>
         </select>
       </div>
       <div class="form-group" style="flex:1;"><label class="form-label">Temperature</label>
@@ -714,7 +730,11 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
       <div class="form-group" style="flex:1;"><label class="form-label">Found By</label><input type="text" class="form-input" id="leadFoundBy" placeholder="Name"></div>
     </div>
     <div style="display:flex;gap:0.6rem;align-items:flex-end;">
-      <div class="form-group" style="flex:1;"><label class="form-label">Next Follow-Up</label><input type="date" class="form-input" id="leadFollowUp"></div>
+      <div class="form-group" style="flex:1;">
+        <label class="form-label">Next Follow-Up</label>
+        <input type="date" class="form-input" id="leadFollowUp">
+        <label style="display:flex;align-items:center;gap:0.4rem;cursor:pointer;font-size:0.72rem;color:var(--text3);margin-top:0.35rem;"><input type="checkbox" id="leadFollowUpNone" onchange="document.getElementById('leadFollowUp').disabled=this.checked;if(this.checked)document.getElementById('leadFollowUp').value='';"> None needed</label>
+      </div>
       <div class="form-group" style="flex:1;"><label style="display:flex;align-items:center;gap:0.4rem;cursor:pointer;font-size:0.75rem;color:var(--text2);"><input type="checkbox" id="leadCompetitor"> Currently using a competitor</label></div>
     </div>
     <div class="form-group"><label class="form-label">Notes</label><textarea class="form-input" id="leadNotes" rows="3"></textarea></div>
@@ -976,6 +996,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
     <div class="form-group"><label class="form-label">Location</label><select class="form-input" id="vmLocation"></select></div>
     <div class="form-group"><label class="form-label">Type of Gig / What We Do There</label><div class="chip-grid" id="gigChips"></div></div>
     <div class="form-group"><label class="form-label">Notes (optional)</label><textarea class="form-textarea" id="vmNotes" placeholder="Any notes about this venue..." style="min-height:60px;"></textarea></div>
+    <div class="form-group"><label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;font-size:0.8rem;color:var(--text2);"><input type="checkbox" id="vmInactive" style="width:16px;height:16px;"> Not currently active <span style="color:var(--text4);font-size:0.7rem;">(paused, ended, or no longer working with us)</span></label></div>
     <div class="modal-actions">
       <button class="modal-cancel" onclick="closeVenueModal()">Cancel</button>
       <button class="modal-save" onclick="saveVenue()">Save Venue</button>
@@ -1649,7 +1670,7 @@ function fetchBingoGigsForDate(dk,dow){
     return {venue,host:'Unassigned',kind:'Bingo',cancelled:false,source:'Bingo App',notes:(roundNames.length?'Rounds: '+roundNames.join(', '):'')+(e.notes?(roundNames.length?' — ':'')+e.notes:'')};
   });
 }
-function startOfWeekSunday(d){const x=new Date(d);x.setHours(0,0,0,0);x.setDate(x.getDate()-x.getDay());return x;}
+function startOfWeekMonday(d){const x=new Date(d);x.setHours(0,0,0,0);x.setDate(x.getDate()-((x.getDay()+6)%7));return x;}
 function dateToKey(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
 // Gigs from OTHER apps (Trivia planner, Bingo) — not HQ's own gigSchedule.
 // Shared by the Dashboard's week view and the Schedule tab's calendar.
@@ -1692,8 +1713,8 @@ function renderDashboardWeek(){
   const grid=document.getElementById('dashboardDayboxGrid');
   if(!grid)return;
   const anchor=new Date();anchor.setDate(anchor.getDate()+dashWeekOffset*7);
-  const start=startOfWeekSunday(anchor);
-  const dayNames=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const start=startOfWeekMonday(anchor);
+  const dayNames=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
   const today=dateToKey(new Date());
   const endLabel=new Date(start.getFullYear(),start.getMonth(),start.getDate()+6);
   document.getElementById('dashboardWeekLabel').textContent=start.toLocaleDateString('en-US',{month:'short',day:'numeric'})+' – '+endLabel.toLocaleDateString('en-US',{month:'short',day:'numeric'});
@@ -1832,15 +1853,15 @@ function renderGigCalendar(){
     let yr=startYear,mo=startMonth+m;
     if(mo>11){mo-=12;yr++;}
     const isCurrentMonth=(mo===today.getMonth()&&yr===today.getFullYear());
-    const firstDay=new Date(yr,mo,1).getDay();
+    const firstDay=(new Date(yr,mo,1).getDay()+6)%7;
     const daysInMonth=new Date(yr,mo+1,0).getDate();
     const daysInPrev=new Date(yr,mo,0).getDate();
     const totalCells=Math.ceil((firstDay+daysInMonth)/7)*7;
     html+=`<div class="cal-month-block">
       <div class="cal-month-heading${isCurrentMonth?' is-today-month':''}">${MONTHS[mo]} ${yr}</div>
       <div class="cal-grid-header">
-        <div class="cal-day-name" style="color:#4aaa5a">Sun</div><div class="cal-day-name">Mon</div><div class="cal-day-name">Tue</div>
-        <div class="cal-day-name">Wed</div><div class="cal-day-name">Thu</div><div class="cal-day-name">Fri</div><div class="cal-day-name">Sat</div>
+        <div class="cal-day-name">Mon</div><div class="cal-day-name">Tue</div><div class="cal-day-name">Wed</div>
+        <div class="cal-day-name">Thu</div><div class="cal-day-name">Fri</div><div class="cal-day-name">Sat</div><div class="cal-day-name" style="color:#4aaa5a">Sun</div>
       </div>
       <div class="cal-grid">`;
     for(let i=0;i<totalCells;i++){
@@ -2362,6 +2383,7 @@ const LEAD_STAGES=[
   {key:'negotiation',label:'Negotiations',color:'var(--purple)'},
   {key:'contract',label:'Contract Sent',color:'var(--rose)'},
   {key:'signed',label:'Signed',color:'#3aaa6a'},
+  {key:'paused',label:'Paused',color:'var(--text4)'},
   {key:'transferred',label:'Transferred',color:'var(--text3)'}
 ];
 function leadStageLabel(k){const s=LEAD_STAGES.find(x=>x.key===k);return s?s.label:k;}
@@ -2498,6 +2520,8 @@ function openLeadModal(id){
   document.getElementById('leadSource').value=l?l.source||'inbound':'inbound';
   document.getElementById('leadFoundBy').value=l?l.foundBy||'':'';
   document.getElementById('leadFollowUp').value=l?l.nextFollowUp||'':'';
+  document.getElementById('leadFollowUpNone').checked=!!(l&&l.followUpNone);
+  document.getElementById('leadFollowUp').disabled=!!(l&&l.followUpNone);
   document.getElementById('leadCompetitor').checked=!!(l&&l.usingCompetitor);
   document.getElementById('leadNotes').value=l?l.notes||'':'';
   document.getElementById('leadDeleteBtn').style.display=l?'':'none';
@@ -2516,7 +2540,7 @@ function saveLead(){
     contactMethod:document.getElementById('leadContactMethod').value,
     contactMethodOther:document.getElementById('leadContactMethod').value==='other'?document.getElementById('leadContactMethodOther').value.trim():'',
     source:document.getElementById('leadSource').value, foundBy:document.getElementById('leadFoundBy').value.trim(),
-    nextFollowUp:document.getElementById('leadFollowUp').value, usingCompetitor:document.getElementById('leadCompetitor').checked,
+    nextFollowUp:document.getElementById('leadFollowUp').value, followUpNone:document.getElementById('leadFollowUpNone').checked, usingCompetitor:document.getElementById('leadCompetitor').checked,
     notes:document.getElementById('leadNotes').value.trim(), updatedAt:new Date().toISOString()
   };
   const id=editingLeadId||db.collection('leads').doc().id;
@@ -2752,9 +2776,7 @@ function confirmInventoryCsvImport(btn){
 function closeModal(id){document.getElementById(id).classList.remove('open');}
 function toggleAdmin(){
   const content=document.getElementById('adminContent');
-  const arrow=document.getElementById('adminArrow');
   content.classList.toggle('open');
-  arrow.classList.toggle('open');
   if(content.classList.contains('open')) renderAdminRanks();
 }
 
@@ -2814,9 +2836,7 @@ function confirmResetStats(){
   closeResetStatsModal();
   // Close admin panel
   const adminContent = document.getElementById('adminContent');
-  const adminArrow = document.getElementById('adminArrow');
   if(adminContent) adminContent.classList.remove('open');
-  if(adminArrow) adminArrow.classList.remove('open');
   // Show quick confirmation
   setTimeout(()=>alert('Stats data has been reset. Open the Stats tab and hit Refresh to reload from Google Sheets.'), 100);
 }
@@ -2959,16 +2979,18 @@ function deleteHost(id){if(!confirm('Remove this host?'))return;roster=roster.fi
 // ── VENUES ──
 function renderVenueManage(){
   const el=document.getElementById('venueManageList');
-  const scoped=venues.filter(v=>locationScopeMatches(v.locationId));
+  const scoped=venues.filter(v=>locationScopeMatches(v.locationId))
+    .sort((a,b)=>(a.inactive?1:0)-(b.inactive?1:0)); // inactive venues sink to the bottom, active order otherwise unchanged
   if(!scoped.length){el.innerHTML='<div class="empty-state">No venues yet.</div>';return;}
   function gigClass(g){const m={'Karaoke':'gig-karaoke','Bingo':'gig-bingo','Trivia':'gig-trivia','Events':'gig-events','Private Events':'gig-private'};return m[g]||'';}
-  el.innerHTML=scoped.map(v=>`<div class="venue-manage-card"><div class="venue-manage-header"><div class="venue-manage-name">${v.name}${v.locationId?` <span style="font-size:0.65rem;color:var(--text3);font-weight:400;">· ${locationLabel(v.locationId)}</span>`:''}</div><div style="display:flex;gap:0.4rem;"><button class="action-btn edit" onclick="openVenueModal('${v.id}')">✎</button><button class="action-btn delete" onclick="deleteVenue('${v.id}')">✕</button></div></div><div class="venue-gig-tags">${(v.gigs||[]).map(g=>`<span class="venue-gig-tag ${gigClass(g)}">${g}</span>`).join('')}</div>${v.notes?`<div style="font-size:0.81rem;color:var(--text3);margin-top:0.5rem;">${v.notes}</div>`:''}</div>`).join('');
+  el.innerHTML=scoped.map(v=>`<div class="venue-manage-card"${v.inactive?' style="opacity:0.55;"':''}><div class="venue-manage-header"><div class="venue-manage-name">${v.name}${v.inactive?' <span style="font-size:0.62rem;color:var(--text4);font-weight:400;text-transform:uppercase;letter-spacing:0.08em;">· Inactive</span>':''}${v.locationId?` <span style="font-size:0.65rem;color:var(--text3);font-weight:400;">· ${locationLabel(v.locationId)}</span>`:''}</div><div style="display:flex;gap:0.4rem;"><button class="action-btn edit" onclick="openVenueModal('${v.id}')">✎</button><button class="action-btn delete" onclick="deleteVenue('${v.id}')">✕</button></div></div><div class="venue-gig-tags">${(v.gigs||[]).map(g=>`<span class="venue-gig-tag ${gigClass(g)}">${g}</span>`).join('')}</div>${v.notes?`<div style="font-size:0.81rem;color:var(--text3);margin-top:0.5rem;">${v.notes}</div>`:''}</div>`).join('');
 }
 function openVenueModal(id=null){
   editVenueId=id;const venue=id?venues.find(v=>v.id===id):null;
   document.getElementById('venueModalTitle').textContent=id?'Edit Venue':'Add Venue';
   document.getElementById('vmName').value=venue?venue.name:'';
   document.getElementById('vmNotes').value=venue?venue.notes||'':'';
+  document.getElementById('vmInactive').checked=!!(venue&&venue.inactive);
   const locSel=document.getElementById('vmLocation');
   locSel.innerHTML=locations.map(l=>`<option value="${l.code}">${l.label}</option>`).join('');
   locSel.value=(venue&&venue.locationId)?venue.locationId:(currentLocationScope!=='ALL'?currentLocationScope:((locations[0]&&locations[0].code)||''));
@@ -2981,8 +3003,9 @@ function saveVenue(){
   const gigs=[...document.querySelectorAll('#gigChips .selected-skill')].map(el=>el.textContent);
   const notes=document.getElementById('vmNotes').value.trim();
   const locationId=document.getElementById('vmLocation').value;
-  if(editVenueId){const v=venues.find(x=>x.id===editVenueId);if(v){v.name=name;v.gigs=gigs;v.notes=notes;v.locationId=locationId;}}
-  else venues.push({id:Date.now().toString(),name,gigs,notes,locationId});
+  const inactive=document.getElementById('vmInactive').checked;
+  if(editVenueId){const v=venues.find(x=>x.id===editVenueId);if(v){v.name=name;v.gigs=gigs;v.notes=notes;v.locationId=locationId;v.inactive=inactive;}}
+  else venues.push({id:Date.now().toString(),name,gigs,notes,locationId,inactive});
   persist('venues-list',venues,'venuesSave');
   renderVenueManage();populateRosterFilters();closeVenueModal();
 }
