@@ -48,6 +48,24 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
 .hq-cal-nav-btn{font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:0.1em;text-transform:uppercase;font-weight:600;background:transparent;color:var(--gold);border:1px solid var(--border-gold);border-radius:8px;padding:0.4rem 0.85rem;cursor:pointer;transition:all 0.2s;white-space:nowrap;}
 .hq-cal-nav-btn:hover{background:var(--gold-dim);}
 
+.rte-toolbar{display:flex;flex-wrap:wrap;gap:0.3rem;background:var(--surface2);border:1px solid var(--border);border-radius:8px 8px 0 0;padding:0.5rem;}
+.rte-toolbar button{background:var(--surface3);border:1px solid var(--border);border-radius:6px;color:var(--text2);padding:0.35rem 0.65rem;font-size:0.72rem;cursor:pointer;font-family:'DM Sans',sans-serif;}
+.rte-toolbar button:hover{border-color:var(--border-gold);color:var(--gold);}
+.rte-sep{width:1px;background:var(--border);margin:0.2rem 0.3rem;}
+.rte-body{background:var(--surface);border:1px solid var(--border);border-top:none;border-radius:0 0 8px 8px;padding:1.5rem 1.8rem;min-height:200px;color:var(--text);font-family:'DM Sans',sans-serif;line-height:1.7;font-size:0.85rem;}
+.rte-body:focus{outline:none;}
+.rte-body[contenteditable="false"]{border-radius:8px;}
+.rte-body[contenteditable="true"]{background:var(--surface2);box-shadow:inset 0 0 0 1px var(--border-gold);}
+.rte-body h1{font-family:'Bebas Neue',sans-serif;font-size:1.9rem;letter-spacing:0.04em;color:var(--gold);border-bottom:2px solid var(--gold);display:inline-block;padding-bottom:0.2rem;margin:0 0 1rem;}
+.rte-body h2{font-family:'Bebas Neue',sans-serif;font-size:1.35rem;letter-spacing:0.04em;color:var(--gold);margin:1.3rem 0 0.5rem;}
+.rte-body h3{font-family:'Cormorant Garamond',serif;font-size:1.1rem;font-weight:600;color:var(--gold2);margin:1rem 0 0.4rem;}
+.rte-body p{margin:0 0 0.7rem;}
+.rte-body ul,.rte-body ol{margin:0 0 0.7rem 1.4rem;}
+.rte-body li{margin-bottom:0.3rem;}
+.rte-body a{color:var(--gold2);text-decoration:underline;}
+.rte-body b,.rte-body strong{color:var(--text);font-weight:700;}
+.rte-body:empty::before{content:'Nothing written yet — click Edit to start.';color:var(--text4);font-style:italic;}
+
 .panel{display:none;padding:1.5rem;}
 .panel.active{display:block;}
 .subtabs{display:flex;gap:0.4rem;margin-bottom:1.2rem;flex-wrap:wrap;}
@@ -479,8 +497,27 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
     </div>
 
     <div id="onb-panel-links">
-      <div style="font-size:0.68rem;color:var(--text3);margin-bottom:1rem;line-height:1.6;">Paste the real link for each of these once, and every recruiter uses the same up-to-date set — no more hunting down the current Google Doc link.</div>
-      <div class="onb-link-list" id="onbLinksList"></div>
+      <div class="rte-toolbar" id="rteToolbar-host" style="display:none;">
+        <button type="button" onclick="rteCmd('host','bold')"><b>B</b></button>
+        <button type="button" onclick="rteCmd('host','italic')"><i>I</i></button>
+        <button type="button" onclick="rteCmd('host','underline')"><u>U</u></button>
+        <span class="rte-sep"></span>
+        <button type="button" onclick="rteCmd('host','formatBlock','h2')">Heading</button>
+        <button type="button" onclick="rteCmd('host','formatBlock','h3')">Subheading</button>
+        <button type="button" onclick="rteCmd('host','formatBlock','p')">Paragraph</button>
+        <span class="rte-sep"></span>
+        <button type="button" onclick="rteCmd('host','insertUnorderedList')">• List</button>
+        <button type="button" onclick="rteCmd('host','insertOrderedList')">1. List</button>
+        <button type="button" onclick="rteCmd('host','indent')">Indent →</button>
+        <button type="button" onclick="rteCmd('host','outdent')">← Outdent</button>
+        <span class="rte-sep"></span>
+        <button type="button" onclick="rteLink('host')">Link</button>
+        <button type="button" onclick="rteCmd('host','unlink')">Unlink</button>
+      </div>
+      <div class="rte-body" id="rteBody-host" contenteditable="false"></div>
+      <div style="text-align:right;margin-top:0.6rem;">
+        <button class="btn-sm btn-gold" id="rteToggleBtn-host" onclick="rteToggle('host')">Edit</button>
+      </div>
     </div>
 
     <div id="onb-panel-progress" style="display:none;">
@@ -600,7 +637,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
     <button class="subtab active" onclick="showSub('venues','manage',this)">Our Venues</button>
     <button class="subtab" onclick="showSub('venues','perf',this);loadVenueStats()">Performance</button>
     <button class="subtab" onclick="showSub('venues','leads',this);renderLeads()" id="leadsTabBtn" style="display:none;">Leads</button>
-    <button class="subtab" onclick="showSub('venues','onboarding',this);renderOnbSteps('venue')">Onboarding</button>
+    <button class="subtab" onclick="showSub('venues','onboarding',this)">Onboarding</button>
     <button class="subtab" onclick="showSub('venues','stats',this);loadStats()">Stats</button>
     <a href="https://belladonnanights.github.io/belladonna-tools/index.html" class="subtab" target="_self" style="text-decoration:none !important;color:var(--text3);">Venue Menu</a>
   </div>
@@ -657,8 +694,27 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
     <div class="section-header">
       <div class="section-title">Venue Onboarding</div>
     </div>
-    <div style="font-size:0.68rem;color:var(--text3);margin-bottom:1rem;line-height:1.6;">The process, start to finish, with the actual links you need at each step. Paste each one in once — it's shared everywhere from then on.</div>
-    <div id="venueOnbChecklist"></div>
+    <div class="rte-toolbar" id="rteToolbar-venue" style="display:none;">
+      <button type="button" onclick="rteCmd('venue','bold')"><b>B</b></button>
+      <button type="button" onclick="rteCmd('venue','italic')"><i>I</i></button>
+      <button type="button" onclick="rteCmd('venue','underline')"><u>U</u></button>
+      <span class="rte-sep"></span>
+      <button type="button" onclick="rteCmd('venue','formatBlock','h2')">Heading</button>
+      <button type="button" onclick="rteCmd('venue','formatBlock','h3')">Subheading</button>
+      <button type="button" onclick="rteCmd('venue','formatBlock','p')">Paragraph</button>
+      <span class="rte-sep"></span>
+      <button type="button" onclick="rteCmd('venue','insertUnorderedList')">• List</button>
+      <button type="button" onclick="rteCmd('venue','insertOrderedList')">1. List</button>
+      <button type="button" onclick="rteCmd('venue','indent')">Indent →</button>
+      <button type="button" onclick="rteCmd('venue','outdent')">← Outdent</button>
+      <span class="rte-sep"></span>
+      <button type="button" onclick="rteLink('venue')">Link</button>
+      <button type="button" onclick="rteCmd('venue','unlink')">Unlink</button>
+    </div>
+    <div class="rte-body" id="rteBody-venue" contenteditable="false"></div>
+    <div style="text-align:right;margin-top:0.6rem;">
+      <button class="btn-sm btn-gold" id="rteToggleBtn-venue" onclick="rteToggle('venue')">Edit</button>
+    </div>
   </div>
   <div class="subpanel" id="sub-venues-stats">
     <div class="section-header" style="margin-bottom:1.2rem;">
@@ -2176,118 +2232,81 @@ function showOnboardingSub(which){
 
 // ── Onboarding Links — a small shared set of reference URLs, so every
 // recruiter always sends the current version instead of an old copy-paste. ──
-// ── ONBOARDING STEPS — a fully editable, reorderable list for both Host and
-// Venue onboarding. Each step is just {id, title, note, url} — add, remove,
-// reorder, and edit any of it right here. The raw URL stays hidden behind
-// an "Edit Link" toggle so the list itself reads clean; only an "Open"
-// button shows once a link is set. Seeded once from the old fixed steps so
-// nothing already entered gets lost, then fully custom from there.
-let hostOnbSteps=[];
-let venueOnbSteps=[];
-let onbLinkEditOpen={}; // stepId -> bool, which rows currently show their URL field
-function onbNewStep(title,note,url){return{id:'onb_'+Date.now()+'_'+Math.random().toString(36).slice(2,7),title:title||'',note:note||'',url:url||''};}
-function loadOnbSteps(kind){
+// ── ONBOARDING CONTENT — a real rich-text page for both Host and Venue
+// onboarding, not a rigid field list. Click Edit to get a formatting
+// toolbar (bold, headings, bullets, links); click Done and it becomes
+// plain page text again, nothing editable showing. Seeded once from
+// whatever was in the old structured step list, so nothing already
+// entered gets lost — freely reformat from there.
+let onbContent={host:'',venue:''};
+function loadOnbContent(kind){
   if(!db)return;
+  db.collection('hq_data').doc('onbContent').get().then(snap=>{
+    const data=snap.exists?snap.data()||{}:{};
+    if(data[kind]){
+      onbContent[kind]=data[kind];
+      document.getElementById('rteBody-'+kind).innerHTML=data[kind];
+    }else{
+      seedOnbContent(kind);
+    }
+  }).catch(()=>{seedOnbContent(kind);});
+}
+function seedOnbContent(kind){
+  // One-time migration from the old structured step list, if any exists.
   const docId=kind==='host'?'onbSteps_host':'onbSteps_venue';
   db.collection('hq_data').doc(docId).get().then(snap=>{
-    if(snap.exists&&Array.isArray(snap.data().steps)&&snap.data().steps.length){
-      if(kind==='host')hostOnbSteps=snap.data().steps; else venueOnbSteps=snap.data().steps;
-      renderOnbSteps(kind);
+    const steps=(snap.exists&&Array.isArray(snap.data().steps))?snap.data().steps:[];
+    let html;
+    if(steps.length){
+      html=steps.map((s,i)=>{
+        let block=`<h2>${i+1}. ${s.title||''}</h2>`;
+        if(s.note)block+=`<p>${s.note}</p>`;
+        if(s.url)block+=`<p><a href="${s.url}" target="_blank">${s.title||'Link'}</a></p>`;
+        return block;
+      }).join('');
     }else{
-      seedOnbSteps(kind);
+      html=`<h1>${kind==='host'?'Host':'Venue'} Onboarding Steps</h1><p>Click Edit to start writing.</p>`;
     }
-  }).catch(()=>{seedOnbSteps(kind);});
+    onbContent[kind]=html;
+    document.getElementById('rteBody-'+kind).innerHTML=html;
+    db.collection('hq_data').doc('onbContent').set({[kind]:html},{merge:true});
+  }).catch(()=>{
+    const html=`<h1>${kind==='host'?'Host':'Venue'} Onboarding Steps</h1><p>Click Edit to start writing.</p>`;
+    onbContent[kind]=html;
+    document.getElementById('rteBody-'+kind).innerHTML=html;
+  });
 }
-function seedOnbSteps(kind){
-  // One-time migration from the old fixed step lists + whatever links were
-  // already saved under the old key-value docs, so nothing gets lost.
-  db.collection('hq_data').doc('onboardingLinks').get().then(oldHostSnap=>{
-    const oh=oldHostSnap.exists?oldHostSnap.data()||{}:{};
-    if(kind==='host'){
-      hostOnbSteps=[
-        onbNewStep('Capture the lead','Found a potential host out in the wild, or someone reached out on their own? Log them with the Lead Capture Form.',oh.leadCaptureForm),
-        onbNewStep('Send the Interview Invite','Once you\'re ready to talk, send them the Interview Invite.',oh.interviewInvite),
-        onbNewStep('Interview','Meet with them and see if they\'re a fit.',''),
-        onbNewStep('New Host Page','',oh.newHostPage),
-        onbNewStep('New Host Welcome Sheet','',oh.welcomeSheet),
-        onbNewStep('The Host Bible','',oh.hostBible),
-        onbNewStep('Belladonna Training App','',oh.trainingApp),
-        onbNewStep('Belladonna Academy','',oh.academy),
-        onbNewStep('Host Contract','',oh.contract)
-      ];
-      persistOnbSteps('host');renderOnbSteps('host');
-    }else{
-      db.collection('hq_data').doc('venueOnboardingLinks').get().then(oldVenueSnap=>{
-        const ov=oldVenueSnap.exists?oldVenueSnap.data()||{}:{};
-        venueOnbSteps=[
-          onbNewStep('Capture the lead','Found one out in the wild, or got sent one through social media? Log it with the Lead Capture Form.',oh.leadCaptureForm),
-          onbNewStep('Venue Application Form','If they came to you directly, have them fill this out instead.',ov.venueApplication),
-          onbNewStep('First Contact','Reach out and find out what they\'re actually looking for.',''),
-          onbNewStep('Interview','Meet the venue in person — meet the owner, walk the space, see what equipment setup you\'d be working with.',''),
-          onbNewStep('Send the contract','If they want in, send the Venue Contract.',ov.contract),
-          onbNewStep('Done','Once it\'s signed, transfer them to Our Venues from their lead card.','')
-        ];
-        persistOnbSteps('venue');renderOnbSteps('venue');
-      }).catch(()=>{venueOnbSteps=[];renderOnbSteps('venue');});
-    }
-  }).catch(()=>{ if(kind==='host'){hostOnbSteps=[];renderOnbSteps('host');} else {venueOnbSteps=[];renderOnbSteps('venue');} });
+function rteToggle(kind){
+  const body=document.getElementById('rteBody-'+kind);
+  const toolbar=document.getElementById('rteToolbar-'+kind);
+  const btn=document.getElementById('rteToggleBtn-'+kind);
+  const editing=body.getAttribute('contenteditable')==='true';
+  if(editing){
+    // Leaving edit mode — save what's there.
+    onbContent[kind]=body.innerHTML;
+    if(db){try{db.collection('hq_data').doc('onbContent').set({[kind]:body.innerHTML},{merge:true});}catch(e){}}
+    body.setAttribute('contenteditable','false');
+    toolbar.style.display='none';
+    btn.textContent='Edit';
+  }else{
+    body.setAttribute('contenteditable','true');
+    toolbar.style.display='flex';
+    btn.textContent='Done';
+    body.focus();
+  }
 }
-function persistOnbSteps(kind){
-  const docId=kind==='host'?'onbSteps_host':'onbSteps_venue';
-  const steps=kind==='host'?hostOnbSteps:venueOnbSteps;
-  if(db){try{db.collection('hq_data').doc(docId).set({steps});}catch(e){}}
+function rteCmd(kind,cmd,arg){
+  document.getElementById('rteBody-'+kind).focus();
+  document.execCommand(cmd,false,arg||null);
 }
-function onbAddStep(kind){
-  const steps=kind==='host'?hostOnbSteps:venueOnbSteps;
-  steps.push(onbNewStep('New step','',''));
-  persistOnbSteps(kind);renderOnbSteps(kind);
-}
-function onbRemoveStep(kind,id){
-  if(!confirm('Remove this step? This cannot be undone.'))return;
-  if(kind==='host')hostOnbSteps=hostOnbSteps.filter(s=>s.id!==id); else venueOnbSteps=venueOnbSteps.filter(s=>s.id!==id);
-  persistOnbSteps(kind);renderOnbSteps(kind);
-}
-function onbMoveStep(kind,id,dir){
-  const steps=kind==='host'?hostOnbSteps:venueOnbSteps;
-  const i=steps.findIndex(s=>s.id===id);
-  const j=i+dir;
-  if(i<0||j<0||j>=steps.length)return;
-  [steps[i],steps[j]]=[steps[j],steps[i]];
-  persistOnbSteps(kind);renderOnbSteps(kind);
-}
-function onbUpdateField(kind,id,field,value){
-  const steps=kind==='host'?hostOnbSteps:venueOnbSteps;
-  const s=steps.find(x=>x.id===id);
-  if(!s)return;
-  s[field]=value;
-  persistOnbSteps(kind);
-  if(field==='url')renderOnbSteps(kind); // only re-render on URL change, so title/note typing doesn't lose focus
-}
-function renderOnbSteps(kind){
-  const steps=kind==='host'?hostOnbSteps:venueOnbSteps;
-  const el=document.getElementById(kind==='host'?'onbLinksList':'venueOnbChecklist');
-  if(!el)return;
-  el.innerHTML=steps.map((s,i)=>`
-    <div style="display:flex;gap:0.7rem;padding:0.8rem 0;${i<steps.length-1?'border-bottom:1px solid var(--border);':''}">
-      <div style="flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:0.3rem;">
-        <div style="width:26px;height:26px;border-radius:50%;background:var(--gold-dim);color:var(--gold);display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:700;">${i+1}</div>
-        <div style="display:flex;flex-direction:column;gap:0.1rem;">
-          <button class="btn-sm" style="padding:0.1rem 0.4rem;font-size:0.6rem;" onclick="onbMoveStep('${kind}','${s.id}',-1)" ${i===0?'disabled':''}>↑</button>
-          <button class="btn-sm" style="padding:0.1rem 0.4rem;font-size:0.6rem;" onclick="onbMoveStep('${kind}','${s.id}',1)" ${i===steps.length-1?'disabled':''}>↓</button>
-        </div>
-      </div>
-      <div style="flex:1;">
-        <input type="text" class="form-input" value="${(s.title||'').replace(/"/g,'&quot;')}" placeholder="Step title" style="font-weight:600;margin-bottom:0.35rem;" onchange="onbUpdateField('${kind}','${s.id}','title',this.value)">
-        <textarea class="form-input" placeholder="Description (optional)" rows="1" style="font-size:0.75rem;color:var(--text3);margin-bottom:0.5rem;" onchange="onbUpdateField('${kind}','${s.id}','note',this.value)">${s.note||''}</textarea>
-        <div style="display:flex;gap:0.4rem;align-items:center;flex-wrap:wrap;">
-          ${s.url?`<a href="${s.url}" target="_blank" class="btn-sm btn-gold" style="text-decoration:none;">Open Link</a>`:''}
-          <button class="btn-sm" onclick="onbLinkEditOpen['${s.id}']=!onbLinkEditOpen['${s.id}'];renderOnbSteps('${kind}');">${s.url?'Edit Link':'+ Add Link'}</button>
-          <button class="btn-sm" style="color:var(--rose);margin-left:auto;" onclick="onbRemoveStep('${kind}','${s.id}')">Remove Step</button>
-        </div>
-        ${onbLinkEditOpen[s.id]?`<input type="text" class="form-input" value="${(s.url||'').replace(/"/g,'&quot;')}" placeholder="https://..." style="margin-top:0.4rem;font-size:0.75rem;" onchange="onbUpdateField('${kind}','${s.id}','url',this.value)">`:''}
-      </div>
-    </div>
-  `).join('')+`<button class="btn-sm btn-gold" style="width:100%;margin-top:0.6rem;" onclick="onbAddStep('${kind}')">+ Add Step</button>`;
+function rteLink(kind){
+  const body=document.getElementById('rteBody-'+kind);
+  body.focus();
+  const sel=window.getSelection();
+  if(!sel||sel.isCollapsed){alert('Select some text first, then click Link.');return;}
+  const url=prompt('Link URL:','https://');
+  if(!url)return;
+  document.execCommand('createLink',false,url);
 }
 
 // ── Host Progress — manually tracked recruits, one card per person, scoped
@@ -3348,9 +3367,9 @@ function init(){
   loadGigSchedule();
   loadPlannerData();
   loadShiftsData();
-  loadOnbSteps('host');
+  loadOnbContent('host');
   loadVenuesList();
-  loadOnbSteps('venue');
+  loadOnbContent('venue');
   renderRoster();
   renderVenueManage();
   populateRosterFilters();
