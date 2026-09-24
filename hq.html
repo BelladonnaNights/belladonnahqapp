@@ -13,6 +13,7 @@
   --gold:#c9a96e;--gold2:#e0bc7e;--gold-dim:rgba(201,169,110,0.12);
   --purple:#a68a5c;--purple2:#8f7550;--purple3:#5c4b32;--purple-dim:rgba(180,150,100,0.1);
   --rose:#b0505a;--teal:#5a8a78;--live:#3a9a5a;--live-dim:rgba(58,154,90,0.12);
+  --cal-purple:#8a6fa0;
   --text:#f0ece0;--text2:#b8ad98;--text3:#8a8272;--text4:#4a4638;
   --purple-btn:#c9a96e;
 }
@@ -153,10 +154,10 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
 .venue-gig-tags{display:flex;flex-wrap:wrap;gap:0.35rem;}
 .venue-gig-tag{font-size:0.6rem;letter-spacing:0.12em;text-transform:uppercase;padding:0.2rem 0.6rem;border-radius:6px;background:rgba(42,136,112,0.1);color:var(--teal);border:1px solid rgba(42,136,112,0.3);}
 .gig-karaoke{background:var(--gold-dim);color:var(--gold);border-color:var(--border-gold);}
-.gig-bingo{background:rgba(42,136,112,0.1);color:var(--teal);border-color:rgba(42,136,112,0.3);}
-.gig-trivia{background:var(--purple-dim);color:var(--purple);border-color:var(--border);}
-.gig-events{background:rgba(160,56,88,0.1);color:var(--rose);border-color:rgba(160,56,88,0.3);}
-.gig-private{background:rgba(143,117,80,0.14);color:var(--purple2);border-color:var(--border2);}
+.gig-bingo{background:var(--gold-dim);color:var(--gold);border-color:var(--border-gold);}
+.gig-trivia{background:var(--gold-dim);color:var(--gold);border-color:var(--border-gold);}
+.gig-events{background:var(--gold-dim);color:var(--gold);border-color:var(--border-gold);}
+.gig-private{background:var(--gold-dim);color:var(--gold);border-color:var(--border-gold);}
 .venue-perf-card{background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--gold);padding:1.1rem 1.2rem;margin-bottom:0.7rem;position:relative;}
 .venue-perf-name{font-family:'Cormorant Garamond',serif;font-size:1.1rem;color:var(--gold);margin-bottom:0.6rem;letter-spacing:0.08em;}
 .venue-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:0.6rem;margin-bottom:0.6rem;}
@@ -231,9 +232,9 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
 .add-entry-btn{background:var(--gold-dim);border:1px solid var(--border-gold);color:var(--gold);padding:0.4rem 1rem;font-size:0.65rem;letter-spacing:0.18em;text-transform:uppercase;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.2s;}
 .add-entry-btn:hover{background:rgba(201,168,76,0.2);}
 .cal-grid-header{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:2px;}
-.cal-day-name{text-align:center;font-size:0.6rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--text3);padding:0.4rem 0;}
+.cal-day-name{text-align:center;font-size:0.6rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--text3);padding:0.4rem 0;min-width:0;overflow:hidden;}
 .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;}
-.cal-cell{background:var(--surface);border:1px solid rgba(180,150,100,0.12);min-height:90px;padding:0.4rem;position:relative;transition:border-color 0.2s;vertical-align:top;cursor:pointer;}
+.cal-cell{background:var(--surface);border:1px solid rgba(180,150,100,0.12);min-height:90px;min-width:0;overflow:hidden;padding:0.4rem;position:relative;transition:border-color 0.2s;vertical-align:top;cursor:pointer;}
 .cal-cell:hover{border-color:var(--border2);}
 .cal-cell.today{border-color:rgba(201,168,76,0.4);background:rgba(201,168,76,0.03);}
 .cal-cell.other-month{opacity:0.3;}
@@ -429,6 +430,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
     <button class="subtab" onclick="showSub('hosts','roster',this)">Host Roster</button>
     <button class="subtab" onclick="showSub('hosts','history',this)">Sign-In/Out Log</button>
     <button class="subtab" onclick="showSub('hosts','onboarding',this)">Host Onboarding</button>
+    <button class="subtab" onclick="showSub('hosts','leadsprogress',this);renderRecruits()">Leads Progress</button>
   </div>
   <div class="subpanel active" id="sub-hosts-live">
     <div id="homeError" class="error-msg"></div>
@@ -458,7 +460,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
       <select class="roster-filter-select" id="rosterFilterSkill" onchange="filterRoster()"><option value="">All Skills</option></select>
       <select class="roster-filter-select" id="rosterFilterVenue" onchange="filterRoster()"><option value="">All Venues</option></select>
     </div>
-    <div class="roster-grid" id="rosterList"></div>
+    <div class="roster-grid" id="rosterList" style="display:flex;flex-direction:column;gap:0.7rem;"></div>
   </div>
   <div class="subpanel" id="sub-hosts-history">
     <div class="section-header">
@@ -491,43 +493,35 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
     <div id="signinSheetWrap" style="display:none;overflow-x:auto;"></div>
   </div>
   <div class="subpanel" id="sub-hosts-onboarding">
-    <div class="inner-tab-row">
-      <button class="inner-tab active" id="onbTabLinks" onclick="showOnboardingSub('links')">Onboarding Links</button>
-      <button class="inner-tab" id="onbTabProgress" onclick="showOnboardingSub('progress')">Leads Progress</button>
+    <div class="rte-toolbar" id="rteToolbar-host" style="display:none;">
+      <button type="button" onclick="rteCmd('host','bold')"><b>B</b></button>
+      <button type="button" onclick="rteCmd('host','italic')"><i>I</i></button>
+      <button type="button" onclick="rteCmd('host','underline')"><u>U</u></button>
+      <span class="rte-sep"></span>
+      <button type="button" onclick="rteCmd('host','formatBlock','h2')">Heading</button>
+      <button type="button" onclick="rteCmd('host','formatBlock','h3')">Subheading</button>
+      <button type="button" onclick="rteCmd('host','formatBlock','p')">Paragraph</button>
+      <span class="rte-sep"></span>
+      <button type="button" onclick="rteCmd('host','insertUnorderedList')">• List</button>
+      <button type="button" onclick="rteCmd('host','insertOrderedList')">1. List</button>
+      <button type="button" onclick="rteCmd('host','indent')">Indent →</button>
+      <button type="button" onclick="rteCmd('host','outdent')">← Outdent</button>
+      <span class="rte-sep"></span>
+      <button type="button" onclick="rteLink('host')">Link</button>
+      <button type="button" onclick="rteCmd('host','unlink')">Unlink</button>
     </div>
-
-    <div id="onb-panel-links">
-      <div class="rte-toolbar" id="rteToolbar-host" style="display:none;">
-        <button type="button" onclick="rteCmd('host','bold')"><b>B</b></button>
-        <button type="button" onclick="rteCmd('host','italic')"><i>I</i></button>
-        <button type="button" onclick="rteCmd('host','underline')"><u>U</u></button>
-        <span class="rte-sep"></span>
-        <button type="button" onclick="rteCmd('host','formatBlock','h2')">Heading</button>
-        <button type="button" onclick="rteCmd('host','formatBlock','h3')">Subheading</button>
-        <button type="button" onclick="rteCmd('host','formatBlock','p')">Paragraph</button>
-        <span class="rte-sep"></span>
-        <button type="button" onclick="rteCmd('host','insertUnorderedList')">• List</button>
-        <button type="button" onclick="rteCmd('host','insertOrderedList')">1. List</button>
-        <button type="button" onclick="rteCmd('host','indent')">Indent →</button>
-        <button type="button" onclick="rteCmd('host','outdent')">← Outdent</button>
-        <span class="rte-sep"></span>
-        <button type="button" onclick="rteLink('host')">Link</button>
-        <button type="button" onclick="rteCmd('host','unlink')">Unlink</button>
-      </div>
-      <div class="rte-body" id="rteBody-host" contenteditable="false"></div>
-      <div style="text-align:right;margin-top:0.6rem;">
-        <button class="btn-sm btn-gold" id="rteToggleBtn-host" onclick="rteToggle('host')">Edit</button>
-      </div>
+    <div class="rte-body" id="rteBody-host" contenteditable="false"></div>
+    <div style="text-align:right;margin-top:0.6rem;">
+      <button class="btn-sm btn-gold" id="rteToggleBtn-host" onclick="rteToggle('host')">Edit</button>
     </div>
-
-    <div id="onb-panel-progress" style="display:none;">
-      <div class="section-header">
-        <div class="section-title">Leads Progress</div>
-        <button class="btn-sm btn-gold" onclick="openRecruitModal()">+ Add Lead</button>
-      </div>
-      <div style="font-size:0.68rem;color:var(--text3);margin-bottom:1rem;line-height:1.6;">Tracked manually by whoever's recruiting — check off each milestone as it actually happens. Nothing here updates itself.</div>
-      <div id="recruitList"></div>
+  </div>
+  <div class="subpanel" id="sub-hosts-leadsprogress">
+    <div class="section-header">
+      <div class="section-title">Leads Progress</div>
+      <button class="btn-sm btn-gold" onclick="openRecruitModal()">+ Add Lead</button>
     </div>
+    <div style="font-size:0.68rem;color:var(--text3);margin-bottom:1rem;line-height:1.6;">Tracked manually by whoever's recruiting — check off each milestone as it actually happens. Nothing here updates itself.</div>
+    <div id="recruitList"></div>
   </div>
 </div>
 
@@ -639,7 +633,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
     <button class="subtab" onclick="showSub('venues','leads',this);renderLeads()" id="leadsTabBtn" style="display:none;">Leads</button>
     <button class="subtab" onclick="showSub('venues','onboarding',this)">Onboarding</button>
     <button class="subtab" onclick="showSub('venues','stats',this);loadStats()">Stats</button>
-    <a href="https://belladonnanights.github.io/belladonna-tools/index.html" class="subtab" target="_self" style="text-decoration:none !important;color:var(--text3);">Venue Menu</a>
+    <a href="https://belladonnanights.github.io/belladonna-tools/index.html" class="subtab" target="_blank" style="text-decoration:underline !important;color:var(--text3);">Venue Menu</a>
   </div>
   <div class="subpanel active" id="sub-venues-manage">
     <div class="section-header">
@@ -673,6 +667,12 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
     <div class="section-header">
       <div class="section-title">Venue Leads</div>
       <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+        <select class="roster-filter-select" id="leadSortBy" onchange="renderLeads()">
+          <option value="added">Sort: Order Added</option>
+          <option value="az">Sort: Alphabetical</option>
+          <option value="stage">Sort: By Stage</option>
+          <option value="followup">Sort: Next Follow-Up</option>
+        </select>
         <select class="roster-filter-select" id="leadStageFilter" onchange="renderLeads()">
           <option value="">All Active Stages</option>
           <option value="new">New Lead</option>
@@ -687,7 +687,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
         <button class="btn-sm btn-gold" onclick="openLeadModal()">+ Add Lead</button>
       </div>
     </div>
-    <div style="font-size:0.62rem;color:var(--text3);letter-spacing:0.04em;margin:-0.5rem 0 0.8rem;">Sorted by next follow-up date — soonest first, so nothing quietly goes cold. Click a lead to see full details.</div>
+    <div style="font-size:0.62rem;color:var(--text3);letter-spacing:0.04em;margin:-0.5rem 0 0.8rem;">Click a lead to see full details.</div>
     <div id="leadsList"></div>
   </div>
   <div class="subpanel" id="sub-venues-onboarding">
@@ -808,7 +808,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
   <div class="subtabs">
     <button class="subtab active" onclick="showSub('schedule','cal',this)">Calendar</button>
     <button class="subtab" onclick="showSub('schedule','table',this)">Spreadsheet</button>
-    <a href="https://belladonnanights.github.io/belladonnatrivia/planner.html" target="_self" class="subtab" style="text-decoration:none !important;color:var(--text3);">Planner</a>
+    <a href="https://belladonnanights.github.io/belladonnatrivia/planner.html" target="_blank" class="subtab" style="text-decoration:underline !important;color:var(--text3);">Planner</a>
   </div>
   <div class="subpanel active" id="sub-schedule-cal">
     <div class="sched-toolbar"><button class="add-entry-btn" onclick="openGigModal()">+ Schedule Gig</button><button class="btn-sm" onclick="openBulkAddModal()">+ Bulk Add</button></div>
@@ -1738,7 +1738,7 @@ function getExternalGigsForDate(dk,dow){
       if(PLANNER_DAY_MAP[v.day]!==dow)return;
       const override=(plannerGigs&&plannerGigs[id])?plannerGigs[id][dk]:null;
       const cancelled=!!(override&&override.status==='cancelled');
-      out.push({venue:v.name,host:v.host||'Unassigned',kind:'Trivia',cancelled,source:'Trivia Planner',notes:override&&override.themeName?('Theme: '+override.themeName):(override&&override.note?override.note:'')});
+      out.push({venue:v.name,host:v.host||'Unassigned',kind:'Trivia',cancelled,source:'Trivia Planner',notes:override&&override.themeName?override.themeName:(override&&override.note?override.note:'')});
     });
   }
   out.push(...fetchBingoGigsForDate(dk,dow));
@@ -1799,9 +1799,8 @@ function showDashGigDetail(idx,fromSchedule){
     <div style="font-size:0.8rem;color:var(--text2);line-height:1.9;">
       <div><b style="color:var(--text3)">Type:</b> ${it.kind}</div>
       <div><b style="color:var(--text3)">Host:</b> ${it.host}</div>
-      <div><b style="color:var(--text3)">Source:</b> ${it.source}</div>
       ${it.cancelled?'<div style="color:var(--rose)"><b>Cancelled</b></div>':''}
-      ${it.notes?`<div><b style="color:var(--text3)">Notes:</b> ${it.notes}</div>`:''}
+      ${it.notes?`<div><b style="color:var(--text3)">Theme:</b> ${it.notes}</div>`:''}
     </div>`;
   document.getElementById('dashGigDetailModal').classList.add('open');
 }
@@ -1874,6 +1873,18 @@ function filteredGigs(){
     return true;
   }).sort((a,b)=>(a.date+(a.time||'')).localeCompare(b.date+(b.time||'')));
 }
+function unsignInGig(venue,date){
+  const matches=shiftsData.filter(s=>normVenueName(s.venue)===normVenueName(venue)&&s.date===date);
+  if(!matches.length){alert('No sign-in record found for this gig.');return;}
+  const names=[...new Set(matches.map(s=>s.hostName))].join(', ');
+  if(!confirm(`Remove the sign-in record(s) for ${names} at ${venue} on ${date}?\n\nThis deletes the actual check-in data, not just this gig's status — it'll show as un-signed-in again everywhere, including the Sign-In/Out Log. This cannot be undone.`))return;
+  const batch=db.batch();
+  matches.forEach(s=>batch.delete(db.collection('shifts').doc(s.id)));
+  batch.commit().then(()=>{
+    shiftsData=shiftsData.filter(s=>!matches.some(m=>m.id===s.id));
+    renderScheduleSpreadsheet();
+  }).catch(e=>alert('Failed to reset: '+e.message));
+}
 function renderScheduleSpreadsheet(){
   const el=document.getElementById('schedTableWrap');
   if(!el)return;
@@ -1891,12 +1902,22 @@ function renderScheduleSpreadsheet(){
         <td>${g.venue}</td>
         <td>${g.host||'Unassigned'}${mismatch?` <span style="color:var(--text3);font-size:0.7rem">(signed in: ${signedBy})</span>`:''}</td>
         <td><span class="sched-status-label" style="color:${st.color};border:1px solid ${st.color};background:${st.color}22">${st.label}</span></td>
-        <td><button class="action-btn edit" onclick="openGigModal('${g.id}')">✎</button></td>
+        <td style="white-space:nowrap;">
+          <button class="action-btn edit" onclick="openGigModal('${g.id}')">✎</button>
+          ${st.key==='signedin'?`<button class="btn-sm" style="color:var(--rose);margin-left:0.3rem;" onclick="unsignInGig('${g.venue.replace(/'/g,"\\'")}','${g.date}')">Un-Sign-In</button>`:''}
+        </td>
       </tr>`;
     }).join('')}
   </tbody></table>`;
 }
 let scheduleExternalItemsFlat=[];
+function calGigColor(kind,cancelled){
+  if(cancelled)return 'var(--rose)';
+  if(kind==='Trivia')return 'var(--live)';
+  if(kind==='Karaoke')return 'var(--gold)';
+  if(kind==='Bingo')return 'var(--cal-purple)';
+  return 'var(--gold)'; // Events / Private Events / anything else not called out specifically
+}
 function renderGigCalendar(){
   const scroll=document.getElementById('gigCalScroll');
   if(!scroll)return;
@@ -1931,11 +1952,11 @@ function renderGigCalendar(){
       let entriesHtml='';
       dayGigs.forEach(g=>{
         const isCancelled=g.status==='cancelled'||gigCheckoutCancelled(g);
-        const c=isCancelled?'var(--rose)':'var(--gold)';
+        const c=calGigColor(g.kind,isCancelled);
         entriesHtml+=`<div class="gig-event" style="background:${c}22;border:1px solid ${c};color:${c}" onclick="event.stopPropagation();openGigModal('${g.id}')">${g.kind?g.kind+': ':''}${g.venue}</div>`;
       });
       getExternalGigsForDate(dateStr,new Date(dateStr+'T12:00:00').getDay()).forEach(it=>{
-        const c=it.cancelled?'var(--rose)':'var(--teal)';
+        const c=calGigColor(it.kind,it.cancelled);
         const idx=scheduleExternalItemsFlat.length;scheduleExternalItemsFlat.push(it);
         entriesHtml+=`<div class="gig-event" style="background:${c}22;border:1px solid ${c};color:${c}" onclick="event.stopPropagation();showDashGigDetail(${idx},true)">${it.kind}: ${it.venue}</div>`;
       });
@@ -2222,14 +2243,6 @@ function refreshAllLocationScopedData(){
 }
 
 // ── HOST ONBOARDING ──
-function showOnboardingSub(which){
-  document.getElementById('onbTabLinks').classList.toggle('active',which==='links');
-  document.getElementById('onbTabProgress').classList.toggle('active',which==='progress');
-  document.getElementById('onb-panel-links').style.display=which==='links'?'':'none';
-  document.getElementById('onb-panel-progress').style.display=which==='progress'?'':'none';
-  if(which==='progress')renderRecruits();
-}
-
 // ── Onboarding Links — a small shared set of reference URLs, so every
 // recruiter always sends the current version instead of an old copy-paste. ──
 // ── ONBOARDING CONTENT — a real rich-text page for both Host and Venue
@@ -2239,13 +2252,23 @@ function showOnboardingSub(which){
 // whatever was in the old structured step list, so nothing already
 // entered gets lost — freely reformat from there.
 let onbContent={host:'',venue:''};
+function rteEnsureNewTabLinks(html){
+  // execCommand('createLink') has no way to set target itself, so every
+  // link gets forced open-in-new-tab here instead, on both load and save —
+  // covers links typed in fresh and any saved before this existed.
+  const tmp=document.createElement('div');
+  tmp.innerHTML=html;
+  tmp.querySelectorAll('a').forEach(a=>{a.setAttribute('target','_blank');a.setAttribute('rel','noopener noreferrer');});
+  return tmp.innerHTML;
+}
 function loadOnbContent(kind){
   if(!db)return;
   db.collection('hq_data').doc('onbContent').get().then(snap=>{
     const data=snap.exists?snap.data()||{}:{};
     if(data[kind]){
-      onbContent[kind]=data[kind];
-      document.getElementById('rteBody-'+kind).innerHTML=data[kind];
+      const html=rteEnsureNewTabLinks(data[kind]);
+      onbContent[kind]=html;
+      document.getElementById('rteBody-'+kind).innerHTML=html;
     }else{
       seedOnbContent(kind);
     }
@@ -2282,9 +2305,11 @@ function rteToggle(kind){
   const btn=document.getElementById('rteToggleBtn-'+kind);
   const editing=body.getAttribute('contenteditable')==='true';
   if(editing){
-    // Leaving edit mode — save what's there.
-    onbContent[kind]=body.innerHTML;
-    if(db){try{db.collection('hq_data').doc('onbContent').set({[kind]:body.innerHTML},{merge:true});}catch(e){}}
+    // Leaving edit mode — force every link to open in a new tab, then save.
+    const html=rteEnsureNewTabLinks(body.innerHTML);
+    body.innerHTML=html;
+    onbContent[kind]=html;
+    if(db){try{db.collection('hq_data').doc('onbContent').set({[kind]:html},{merge:true});}catch(e){}}
     body.setAttribute('contenteditable','false');
     toolbar.style.display='none';
     btn.textContent='Edit';
@@ -2436,12 +2461,20 @@ function renderLeads(){
     if(stageF)return (l.stage||'new')===stageF;
     return (l.stage||'new')!=='transferred'; // default view hides the archive
   });
-  shown.sort((a,b)=>{
-    if(!a.nextFollowUp&&!b.nextFollowUp)return 0;
-    if(!a.nextFollowUp)return 1;
-    if(!b.nextFollowUp)return -1;
-    return a.nextFollowUp.localeCompare(b.nextFollowUp);
-  });
+  const sortBy=document.getElementById('leadSortBy').value;
+  const stageOrder=LEAD_STAGES.map(s=>s.key);
+  const sorters={
+    added:(a,b)=>(a.createdAt||'').localeCompare(b.createdAt||''),
+    az:(a,b)=>(a.name||'').localeCompare(b.name||''),
+    stage:(a,b)=>stageOrder.indexOf(a.stage||'new')-stageOrder.indexOf(b.stage||'new'),
+    followup:(a,b)=>{
+      if(!a.nextFollowUp&&!b.nextFollowUp)return 0;
+      if(!a.nextFollowUp)return 1;
+      if(!b.nextFollowUp)return -1;
+      return a.nextFollowUp.localeCompare(b.nextFollowUp);
+    }
+  };
+  shown.sort(sorters[sortBy]||sorters.added);
   if(!shown.length){el.innerHTML='<div class="empty-state">No leads match this view.</div>';return;}
   const today=dateToKey(new Date());
   el.innerHTML=shown.map(l=>{
@@ -2562,6 +2595,7 @@ function saveLead(){
     nextFollowUp:document.getElementById('leadFollowUp').value, followUpNone:document.getElementById('leadFollowUpNone').checked, usingCompetitor:document.getElementById('leadCompetitor').checked,
     notes:document.getElementById('leadNotes').value.trim(), updatedAt:new Date().toISOString()
   };
+  if(!editingLeadId)data.createdAt=new Date().toISOString();
   const id=editingLeadId||db.collection('leads').doc().id;
   db.collection('leads').doc(id).set(data,{merge:true}).then(()=>{
     closeModal('leadModal'); loadLeads();
