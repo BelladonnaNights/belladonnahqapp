@@ -1000,7 +1000,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
           <label class="form-label">Payment Options</label>
           <div id="tipPayRows"></div>
           <button type="button" class="btn-sm btn-gold" onclick="addTipPayRow()">+ Add Payment Option</button>
-          <div class="tip-hint">For each one: the payment name people will see (e.g. @belladonna-eddy) and the link to the QR code image you host on Cloudflare. Either is optional; Cash needs neither.</div>
+          <div class="tip-hint">For each one: the payment name people see, the link the button sends them to (e.g. your Venmo profile link), and your Cloudflare QR image (kept in HQ for later, not shown on the page). Cash needs none of these.</div>
         </div>
       </div>
     </div>
@@ -3071,8 +3071,8 @@ function saveRoster(){
   const rankId=selRank?selRank.dataset.rankid:null;
   const tipPhoto=document.getElementById('rmTipPhoto').value.trim();
   const tipPayments=readTipPayRows();
-  const badUrl=[tipPhoto].concat(tipPayments.map(p=>p.qr)).find(u=>u&&!/^https:\/\//i.test(u));
-  if(badUrl){alert('Photo and QR code links need to be full https:// web addresses (your Cloudflare URLs).');return;}
+  const badUrl=[tipPhoto].concat(tipPayments.map(p=>p.link),tipPayments.map(p=>p.qr)).find(u=>u&&!/^https:\/\//i.test(u));
+  if(badUrl){alert('The photo, payment link and QR code fields need full https:// web addresses.');return;}
   const tip={enabled:tipEnabledDraft,photo:tipPhoto,payments:tipPayments};
   let savedId=editRosterId;
   if(editRosterId){const h=roster.find(x=>x.id===editRosterId);if(h){h.name=name;h.skills=skills;h.venues=vs;h.rankId=rankId;h.locationId=locationId;h.tip=tip;}}
@@ -3110,16 +3110,18 @@ function addTipPayRow(p){
   document.getElementById('tipPayRows').insertAdjacentHTML('beforeend',
     `<div class="tip-pay-row">
       <div class="tp-top"><select class="form-input tp-method">${opts}</select><button type="button" class="tp-del" onclick="this.closest('.tip-pay-row').remove()" title="Remove">✕</button></div>
-      <input type="text" class="form-input tp-name" placeholder="Payment name (e.g. @belladonna-eddy)" value="${tipEsc(p.name)}">
-      <input type="text" class="form-input tp-qr" placeholder="QR code image URL (Cloudflare, https://…)" value="${tipEsc(p.qr)}">
+      <input type="text" class="form-input tp-name" placeholder="Payment name (e.g. AhnnaAvenues)" value="${tipEsc(p.name)}">
+      <input type="text" class="form-input tp-link" placeholder="Payment link (e.g. https://venmo.com/u/AhnnaAvenues)" value="${tipEsc(p.link)}">
+      <input type="text" class="form-input tp-qr" placeholder="QR code image URL (Cloudflare) — saved for later, not shown on the tip page" value="${tipEsc(p.qr)}">
     </div>`);
 }
 function readTipPayRows(){
   return [...document.querySelectorAll('#tipPayRows .tip-pay-row')].map(r=>({
     method:r.querySelector('.tp-method').value,
     name:r.querySelector('.tp-name').value.trim(),
+    link:r.querySelector('.tp-link').value.trim(),
     qr:r.querySelector('.tp-qr').value.trim()
-  })).filter(p=>p.method==='cash'||p.name||p.qr);
+  })).filter(p=>p.method==='cash'||p.name||p.link||p.qr);
 }
 function toggleTipHost(id){
   const h=roster.find(x=>String(x.id)===String(id));if(!h)return;
@@ -3142,7 +3144,7 @@ function syncTipHosts(ids){
       const ref=db.collection('tip_hosts').doc(String(id));
       const h=roster.find(x=>String(x.id)===String(id));
       if(h&&h.tip&&h.tip.enabled){
-        batch.set(ref,{name:h.name||'',photo:h.tip.photo||'',payments:(h.tip.payments||[]).map(p=>({method:p.method||'other',name:p.name||'',qr:p.qr||''})),locationId:h.locationId||'',updated:Date.now()});
+        batch.set(ref,{name:h.name||'',photo:h.tip.photo||'',payments:(h.tip.payments||[]).map(p=>({method:p.method||'other',name:p.name||'',link:p.link||''})),locationId:h.locationId||'',updated:Date.now()});
       }else batch.delete(ref);
     });
     batch.commit().catch(tipFail);
