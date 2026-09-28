@@ -3165,7 +3165,7 @@ function syncTipSchedule(){
   const codes=currentLocationScope==='ALL'?locations.map(l=>l.code):[currentLocationScope];
   codes.forEach(code=>{
     const items=gigSchedule.filter(g=>(g.locationId||code)===code&&g.status!=='cancelled'&&g.date>=from&&g.date<=to&&names.has((g.host||'').trim().toLowerCase()))
-      .map(g=>({date:g.date,venue:g.venue||'',host:g.host||'',kind:g.kind||'',time:g.time||''}));
+      .map(g=>({date:g.date,venue:g.venue||'',host:g.host||'',kind:g.kind||'',time:g.time||'',endTime:g.endTime||''}));
     db.collection('tip_schedule').doc(code).set({items:items,updated:Date.now()}).catch(tipFail);
   });
 }
