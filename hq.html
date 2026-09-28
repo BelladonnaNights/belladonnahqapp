@@ -324,6 +324,21 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
 .daybox-item small{display:block;color:var(--text3);font-size:10px;}
 .daybox-item.cancelled{color:var(--rose);opacity:0.75;}
 .daybox-kind-tag{font-size:9px;letter-spacing:0.08em;text-transform:uppercase;color:var(--gold);}
+
+/* ── TIP-A-HOST ── */
+.tip-section{border:1px solid var(--border);background:var(--surface2);padding:0.9rem;margin-bottom:0.9rem;}
+.tip-pay-row{border:1px solid var(--border);background:var(--surface);padding:0.6rem;margin-bottom:0.5rem;display:flex;flex-direction:column;gap:0.4rem;position:relative;}
+.tip-pay-row .tp-top{display:flex;gap:0.4rem;}
+.tip-pay-row select{flex:1;}
+.tip-pay-row .tp-del{background:none;border:1px solid var(--border);color:var(--text3);width:34px;cursor:pointer;font-size:1rem;}
+.tip-pay-row .tp-del:hover{border-color:var(--rose);color:var(--rose);}
+.tip-photo-prev{width:44px;height:44px;border-radius:50%;object-fit:cover;border:1px solid var(--border-gold);flex:none;}
+.tip-hint{font-size:0.62rem;color:var(--text3);line-height:1.5;margin-top:0.3rem;}
+.tip-card-row{display:flex;align-items:center;gap:0.6rem;flex-wrap:wrap;margin-top:0.6rem;}
+.tip-toggle-btn{font-size:0.6rem;letter-spacing:0.12em;text-transform:uppercase;padding:0.3rem 0.7rem;cursor:pointer;border:1px solid var(--border);background:var(--surface2);color:var(--text3);font-family:'DM Sans',sans-serif;transition:all 0.2s;}
+.tip-toggle-btn:hover{border-color:var(--gold);color:var(--gold);}
+.tip-toggle-btn.on{border-color:var(--gold);color:var(--gold);background:var(--gold-dim);}
+.tip-warn{font-size:0.62rem;color:var(--text3);font-style:italic;}
 </style>
 </head>
 <body>
@@ -453,7 +468,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
   <div class="subpanel" id="sub-hosts-roster">
     <div class="section-header">
       <div class="section-title">Host Roster <span class="save-dot" id="rosterSave">Saved ✓</span></div>
-      <button class="btn-sm btn-gold" onclick="openRosterModal()">+ Add Host</button>
+      <div style="display:flex;gap:0.5rem;"><button class="btn-sm" onclick="syncAllTipHosts()" title="Re-publish every host on the tip-a-host page">Sync Tip Page</button><button class="btn-sm btn-gold" onclick="openRosterModal()">+ Add Host</button></div>
     </div>
     <div class="roster-search">
       <input type="text" class="roster-search-input" id="rosterSearchName" placeholder="Search by name..." oninput="filterRoster()">
@@ -967,6 +982,27 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
     <div class="form-group">
       <label class="form-label">Rank</label>
       <div class="chip-grid" id="rankChips"></div>
+    </div>
+    <div class="tip-section">
+      <div class="form-group" style="margin-bottom:0.6rem;">
+        <label class="form-label">Tip-a-Host Page</label>
+        <div class="chip-grid"><div class="chip" id="rmTipToggle" onclick="setTipDraft(!tipEnabledDraft)">Add to tip-a-host page</div></div>
+      </div>
+      <div id="tipFields" style="display:none;">
+        <div class="form-group">
+          <label class="form-label">Profile Picture URL</label>
+          <div style="display:flex;gap:0.6rem;align-items:center;">
+            <input type="text" class="form-input" id="rmTipPhoto" placeholder="https://… (Cloudflare-hosted image)" oninput="previewTipPhoto()">
+            <img id="rmTipPhotoPrev" class="tip-photo-prev" style="display:none;" alt="">
+          </div>
+        </div>
+        <div class="form-group" style="margin-bottom:0;">
+          <label class="form-label">Payment Options</label>
+          <div id="tipPayRows"></div>
+          <button type="button" class="btn-sm btn-gold" onclick="addTipPayRow()">+ Add Payment Option</button>
+          <div class="tip-hint">For each one: the payment name people will see (e.g. @belladonna-eddy) and the link to the QR code image you host on Cloudflare. Either is optional; Cash needs neither.</div>
+        </div>
+      </div>
     </div>
     <div class="modal-actions">
       <button class="modal-cancel" onclick="closeRosterModal()">Cancel</button>
@@ -1810,11 +1846,12 @@ const MONTHS=['January','February','March','April','May','June','July','August',
 let gigSchedule=[],editingGigId=null,pendingGigDate=null,selectedGigVenue='',selectedGigHost='Unassigned',selectedGigKind='';
 function loadGigSchedule(){
   try{const g=LS.get('gig-schedule');if(g)gigSchedule=JSON.parse(g);}catch(e){}
-  if(db){db.collection('gig_schedule').get().then(snap=>{if(!snap.empty){gigSchedule=snap.docs.map(d=>({id:d.id,...d.data()})).filter(g=>locationScopeMatches(g.locationId));renderScheduleAll();renderDashboardWeek();}}).catch(()=>{});}
+  if(db){db.collection('gig_schedule').get().then(snap=>{if(!snap.empty){gigSchedule=snap.docs.map(d=>({id:d.id,...d.data()})).filter(g=>locationScopeMatches(g.locationId));renderScheduleAll();renderDashboardWeek();scheduleTipScheduleSync();}}).catch(()=>{});}
 }
 function saveGigScheduleLocal(){LS.set('gig-schedule',JSON.stringify(gigSchedule));}
 function persistGig(entry,isDelete){
   saveGigScheduleLocal();
+  scheduleTipScheduleSync();
   if(db){try{if(isDelete)db.collection('gig_schedule').doc(entry.id).delete();else db.collection('gig_schedule').doc(entry.id).set({date:entry.date,time:entry.time||'',endTime:entry.endTime||'',kind:entry.kind||'',venue:entry.venue,host:entry.host||'Unassigned',status:entry.status||'scheduled',notes:entry.notes||'',seriesId:entry.seriesId||null,locationId:entry.locationId||(currentLocationScope!=='ALL'?currentLocationScope:(locations[0]&&locations[0].code)||null)});}catch(e){}}
   // mirror to the Sheet so the Apps Script triggers (no-show + auto sign-out) can read it
   try{fetch(SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({form_type:'schedule',action:isDelete?'delete':'upsert',id:entry.id,date:entry.date,time:entry.time||'',endTime:entry.endTime||'',venue:entry.venue,host:entry.host||'Unassigned',status:entry.status||'scheduled',notes:entry.notes||''})});}catch(e){}
@@ -2984,6 +3021,10 @@ function renderRosterCards(list){
       </div>
       <div class="skill-tags">${(h.skills||[]).map(s=>`<span class="skill-tag">${s}</span>`).join('')||'<span style="font-size:0.81rem;color:var(--text3)">No skills added</span>'}</div>
       <div class="venue-tags" style="margin-top:0.35rem;">${(h.venues||[]).map(v=>`<span class="venue-tag">${v}</span>`).join('')||'<span style="font-size:0.81rem;color:var(--text3)">No venues added</span>'}</div>
+      <div class="tip-card-row">
+        <button class="tip-toggle-btn${h.tip&&h.tip.enabled?' on':''}" onclick="toggleTipHost('${h.id}')">${h.tip&&h.tip.enabled?'✓ On tip-a-host page':'+ Add to tip-a-host page'}</button>
+        ${h.tip&&h.tip.enabled&&(!h.tip.photo||!(h.tip.payments||[]).length)?'<span class="tip-warn">Still needs a photo or payment option — click ✎</span>':''}
+      </div>
     </div>`;
   }).join('');
 }
@@ -3011,6 +3052,12 @@ function openRosterModal(id=null){
   document.getElementById('skillChips').innerHTML=SKILLS.map(s=>{const sel=host&&(host.skills||[]).includes(s);return`<div class="chip${sel?' selected-skill':''}" onclick="toggleChip(this,'skill')">${s}</div>`;}).join('');
   document.getElementById('venueChips').innerHTML=vnames.map(v=>{const sel=host&&(host.venues||[]).includes(v);return`<div class="chip${sel?' selected-venue':''}" onclick="toggleChip(this,'venue')">${v}</div>`;}).join('');
   populateRankChips(host?host.rankId:null);
+  const tip=(host&&host.tip)||{enabled:false,photo:'',payments:[]};
+  document.getElementById('rmTipPhoto').value=tip.photo||'';
+  document.getElementById('tipPayRows').innerHTML='';
+  (tip.payments||[]).forEach(p=>addTipPayRow(p));
+  previewTipPhoto();
+  setTipDraft(!!tip.enabled);
   document.getElementById('rosterModal').classList.add('open');
 }
 function toggleChip(el,type){el.classList.toggle(type==='skill'?'selected-skill':'selected-venue');}
@@ -3022,12 +3069,104 @@ function saveRoster(){
   const vs=[...document.querySelectorAll('#venueChips .selected-venue')].map(el=>el.textContent);
   const selRank=document.querySelector('#rankChips .selected-rank');
   const rankId=selRank?selRank.dataset.rankid:null;
-  if(editRosterId){const h=roster.find(x=>x.id===editRosterId);if(h){h.name=name;h.skills=skills;h.venues=vs;h.rankId=rankId;h.locationId=locationId;}}
-  else roster.push({id:Date.now().toString(),name,skills,venues:vs,rankId,locationId});
+  const tipPhoto=document.getElementById('rmTipPhoto').value.trim();
+  const tipPayments=readTipPayRows();
+  const badUrl=[tipPhoto].concat(tipPayments.map(p=>p.qr)).find(u=>u&&!/^https:\/\//i.test(u));
+  if(badUrl){alert('Photo and QR code links need to be full https:// web addresses (your Cloudflare URLs).');return;}
+  const tip={enabled:tipEnabledDraft,photo:tipPhoto,payments:tipPayments};
+  let savedId=editRosterId;
+  if(editRosterId){const h=roster.find(x=>x.id===editRosterId);if(h){h.name=name;h.skills=skills;h.venues=vs;h.rankId=rankId;h.locationId=locationId;h.tip=tip;}}
+  else{savedId=Date.now().toString();roster.push({id:savedId,name,skills,venues:vs,rankId,locationId,tip});}
   persist('host-roster',roster,'rosterSave');
   renderRoster();filterRoster();closeRosterModal();
+  syncTipHosts([savedId]);
 }
-function deleteHost(id){if(!confirm('Remove this host?'))return;roster=roster.filter(h=>h.id!==id);persist('host-roster',roster,'rosterSave');renderRoster();}
+function deleteHost(id){if(!confirm('Remove this host?'))return;roster=roster.filter(h=>h.id!==id);persist('host-roster',roster,'rosterSave');renderRoster();syncTipHosts([id]);}
+
+// ── TIP-A-HOST PAGE ──
+// Public copy of each opted-in host lives in Firestore `tip_hosts` (one doc per host) and a
+// sanitized upcoming schedule in `tip_schedule` (one doc per location). The public
+// tip-a-host.html page reads only those two collections — never hq_data or gig_schedule.
+const TIP_METHODS=[{key:'venmo',label:'Venmo'},{key:'cashapp',label:'Cash App'},{key:'paypal',label:'PayPal'},{key:'zelle',label:'Zelle'},{key:'cash',label:'Cash'},{key:'other',label:'Other'}];
+let tipEnabledDraft=false,tipSyncWarned=false,tipSchedTimer=null;
+function tipEsc(v){return String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function setTipDraft(on){
+  tipEnabledDraft=!!on;
+  const c=document.getElementById('rmTipToggle');
+  c.classList.toggle('selected-skill',tipEnabledDraft);
+  c.textContent=tipEnabledDraft?'✓ On tip-a-host page':'Add to tip-a-host page';
+  document.getElementById('tipFields').style.display=tipEnabledDraft?'block':'none';
+  if(tipEnabledDraft&&!document.querySelector('#tipPayRows .tip-pay-row'))addTipPayRow();
+}
+function previewTipPhoto(){
+  const url=document.getElementById('rmTipPhoto').value.trim();
+  const img=document.getElementById('rmTipPhotoPrev');
+  if(/^https:\/\//i.test(url)){img.src=url;img.style.display='block';img.onerror=function(){img.style.display='none';};}
+  else{img.removeAttribute('src');img.style.display='none';}
+}
+function addTipPayRow(p){
+  p=p||{method:'venmo',name:'',qr:''};
+  const opts=TIP_METHODS.map(m=>`<option value="${m.key}"${m.key===p.method?' selected':''}>${m.label}</option>`).join('');
+  document.getElementById('tipPayRows').insertAdjacentHTML('beforeend',
+    `<div class="tip-pay-row">
+      <div class="tp-top"><select class="form-input tp-method">${opts}</select><button type="button" class="tp-del" onclick="this.closest('.tip-pay-row').remove()" title="Remove">✕</button></div>
+      <input type="text" class="form-input tp-name" placeholder="Payment name (e.g. @belladonna-eddy)" value="${tipEsc(p.name)}">
+      <input type="text" class="form-input tp-qr" placeholder="QR code image URL (Cloudflare, https://…)" value="${tipEsc(p.qr)}">
+    </div>`);
+}
+function readTipPayRows(){
+  return [...document.querySelectorAll('#tipPayRows .tip-pay-row')].map(r=>({
+    method:r.querySelector('.tp-method').value,
+    name:r.querySelector('.tp-name').value.trim(),
+    qr:r.querySelector('.tp-qr').value.trim()
+  })).filter(p=>p.method==='cash'||p.name||p.qr);
+}
+function toggleTipHost(id){
+  const h=roster.find(x=>String(x.id)===String(id));if(!h)return;
+  h.tip=h.tip||{enabled:false,photo:'',payments:[]};
+  h.tip.enabled=!h.tip.enabled;
+  persist('host-roster',roster,'rosterSave');
+  renderRoster();filterRoster();
+  syncTipHosts([id]);
+  if(h.tip.enabled&&(!h.tip.photo||!(h.tip.payments||[]).length))openRosterModal(h.id);
+}
+function tipFail(e){
+  console.warn('Tip page sync failed:',e);
+  if(!tipSyncWarned){tipSyncWarned=true;alert('Saved in HQ, but publishing to the tip-a-host page failed. The Firestore rules for tip_hosts / tip_schedule probably still need to be added.');}
+}
+function syncTipHosts(ids){
+  if(!db)return;
+  try{
+    const batch=db.batch();
+    (ids||[]).forEach(id=>{
+      const ref=db.collection('tip_hosts').doc(String(id));
+      const h=roster.find(x=>String(x.id)===String(id));
+      if(h&&h.tip&&h.tip.enabled){
+        batch.set(ref,{name:h.name||'',photo:h.tip.photo||'',payments:(h.tip.payments||[]).map(p=>({method:p.method||'other',name:p.name||'',qr:p.qr||''})),locationId:h.locationId||'',updated:Date.now()});
+      }else batch.delete(ref);
+    });
+    batch.commit().catch(tipFail);
+  }catch(e){tipFail(e);}
+  scheduleTipScheduleSync();
+}
+function syncAllTipHosts(){
+  syncTipHosts(roster.filter(h=>h.tip&&h.tip.enabled).map(h=>h.id));
+  const d=document.getElementById('rosterSave');if(d){d.classList.add('show');setTimeout(()=>d.classList.remove('show'),2000);}
+}
+function scheduleTipScheduleSync(){clearTimeout(tipSchedTimer);tipSchedTimer=setTimeout(syncTipSchedule,2500);}
+function syncTipSchedule(){
+  if(!db||!gigSchedule.length)return;
+  const names=new Set(roster.filter(h=>h.tip&&h.tip.enabled).map(h=>(h.name||'').trim().toLowerCase()));
+  if(!names.size)return;
+  const iso=off=>{const d=new Date();d.setDate(d.getDate()+off);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');};
+  const from=iso(-14),to=iso(180);
+  const codes=currentLocationScope==='ALL'?locations.map(l=>l.code):[currentLocationScope];
+  codes.forEach(code=>{
+    const items=gigSchedule.filter(g=>(g.locationId||code)===code&&g.status!=='cancelled'&&g.date>=from&&g.date<=to&&names.has((g.host||'').trim().toLowerCase()))
+      .map(g=>({date:g.date,venue:g.venue||'',host:g.host||'',kind:g.kind||'',time:g.time||''}));
+    db.collection('tip_schedule').doc(code).set({items:items,updated:Date.now()}).catch(tipFail);
+  });
+}
 
 // ── VENUES ──
 function renderVenueManage(){
