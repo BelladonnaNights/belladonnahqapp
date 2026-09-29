@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Belladonna Venue Perks</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Josefin+Sans:wght@200;300;400&display=swap');
+  *{margin:0;padding:0;box-sizing:border-box;}
+  :root{
+    --bg:#000000;--surface:#0d0d0d;--surface2:#141414;--surface3:#1a1a1a;
+    --border:rgba(201,169,110,0.2);--border2:rgba(201,169,110,0.4);
+    --gold:#c9a96e;--rose2:#b0505a;--teal2:#3aa08a;--purple2:#a68a5c;
+    --text:#f0ece0;--text2:#b0a890;--text3:#8a8272;
+    --live:#3aaa6a;--live-dim:rgba(58,170,106,0.12);
+    --purple-btn:#c9a96e;
+  }
+  body{background:var(--bg);color:var(--text);font-family:'Josefin Sans',sans-serif;font-weight:300;min-height:100vh;letter-spacing:0.04em;overflow-x:hidden;}
+
+  .page{max-width:460px;margin:0 auto;padding:3rem 1.5rem 2.5rem;}
+
+  .hub-brand{font-family:'Playfair Display',serif;font-size:2rem;font-weight:700;color:var(--gold);letter-spacing:0.2em;text-transform:uppercase;text-align:center;}
+  .hub-sub{font-size:0.73rem;letter-spacing:0.5em;text-transform:uppercase;color:var(--text3);margin-top:0.2rem;text-align:center;}
+  .hub-ornament{color:#3a3428;font-family:'Cormorant Garamond',serif;font-size:1.17rem;letter-spacing:0.4em;margin:0.8rem 0 2rem;text-align:center;}
+
+  .back-link{display:inline-flex;align-items:center;gap:0.4rem;font-size:0.68rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--text3);text-decoration:none;margin-bottom:1.6rem;}
+  .back-link:hover{color:var(--gold);}
+
+  .section-label{font-size:0.68rem;letter-spacing:0.3em;text-transform:uppercase;color:var(--text3);margin-bottom:0.6rem;}
+
+  .picker-block{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1.1rem;margin-bottom:1.8rem;position:relative;overflow:hidden;}
+  .picker-block::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);}
+
+  input[type="text"],select{
+    width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);
+    padding:0.7rem 0.9rem;font-size:0.85rem;font-family:'Josefin Sans',sans-serif;letter-spacing:0.03em;
+  }
+  input[type="text"]:focus,select:focus{outline:none;border-color:var(--border-gold,var(--gold));}
+  select{margin-top:0.6rem;appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--gold) 50%),linear-gradient(135deg,var(--gold) 50%,transparent 50%);background-position:calc(100% - 18px) center,calc(100% - 13px) center;background-size:5px 5px,5px 5px;background-repeat:no-repeat;}
+
+  #selectedPerkCard{margin-bottom:1.8rem;}
+
+  .perk-card{background:var(--surface);border:1px solid rgba(201,169,110,0.22);border-radius:11px;padding:1rem 1.2rem;position:relative;overflow:hidden;margin-bottom:0.7rem;}
+  .perk-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);}
+  .perk-card-name{font-size:0.92rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--gold);margin-bottom:0.5rem;font-weight:400;}
+  .perk-card-body{font-size:0.85rem;color:var(--text);line-height:1.6;white-space:pre-wrap;}
+  .perk-card-empty{font-size:0.78rem;color:var(--text3);font-style:italic;}
+
+  .venue-list-item{display:flex;align-items:center;justify-content:space-between;padding:0.75rem 0;border-bottom:1px solid var(--border);cursor:pointer;transition:color 0.2s;}
+  .venue-list-item:last-child{border-bottom:none;}
+  .venue-list-item:hover{color:var(--gold);}
+  .venue-list-item .vname{font-size:0.85rem;color:var(--text);}
+  .venue-list-item:hover .vname{color:var(--gold);}
+  .venue-list-item .vhas{font-size:0.6rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--live);}
+  .venue-list-item .vnone{font-size:0.6rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--text4,var(--text3));}
+
+  .hub-footer{font-size:0.68rem;letter-spacing:0.18em;color:var(--text3);margin-top:2rem;text-transform:uppercase;text-align:center;}
+  .empty-state{font-size:0.8rem;color:var(--text3);text-align:center;padding:1.5rem 0;}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <a href="host-hub.html" class="back-link">‹ Back to Host Hub</a>
+
+  <div class="hub-brand">Belladonna</div>
+  <div class="hub-sub">Venue Perks</div>
+  <div class="hub-ornament">✦ ✦ ✦</div>
+
+  <div class="picker-block">
+    <div class="section-label">Which venue are you at?</div>
+    <input type="text" id="venueSearch" placeholder="Start typing a venue name..." autocomplete="off">
+    <select id="venueSelect">
+      <option value="">— or choose from the list —</option>
+    </select>
+  </div>
+
+  <div id="selectedPerkCard"></div>
+
+  <div class="section-label">All Venues</div>
+  <div id="venueFullList"><div class="empty-state">Loading venues...</div></div>
+
+  <div class="hub-footer">Belladonna Audio Alchemies ✦ Venue Perks</div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+<script>
+  let db=null;
+  try{
+    firebase.initializeApp({apiKey:"AIzaSyCIfAE1JGHsUGzzVH2pz1Vyj5b5OhA0tDQ",authDomain:"belladonna-hq.firebaseapp.com",databaseURL:"https://belladonna-hq-default-rtdb.firebaseio.com",projectId:"belladonna-hq",storageBucket:"belladonna-hq.firebasestorage.app",messagingSenderId:"1021873183587",appId:"1:1021873183587:web:def283bb7b5ca48e4f9156"});
+    db=firebase.firestore();
+  }catch(e){console.warn('Firebase init failed:',e);}
+
+  let venues=[];
+
+  function loadVenues(){
+    if(!db){renderVenueFullList();return;}
+    db.collection('hq_data').doc('venues-list').get().then(snap=>{
+      if(snap.exists){
+        try{venues=JSON.parse(snap.data().value)||[];}catch(e){venues=[];}
+      }
+      venues=venues.filter(v=>!v.inactive).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+      populateVenueSelect();
+      renderVenueFullList();
+      restoreLastVenue();
+    }).catch(()=>{
+      document.getElementById('venueFullList').innerHTML='<div class="empty-state">Could not load venues. Check your connection and reload.</div>';
+    });
+  }
+
+  function populateVenueSelect(){
+    const sel=document.getElementById('venueSelect');
+    sel.innerHTML='<option value="">— or choose from the list —</option>'
+      +venues.map(v=>`<option value="${v.id}">${v.name}</option>`).join('');
+  }
+
+  function renderVenueFullList(){
+    const el=document.getElementById('venueFullList');
+    if(!venues.length){el.innerHTML='<div class="empty-state">No venues yet.</div>';return;}
+    el.innerHTML=venues.map(v=>`
+      <div class="venue-list-item" onclick="selectVenue('${v.id}')">
+        <span class="vname">${v.name}</span>
+        <span class="${v.perks?'vhas':'vnone'}">${v.perks?'Has Perks':'No Perks Set'}</span>
+      </div>`).join('');
+  }
+
+  function selectVenue(id){
+    const v=venues.find(x=>x.id===id);
+    if(!v)return;
+    document.getElementById('venueSelect').value=id;
+    document.getElementById('venueSearch').value=v.name;
+    renderSelectedPerkCard(v);
+    try{localStorage.setItem('venue-perks-last',id);}catch(e){}
+    document.getElementById('selectedPerkCard').scrollIntoView({behavior:'smooth',block:'start'});
+  }
+
+  function renderSelectedPerkCard(v){
+    const el=document.getElementById('selectedPerkCard');
+    if(!v){el.innerHTML='';return;}
+    el.innerHTML=`<div class="perk-card">
+      <div class="perk-card-name">${v.name}</div>
+      <div class="perk-card-body">${v.perks?escapeHtml(v.perks):'<span class="perk-card-empty">No perks listed for this venue yet — check with Ahnna.</span>'}</div>
+    </div>`;
+  }
+
+  function escapeHtml(s){
+    return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  function restoreLastVenue(){
+    let lastId=null;
+    try{lastId=localStorage.getItem('venue-perks-last');}catch(e){}
+    if(lastId&&venues.some(v=>v.id===lastId))selectVenue(lastId);
+  }
+
+  document.getElementById('venueSelect').addEventListener('change',function(){
+    if(this.value)selectVenue(this.value);
+  });
+
+  document.getElementById('venueSearch').addEventListener('input',function(){
+    const q=this.value.trim().toLowerCase();
+    if(!q){document.getElementById('venueSelect').value='';return;}
+    const match=venues.find(v=>(v.name||'').toLowerCase()===q)
+      ||venues.find(v=>(v.name||'').toLowerCase().startsWith(q));
+    if(match){
+      document.getElementById('venueSelect').value=match.id;
+      renderSelectedPerkCard(match);
+    }
+  });
+
+  loadVenues();
+</script>
+</body>
+</html>
