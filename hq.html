@@ -212,6 +212,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
 .modal-save:hover{background:rgba(201,168,76,0.2);color:var(--text);}
 .modal-cancel{background:none;border:1px solid var(--border);color:var(--text3);padding:0.65rem 1.1rem;font-size:0.68rem;letter-spacing:0.18em;text-transform:uppercase;cursor:pointer;font-family:'DM Sans',sans-serif;}
 .modal-cancel:hover{border-color:var(--rose);color:var(--rose);}
+.modal-cancel.modal-history-btn:hover{border-color:var(--gold);color:var(--gold);}
 
 .save-dot{font-size:0.6rem;color:var(--teal);letter-spacing:0.08em;opacity:0;transition:opacity 0.3s;margin-left:0.5rem;}
 .save-dot.show{opacity:1;}
@@ -675,7 +676,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
         <option value="Check">Check</option>
         <option value="Venmo/CashApp/Zelle">Venmo / CashApp / Zelle</option>
         <option value="ACH/Direct Deposit">ACH / Direct Deposit</option>
-        <option value="Invoice/Net-30">Invoice / Net-30</option>
+        <option value="Invoice">Invoice</option>
         <option value="Other">Other</option>
         <option value="__unset">Not Set</option>
       </select>
@@ -1140,8 +1141,16 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
     <div class="modal-title" id="venueModalTitle">Add Venue</div>
     <div class="form-group"><label class="form-label">Venue Name</label><input type="text" class="form-input" id="vmName" placeholder="Venue name"></div>
     <div class="form-group"><label class="form-label">Location</label><select class="form-input" id="vmLocation"></select></div>
+    <div class="form-group">
+      <label class="form-label">Amount Paid — By Gig Type</label>
+      <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+        <div style="flex:1;min-width:100px;"><label class="form-label" style="font-size:0.6rem;">Karaoke</label><input type="text" class="form-input" id="vmAmountKaraoke" placeholder="$"></div>
+        <div style="flex:1;min-width:100px;"><label class="form-label" style="font-size:0.6rem;">Bingo</label><input type="text" class="form-input" id="vmAmountBingo" placeholder="$"></div>
+        <div style="flex:1;min-width:100px;"><label class="form-label" style="font-size:0.6rem;">Trivia</label><input type="text" class="form-input" id="vmAmountTrivia" placeholder="$"></div>
+        <div style="flex:1;min-width:100px;"><label class="form-label" style="font-size:0.6rem;">Event</label><input type="text" class="form-input" id="vmAmountEvents" placeholder="$"></div>
+      </div>
+    </div>
     <div style="display:flex;gap:0.6rem;">
-      <div class="form-group" style="flex:1;"><label class="form-label">Amount</label><input type="text" class="form-input" id="vmPayAmount" placeholder="e.g. $150 flat, $75/hr, 20%"></div>
       <div class="form-group" style="flex:1;"><label class="form-label">How They're Paying</label>
         <select class="form-input" id="vmPayMethod">
           <option value="">Not set</option>
@@ -1149,7 +1158,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
           <option value="Check">Check</option>
           <option value="Venmo/CashApp/Zelle">Venmo / CashApp / Zelle</option>
           <option value="ACH/Direct Deposit">ACH / Direct Deposit</option>
-          <option value="Invoice/Net-30">Invoice / Net-30</option>
+          <option value="Invoice">Invoice</option>
           <option value="Other">Other</option>
         </select>
       </div>
@@ -1169,7 +1178,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
       <a href="https://qbo.intuit.com" target="_blank" class="admin-add-btn" style="display:inline-block;text-decoration:none;text-align:center;margin-top:0.3rem;">Open QuickBooks</a>
     </div>
     <div class="modal-actions">
-      <button class="modal-cancel" id="vmHistoryBtn" style="display:none;" onclick="openVenueHistoryModal(editVenueId)">History</button>
+      <button class="modal-cancel modal-history-btn" id="vmHistoryBtn" style="display:none;" onclick="openVenueHistoryModal(editVenueId)">History</button>
       <button class="modal-cancel" onclick="closeVenueModal()">Cancel</button>
       <button class="modal-save" onclick="saveVenue()">Save Venue</button>
     </div>
@@ -3407,9 +3416,26 @@ function renderVenueManage(){
     .sort((a,b)=>(a.inactive?1:0)-(b.inactive?1:0)); // inactive venues sink to the bottom, active order otherwise unchanged
   if(!scoped.length){el.innerHTML='<div class="empty-state">No venues match these filters.</div>';return;}
   function gigClass(g){const m={'Karaoke':'gig-karaoke','Bingo':'gig-bingo','Trivia':'gig-trivia','Events':'gig-events','Private Events':'gig-private'};return m[g]||'';}
-  el.innerHTML=scoped.map(v=>`<div class="venue-manage-card"${v.inactive?' style="opacity:0.55;"':''}><div class="venue-manage-header"><div class="venue-manage-name">${v.name}${v.inactive?' <span style="font-size:0.62rem;color:var(--text4);font-weight:400;text-transform:uppercase;letter-spacing:0.08em;">· Inactive</span>':''}${v.locationId?` <span style="font-size:0.65rem;color:var(--text3);font-weight:400;">· ${locationLabel(v.locationId)}</span>`:''}</div><div style="display:flex;gap:0.4rem;"><button class="action-btn" title="History" onclick="openVenueHistoryModal('${v.id}')">🕘</button><button class="action-btn edit" onclick="openVenueModal('${v.id}')">✎</button><button class="action-btn delete" onclick="deleteVenue('${v.id}')">✕</button></div></div><div class="venue-gig-tags">${(v.gigs||[]).map(g=>`<span class="venue-gig-tag ${gigClass(g)}">${g}</span>`).join('')}</div>${(v.payAmount||v.payMethod||v.startDate)?`<div style="font-size:0.68rem;color:var(--text3);margin-top:0.4rem;">${v.payAmount?v.payAmount:''}${v.payAmount&&v.payMethod?' via ':(v.payMethod?'Pays via ':'')}${v.payMethod||''}${(v.payAmount||v.payMethod)&&v.startDate?' · ':''}${v.startDate?'Started '+formatDateShort(v.startDate):''}</div>`:''}${v.notes?`<div style="font-size:0.81rem;color:var(--text3);margin-top:0.5rem;">${v.notes}</div>`:''}</div>`).join('');
+  el.innerHTML=scoped.map(v=>{
+    const amounts=v.payAmounts||{};
+    const amountParts=VENUE_AMOUNT_KINDS.filter(k=>amounts[k]).map(k=>(k==='Events'?'Event':k)+' '+amounts[k]);
+    const hasPay=amountParts.length||v.payMethod||v.startDate;
+    const payLine=hasPay?`<div style="font-size:0.68rem;color:var(--text3);margin-top:0.4rem;">${amountParts.join(', ')}${amountParts.length&&v.payMethod?' via ':(v.payMethod?'Pays via ':'')}${v.payMethod||''}${(amountParts.length||v.payMethod)&&v.startDate?' · ':''}${v.startDate?'Started '+formatDateShort(v.startDate):''}</div>`:'';
+    const slots=v.gigSlots||[];
+    const slotsLine=slots.length?`<div style="font-size:0.66rem;color:var(--text3);margin-top:0.3rem;display:flex;flex-direction:column;gap:0.15rem;">${slots.map(s=>`<div>${s.kind||''} · ${s.day||''}${s.time?' '+formatTimeShort(s.time):''}${s.endTime?'–'+formatTimeShort(s.endTime):''}${s.price?' · '+s.price:''}</div>`).join('')}</div>`:'';
+    return `<div class="venue-manage-card"${v.inactive?' style="opacity:0.55;"':''}><div class="venue-manage-header"><div class="venue-manage-name">${v.name}${v.inactive?' <span style="font-size:0.62rem;color:var(--text4);font-weight:400;text-transform:uppercase;letter-spacing:0.08em;">· Inactive</span>':''}${v.locationId?` <span style="font-size:0.65rem;color:var(--text3);font-weight:400;">· ${locationLabel(v.locationId)}</span>`:''}</div><div style="display:flex;gap:0.4rem;align-items:center;"><button class="btn-sm modal-history-btn" style="padding:0.3rem 0.6rem;font-size:0.6rem;" onclick="openVenueHistoryModal('${v.id}')">History</button><button class="action-btn edit" onclick="openVenueModal('${v.id}')">✎</button><button class="action-btn delete" onclick="deleteVenue('${v.id}')">✕</button></div></div><div class="venue-gig-tags">${(v.gigs||[]).map(g=>`<span class="venue-gig-tag ${gigClass(g)}">${g}</span>`).join('')}</div>${payLine}${slotsLine}${v.notes?`<div style="font-size:0.81rem;color:var(--text3);margin-top:0.5rem;">${v.notes}</div>`:''}</div>`;
+  }).join('');
 }
 const VENUE_GIG_SLOT_DAYS=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const VENUE_AMOUNT_KINDS=['Karaoke','Bingo','Trivia','Events'];
+function formatTimeShort(t){
+  if(!t)return'';
+  const [h,m]=t.split(':').map(Number);
+  if(isNaN(h))return t;
+  const period=h>=12?'PM':'AM';
+  const h12=((h+11)%12)+1;
+  return h12+(m?':'+String(m).padStart(2,'0'):'')+period;
+}
 function renderVenueGigSlotRows(slots){
   const el=document.getElementById('vmGigSlotRows');
   if(!el)return;
@@ -3420,7 +3446,10 @@ function renderVenueGigSlotRows(slots){
         <select class="form-input vm-slot-day">${VENUE_GIG_SLOT_DAYS.map(d=>`<option value="${d}"${s.day===d?' selected':''}>${d}</option>`).join('')}</select>
       </div>
       <div class="tp-top">
-        <input type="time" class="form-input vm-slot-time" value="${s.time||''}">
+        <input type="time" class="form-input vm-slot-time" value="${s.time||''}" title="Start time">
+        <input type="time" class="form-input vm-slot-endtime" value="${s.endTime||''}" title="End time">
+      </div>
+      <div class="tp-top">
         <input type="text" class="form-input vm-slot-price" placeholder="e.g. $150 flat" value="${(s.price||'').toString().replace(/"/g,'&quot;')}">
         <button class="tp-del" type="button" onclick="this.closest('.tip-pay-row').remove()">✕</button>
       </div>
@@ -3428,7 +3457,7 @@ function renderVenueGigSlotRows(slots){
 }
 function addVenueGigSlotRow(){
   const rows=readVenueGigSlotRows();
-  rows.push({id:Date.now().toString()+'_'+Math.random().toString(36).slice(2,5),kind:'Karaoke',day:'Monday',time:'',price:''});
+  rows.push({id:Date.now().toString()+'_'+Math.random().toString(36).slice(2,5),kind:'Karaoke',day:'Monday',time:'',endTime:'',price:''});
   renderVenueGigSlotRows(rows);
 }
 function readVenueGigSlotRows(){
@@ -3437,8 +3466,14 @@ function readVenueGigSlotRows(){
     kind:row.querySelector('.vm-slot-kind').value,
     day:row.querySelector('.vm-slot-day').value,
     time:row.querySelector('.vm-slot-time').value,
+    endTime:row.querySelector('.vm-slot-endtime').value,
     price:row.querySelector('.vm-slot-price').value.trim()
   }));
+}
+function readVenueAmounts(){
+  const amounts={};
+  VENUE_AMOUNT_KINDS.forEach(k=>{amounts[k]=document.getElementById('vmAmount'+k).value.trim();});
+  return amounts;
 }
 function openVenueModal(id=null){
   editVenueId=id;const venue=id?venues.find(v=>v.id===id):null;
@@ -3446,7 +3481,8 @@ function openVenueModal(id=null){
   document.getElementById('vmName').value=venue?venue.name:'';
   document.getElementById('vmNotes').value=venue?venue.notes||'':'';
   document.getElementById('vmInactive').checked=!!(venue&&venue.inactive);
-  document.getElementById('vmPayAmount').value=venue?venue.payAmount||'':'';
+  const amounts=(venue&&venue.payAmounts)||{};
+  VENUE_AMOUNT_KINDS.forEach(k=>{document.getElementById('vmAmount'+k).value=amounts[k]||'';});
   document.getElementById('vmPayMethod').value=venue?venue.payMethod||'':'';
   document.getElementById('vmStartDate').value=venue?venue.startDate||'':'';
   document.getElementById('vmHistoryBtn').style.display=id?'':'none';
@@ -3465,7 +3501,7 @@ function saveVenue(){
   const notes=document.getElementById('vmNotes').value.trim();
   const locationId=document.getElementById('vmLocation').value;
   const inactive=document.getElementById('vmInactive').checked;
-  const payAmount=document.getElementById('vmPayAmount').value.trim();
+  const payAmounts=readVenueAmounts();
   const payMethod=document.getElementById('vmPayMethod').value;
   const startDate=document.getElementById('vmStartDate').value;
   const gigSlots=readVenueGigSlotRows();
@@ -3473,15 +3509,17 @@ function saveVenue(){
   if(editVenueId){
     const v=venues.find(x=>x.id===editVenueId);
     if(v){
-      const prev={payAmount:v.payAmount||'',payMethod:v.payMethod||'',startDate:v.startDate||''};
+      const prev={payAmounts:Object.assign({},v.payAmounts||{}),payMethod:v.payMethod||'',startDate:v.startDate||''};
       v.name=name;v.gigs=gigs;v.notes=notes;v.locationId=locationId;v.inactive=inactive;
-      v.payAmount=payAmount;v.payMethod=payMethod;v.startDate=startDate;v.gigSlots=gigSlots;
-      logVenueHistoryDiff(v,prev,{payAmount,payMethod,startDate},today);
+      v.payAmounts=payAmounts;v.payMethod=payMethod;v.startDate=startDate;v.gigSlots=gigSlots;
+      logVenueHistoryDiff(v,prev,{payAmounts,payMethod,startDate},today);
     }
   }else{
-    const v={id:Date.now().toString(),name,gigs,notes,locationId,inactive,payAmount,payMethod,startDate,gigSlots,history:[]};
-    if(startDate||payAmount||payMethod){
-      pushVenueHistory(v,{date:startDate||today,text:'Onboarded'+(startDate?' — start date '+formatDateShort(startDate):'')+(payAmount?' — paying '+payAmount:'')+(payMethod?' via '+payMethod:''),auto:true});
+    const v={id:Date.now().toString(),name,gigs,notes,locationId,inactive,payAmounts,payMethod,startDate,gigSlots,history:[]};
+    const anyAmount=VENUE_AMOUNT_KINDS.some(k=>payAmounts[k]);
+    if(startDate||anyAmount||payMethod){
+      const amtText=VENUE_AMOUNT_KINDS.filter(k=>payAmounts[k]).map(k=>(k==='Events'?'Event':k)+' '+payAmounts[k]).join(', ');
+      pushVenueHistory(v,{date:startDate||today,text:'Onboarded'+(startDate?' — start date '+formatDateShort(startDate):'')+(amtText?' — paying '+amtText:'')+(payMethod?' via '+payMethod:''),auto:true});
     }
     venues.push(v);
   }
@@ -3491,8 +3529,9 @@ function saveVenue(){
 function deleteVenue(id){if(!confirm('Remove this venue?'))return;venues=venues.filter(v=>v.id!==id);persist('venues-list',venues,'venuesSave');renderVenueManage();populateRosterFilters();}
 
 // ── VENUE HISTORY LOG ──
-// Auto-logged whenever pay amount, pay method, or start date changes on save;
-// Ahnna can also add/edit/delete entries by hand from the History modal.
+// Auto-logged whenever a per-kind pay amount, pay method, or start date
+// changes on save; Ahnna can also add/edit/delete entries by hand from the
+// History modal.
 function pushVenueHistory(v,entry){
   v.history=v.history||[];
   v.history.push(Object.assign({id:Date.now().toString()+'_'+Math.random().toString(36).slice(2,6)},entry));
@@ -3502,12 +3541,16 @@ function logVenueHistoryDiff(v,prev,next,today){
   if((prev.startDate||'')!==(next.startDate||'')&&next.startDate){
     pushVenueHistory(v,{date:next.startDate,text:'Start date set to '+formatDateShort(next.startDate)+(prev.startDate?' (was '+formatDateShort(prev.startDate)+')':''),auto:true});
   }
-  const payChanged=(prev.payAmount||'')!==(next.payAmount||'')||(prev.payMethod||'')!==(next.payMethod||'');
-  if(payChanged&&(next.payAmount||next.payMethod)){
-    let text;
-    if(!prev.payAmount&&!prev.payMethod)text='Pay set to '+(next.payAmount||'')+(next.payAmount&&next.payMethod?' via ':'')+(next.payMethod||'');
-    else text='Pay changed to '+(next.payAmount||prev.payAmount||'')+(next.payMethod?' via '+next.payMethod:'')+' (was '+(prev.payAmount||'—')+(prev.payMethod?' via '+prev.payMethod:'')+')';
-    pushVenueHistory(v,{date:today,text,auto:true});
+  VENUE_AMOUNT_KINDS.forEach(k=>{
+    const before=(prev.payAmounts&&prev.payAmounts[k])||'';
+    const after=(next.payAmounts&&next.payAmounts[k])||'';
+    if(before!==after&&after){
+      const label=k==='Events'?'Event':k;
+      pushVenueHistory(v,{date:today,text:label+' pay '+(before?'changed to '+after+' (was '+before+')':'set to '+after),auto:true});
+    }
+  });
+  if((prev.payMethod||'')!==(next.payMethod||'')&&next.payMethod){
+    pushVenueHistory(v,{date:today,text:'Payment method changed to '+next.payMethod+(prev.payMethod?' (was '+prev.payMethod+')':''),auto:true});
   }
 }
 function openVenueHistoryModal(id){
