@@ -508,6 +508,19 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
     <div id="signinSheetWrap" style="display:none;overflow-x:auto;"></div>
   </div>
   <div class="subpanel" id="sub-hosts-onboarding">
+    <div style="text-align:right;margin-bottom:0.6rem;position:relative;">
+      <button class="hq-btn-ghost" onclick="toggleOnboardAdmin('host')">Backend Admin ▾</button>
+      <div class="admin-content" id="onboardAdminContent-host" style="right:0;">
+        <div class="admin-section">
+          <div class="admin-section-title">Backend Setup — Host <span style="font-size:0.55rem;color:var(--text3)">(just for you / whoever runs the back end)</span></div>
+          <div id="onboardChecklist-host"></div>
+        </div>
+        <div class="admin-section">
+          <div class="admin-section-title">Quick Links</div>
+          <a href="https://qbo.intuit.com" target="_blank" class="admin-add-btn" style="display:inline-block;text-decoration:none;text-align:center;">Open QuickBooks</a>
+        </div>
+      </div>
+    </div>
     <div class="rte-toolbar" id="rteToolbar-host" style="display:none;">
       <button type="button" onclick="rteCmd('host','bold')"><b>B</b></button>
       <button type="button" onclick="rteCmd('host','italic')"><i>I</i></button>
@@ -655,6 +668,21 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
       <div class="section-title">Venues <span class="save-dot" id="venuesSave">Saved ✓</span></div>
       <button class="btn-sm btn-gold" onclick="openVenueModal()">+ Add Venue</button>
     </div>
+    <div class="sched-toolbar">
+      <select class="roster-filter-select" id="venueFilterPayMethod" onchange="renderVenueManage()">
+        <option value="">All Payment Methods</option>
+        <option value="Cash">Cash</option>
+        <option value="Check">Check</option>
+        <option value="Venmo/CashApp/Zelle">Venmo / CashApp / Zelle</option>
+        <option value="ACH/Direct Deposit">ACH / Direct Deposit</option>
+        <option value="Invoice/Net-30">Invoice / Net-30</option>
+        <option value="Other">Other</option>
+        <option value="__unset">Not Set</option>
+      </select>
+      <input type="date" class="roster-search-input" id="venueFilterStartFrom" onchange="renderVenueManage()" style="min-width:130px;flex:none;" title="Start date from">
+      <input type="date" class="roster-search-input" id="venueFilterStartTo" onchange="renderVenueManage()" style="min-width:130px;flex:none;" title="Start date to">
+      <button class="btn-sm" onclick="document.getElementById('venueFilterPayMethod').value='';document.getElementById('venueFilterStartFrom').value='';document.getElementById('venueFilterStartTo').value='';renderVenueManage();">Clear Filters</button>
+    </div>
     <div id="venueManageList"></div>
   </div>
   <div class="subpanel" id="sub-venues-perf">
@@ -708,6 +736,19 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
   <div class="subpanel" id="sub-venues-onboarding">
     <div class="section-header">
       <div class="section-title">Venue Onboarding</div>
+      <div style="position:relative;">
+        <button class="hq-btn-ghost" onclick="toggleOnboardAdmin('venue')">Backend Admin ▾</button>
+        <div class="admin-content" id="onboardAdminContent-venue" style="right:0;">
+          <div class="admin-section">
+            <div class="admin-section-title">Backend Setup — Venue <span style="font-size:0.55rem;color:var(--text3)">(just for you / whoever runs the back end)</span></div>
+            <div id="onboardChecklist-venue"></div>
+          </div>
+          <div class="admin-section">
+            <div class="admin-section-title">Quick Links</div>
+            <a href="https://qbo.intuit.com" target="_blank" class="admin-add-btn" style="display:inline-block;text-decoration:none;text-align:center;">Open QuickBooks</a>
+          </div>
+        </div>
+      </div>
     </div>
     <div class="rte-toolbar" id="rteToolbar-venue" style="display:none;">
       <button type="button" onclick="rteCmd('venue','bold')"><b>B</b></button>
@@ -826,7 +867,20 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
     <a href="https://belladonnanights.github.io/belladonnatrivia/planner.html" target="_blank" class="subtab" style="text-decoration:underline !important;color:var(--text3);">Planner</a>
   </div>
   <div class="subpanel active" id="sub-schedule-cal">
-    <div class="sched-toolbar"><button class="add-entry-btn" onclick="openGigModal()">+ Schedule Gig</button><button class="btn-sm" onclick="openBulkAddModal()">+ Bulk Add</button></div>
+    <div class="sched-toolbar">
+      <button class="add-entry-btn" onclick="openGigModal()">+ Schedule Gig</button>
+      <button class="btn-sm" onclick="openBulkAddModal()">+ Bulk Add</button>
+      <select class="roster-filter-select" id="calFilterVenue" onchange="renderGigCalendar()"><option value="">All Venues</option></select>
+      <select class="roster-filter-select" id="calFilterType" onchange="renderGigCalendar()">
+        <option value="">All Types</option>
+        <option value="Karaoke">Karaoke</option>
+        <option value="Bingo">Bingo</option>
+        <option value="Trivia">Trivia</option>
+        <option value="Events">Events</option>
+        <option value="Private Events">Private Events</option>
+      </select>
+      <button class="btn-sm" id="calFilterClearBtn" onclick="document.getElementById('calFilterVenue').value='';document.getElementById('calFilterType').value='';renderGigCalendar();">Clear Filters</button>
+    </div>
     <div id="gigCalScroll"></div>
   </div>
   <div class="subpanel" id="sub-schedule-table">
@@ -1086,6 +1140,20 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
     <div class="modal-title" id="venueModalTitle">Add Venue</div>
     <div class="form-group"><label class="form-label">Venue Name</label><input type="text" class="form-input" id="vmName" placeholder="Venue name"></div>
     <div class="form-group"><label class="form-label">Location</label><select class="form-input" id="vmLocation"></select></div>
+    <div style="display:flex;gap:0.6rem;">
+      <div class="form-group" style="flex:1;"><label class="form-label">How They're Paying</label>
+        <select class="form-input" id="vmPayMethod">
+          <option value="">Not set</option>
+          <option value="Cash">Cash</option>
+          <option value="Check">Check</option>
+          <option value="Venmo/CashApp/Zelle">Venmo / CashApp / Zelle</option>
+          <option value="ACH/Direct Deposit">ACH / Direct Deposit</option>
+          <option value="Invoice/Net-30">Invoice / Net-30</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+      <div class="form-group" style="flex:1;"><label class="form-label">Start Date</label><input type="date" class="form-input" id="vmStartDate"></div>
+    </div>
     <div class="form-group"><label class="form-label">Type of Gig / What We Do There</label><div class="chip-grid" id="gigChips"></div></div>
     <div class="form-group"><label class="form-label">Notes (optional)</label><textarea class="form-textarea" id="vmNotes" placeholder="Any notes about this venue..." style="min-height:60px;"></textarea></div>
     <div class="form-group"><label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;font-size:0.8rem;color:var(--text2);"><input type="checkbox" id="vmInactive" style="width:16px;height:16px;"> Not currently active <span style="color:var(--text4);font-size:0.7rem;">(paused, ended, or no longer working with us)</span></label></div>
@@ -1768,16 +1836,21 @@ function dateToKey(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart
 // Shared by the Dashboard's week view and the Schedule tab's calendar.
 function getExternalGigsForDate(dk,dow){
   const out=[];
+  // Anything HQ already pushed into Planner/Bingo (pushGigToExternalPlanner) has
+  // an entry right here in gigSchedule too — skip it as "external" so it doesn't
+  // render twice on the calendar.
+  const hqVenuesForDate=new Set(gigSchedule.filter(g=>g.date===dk).map(g=>normVenueName(g.venue)));
   if(plannerVenues){
     Object.entries(plannerVenues).forEach(([id,v])=>{
       if(v.status!=='active'&&v.status!=='seasonal')return;
       if(PLANNER_DAY_MAP[v.day]!==dow)return;
+      if(hqVenuesForDate.has(normVenueName(v.name)))return;
       const override=(plannerGigs&&plannerGigs[id])?plannerGigs[id][dk]:null;
       const cancelled=!!(override&&override.status==='cancelled');
       out.push({venue:v.name,host:v.host||'Unassigned',kind:'Trivia',cancelled,source:'Trivia Planner',notes:override&&override.themeName?override.themeName:(override&&override.note?override.note:'')});
     });
   }
-  out.push(...fetchBingoGigsForDate(dk,dow));
+  out.push(...fetchBingoGigsForDate(dk,dow).filter(it=>!hqVenuesForDate.has(normVenueName(it.venue))));
   return out;
 }
 function getDashboardGigsForDate(dk,dow){
@@ -1855,6 +1928,47 @@ function persistGig(entry,isDelete){
   if(db){try{if(isDelete)db.collection('gig_schedule').doc(entry.id).delete();else db.collection('gig_schedule').doc(entry.id).set({date:entry.date,time:entry.time||'',endTime:entry.endTime||'',kind:entry.kind||'',venue:entry.venue,host:entry.host||'Unassigned',status:entry.status||'scheduled',notes:entry.notes||'',seriesId:entry.seriesId||null,locationId:entry.locationId||(currentLocationScope!=='ALL'?currentLocationScope:(locations[0]&&locations[0].code)||null)});}catch(e){}}
   // mirror to the Sheet so the Apps Script triggers (no-show + auto sign-out) can read it
   try{fetch(SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({form_type:'schedule',action:isDelete?'delete':'upsert',id:entry.id,date:entry.date,time:entry.time||'',endTime:entry.endTime||'',venue:entry.venue,host:entry.host||'Unassigned',status:entry.status||'scheduled',notes:entry.notes||''})});}catch(e){}
+  pushGigToExternalPlanner(entry,isDelete);
+}
+// HQ's gig_schedule (Firestore) and the Trivia Planner / Bingo app (Realtime DB,
+// trivia/planner/* and bingo/landing/*) are two separate systems — this is the
+// one bridge between them. It only works when the venue already exists over
+// there under the same name (Planner/Bingo own their own venue lists; HQ can't
+// create a venue for them, only fill in a date on one that's already set up).
+// If there's no match, this silently does nothing — the gig still lives fine
+// in HQ, it just won't appear in that other app.
+function pushGigToExternalPlanner(entry,isDelete){
+  if(!rtdb||!entry||!entry.kind||!entry.venue)return;
+  const kind=(entry.kind||'').toLowerCase();
+  const vName=normVenueName(entry.venue);
+  const cancelled=isDelete||entry.status==='cancelled';
+  if(kind==='trivia'){
+    if(!plannerVenues)return;
+    const match=Object.entries(plannerVenues).find(([id,v])=>normVenueName(v.name)===vName);
+    if(!match)return;
+    const venueId=match[0];
+    const path='trivia/planner/gigs/'+venueId+'/'+entry.date;
+    if(cancelled){
+      rtdb.ref(path).set({themeId:null,themeName:null,status:'cancelled',note:entry.notes||'(cancelled from HQ)'}).catch(()=>{});
+    }else{
+      rtdb.ref(path).once('value').then(snap=>{
+        const existing=snap.val()||{};
+        rtdb.ref(path).set(Object.assign({},existing,{status:'planned',note:entry.notes||existing.note||'(from HQ — open Planner to set a theme)'})).catch(()=>{});
+      }).catch(()=>{});
+    }
+  }else if(kind==='bingo'){
+    if(!bingoVenuesMap||!bingoScheduleList)return;
+    const match=Object.entries(bingoVenuesMap).find(([id,v])=>normVenueName(v.name)===vName);
+    if(!match)return;
+    const venueId=match[0];
+    const existing=bingoScheduleList.find(e=>e.venueId===venueId&&e.date===entry.date);
+    if(cancelled){
+      if(existing)rtdb.ref('bingo/landing/schedule/'+existing.id).remove().catch(()=>{});
+    }else{
+      const id=existing?existing.id:rtdb.ref('bingo/landing/schedule').push().key;
+      rtdb.ref('bingo/landing/schedule/'+id).set(Object.assign({},existing||{},{id,date:entry.date,venueId,notes:entry.notes||(existing&&existing.notes)||''})).catch(()=>{});
+    }
+  }
 }
 // Creates one gig, or (if repeatMode is weekly/monthly, optionally "-forever") a whole series sharing a seriesId.
 function createGigEntry(base,repeatMode,count){
@@ -1890,6 +2004,7 @@ function getGigStatus(entry){
 }
 function populateSchedFilters(){
   populateVenueFilterOptions('schedFilterVenue');
+  populateVenueFilterOptions('calFilterVenue');
   const hf=document.getElementById('schedFilterHost');
   if(hf){const cur=hf.value;hf.innerHTML='<option value="">All Hosts</option>'+roster.map(h=>`<option value="${h.name}">${h.name}</option>`).join('');hf.value=cur;}
 }
@@ -1961,6 +2076,8 @@ function renderGigCalendar(){
   const today=new Date();
   const startYear=today.getFullYear();
   const startMonth=today.getMonth();
+  const calVenue=document.getElementById('calFilterVenue')?.value||'';
+  const calType=document.getElementById('calFilterType')?.value||'';
   scheduleExternalItemsFlat=[];
   let html='';
   for(let m=0;m<3;m++){
@@ -1985,14 +2102,16 @@ function renderGigCalendar(){
       else{day=i-firstDay+1;}
       const dateStr=cellYr+'-'+String(cellMo+1).padStart(2,'0')+'-'+String(day).padStart(2,'0');
       const isToday=!otherMonth&&day===today.getDate()&&mo===today.getMonth()&&yr===today.getFullYear();
-      const dayGigs=gigSchedule.filter(g=>g.date===dateStr);
+      const dayGigs=gigSchedule.filter(g=>g.date===dateStr&&(!calVenue||g.venue===calVenue)&&(!calType||g.kind===calType));
       let entriesHtml='';
       dayGigs.forEach(g=>{
         const isCancelled=g.status==='cancelled'||gigCheckoutCancelled(g);
         const c=calGigColor(g.kind,isCancelled);
         entriesHtml+=`<div class="gig-event" style="background:${c}22;border:1px solid ${c};color:${c}" onclick="event.stopPropagation();openGigModal('${g.id}')">${g.kind?g.kind+': ':''}${g.venue}</div>`;
       });
-      getExternalGigsForDate(dateStr,new Date(dateStr+'T12:00:00').getDay()).forEach(it=>{
+      getExternalGigsForDate(dateStr,new Date(dateStr+'T12:00:00').getDay())
+        .filter(it=>(!calVenue||it.venue===calVenue)&&(!calType||it.kind===calType))
+        .forEach(it=>{
         const c=calGigColor(it.kind,it.cancelled);
         const idx=scheduleExternalItemsFlat.length;scheduleExternalItemsFlat.push(it);
         entriesHtml+=`<div class="gig-event" style="background:${c}22;border:1px solid ${c};color:${c}" onclick="event.stopPropagation();showDashGigDetail(${idx},true)">${it.kind}: ${it.venue}</div>`;
@@ -2870,6 +2989,65 @@ function toggleAdmin(){
   if(content.classList.contains('open')) renderAdminRanks();
 }
 
+// ── Backend Admin dropdowns on Host/Venue Onboarding — same open/close
+// mechanism as the top "Admin Panel" dropdown, but scoped to onboarding and
+// meant only for Ahnna / whoever handles the back end. Not tied to any one
+// host or venue record — it's a running reference checklist of the backend
+// steps that go with onboarding, since HQ doesn't have a separate back-end
+// system to track those in yet.
+const ONBOARD_CHECKLIST_ITEMS={
+  host:[
+    'Add to QuickBooks (as contractor/vendor)',
+    'Collect signed W-9',
+    'Add to 1099 tracking',
+    'Set starting pay rate / rank',
+    'Send Gateway / Host Hub login invite',
+    'Log ID verification / background check',
+    'Add to group chat & host email list',
+    'Assign / hand off gear (mic, equipment)'
+  ],
+  venue:[
+    'Add to QuickBooks (as customer/client)',
+    'File signed contract in Drive',
+    'Set up invoicing & payment terms',
+    'Confirm COI / insurance on file',
+    'Create venue folder in Drive',
+    'Add venue contact to CRM & email list',
+    'Confirm tax-exempt status if applicable',
+    'Add venue to marketing / social list'
+  ]
+};
+function toggleOnboardAdmin(kind){
+  const content=document.getElementById('onboardAdminContent-'+kind);
+  if(!content)return;
+  content.classList.toggle('open');
+  if(content.classList.contains('open'))renderOnboardChecklist(kind);
+}
+function onboardChecklistKey(kind){return 'onboard-checklist-'+kind;}
+function renderOnboardChecklist(kind){
+  const el=document.getElementById('onboardChecklist-'+kind);
+  if(!el)return;
+  let checked={};
+  try{checked=JSON.parse(LS.get(onboardChecklistKey(kind))||'{}');}catch(e){checked={};}
+  el.innerHTML=ONBOARD_CHECKLIST_ITEMS[kind].map((item,i)=>`
+    <label style="display:flex;align-items:flex-start;gap:0.5rem;cursor:pointer;font-size:0.72rem;color:var(--text2);margin-bottom:0.5rem;line-height:1.4;">
+      <input type="checkbox" style="margin-top:0.15rem;" ${checked[i]?'checked':''} onchange="toggleOnboardChecklistItem('${kind}',${i},this.checked)">
+      <span${checked[i]?' style="text-decoration:line-through;color:var(--text4);"':''}>${item}</span>
+    </label>`).join('')
+    +`<button class="admin-add-btn" onclick="resetOnboardChecklist('${kind}')" style="margin-top:0.3rem;">Reset Checklist</button>`;
+}
+function toggleOnboardChecklistItem(kind,i,val){
+  let checked={};
+  try{checked=JSON.parse(LS.get(onboardChecklistKey(kind))||'{}');}catch(e){checked={};}
+  checked[i]=val;
+  LS.set(onboardChecklistKey(kind),JSON.stringify(checked));
+  renderOnboardChecklist(kind);
+}
+function resetOnboardChecklist(kind){
+  LS.set(onboardChecklistKey(kind),'{}');
+  renderOnboardChecklist(kind);
+}
+
 function renderAdminRanks(){
   const el=document.getElementById('adminRanksList');
   if(!el)return;
@@ -3173,11 +3351,21 @@ function syncTipSchedule(){
 // ── VENUES ──
 function renderVenueManage(){
   const el=document.getElementById('venueManageList');
+  const payF=document.getElementById('venueFilterPayMethod')?.value||'';
+  const startFrom=document.getElementById('venueFilterStartFrom')?.value||'';
+  const startTo=document.getElementById('venueFilterStartTo')?.value||'';
   const scoped=venues.filter(v=>locationScopeMatches(v.locationId))
+    .filter(v=>{
+      if(payF==='__unset'&&v.payMethod)return false;
+      if(payF&&payF!=='__unset'&&v.payMethod!==payF)return false;
+      if(startFrom&&(!v.startDate||v.startDate<startFrom))return false;
+      if(startTo&&(!v.startDate||v.startDate>startTo))return false;
+      return true;
+    })
     .sort((a,b)=>(a.inactive?1:0)-(b.inactive?1:0)); // inactive venues sink to the bottom, active order otherwise unchanged
-  if(!scoped.length){el.innerHTML='<div class="empty-state">No venues yet.</div>';return;}
+  if(!scoped.length){el.innerHTML='<div class="empty-state">No venues match these filters.</div>';return;}
   function gigClass(g){const m={'Karaoke':'gig-karaoke','Bingo':'gig-bingo','Trivia':'gig-trivia','Events':'gig-events','Private Events':'gig-private'};return m[g]||'';}
-  el.innerHTML=scoped.map(v=>`<div class="venue-manage-card"${v.inactive?' style="opacity:0.55;"':''}><div class="venue-manage-header"><div class="venue-manage-name">${v.name}${v.inactive?' <span style="font-size:0.62rem;color:var(--text4);font-weight:400;text-transform:uppercase;letter-spacing:0.08em;">· Inactive</span>':''}${v.locationId?` <span style="font-size:0.65rem;color:var(--text3);font-weight:400;">· ${locationLabel(v.locationId)}</span>`:''}</div><div style="display:flex;gap:0.4rem;"><button class="action-btn edit" onclick="openVenueModal('${v.id}')">✎</button><button class="action-btn delete" onclick="deleteVenue('${v.id}')">✕</button></div></div><div class="venue-gig-tags">${(v.gigs||[]).map(g=>`<span class="venue-gig-tag ${gigClass(g)}">${g}</span>`).join('')}</div>${v.notes?`<div style="font-size:0.81rem;color:var(--text3);margin-top:0.5rem;">${v.notes}</div>`:''}</div>`).join('');
+  el.innerHTML=scoped.map(v=>`<div class="venue-manage-card"${v.inactive?' style="opacity:0.55;"':''}><div class="venue-manage-header"><div class="venue-manage-name">${v.name}${v.inactive?' <span style="font-size:0.62rem;color:var(--text4);font-weight:400;text-transform:uppercase;letter-spacing:0.08em;">· Inactive</span>':''}${v.locationId?` <span style="font-size:0.65rem;color:var(--text3);font-weight:400;">· ${locationLabel(v.locationId)}</span>`:''}</div><div style="display:flex;gap:0.4rem;"><button class="action-btn edit" onclick="openVenueModal('${v.id}')">✎</button><button class="action-btn delete" onclick="deleteVenue('${v.id}')">✕</button></div></div><div class="venue-gig-tags">${(v.gigs||[]).map(g=>`<span class="venue-gig-tag ${gigClass(g)}">${g}</span>`).join('')}</div>${(v.payMethod||v.startDate)?`<div style="font-size:0.68rem;color:var(--text3);margin-top:0.4rem;">${v.payMethod?'Pays via '+v.payMethod:''}${v.payMethod&&v.startDate?' · ':''}${v.startDate?'Started '+formatDateShort(v.startDate):''}</div>`:''}${v.notes?`<div style="font-size:0.81rem;color:var(--text3);margin-top:0.5rem;">${v.notes}</div>`:''}</div>`).join('');
 }
 function openVenueModal(id=null){
   editVenueId=id;const venue=id?venues.find(v=>v.id===id):null;
@@ -3185,6 +3373,8 @@ function openVenueModal(id=null){
   document.getElementById('vmName').value=venue?venue.name:'';
   document.getElementById('vmNotes').value=venue?venue.notes||'':'';
   document.getElementById('vmInactive').checked=!!(venue&&venue.inactive);
+  document.getElementById('vmPayMethod').value=venue?venue.payMethod||'':'';
+  document.getElementById('vmStartDate').value=venue?venue.startDate||'':'';
   const locSel=document.getElementById('vmLocation');
   locSel.innerHTML=locations.map(l=>`<option value="${l.code}">${l.label}</option>`).join('');
   locSel.value=(venue&&venue.locationId)?venue.locationId:(currentLocationScope!=='ALL'?currentLocationScope:((locations[0]&&locations[0].code)||''));
@@ -3198,8 +3388,10 @@ function saveVenue(){
   const notes=document.getElementById('vmNotes').value.trim();
   const locationId=document.getElementById('vmLocation').value;
   const inactive=document.getElementById('vmInactive').checked;
-  if(editVenueId){const v=venues.find(x=>x.id===editVenueId);if(v){v.name=name;v.gigs=gigs;v.notes=notes;v.locationId=locationId;v.inactive=inactive;}}
-  else venues.push({id:Date.now().toString(),name,gigs,notes,locationId,inactive});
+  const payMethod=document.getElementById('vmPayMethod').value;
+  const startDate=document.getElementById('vmStartDate').value;
+  if(editVenueId){const v=venues.find(x=>x.id===editVenueId);if(v){v.name=name;v.gigs=gigs;v.notes=notes;v.locationId=locationId;v.inactive=inactive;v.payMethod=payMethod;v.startDate=startDate;}}
+  else venues.push({id:Date.now().toString(),name,gigs,notes,locationId,inactive,payMethod,startDate});
   persist('venues-list',venues,'venuesSave');
   renderVenueManage();populateRosterFilters();closeVenueModal();
 }
