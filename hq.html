@@ -1141,6 +1141,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
     <div class="form-group"><label class="form-label">Venue Name</label><input type="text" class="form-input" id="vmName" placeholder="Venue name"></div>
     <div class="form-group"><label class="form-label">Location</label><select class="form-input" id="vmLocation"></select></div>
     <div style="display:flex;gap:0.6rem;">
+      <div class="form-group" style="flex:1;"><label class="form-label">Amount</label><input type="text" class="form-input" id="vmPayAmount" placeholder="e.g. $150 flat, $75/hr, 20%"></div>
       <div class="form-group" style="flex:1;"><label class="form-label">How They're Paying</label>
         <select class="form-input" id="vmPayMethod">
           <option value="">Not set</option>
@@ -1155,11 +1156,42 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
       <div class="form-group" style="flex:1;"><label class="form-label">Start Date</label><input type="date" class="form-input" id="vmStartDate"></div>
     </div>
     <div class="form-group"><label class="form-label">Type of Gig / What We Do There</label><div class="chip-grid" id="gigChips"></div></div>
+    <div class="form-group">
+      <label class="form-label">Gigs at This Venue <span style="font-size:0.6rem;color:var(--text4);text-transform:none;letter-spacing:0;">(recurring day/time/price reference — doesn't auto-create Schedule entries)</span></label>
+      <div id="vmGigSlotRows" style="display:flex;flex-direction:column;gap:0.4rem;margin-bottom:0.5rem;"></div>
+      <button class="btn-sm" type="button" onclick="addVenueGigSlotRow()">+ Add Gig Slot</button>
+    </div>
     <div class="form-group"><label class="form-label">Notes (optional)</label><textarea class="form-textarea" id="vmNotes" placeholder="Any notes about this venue..." style="min-height:60px;"></textarea></div>
     <div class="form-group"><label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;font-size:0.8rem;color:var(--text2);"><input type="checkbox" id="vmInactive" style="width:16px;height:16px;"> Not currently active <span style="color:var(--text4);font-size:0.7rem;">(paused, ended, or no longer working with us)</span></label></div>
+    <div class="admin-section" style="margin-top:0.4rem;">
+      <div class="admin-section-title">Backend Admin <span style="font-size:0.55rem;color:var(--text3)">(just for you / whoever runs the back end)</span></div>
+      <div id="onboardChecklist-venueModal"></div>
+      <a href="https://qbo.intuit.com" target="_blank" class="admin-add-btn" style="display:inline-block;text-decoration:none;text-align:center;margin-top:0.3rem;">Open QuickBooks</a>
+    </div>
     <div class="modal-actions">
+      <button class="modal-cancel" id="vmHistoryBtn" style="display:none;" onclick="openVenueHistoryModal(editVenueId)">History</button>
       <button class="modal-cancel" onclick="closeVenueModal()">Cancel</button>
       <button class="modal-save" onclick="saveVenue()">Save Venue</button>
+    </div>
+  </div>
+</div>
+
+<!-- VENUE HISTORY MODAL -->
+<div class="modal-bg" id="venueHistoryModal">
+  <div class="modal" style="max-width:520px;max-height:85vh;overflow-y:auto;">
+    <div class="modal-title">History — <span id="vhVenueName"></span></div>
+    <div style="font-size:0.65rem;color:var(--text3);margin-bottom:0.8rem;line-height:1.5;">Pay/start-date changes are logged here automatically when you save the venue. Edit or delete any entry below — nothing here is locked.</div>
+    <div id="vhList" style="display:flex;flex-direction:column;gap:0.6rem;margin-bottom:1rem;"></div>
+    <div class="admin-section">
+      <div class="admin-section-title">Add Entry Manually</div>
+      <div style="display:flex;gap:0.5rem;align-items:flex-end;flex-wrap:wrap;">
+        <div class="form-group" style="flex:none;"><label class="form-label">Date</label><input type="date" class="form-input" id="vhNewDate" style="width:150px;"></div>
+        <div class="form-group" style="flex:1;min-width:160px;"><label class="form-label">Note</label><input type="text" class="form-input" id="vhNewText" placeholder="What happened"></div>
+        <button class="btn-sm btn-gold" onclick="addVenueHistoryEntry()" style="margin-bottom:0.9rem;">+ Add</button>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="document.getElementById('venueHistoryModal').classList.remove('open')">Close</button>
     </div>
   </div>
 </div>
@@ -3017,35 +3049,45 @@ const ONBOARD_CHECKLIST_ITEMS={
     'Add venue to marketing / social list'
   ]
 };
+// Every place a given checklist (host / venue) is rendered — the onboarding
+// tab's dropdown, and (for venue) the Edit Venue modal — shares one storage
+// key, so checking something off in one place updates the other too.
+const CHECKLIST_ELEMENT_IDS={host:['onboardChecklist-host'],venue:['onboardChecklist-venue','onboardChecklist-venueModal']};
 function toggleOnboardAdmin(kind){
   const content=document.getElementById('onboardAdminContent-'+kind);
   if(!content)return;
   content.classList.toggle('open');
-  if(content.classList.contains('open'))renderOnboardChecklist(kind);
+  if(content.classList.contains('open'))renderChecklistInto('onboardChecklist-'+kind,kind,ONBOARD_CHECKLIST_ITEMS[kind]);
 }
 function onboardChecklistKey(kind){return 'onboard-checklist-'+kind;}
-function renderOnboardChecklist(kind){
-  const el=document.getElementById('onboardChecklist-'+kind);
+function renderChecklistInto(elId,storageKind,items){
+  const el=document.getElementById(elId);
   if(!el)return;
   let checked={};
-  try{checked=JSON.parse(LS.get(onboardChecklistKey(kind))||'{}');}catch(e){checked={};}
-  el.innerHTML=ONBOARD_CHECKLIST_ITEMS[kind].map((item,i)=>`
+  try{checked=JSON.parse(LS.get(onboardChecklistKey(storageKind))||'{}');}catch(e){checked={};}
+  el.innerHTML=items.map((item,i)=>`
     <label style="display:flex;align-items:flex-start;gap:0.5rem;cursor:pointer;font-size:0.72rem;color:var(--text2);margin-bottom:0.5rem;line-height:1.4;">
-      <input type="checkbox" style="margin-top:0.15rem;" ${checked[i]?'checked':''} onchange="toggleOnboardChecklistItem('${kind}',${i},this.checked)">
+      <input type="checkbox" style="margin-top:0.15rem;" ${checked[i]?'checked':''} onchange="toggleOnboardChecklistItem('${storageKind}',${i},this.checked)">
       <span${checked[i]?' style="text-decoration:line-through;color:var(--text4);"':''}>${item}</span>
     </label>`).join('')
-    +`<button class="admin-add-btn" onclick="resetOnboardChecklist('${kind}')" style="margin-top:0.3rem;">Reset Checklist</button>`;
+    +`<button class="admin-add-btn" onclick="resetOnboardChecklist('${storageKind}')" style="margin-top:0.3rem;">Reset Checklist</button>`;
+}
+function renderOnboardChecklist(kind){renderChecklistInto('onboardChecklist-'+kind,kind,ONBOARD_CHECKLIST_ITEMS[kind]);}
+function refreshChecklistEverywhere(kind){
+  (CHECKLIST_ELEMENT_IDS[kind]||[]).forEach(elId=>{
+    if(document.getElementById(elId))renderChecklistInto(elId,kind,ONBOARD_CHECKLIST_ITEMS[kind]);
+  });
 }
 function toggleOnboardChecklistItem(kind,i,val){
   let checked={};
   try{checked=JSON.parse(LS.get(onboardChecklistKey(kind))||'{}');}catch(e){checked={};}
   checked[i]=val;
   LS.set(onboardChecklistKey(kind),JSON.stringify(checked));
-  renderOnboardChecklist(kind);
+  refreshChecklistEverywhere(kind);
 }
 function resetOnboardChecklist(kind){
   LS.set(onboardChecklistKey(kind),'{}');
-  renderOnboardChecklist(kind);
+  refreshChecklistEverywhere(kind);
 }
 
 function renderAdminRanks(){
@@ -3365,7 +3407,38 @@ function renderVenueManage(){
     .sort((a,b)=>(a.inactive?1:0)-(b.inactive?1:0)); // inactive venues sink to the bottom, active order otherwise unchanged
   if(!scoped.length){el.innerHTML='<div class="empty-state">No venues match these filters.</div>';return;}
   function gigClass(g){const m={'Karaoke':'gig-karaoke','Bingo':'gig-bingo','Trivia':'gig-trivia','Events':'gig-events','Private Events':'gig-private'};return m[g]||'';}
-  el.innerHTML=scoped.map(v=>`<div class="venue-manage-card"${v.inactive?' style="opacity:0.55;"':''}><div class="venue-manage-header"><div class="venue-manage-name">${v.name}${v.inactive?' <span style="font-size:0.62rem;color:var(--text4);font-weight:400;text-transform:uppercase;letter-spacing:0.08em;">· Inactive</span>':''}${v.locationId?` <span style="font-size:0.65rem;color:var(--text3);font-weight:400;">· ${locationLabel(v.locationId)}</span>`:''}</div><div style="display:flex;gap:0.4rem;"><button class="action-btn edit" onclick="openVenueModal('${v.id}')">✎</button><button class="action-btn delete" onclick="deleteVenue('${v.id}')">✕</button></div></div><div class="venue-gig-tags">${(v.gigs||[]).map(g=>`<span class="venue-gig-tag ${gigClass(g)}">${g}</span>`).join('')}</div>${(v.payMethod||v.startDate)?`<div style="font-size:0.68rem;color:var(--text3);margin-top:0.4rem;">${v.payMethod?'Pays via '+v.payMethod:''}${v.payMethod&&v.startDate?' · ':''}${v.startDate?'Started '+formatDateShort(v.startDate):''}</div>`:''}${v.notes?`<div style="font-size:0.81rem;color:var(--text3);margin-top:0.5rem;">${v.notes}</div>`:''}</div>`).join('');
+  el.innerHTML=scoped.map(v=>`<div class="venue-manage-card"${v.inactive?' style="opacity:0.55;"':''}><div class="venue-manage-header"><div class="venue-manage-name">${v.name}${v.inactive?' <span style="font-size:0.62rem;color:var(--text4);font-weight:400;text-transform:uppercase;letter-spacing:0.08em;">· Inactive</span>':''}${v.locationId?` <span style="font-size:0.65rem;color:var(--text3);font-weight:400;">· ${locationLabel(v.locationId)}</span>`:''}</div><div style="display:flex;gap:0.4rem;"><button class="action-btn" title="History" onclick="openVenueHistoryModal('${v.id}')">🕘</button><button class="action-btn edit" onclick="openVenueModal('${v.id}')">✎</button><button class="action-btn delete" onclick="deleteVenue('${v.id}')">✕</button></div></div><div class="venue-gig-tags">${(v.gigs||[]).map(g=>`<span class="venue-gig-tag ${gigClass(g)}">${g}</span>`).join('')}</div>${(v.payAmount||v.payMethod||v.startDate)?`<div style="font-size:0.68rem;color:var(--text3);margin-top:0.4rem;">${v.payAmount?v.payAmount:''}${v.payAmount&&v.payMethod?' via ':(v.payMethod?'Pays via ':'')}${v.payMethod||''}${(v.payAmount||v.payMethod)&&v.startDate?' · ':''}${v.startDate?'Started '+formatDateShort(v.startDate):''}</div>`:''}${v.notes?`<div style="font-size:0.81rem;color:var(--text3);margin-top:0.5rem;">${v.notes}</div>`:''}</div>`).join('');
+}
+const VENUE_GIG_SLOT_DAYS=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+function renderVenueGigSlotRows(slots){
+  const el=document.getElementById('vmGigSlotRows');
+  if(!el)return;
+  el.innerHTML=(slots||[]).map(s=>`
+    <div class="tip-pay-row" data-slotid="${s.id}">
+      <div class="tp-top">
+        <select class="form-input vm-slot-kind">${['Karaoke','Bingo','Trivia','Events','Private Events'].map(k=>`<option value="${k}"${s.kind===k?' selected':''}>${k}</option>`).join('')}</select>
+        <select class="form-input vm-slot-day">${VENUE_GIG_SLOT_DAYS.map(d=>`<option value="${d}"${s.day===d?' selected':''}>${d}</option>`).join('')}</select>
+      </div>
+      <div class="tp-top">
+        <input type="time" class="form-input vm-slot-time" value="${s.time||''}">
+        <input type="text" class="form-input vm-slot-price" placeholder="e.g. $150 flat" value="${(s.price||'').toString().replace(/"/g,'&quot;')}">
+        <button class="tp-del" type="button" onclick="this.closest('.tip-pay-row').remove()">✕</button>
+      </div>
+    </div>`).join('');
+}
+function addVenueGigSlotRow(){
+  const rows=readVenueGigSlotRows();
+  rows.push({id:Date.now().toString()+'_'+Math.random().toString(36).slice(2,5),kind:'Karaoke',day:'Monday',time:'',price:''});
+  renderVenueGigSlotRows(rows);
+}
+function readVenueGigSlotRows(){
+  return [...document.querySelectorAll('#vmGigSlotRows .tip-pay-row')].map(row=>({
+    id:row.dataset.slotid,
+    kind:row.querySelector('.vm-slot-kind').value,
+    day:row.querySelector('.vm-slot-day').value,
+    time:row.querySelector('.vm-slot-time').value,
+    price:row.querySelector('.vm-slot-price').value.trim()
+  }));
 }
 function openVenueModal(id=null){
   editVenueId=id;const venue=id?venues.find(v=>v.id===id):null;
@@ -3373,12 +3446,16 @@ function openVenueModal(id=null){
   document.getElementById('vmName').value=venue?venue.name:'';
   document.getElementById('vmNotes').value=venue?venue.notes||'':'';
   document.getElementById('vmInactive').checked=!!(venue&&venue.inactive);
+  document.getElementById('vmPayAmount').value=venue?venue.payAmount||'':'';
   document.getElementById('vmPayMethod').value=venue?venue.payMethod||'':'';
   document.getElementById('vmStartDate').value=venue?venue.startDate||'':'';
+  document.getElementById('vmHistoryBtn').style.display=id?'':'none';
+  renderVenueGigSlotRows(venue?venue.gigSlots||[]:[]);
   const locSel=document.getElementById('vmLocation');
   locSel.innerHTML=locations.map(l=>`<option value="${l.code}">${l.label}</option>`).join('');
   locSel.value=(venue&&venue.locationId)?venue.locationId:(currentLocationScope!=='ALL'?currentLocationScope:((locations[0]&&locations[0].code)||''));
   document.getElementById('gigChips').innerHTML=['Karaoke','Bingo','Trivia','Events','Private Events'].map(g=>{const sel=venue&&(venue.gigs||[]).includes(g);return`<div class="chip${sel?' selected-skill':''}" onclick="toggleChip(this,'skill')">${g}</div>`;}).join('');
+  renderChecklistInto('onboardChecklist-venueModal','venue',ONBOARD_CHECKLIST_ITEMS.venue);
   document.getElementById('venueModal').classList.add('open');
 }
 function closeVenueModal(){document.getElementById('venueModal').classList.remove('open');editVenueId=null;}
@@ -3388,14 +3465,107 @@ function saveVenue(){
   const notes=document.getElementById('vmNotes').value.trim();
   const locationId=document.getElementById('vmLocation').value;
   const inactive=document.getElementById('vmInactive').checked;
+  const payAmount=document.getElementById('vmPayAmount').value.trim();
   const payMethod=document.getElementById('vmPayMethod').value;
   const startDate=document.getElementById('vmStartDate').value;
-  if(editVenueId){const v=venues.find(x=>x.id===editVenueId);if(v){v.name=name;v.gigs=gigs;v.notes=notes;v.locationId=locationId;v.inactive=inactive;v.payMethod=payMethod;v.startDate=startDate;}}
-  else venues.push({id:Date.now().toString(),name,gigs,notes,locationId,inactive,payMethod,startDate});
+  const gigSlots=readVenueGigSlotRows();
+  const today=new Date().toISOString().slice(0,10);
+  if(editVenueId){
+    const v=venues.find(x=>x.id===editVenueId);
+    if(v){
+      const prev={payAmount:v.payAmount||'',payMethod:v.payMethod||'',startDate:v.startDate||''};
+      v.name=name;v.gigs=gigs;v.notes=notes;v.locationId=locationId;v.inactive=inactive;
+      v.payAmount=payAmount;v.payMethod=payMethod;v.startDate=startDate;v.gigSlots=gigSlots;
+      logVenueHistoryDiff(v,prev,{payAmount,payMethod,startDate},today);
+    }
+  }else{
+    const v={id:Date.now().toString(),name,gigs,notes,locationId,inactive,payAmount,payMethod,startDate,gigSlots,history:[]};
+    if(startDate||payAmount||payMethod){
+      pushVenueHistory(v,{date:startDate||today,text:'Onboarded'+(startDate?' — start date '+formatDateShort(startDate):'')+(payAmount?' — paying '+payAmount:'')+(payMethod?' via '+payMethod:''),auto:true});
+    }
+    venues.push(v);
+  }
   persist('venues-list',venues,'venuesSave');
   renderVenueManage();populateRosterFilters();closeVenueModal();
 }
 function deleteVenue(id){if(!confirm('Remove this venue?'))return;venues=venues.filter(v=>v.id!==id);persist('venues-list',venues,'venuesSave');renderVenueManage();populateRosterFilters();}
+
+// ── VENUE HISTORY LOG ──
+// Auto-logged whenever pay amount, pay method, or start date changes on save;
+// Ahnna can also add/edit/delete entries by hand from the History modal.
+function pushVenueHistory(v,entry){
+  v.history=v.history||[];
+  v.history.push(Object.assign({id:Date.now().toString()+'_'+Math.random().toString(36).slice(2,6)},entry));
+}
+function logVenueHistoryDiff(v,prev,next,today){
+  v.history=v.history||[];
+  if((prev.startDate||'')!==(next.startDate||'')&&next.startDate){
+    pushVenueHistory(v,{date:next.startDate,text:'Start date set to '+formatDateShort(next.startDate)+(prev.startDate?' (was '+formatDateShort(prev.startDate)+')':''),auto:true});
+  }
+  const payChanged=(prev.payAmount||'')!==(next.payAmount||'')||(prev.payMethod||'')!==(next.payMethod||'');
+  if(payChanged&&(next.payAmount||next.payMethod)){
+    let text;
+    if(!prev.payAmount&&!prev.payMethod)text='Pay set to '+(next.payAmount||'')+(next.payAmount&&next.payMethod?' via ':'')+(next.payMethod||'');
+    else text='Pay changed to '+(next.payAmount||prev.payAmount||'')+(next.payMethod?' via '+next.payMethod:'')+' (was '+(prev.payAmount||'—')+(prev.payMethod?' via '+prev.payMethod:'')+')';
+    pushVenueHistory(v,{date:today,text,auto:true});
+  }
+}
+function openVenueHistoryModal(id){
+  if(!id)return;
+  const v=venues.find(x=>x.id===id);if(!v)return;
+  historyVenueId=id;
+  document.getElementById('vhVenueName').textContent=v.name;
+  document.getElementById('vhNewDate').value=new Date().toISOString().slice(0,10);
+  document.getElementById('vhNewText').value='';
+  renderVenueHistoryList();
+  document.getElementById('venueHistoryModal').classList.add('open');
+}
+let historyVenueId=null;
+function renderVenueHistoryList(){
+  const el=document.getElementById('vhList');
+  const v=venues.find(x=>x.id===historyVenueId);
+  if(!v||!el)return;
+  const entries=(v.history||[]).slice().sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  if(!entries.length){el.innerHTML='<div class="empty-state">No history logged yet.</div>';return;}
+  el.innerHTML=entries.map(h=>`
+    <div class="tip-pay-row" data-hid="${h.id}">
+      <div class="tp-top">
+        <input type="date" class="form-input vh-date" value="${h.date||''}" style="max-width:150px;" onchange="editVenueHistoryEntry('${h.id}')">
+        <button class="tp-del" type="button" onclick="deleteVenueHistoryEntry('${h.id}')">✕</button>
+      </div>
+      <input type="text" class="form-input vh-text" value="${(h.text||'').replace(/"/g,'&quot;')}" onchange="editVenueHistoryEntry('${h.id}')">
+      ${h.auto?'<div style="font-size:0.6rem;color:var(--text4);">auto-logged</div>':''}
+    </div>`).join('');
+}
+function editVenueHistoryEntry(id){
+  const v=venues.find(x=>x.id===historyVenueId);if(!v)return;
+  const h=(v.history||[]).find(x=>x.id===id);if(!h)return;
+  const row=document.querySelector(`#vhList [data-hid="${id}"]`);if(!row)return;
+  h.date=row.querySelector('.vh-date').value;
+  h.text=row.querySelector('.vh-text').value.trim();
+  h.auto=false;
+  persist('venues-list',venues,'venuesSave');
+  renderVenueManage();
+}
+function addVenueHistoryEntry(){
+  const v=venues.find(x=>x.id===historyVenueId);if(!v)return;
+  const date=document.getElementById('vhNewDate').value;
+  const text=document.getElementById('vhNewText').value.trim();
+  if(!text)return;
+  pushVenueHistory(v,{date:date||new Date().toISOString().slice(0,10),text,auto:false});
+  persist('venues-list',venues,'venuesSave');
+  document.getElementById('vhNewText').value='';
+  renderVenueHistoryList();
+  renderVenueManage();
+}
+function deleteVenueHistoryEntry(id){
+  const v=venues.find(x=>x.id===historyVenueId);if(!v)return;
+  if(!confirm('Delete this log entry?'))return;
+  v.history=(v.history||[]).filter(x=>x.id!==id);
+  persist('venues-list',venues,'venuesSave');
+  renderVenueHistoryList();
+  renderVenueManage();
+}
 
 const TIP_BRACKET_VALUE={'No tips':0,'Under $10':5,'$10–$25':17.5,'$25–$50':37.5,'$50–$75':62.5,'$75–$100':87.5,'$100+':110};
 function loadVenueStats(){
