@@ -1170,6 +1170,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
       <div id="vmGigSlotRows" style="display:flex;flex-direction:column;gap:0.4rem;margin-bottom:0.5rem;"></div>
       <button class="btn-sm" type="button" onclick="addVenueGigSlotRow()">+ Add Gig Slot</button>
     </div>
+    <div class="form-group"><label class="form-label">Perks <span style="font-size:0.6rem;color:var(--text4);text-transform:none;letter-spacing:0;">(discounts, free drinks, etc. hosts get while working here — shown to hosts on Venue Perks)</span></label><textarea class="form-textarea" id="vmPerks" placeholder="e.g. Free non-alcoholic drinks all shift, 20% off food" style="min-height:60px;"></textarea></div>
     <div class="form-group"><label class="form-label">Notes (optional)</label><textarea class="form-textarea" id="vmNotes" placeholder="Any notes about this venue..." style="min-height:60px;"></textarea></div>
     <div class="form-group"><label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;font-size:0.8rem;color:var(--text2);"><input type="checkbox" id="vmInactive" style="width:16px;height:16px;"> Not currently active <span style="color:var(--text4);font-size:0.7rem;">(paused, ended, or no longer working with us)</span></label></div>
     <div class="admin-section" style="margin-top:0.4rem;">
@@ -3480,6 +3481,7 @@ function openVenueModal(id=null){
   document.getElementById('venueModalTitle').textContent=id?'Edit Venue':'Add Venue';
   document.getElementById('vmName').value=venue?venue.name:'';
   document.getElementById('vmNotes').value=venue?venue.notes||'':'';
+  document.getElementById('vmPerks').value=venue?venue.perks||'':'';
   document.getElementById('vmInactive').checked=!!(venue&&venue.inactive);
   const amounts=(venue&&venue.payAmounts)||{};
   VENUE_AMOUNT_KINDS.forEach(k=>{document.getElementById('vmAmount'+k).value=amounts[k]||'';});
@@ -3499,6 +3501,7 @@ function saveVenue(){
   const name=document.getElementById('vmName').value.trim();if(!name)return;
   const gigs=[...document.querySelectorAll('#gigChips .selected-skill')].map(el=>el.textContent);
   const notes=document.getElementById('vmNotes').value.trim();
+  const perks=document.getElementById('vmPerks').value.trim();
   const locationId=document.getElementById('vmLocation').value;
   const inactive=document.getElementById('vmInactive').checked;
   const payAmounts=readVenueAmounts();
@@ -3510,12 +3513,12 @@ function saveVenue(){
     const v=venues.find(x=>x.id===editVenueId);
     if(v){
       const prev={payAmounts:Object.assign({},v.payAmounts||{}),payMethod:v.payMethod||'',startDate:v.startDate||''};
-      v.name=name;v.gigs=gigs;v.notes=notes;v.locationId=locationId;v.inactive=inactive;
+      v.name=name;v.gigs=gigs;v.notes=notes;v.perks=perks;v.locationId=locationId;v.inactive=inactive;
       v.payAmounts=payAmounts;v.payMethod=payMethod;v.startDate=startDate;v.gigSlots=gigSlots;
       logVenueHistoryDiff(v,prev,{payAmounts,payMethod,startDate},today);
     }
   }else{
-    const v={id:Date.now().toString(),name,gigs,notes,locationId,inactive,payAmounts,payMethod,startDate,gigSlots,history:[]};
+    const v={id:Date.now().toString(),name,gigs,notes,perks,locationId,inactive,payAmounts,payMethod,startDate,gigSlots,history:[]};
     const anyAmount=VENUE_AMOUNT_KINDS.some(k=>payAmounts[k]);
     if(startDate||anyAmount||payMethod){
       const amtText=VENUE_AMOUNT_KINDS.filter(k=>payAmounts[k]).map(k=>(k==='Events'?'Event':k)+' '+payAmounts[k]).join(', ');
