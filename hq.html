@@ -1385,6 +1385,7 @@ const DEFAULT_VENUES=[
 
 let roster=[...DEFAULT_ROSTER],venues=[...DEFAULT_VENUES];
 let editRosterId=null,editVenueId=null;
+let rosterLoadedFromServer=false,venuesLoadedFromServer=false,ranksLoadedFromServer=false,hostOrderLoadedFromServer=false,locationsLoadedFromServer=false;
 let dragSrc=null,dragTabId=null,checkoutData=[];
 
 // ── STORAGE ── uses localStorage, Firebase syncs in background
@@ -1393,12 +1394,47 @@ function loadStorage(){
   try{const v=LS.get('venues-list');if(v)venues=JSON.parse(v);}catch(e){}
 }
 function loadVenuesList(){
-  if(!db)return;
+  if(!db){venuesLoadedFromServer=true;return;}
   db.collection('hq_data').doc('venues-list').get().then(snap=>{
     if(snap.exists){try{venues=JSON.parse(snap.data().value);renderVenueManage();populateRosterFilters();}catch(e){}}
-  }).catch(()=>{});
+    venuesLoadedFromServer=true;
+  }).catch(()=>{venuesLoadedFromServer=true;});
 }
+// The host roster used to be trusted from this browser's local cache only, with Firebase
+// treated as write-only — so opening HQ on a different device/browser (or after clearing
+// site data) would silently show a stale/empty list, and the next save would overwrite the
+// real cloud copy with it. This now always re-pulls the live roster from Firestore on load,
+// and saves are blocked until that pull finishes so a stale local copy can never win a race.
+function loadRoster(){
+  if(!db){rosterLoadedFromServer=true;return;}
+  db.collection('hq_data').doc('host-roster').get().then(snap=>{
+    if(snap.exists){
+      try{
+        const server=JSON.parse(snap.data().value);
+        if(Array.isArray(server))roster=server;
+      }catch(e){}
+    }
+    rosterLoadedFromServer=true;
+    renderRoster();filterRoster();renderVenueManage();populateRosterFilters();
+  }).catch(()=>{rosterLoadedFromServer=true;});
+}
+// Safety net: for the record-list blobs that burned us once already (a whole array of
+// business data gets overwritten in one shot), refuse to write to Firestore until we know
+// we've actually pulled the current live copy down first — otherwise a stale/empty local
+// array (fresh browser, cleared site data, a tab opened before the day's data loaded) can
+// silently stomp the real thing the moment anything triggers a save.
+const PERSIST_GUARDS={
+  'host-roster':()=>rosterLoadedFromServer,
+  'venues-list':()=>venuesLoadedFromServer,
+  'host-ranks':()=>ranksLoadedFromServer,
+  'host-order':()=>hostOrderLoadedFromServer
+};
 function persist(key,val,dotId){
+  const guard=PERSIST_GUARDS[key];
+  if(guard&&!guard()){
+    alert('Still loading the latest copy from the cloud — give it a second and try that again so nothing gets overwritten.');
+    return;
+  }
   LS.set(key,JSON.stringify(val));
   if(db){try{db.collection('hq_data').doc(key).set({value:JSON.stringify(val)});}catch(e){}}
   if(dotId){const d=document.getElementById(dotId);if(d){d.classList.add('show');setTimeout(()=>d.classList.remove('show'),2000);}}
@@ -2443,9 +2479,14 @@ let hostDragSrc = null;
 
 function loadRanks(){
   try{const r=LS.get('host-ranks');if(r)ranks=JSON.parse(r);}catch(e){}
-  if(db){db.collection('hq_data').doc('host-ranks').get().then(snap=>{if(snap.exists){try{ranks=JSON.parse(snap.data().value);renderAdminRanks();renderRoster();}catch(e){}}}).catch(()=>{});}
+  if(!db){ranksLoadedFromServer=true;return;}
+  db.collection('hq_data').doc('host-ranks').get().then(snap=>{
+    if(snap.exists){try{ranks=JSON.parse(snap.data().value);renderAdminRanks();renderRoster();}catch(e){}}
+    ranksLoadedFromServer=true;
+  }).catch(()=>{ranksLoadedFromServer=true;});
 }
 function saveRanks(){
+  if(!ranksLoadedFromServer){alert('Still loading the latest copy from the cloud — give it a second and try again.');return;}
   LS.set('host-ranks',JSON.stringify(ranks));
   if(db){try{db.collection('hq_data').doc('host-ranks').set({value:JSON.stringify(ranks)});}catch(e){}}
 }
@@ -2458,13 +2499,15 @@ function getRankById(id){return ranks.find(r=>r.id===id);}
 // and eventually planner/index) reads from this same source.
 let locations = [{code:'wa-southsound',label:'WA - South Sound'}];
 function loadLocations(){
-  if(!db)return Promise.resolve();
+  if(!db){locationsLoadedFromServer=true;return Promise.resolve();}
   return db.collection('hq_data').doc('locations').get().then(snap=>{
     if(snap.exists&&Array.isArray(snap.data().list)&&snap.data().list.length){locations=snap.data().list;}
+    locationsLoadedFromServer=true;
     renderAdminLocations();
-  }).catch(()=>{renderAdminLocations();});
+  }).catch(()=>{locationsLoadedFromServer=true;renderAdminLocations();});
 }
 function saveLocations(){
+  if(!locationsLoadedFromServer){alert('Still loading the latest copy from the cloud — give it a second and try again.');return;}
   if(db){try{db.collection('hq_data').doc('locations').set({list:locations});}catch(e){}}
 }
 function locationLabel(code){const l=locations.find(x=>x.code===code);return l?l.label:(code||'—');}
@@ -3620,8 +3663,14 @@ let hostOrder = null;
 
 function loadHostOrder(){
   try{const o=LS.get('host-order');if(o)hostOrder=JSON.parse(o);}catch(e){}
+  if(!db){hostOrderLoadedFromServer=true;return;}
+  db.collection('hq_data').doc('host-order').get().then(snap=>{
+    if(snap.exists){try{const server=JSON.parse(snap.data().value);if(Array.isArray(server))hostOrder=server;renderRoster();}catch(e){}}
+    hostOrderLoadedFromServer=true;
+  }).catch(()=>{hostOrderLoadedFromServer=true;});
 }
 function saveHostOrder(){
+  if(!hostOrderLoadedFromServer){return;}
   LS.set('host-order',JSON.stringify(hostOrder));
   if(db){try{db.collection('hq_data').doc('host-order').set({value:JSON.stringify(hostOrder)});}catch(e){}}
 }
@@ -3725,6 +3774,7 @@ function openRosterModal(id=null){
 function toggleChip(el,type){el.classList.toggle(type==='skill'?'selected-skill':'selected-venue');}
 function closeRosterModal(){document.getElementById('rosterModal').classList.remove('open');editRosterId=null;}
 function saveRoster(){
+  if(!rosterLoadedFromServer){alert('Still loading the host list from the cloud — give it a second and try Save again so nothing gets overwritten.');return;}
   const name=document.getElementById('rmName').value.trim();if(!name)return;
   const gatewayEmail=document.getElementById('rmGatewayEmail').value.trim().toLowerCase();
   const locationId=document.getElementById('rmLocation').value;
@@ -3744,7 +3794,7 @@ function saveRoster(){
   renderRoster();filterRoster();closeRosterModal();
   syncTipHosts([savedId]);
 }
-function deleteHost(id){if(!confirm('Remove this host?'))return;roster=roster.filter(h=>h.id!==id);persist('host-roster',roster,'rosterSave');renderRoster();syncTipHosts([id]);}
+function deleteHost(id){if(!rosterLoadedFromServer){alert('Still loading the host list from the cloud — give it a second and try again.');return;}if(!confirm('Remove this host?'))return;roster=roster.filter(h=>h.id!==id);persist('host-roster',roster,'rosterSave');renderRoster();syncTipHosts([id]);}
 
 // ── TIP-A-HOST PAGE ──
 // Public copy of each opted-in host lives in Firestore `tip_hosts` (one doc per host) and a
@@ -3815,6 +3865,7 @@ function syncTipHosts(ids){
   scheduleTipScheduleSync();
 }
 function syncAllTipHosts(){
+  if(!rosterLoadedFromServer){alert('Still loading the host list from the cloud — give it a second and try again so this doesn\'t publish an incomplete list.');return;}
   syncTipHosts(roster.filter(h=>h.tip&&h.tip.enabled).map(h=>h.id));
   const d=document.getElementById('rosterSave');if(d){d.classList.add('show');setTimeout(()=>d.classList.remove('show'),2000);}
 }
@@ -4378,6 +4429,7 @@ function clearBan(uid){
 // ── INIT ── renders immediately, Firebase syncs in background
 function init(){
   loadStorage();
+  loadRoster();
   loadRanks();
   loadHostOrder();
   loadGigSchedule();
