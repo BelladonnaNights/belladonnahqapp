@@ -563,6 +563,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
       <div class="section-header">
         <div class="section-title">Host Setup Questions <span class="save-dot" id="hostSetupSchemaSave">Saved ✓</span></div>
         <div style="display:flex;gap:0.5rem;">
+          <button class="btn-sm" onclick="previewHostSetup()">👁 Preview as Host</button>
           <button class="btn-sm" onclick="loadHostSetupDefaultTemplate()">Load Default Template</button>
           <button class="btn-sm btn-gold" onclick="addHostSetupSection()">+ Add Section</button>
         </div>
@@ -3259,7 +3260,7 @@ function hsGenId(prefix){return prefix+'_'+Date.now().toString(36)+Math.random()
 function loadHostSetupSchema(){
   if(!db){renderHostSetupBuilder();return;}
   db.collection('hq_data').doc('hostSetupSchema').get().then(snap=>{
-    if(snap.exists()){try{hostSetupSchema=JSON.parse(snap.data().value);}catch(e){hostSetupSchema={sections:[]};}}
+    if(snap.exists){try{hostSetupSchema=JSON.parse(snap.data().value);}catch(e){hostSetupSchema={sections:[]};}}
     if(!hostSetupSchema.sections)hostSetupSchema.sections=[];
     renderHostSetupBuilder();
   }).catch(()=>{renderHostSetupBuilder();});
@@ -3396,6 +3397,14 @@ function deleteHostSetupQuestion(){
   saveHostSetupSchemaToServer();
   closeHsqModal();
 }
+// Opens the actual Gateway wizard a new host sees — same file, same markup, same CSS —
+// in a no-sign-in-required "preview" mode that reads the live schema but never writes
+// anything to Firestore or Storage. This is the real thing, not a mockup of it, so it can
+// never drift out of sync with what hosts actually see.
+function previewHostSetup(){
+  if(hostSetupSchema.sections&&hostSetupSchema.sections.length)saveHostSetupSchemaToServer();
+  window.open('https://belladonnanights.github.io/belladonna-gateway/accounts.html?hostSetupPreview=1','_blank');
+}
 function loadHostSetupDefaultTemplate(){
   if(hostSetupSchema.sections.length&&!confirm('This replaces your current Host Setup questions with the full default template. Continue?'))return;
   hostSetupSchema=JSON.parse(JSON.stringify(DEFAULT_HOST_SETUP_SCHEMA));
@@ -3451,7 +3460,7 @@ function hsFormatAnswer(q,val){
 function viewHostSetupAnswers(uid){
   if(!db||!uid)return;
   db.collection('users').doc(uid).get().then(snap=>{
-    const profile=snap.exists()?snap.data():{};
+    const profile=snap.exists?snap.data():{};
     const hs=profile.hostSetup||{answers:{}};
     document.getElementById('hsvName').textContent=profile.name||profile.email||'Host Setup';
     document.getElementById('hsvStatus').textContent=hs.completedAt?('Completed '+new Date(hs.completedAt).toLocaleString()):(hs.startedAt?('Started '+new Date(hs.startedAt).toLocaleString()+' — not finished'):'Not started');
