@@ -79,6 +79,8 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
 .inner-tab.active{border-bottom-color:var(--gold);color:var(--gold);}
 .subpanel{display:none;}
 .subpanel.active{display:block;}
+.inner-subpanel{display:none;}
+.inner-subpanel.active{display:block;}
 
 .section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;}
 .section-title{font-size:0.65rem;letter-spacing:0.32em;text-transform:uppercase;color:var(--text3);font-weight:400;}
@@ -125,6 +127,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
 .skill-tag{font-size:0.6rem;letter-spacing:0.14em;text-transform:uppercase;padding:0.2rem 0.6rem;border-radius:6px;background:var(--gold-dim);color:var(--gold);border:1px solid var(--border-gold);}
 .venue-tags{display:flex;flex-wrap:wrap;gap:0.35rem;}
 .venue-tag{font-size:0.6rem;letter-spacing:0.1em;padding:0.2rem 0.6rem;border-radius:6px;background:var(--purple-dim);color:var(--purple-btn);border:1px solid var(--border);}
+.roster-chip-row{display:flex;flex-wrap:wrap;gap:0.35rem;align-items:center;}
 .no-results{text-align:center;padding:1.5rem;color:var(--text3);font-size:0.78rem;letter-spacing:0.12em;}
 
 .acct-card{background:var(--surface);border:1px solid var(--border);padding:1rem 1.2rem;margin-bottom:0.7rem;}
@@ -335,8 +338,10 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
 .tip-pay-row .tp-del:hover{border-color:var(--rose);color:var(--rose);}
 .tip-photo-prev{width:44px;height:44px;border-radius:50%;object-fit:cover;border:1px solid var(--border-gold);flex:none;}
 .tip-hint{font-size:0.62rem;color:var(--text3);line-height:1.5;margin-top:0.3rem;}
+.tip-pay-row .tp-link-preview{font-size:0.65rem;color:var(--gold);word-break:break-all;min-height:1em;}
+.tip-pay-row .tp-link-preview.tp-link-note{color:var(--text3);font-style:italic;}
 .tip-card-row{display:flex;align-items:center;gap:0.6rem;flex-wrap:wrap;margin-top:0.6rem;}
-.tip-toggle-btn{font-size:0.6rem;letter-spacing:0.12em;text-transform:uppercase;padding:0.3rem 0.7rem;cursor:pointer;border:1px solid var(--border);background:var(--surface2);color:var(--text3);font-family:'DM Sans',sans-serif;transition:all 0.2s;}
+.tip-toggle-btn{font-size:0.6rem;letter-spacing:0.12em;text-transform:uppercase;padding:0.2rem 0.6rem;border-radius:6px;cursor:pointer;border:1px solid var(--border);background:var(--surface2);color:var(--text3);font-family:'DM Sans',sans-serif;transition:all 0.2s;}
 .tip-toggle-btn:hover{border-color:var(--gold);color:var(--gold);}
 .tip-toggle-btn.on{border-color:var(--gold);color:var(--gold);background:var(--gold-dim);}
 .tip-warn{font-size:0.62rem;color:var(--text3);font-style:italic;}
@@ -446,7 +451,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
     <button class="subtab" onclick="showSub('hosts','roster',this)">Host Roster</button>
     <button class="subtab" onclick="showSub('hosts','history',this)">Sign-In/Out Log</button>
     <button class="subtab" onclick="showSub('hosts','onboarding',this)">Host Onboarding</button>
-    <button class="subtab" onclick="showSub('hosts','setupresponses',this);loadHostSetupResponses()">Setup Responses</button>
+    <button class="subtab" onclick="showSub('hosts','setupresponses',this)">Profile Setup</button>
     <button class="subtab" onclick="showSub('hosts','leadsprogress',this);renderRecruits()">Leads Progress</button>
   </div>
   <div class="subpanel active" id="sub-hosts-live">
@@ -525,16 +530,6 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
     </div>
 
     <div class="section-header">
-      <div class="section-title">Host Setup Questions <span class="save-dot" id="hostSetupSchemaSave">Saved ✓</span></div>
-      <div style="display:flex;gap:0.5rem;">
-        <button class="btn-sm" onclick="loadHostSetupDefaultTemplate()">Load Default Template</button>
-        <button class="btn-sm btn-gold" onclick="addHostSetupSection()">+ Add Section</button>
-      </div>
-    </div>
-    <div style="font-size:0.68rem;color:var(--text3);margin-bottom:1rem;line-height:1.6;">This is what pops up the first time someone creates a Gateway account — they can skip it and finish later from My Account. Changes here take effect immediately for anyone who opens it.</div>
-    <div id="hostSetupSectionsList"></div>
-
-    <div class="section-header" style="margin-top:1.6rem;">
       <div class="section-title">Additional Written Instructions</div>
     </div>
     <div class="rte-toolbar" id="rteToolbar-host" style="display:none;">
@@ -560,20 +555,37 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
     </div>
   </div>
   <div class="subpanel" id="sub-hosts-setupresponses">
-    <div class="section-header">
-      <div class="section-title">Host Setup Responses</div>
-      <button class="btn-sm" onclick="loadHostSetupResponses()">↻ Refresh</button>
+    <div class="inner-tab-row">
+      <button class="inner-tab active" onclick="showHostsInnerTab('questions',this)">Host Setup Questions</button>
+      <button class="inner-tab" onclick="showHostsInnerTab('responses',this);loadHostSetupResponses()">Responses</button>
     </div>
-    <div class="roster-search">
-      <input type="text" class="roster-search-input" id="hsrSearch" placeholder="Search by name or email..." oninput="renderHostSetupResponses()">
-      <select class="roster-filter-select" id="hsrStatusFilter" onchange="renderHostSetupResponses()">
-        <option value="">All</option>
-        <option value="complete">Completed</option>
-        <option value="partial">Started, Not Finished</option>
-        <option value="none">Not Started</option>
-      </select>
+    <div class="inner-subpanel active" id="inner-hosts-questions">
+      <div class="section-header">
+        <div class="section-title">Host Setup Questions <span class="save-dot" id="hostSetupSchemaSave">Saved ✓</span></div>
+        <div style="display:flex;gap:0.5rem;">
+          <button class="btn-sm" onclick="loadHostSetupDefaultTemplate()">Load Default Template</button>
+          <button class="btn-sm btn-gold" onclick="addHostSetupSection()">+ Add Section</button>
+        </div>
+      </div>
+      <div style="font-size:0.68rem;color:var(--text3);margin-bottom:1rem;line-height:1.6;">This is what pops up the first time someone creates a Gateway account — they can skip it and finish later from My Account. Changes here take effect immediately for anyone who opens it.</div>
+      <div id="hostSetupSectionsList"></div>
     </div>
-    <div id="hostSetupResponsesList"><div class="empty-state">Loading...</div></div>
+    <div class="inner-subpanel" id="inner-hosts-responses">
+      <div class="section-header">
+        <div class="section-title">Host Setup Responses</div>
+        <button class="btn-sm" onclick="loadHostSetupResponses()">↻ Refresh</button>
+      </div>
+      <div class="roster-search">
+        <input type="text" class="roster-search-input" id="hsrSearch" placeholder="Search by name or email..." oninput="renderHostSetupResponses()">
+        <select class="roster-filter-select" id="hsrStatusFilter" onchange="renderHostSetupResponses()">
+          <option value="">All</option>
+          <option value="complete">Completed</option>
+          <option value="partial">Started, Not Finished</option>
+          <option value="none">Not Started</option>
+        </select>
+      </div>
+      <div id="hostSetupResponsesList"><div class="empty-state">Loading...</div></div>
+    </div>
   </div>
   <div class="subpanel" id="sub-hosts-leadsprogress">
     <div class="section-header">
@@ -1094,7 +1106,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
           <label class="form-label">Payment Options</label>
           <div id="tipPayRows"></div>
           <button type="button" class="btn-sm btn-gold" onclick="addTipPayRow()">+ Add Payment Option</button>
-          <div class="tip-hint">For each one: the payment name people see, the link the button sends them to (e.g. your Venmo profile link), and your Cloudflare QR image (kept in HQ for later, not shown on the page). Cash needs none of these.</div>
+          <div class="tip-hint">Pick the platform, then just type the username/handle — the click-through link is built for you (Venmo, Cash App, PayPal). Zelle and Other have no public profile link, so those just display. Your Cloudflare QR image is kept in HQ for later, not shown on the page. Cash needs none of this.</div>
         </div>
       </div>
     </div>
@@ -1456,6 +1468,11 @@ function showSub(tab,id,el){
   if(tab==='hosts'&&id==='history')refreshSigninLog();
   if(tab==='schedule'&&id==='cal')renderGigCalendar();
   if(tab==='schedule'&&id==='table')renderScheduleSpreadsheet();
+}
+function showHostsInnerTab(id,el){
+  document.querySelectorAll('#sub-hosts-setupresponses .inner-subpanel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('#sub-hosts-setupresponses .inner-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById(`inner-hosts-${id}`).classList.add('active');el.classList.add('active');
 }
 
 // ── SHEETS ──
@@ -3728,12 +3745,12 @@ function renderRosterCards(list){
           <button class="action-btn delete" onclick="deleteHost('${h.id}')">✕</button>
         </div>
       </div>
-      <div class="skill-tags">${(h.skills||[]).map(s=>`<span class="skill-tag">${s}</span>`).join('')||'<span style="font-size:0.81rem;color:var(--text3)">No skills added</span>'}</div>
-      <div class="venue-tags" style="margin-top:0.35rem;">${(h.venues||[]).map(v=>`<span class="venue-tag">${v}</span>`).join('')||'<span style="font-size:0.81rem;color:var(--text3)">No venues added</span>'}</div>
-      <div class="tip-card-row">
+      <div class="roster-chip-row">
+        ${(h.skills||[]).map(s=>`<span class="skill-tag">${s}</span>`).join('')}
+        ${(h.venues||[]).map(v=>`<span class="venue-tag">${v}</span>`).join('')}
         <button class="tip-toggle-btn${h.tip&&h.tip.enabled?' on':''}" onclick="toggleTipHost('${h.id}')">${h.tip&&h.tip.enabled?'✓ On tip-a-host page':'+ Add to tip-a-host page'}</button>
-        ${h.tip&&h.tip.enabled&&(!h.tip.photo||!(h.tip.payments||[]).length)?'<span class="tip-warn">Still needs a photo or payment option — click ✎</span>':''}
       </div>
+      ${h.tip&&h.tip.enabled&&(!h.tip.photo||!(h.tip.payments||[]).length)?'<div class="tip-warn" style="margin-top:0.4rem;">Still needs a photo or payment option — click ✎</div>':''}
     </div>`;
   }).join('');
 }
@@ -3817,24 +3834,70 @@ function previewTipPhoto(){
   if(/^https:\/\//i.test(url)){img.src=url;img.style.display='block';img.onerror=function(){img.style.display='none';};}
   else{img.removeAttribute('src');img.style.display='none';}
 }
+// Click-through links used to be typed in by hand. Now they're built from the platform +
+// username, so there's no manual link field — pick Venmo/Cash App/PayPal and the link is
+// derived automatically. Zelle has no public profile-link format (and Bella said she's not
+// sure one exists), and "Other" is unpredictable by definition, so those two just display
+// the username as text rather than linking anywhere.
+function tipUsernamePlaceholder(method){
+  switch(method){
+    case 'venmo':return 'Venmo username (e.g. AhnnaAvenues)';
+    case 'cashapp':return 'Cash App $cashtag (e.g. $AhnnaAvenues)';
+    case 'paypal':return 'PayPal.me username (e.g. AhnnaAvenues)';
+    case 'zelle':return 'Zelle email or phone (shown, not a clickable link)';
+    case 'cash':return '';
+    default:return 'Username or handle';
+  }
+}
+function tipPaymentLink(method,username){
+  const raw=(username||'').trim();
+  if(!raw)return '';
+  switch(method){
+    case 'venmo':return 'https://venmo.com/'+encodeURIComponent(raw.replace(/^@/,''));
+    case 'cashapp':return 'https://cash.app/$'+encodeURIComponent(raw.replace(/^\$/,''));
+    case 'paypal':return 'https://paypal.me/'+encodeURIComponent(raw.replace(/^@/,''));
+    default:return '';
+  }
+}
+function tpRenderPreview(row){
+  if(!row)return;
+  const method=row.querySelector('.tp-method').value;
+  const name=row.querySelector('.tp-name').value;
+  const link=tipPaymentLink(method,name);
+  const prev=row.querySelector('.tp-link-preview');
+  if(!prev)return;
+  if(link){prev.textContent='→ '+link;prev.classList.remove('tp-link-note');}
+  else if(method==='zelle'){prev.textContent='Shown as text on the tip page — Zelle has no public profile link to click through to.';prev.classList.add('tp-link-note');}
+  else if(method==='other'){prev.textContent='Shown as text on the tip page — no known link format for "Other".';prev.classList.add('tp-link-note');}
+  else{prev.textContent='';prev.classList.remove('tp-link-note');}
+}
+function tpMethodChanged(sel){
+  const row=sel.closest('.tip-pay-row');
+  const method=sel.value;
+  const nameInput=row.querySelector('.tp-name');
+  nameInput.placeholder=tipUsernamePlaceholder(method);
+  nameInput.style.display=method==='cash'?'none':'';
+  tpRenderPreview(row);
+}
 function addTipPayRow(p){
   p=p||{method:'venmo',name:'',qr:''};
   const opts=TIP_METHODS.map(m=>`<option value="${m.key}"${m.key===p.method?' selected':''}>${m.label}</option>`).join('');
   document.getElementById('tipPayRows').insertAdjacentHTML('beforeend',
     `<div class="tip-pay-row">
-      <div class="tp-top"><select class="form-input tp-method">${opts}</select><button type="button" class="tp-del" onclick="this.closest('.tip-pay-row').remove()" title="Remove">✕</button></div>
-      <input type="text" class="form-input tp-name" placeholder="Payment name (e.g. AhnnaAvenues)" value="${tipEsc(p.name)}">
-      <input type="text" class="form-input tp-link" placeholder="Payment link (e.g. https://venmo.com/u/AhnnaAvenues)" value="${tipEsc(p.link)}">
+      <div class="tp-top"><select class="form-input tp-method" onchange="tpMethodChanged(this)">${opts}</select><button type="button" class="tp-del" onclick="this.closest('.tip-pay-row').remove()" title="Remove">✕</button></div>
+      <input type="text" class="form-input tp-name" placeholder="${tipEsc(tipUsernamePlaceholder(p.method))}" value="${tipEsc(p.name)}" oninput="tpRenderPreview(this.closest('.tip-pay-row'))" style="${p.method==='cash'?'display:none;':''}">
+      <div class="tp-link-preview"></div>
       <input type="text" class="form-input tp-qr" placeholder="QR code image URL (Cloudflare) — saved for later, not shown on the tip page" value="${tipEsc(p.qr)}">
     </div>`);
+  tpRenderPreview(document.querySelector('#tipPayRows .tip-pay-row:last-child'));
 }
 function readTipPayRows(){
-  return [...document.querySelectorAll('#tipPayRows .tip-pay-row')].map(r=>({
-    method:r.querySelector('.tp-method').value,
-    name:r.querySelector('.tp-name').value.trim(),
-    link:r.querySelector('.tp-link').value.trim(),
-    qr:r.querySelector('.tp-qr').value.trim()
-  })).filter(p=>p.method==='cash'||p.name||p.link||p.qr);
+  return [...document.querySelectorAll('#tipPayRows .tip-pay-row')].map(r=>{
+    const method=r.querySelector('.tp-method').value;
+    const name=r.querySelector('.tp-name').value.trim();
+    const qr=r.querySelector('.tp-qr').value.trim();
+    return {method,name,link:tipPaymentLink(method,name),qr};
+  }).filter(p=>p.method==='cash'||p.name||p.qr);
 }
 function toggleTipHost(id){
   const h=roster.find(x=>String(x.id)===String(id));if(!h)return;
@@ -3866,8 +3929,26 @@ function syncTipHosts(ids){
 }
 function syncAllTipHosts(){
   if(!rosterLoadedFromServer){alert('Still loading the host list from the cloud — give it a second and try again so this doesn\'t publish an incomplete list.');return;}
-  syncTipHosts(roster.filter(h=>h.tip&&h.tip.enabled).map(h=>h.id));
+  const validIds=new Set(roster.filter(h=>h.tip&&h.tip.enabled).map(h=>String(h.id)));
+  syncTipHosts([...validIds]);
+  purgeOrphanTipHosts(validIds);
   const d=document.getElementById('rosterSave');if(d){d.classList.add('show');setTimeout(()=>d.classList.remove('show'),2000);}
+}
+// "Sync Tip Page" used to only ever add/update the hosts currently switched on — it never
+// checked whether Firestore still had old entries for hosts since deleted or renamed in HQ
+// (their tip_hosts doc just sat there forever, which is why "doubles" showed up and clicking
+// Sync Tip Page didn't fix it — it was never designed to clean anything up, only publish).
+// This sweeps the whole tip_hosts collection and removes anything that isn't a currently
+// tip-enabled host.
+function purgeOrphanTipHosts(validIds){
+  if(!db)return;
+  db.collection('tip_hosts').get().then(snap=>{
+    const toDelete=snap.docs.filter(d=>!validIds.has(d.id));
+    if(!toDelete.length)return;
+    const batch=db.batch();
+    toDelete.forEach(d=>batch.delete(d.ref));
+    batch.commit().catch(tipFail);
+  }).catch(tipFail);
 }
 function scheduleTipScheduleSync(){clearTimeout(tipSchedTimer);tipSchedTimer=setTimeout(syncTipSchedule,2500);}
 function syncTipSchedule(){
