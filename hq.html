@@ -1037,6 +1037,12 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
 <!-- ACCOUNTS -->
 <div class="panel" id="panel-accounts">
   <div class="section-header">
+    <div class="section-title">Access Requests</div>
+    <button class="btn-sm" onclick="loadAccessRequests()">↻ Refresh</button>
+  </div>
+  <div class="roster-grid" id="accessRequestsGrid"><div class="empty-state">Loading…</div></div>
+
+  <div class="section-header" style="margin-top:1.5rem;">
     <div class="section-title">Accounts</div>
     <button class="btn-sm" onclick="loadAccounts()">↻ Refresh</button>
   </div>
@@ -1495,7 +1501,7 @@ function showTab(id,el){
   document.getElementById('panel-'+id).classList.add('active');el.classList.add('active');
   if(id==='dashboard')renderDashboardWeek();
   if(id==='schedule'){populateSchedFilters();loadShiftsData().then(renderScheduleAll);}
-  if(id==='accounts')loadAccounts();
+  if(id==='accounts'){loadAccounts();loadAccessRequests();}
 }
 function showSub(tab,id,el){
   document.querySelectorAll(`#panel-${tab} .subpanel`).forEach(p=>p.classList.remove('active'));
@@ -4564,6 +4570,81 @@ function renderAccounts(){
       </div>
     </div>`;
   }).join('');
+}
+
+// ── Access Requests — accounts.html writes a pending doc here whenever
+// someone taps "Request Access" on an app they don't have (from either the
+// "No Access" screen or their own "My Account" page). Approving one here is
+// the ONLY thing that actually grants anything — the request itself never
+// does. Reuses the same Firestore write + RTDB mirror path as the manual
+// chips below, just driven from the request instead of a click in the grid.
+let accessRequests=[];
+function loadAccessRequests(){
+  const grid=document.getElementById('accessRequestsGrid');
+  if(!db){grid.innerHTML='<div class="empty-state">Firebase not connected.</div>';return;}
+  grid.innerHTML='<div class="empty-state">Loading…</div>';
+  db.collection('accessRequests').where('status','==','pending').get().then(snap=>{
+    accessRequests=snap.docs.map(d=>({id:d.id,...d.data()}));
+    renderAccessRequests();
+  }).catch(e=>{
+    grid.innerHTML='<div class="empty-state">Couldn\'t load access requests. '+e.message+'</div>';
+  });
+}
+function renderAccessRequests(){
+  const grid=document.getElementById('accessRequestsGrid');
+  if(!accessRequests.length){grid.innerHTML='<div class="empty-state">No pending requests.</div>';return;}
+  grid.innerHTML=accessRequests.map(r=>{
+    const when=r.requestedAt&&r.requestedAt.toDate?formatDateShort(r.requestedAt.toDate().toISOString().slice(0,10)):'';
+    return `<div class="acct-card">
+      <div class="acct-header">
+        <div class="acct-name-group">
+          <div class="acct-name">${r.name||r.email||'(unknown)'}</div>
+          <div class="acct-meta">${r.email||''}${when?' · requested '+when:''}</div>
+        </div>
+        <div class="acct-badges">
+          <span class="acct-status-badge" style="${r.kind==='admin'?'background:var(--gold-dim);color:var(--gold);border-color:var(--border-gold);':''}">${esc(r.label||r.appKey)}</span>
+        </div>
+      </div>
+      <div style="display:flex;gap:0.5rem;margin-top:0.5rem;">
+        <button class="btn-sm" onclick="approveAccessRequest('${r.id}')">✓ Approve</button>
+        <button class="btn-sm" onclick="dismissAccessRequest('${r.id}')" style="opacity:0.7;">Dismiss</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function approveAccessRequest(reqId){
+  const req=accessRequests.find(r=>r.id===reqId);if(!req)return;
+  const appLabel=req.label||req.appKey;
+  if(req.kind==='admin'&&!confirm(`Give ${req.name||req.email} admin access to ${appLabel}?`))return;
+  db.collection('users').doc(req.uid).get().then(snap=>{
+    const data=snap.exists?snap.data():{};
+    if(req.kind==='admin'){
+      const adminAccess=Object.assign({},data.adminAccess||{});
+      adminAccess[req.appKey]=true;
+      return db.collection('users').doc(req.uid).set({adminAccess},{merge:true}).then(()=>mirrorAdminAccess(req.uid,adminAccess));
+    }else{
+      const entitlements=Object.assign({},data.entitlements||{});
+      entitlements[req.appKey]=true;
+      return db.collection('users').doc(req.uid).set({entitlements},{merge:true}).then(()=>mirrorProgramAccess(req.uid,entitlements));
+    }
+  }).then(()=>{
+    return db.collection('accessRequests').doc(reqId).set({status:'approved',resolvedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
+  }).then(()=>{
+    accessRequests=accessRequests.filter(r=>r.id!==reqId);
+    renderAccessRequests();
+    loadAccounts();
+  }).catch(e=>{
+    alert('Failed to approve: '+e.message);
+  });
+}
+function dismissAccessRequest(reqId){
+  db.collection('accessRequests').doc(reqId).set({status:'dismissed',resolvedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true}).then(()=>{
+    accessRequests=accessRequests.filter(r=>r.id!==reqId);
+    renderAccessRequests();
+  }).catch(e=>{
+    alert('Failed to dismiss: '+e.message);
+  });
 }
 
 function toggleEntitlement(uid,appKey){
