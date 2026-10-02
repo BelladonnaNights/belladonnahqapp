@@ -1374,6 +1374,16 @@ if(authInst){
     if(user&&db){
       db.collection('users').doc(user.uid).get().then(function(snap){
         const profile=snap.exists?snap.data():{};
+        // Hard admin check, independent of the Gateway front door — a venue or
+        // host account should never get past this even with a valid (or stale)
+        // gatewaySession_hq sitting in localStorage. Kick them straight back out.
+        if(!(profile.adminAccess&&profile.adminAccess.hq)){
+          try{localStorage.removeItem('gatewaySession_'+GATEWAY_APP_KEY);}catch(e){}
+          authInst.signOut().catch(function(){}).then(function(){
+            window.location.href='https://belladonnanights.github.io/belladonna-gateway/accounts.html?return='+encodeURIComponent(window.location.href)+'&app='+GATEWAY_APP_KEY;
+          });
+          return;
+        }
         myLocationId=profile.locationId||null;
         myAllLocations=!!profile.allLocations;
         myLeadsAccess=!!(profile.leadsAccess||(profile.adminAccess&&profile.adminAccess.hq));
