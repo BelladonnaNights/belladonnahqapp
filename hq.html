@@ -1038,10 +1038,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
 <div class="panel" id="panel-accounts">
   <div class="section-header">
     <div class="section-title">Accounts</div>
-    <div style="display:flex;gap:0.5rem;">
-      <button class="btn-sm" onclick="migrateSubscribersToHosts()" title="One-time cleanup: sets every account that still has the old 'subscriber' type to Host">Convert Subscribers → Hosts</button>
-      <button class="btn-sm" onclick="loadAccounts()">↻ Refresh</button>
-    </div>
+    <button class="btn-sm" onclick="loadAccounts()">↻ Refresh</button>
   </div>
   <div class="roster-search">
     <input type="text" class="roster-search-input" id="acctSearch" placeholder="Search name, email, username, Host ID, or Venue ID..." oninput="renderAccounts()">
@@ -1079,6 +1076,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
   <div class="modal">
     <div class="modal-title" id="rosterModalTitle">Add Host</div>
     <div class="form-group"><label class="form-label">Host Name</label><input type="text" class="form-input" id="rmName" placeholder="Full name"></div>
+    <div class="form-group"><label class="form-label">Last Name <span style="font-size:0.6rem;color:var(--text4);text-transform:none;letter-spacing:0;">(shown on the host card here in HQ — never sent to the tip-a-host page)</span></label><input type="text" class="form-input" id="rmLastName" placeholder="Last name"></div>
     <div class="form-group"><label class="form-label">Host ID <span style="font-size:0.6rem;color:var(--text4);text-transform:none;letter-spacing:0;">(matched against the Host ID set on their Gateway account in Accounts — takes priority over the email below if both are set)</span></label><input type="text" class="form-input" id="rmHostId" placeholder="not set"></div>
     <div class="form-group"><label class="form-label">Gateway Account Email <span style="font-size:0.6rem;color:var(--text4);text-transform:none;letter-spacing:0;">(fallback link to their Belladonna account if no Host ID is set on either side)</span></label><input type="text" class="form-input" id="rmGatewayEmail" placeholder="the email they signed up with"></div>
     <div class="form-group" id="rmHostSetupWrap" style="display:none;">
@@ -3765,9 +3763,8 @@ function renderRosterCards(list){
       <div class="acct-header">
         <div style="display:flex;align-items:center;gap:0.6rem;">
           <span class="host-drag-handle">⠿</span>
-          <div class="host-avatar">${(h.name||'?').charAt(0).toUpperCase()}</div>
           <div class="acct-name-group">
-            <div class="acct-name">${h.name}</div>
+            <div class="acct-name">${h.name}${h.lastName?' '+h.lastName:''}</div>
             <div class="acct-meta">${h.locationId?locationLabel(h.locationId):'No location set'}</div>
           </div>
         </div>
@@ -3803,6 +3800,7 @@ function openRosterModal(id=null){
   editRosterId=id;const host=id?roster.find(h=>h.id===id):null;
   document.getElementById('rosterModalTitle').textContent=id?'Edit Host':'Add Host';
   document.getElementById('rmName').value=host?host.name:'';
+  document.getElementById('rmLastName').value=host?host.lastName||'':'';
   document.getElementById('rmHostId').value=host?host.hostId||'':'';
   document.getElementById('rmGatewayEmail').value=host?host.gatewayEmail||'':'';
   renderRosterHostSetupStatus(host);
@@ -3826,6 +3824,7 @@ function closeRosterModal(){document.getElementById('rosterModal').classList.rem
 function saveRoster(){
   if(!rosterLoadedFromServer){alert('Still loading the host list from the cloud — give it a second and try Save again so nothing gets overwritten.');return;}
   const name=document.getElementById('rmName').value.trim();if(!name)return;
+  const lastName=document.getElementById('rmLastName').value.trim();
   const hostId=document.getElementById('rmHostId').value.trim();
   const gatewayEmail=document.getElementById('rmGatewayEmail').value.trim().toLowerCase();
   const locationId=document.getElementById('rmLocation').value;
@@ -3839,8 +3838,8 @@ function saveRoster(){
   if(badUrl){alert('The photo, payment link and QR code fields need full https:// web addresses.');return;}
   const tip={enabled:tipEnabledDraft,photo:tipPhoto,payments:tipPayments};
   let savedId=editRosterId;
-  if(editRosterId){const h=roster.find(x=>x.id===editRosterId);if(h){h.name=name;h.skills=skills;h.venues=vs;h.rankId=rankId;h.locationId=locationId;h.tip=tip;h.hostId=hostId;h.gatewayEmail=gatewayEmail;}}
-  else{savedId=Date.now().toString();roster.push({id:savedId,name,skills,venues:vs,rankId,locationId,tip,hostId,gatewayEmail});}
+  if(editRosterId){const h=roster.find(x=>x.id===editRosterId);if(h){h.name=name;h.lastName=lastName;h.skills=skills;h.venues=vs;h.rankId=rankId;h.locationId=locationId;h.tip=tip;h.hostId=hostId;h.gatewayEmail=gatewayEmail;}}
+  else{savedId=Date.now().toString();roster.push({id:savedId,name,lastName,skills,venues:vs,rankId,locationId,tip,hostId,gatewayEmail});}
   persist('host-roster',roster,'rosterSave');
   renderRoster();filterRoster();closeRosterModal();
   syncTipHosts([savedId]);
@@ -4553,28 +4552,6 @@ function setAcctVenueId(uid,val){
   db.collection('users').doc(uid).set({venueId:acct.venueId},{merge:true}).catch(e=>{
     acct.venueId=prev;renderAccounts();
     alert('Failed to update Venue ID: '+e.message);
-  });
-}
-// One-time cleanup: every account created before Host/Venue signup existed
-// defaulted to accountType "subscriber". This flips all of those over to
-// "host" in one pass (nothing is deleted — just the one field changes),
-// since that's what nearly all of them actually are.
-function migrateSubscribersToHosts(){
-  if(!accounts.length){alert('Load accounts first (hit Refresh).');return;}
-  const targets=accounts.filter(a=>(a.accountType||'subscriber')==='subscriber');
-  if(!targets.length){alert('No accounts are still marked Subscriber — nothing to convert.');return;}
-  if(!confirm(`Convert ${targets.length} Subscriber account(s) to Host? This only changes their account type — nothing is deleted.`))return;
-  const batch=db.batch();
-  targets.forEach(a=>{
-    a.accountType='host';
-    batch.set(db.collection('users').doc(a.uid),{accountType:'host'},{merge:true});
-  });
-  batch.commit().then(()=>{
-    renderAccounts();
-    alert(`Converted ${targets.length} account(s) to Host.`);
-  }).catch(e=>{
-    alert('Conversion failed: '+e.message);
-    loadAccounts();
   });
 }
 function toggleAllLocations(uid){
