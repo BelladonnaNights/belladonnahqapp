@@ -1038,14 +1038,18 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
 <div class="panel" id="panel-accounts">
   <div class="section-header">
     <div class="section-title">Accounts</div>
-    <button class="btn-sm" onclick="loadAccounts()">↻ Refresh</button>
+    <div style="display:flex;gap:0.5rem;">
+      <button class="btn-sm" onclick="migrateSubscribersToHosts()" title="One-time cleanup: sets every account that still has the old 'subscriber' type to Host">Convert Subscribers → Hosts</button>
+      <button class="btn-sm" onclick="loadAccounts()">↻ Refresh</button>
+    </div>
   </div>
   <div class="roster-search">
-    <input type="text" class="roster-search-input" id="acctSearch" placeholder="Search name, email, username, or Host ID..." oninput="renderAccounts()">
+    <input type="text" class="roster-search-input" id="acctSearch" placeholder="Search name, email, username, Host ID, or Venue ID..." oninput="renderAccounts()">
     <select class="roster-filter-select" id="acctTypeFilter" onchange="renderAccounts()">
       <option value="">All Types</option>
       <option value="host">Hosts</option>
-      <option value="subscriber">Subscribers</option>
+      <option value="venue">Venues</option>
+      <option value="subscriber">Subscribers (legacy)</option>
       <option value="former_host">Former Hosts</option>
     </select>
     <select class="roster-filter-select" id="acctStatusFilter" onchange="renderAccounts()">
@@ -1075,7 +1079,8 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
   <div class="modal">
     <div class="modal-title" id="rosterModalTitle">Add Host</div>
     <div class="form-group"><label class="form-label">Host Name</label><input type="text" class="form-input" id="rmName" placeholder="Full name"></div>
-    <div class="form-group"><label class="form-label">Gateway Account Email <span style="font-size:0.6rem;color:var(--text4);text-transform:none;letter-spacing:0;">(links this roster entry to their Belladonna account, for Host Setup answers)</span></label><input type="text" class="form-input" id="rmGatewayEmail" placeholder="the email they signed up with"></div>
+    <div class="form-group"><label class="form-label">Host ID <span style="font-size:0.6rem;color:var(--text4);text-transform:none;letter-spacing:0;">(matched against the Host ID set on their Gateway account in Accounts — takes priority over the email below if both are set)</span></label><input type="text" class="form-input" id="rmHostId" placeholder="e.g. BD-014"></div>
+    <div class="form-group"><label class="form-label">Gateway Account Email <span style="font-size:0.6rem;color:var(--text4);text-transform:none;letter-spacing:0;">(fallback link to their Belladonna account if no Host ID is set on either side)</span></label><input type="text" class="form-input" id="rmGatewayEmail" placeholder="the email they signed up with"></div>
     <div class="form-group" id="rmHostSetupWrap" style="display:none;">
       <label class="form-label">Host Setup</label>
       <div style="display:flex;align-items:center;gap:0.6rem;">
@@ -1192,6 +1197,12 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
   <div class="modal">
     <div class="modal-title" id="venueModalTitle">Add Venue</div>
     <div class="form-group"><label class="form-label">Venue Name</label><input type="text" class="form-input" id="vmName" placeholder="Venue name"></div>
+    <div class="form-group"><label class="form-label">Venue ID <span style="font-size:0.6rem;color:var(--text4);text-transform:none;letter-spacing:0;">(matched against the Venue ID set on their Gateway account in Accounts — takes priority over the email below if both are set)</span></label><input type="text" class="form-input" id="vmVenueId" placeholder="e.g. V-014"></div>
+    <div class="form-group"><label class="form-label">Gateway Account Email <span style="font-size:0.6rem;color:var(--text4);text-transform:none;letter-spacing:0;">(fallback link to their Belladonna account if no Venue ID is set on either side)</span></label><input type="text" class="form-input" id="vmGatewayEmail" placeholder="the email they signed up with"></div>
+    <div class="form-group" id="vmGatewayStatusWrap" style="display:none;">
+      <label class="form-label">Gateway Account</label>
+      <span id="vmGatewayStatus" style="font-size:0.78rem;color:var(--text2);"></span>
+    </div>
     <div class="form-group"><label class="form-label">Location</label><select class="form-input" id="vmLocation"></select></div>
     <div class="form-group">
       <label class="form-label">Amount Paid — By Gig Type</label>
@@ -3479,19 +3490,31 @@ function viewHostSetupAnswers(uid){
   }).catch(e=>alert('Could not load answers: '+e.message));
 }
 
-// ── HOST SETUP — linked from a Host Roster record via Gateway Account Email ──
+// ── HOST SETUP — linked from a Host Roster record to a Gateway account. Host
+// ID is matched first (set on both sides in Accounts / this modal); gateway
+// email is only the fallback when no Host ID is set on either side. ──────
+function matchGatewayAccount(hostIdVal,emailVal){
+  const hid=(hostIdVal||'').trim().toLowerCase();
+  if(hid){
+    const byId=(accounts||[]).find(a=>(a.hostId||'').trim().toLowerCase()===hid);
+    if(byId)return byId;
+  }
+  const email=(emailVal||'').trim().toLowerCase();
+  if(email)return (accounts||[]).find(a=>(a.email||'').toLowerCase()===email)||null;
+  return null;
+}
 let rmHostSetupMatchUid=null;
 function renderRosterHostSetupStatus(host){
   const wrap=document.getElementById('rmHostSetupWrap');
   rmHostSetupMatchUid=null;
-  if(!host||!host.gatewayEmail){wrap.style.display='none';return;}
-  const match=(accounts||[]).find(a=>(a.email||'').toLowerCase()===host.gatewayEmail.toLowerCase());
+  if(!host||(!host.hostId&&!host.gatewayEmail)){wrap.style.display='none';return;}
+  const match=matchGatewayAccount(host.hostId,host.gatewayEmail);
   if(!match){wrap.style.display='';document.getElementById('rmHostSetupStatus').textContent='No matching Gateway account found yet (checked accounts already loaded in HQ).';return;}
   rmHostSetupMatchUid=match.uid;
   const st=hsStatusOf(match);
   const STATUS_LABEL={complete:'✓ Completed',partial:'Started, not finished',none:'Not started'};
   wrap.style.display='';
-  document.getElementById('rmHostSetupStatus').textContent=STATUS_LABEL[st];
+  document.getElementById('rmHostSetupStatus').textContent=STATUS_LABEL[st]+(host.hostId&&match.hostId&&host.hostId.trim().toLowerCase()===match.hostId.trim().toLowerCase()?' (matched by Host ID)':' (matched by email)');
 }
 function viewHostSetupForRoster(){
   if(rmHostSetupMatchUid)viewHostSetupAnswers(rmHostSetupMatchUid);
@@ -3780,6 +3803,7 @@ function openRosterModal(id=null){
   editRosterId=id;const host=id?roster.find(h=>h.id===id):null;
   document.getElementById('rosterModalTitle').textContent=id?'Edit Host':'Add Host';
   document.getElementById('rmName').value=host?host.name:'';
+  document.getElementById('rmHostId').value=host?host.hostId||'':'';
   document.getElementById('rmGatewayEmail').value=host?host.gatewayEmail||'':'';
   renderRosterHostSetupStatus(host);
   const locSel=document.getElementById('rmLocation');
@@ -3802,6 +3826,7 @@ function closeRosterModal(){document.getElementById('rosterModal').classList.rem
 function saveRoster(){
   if(!rosterLoadedFromServer){alert('Still loading the host list from the cloud — give it a second and try Save again so nothing gets overwritten.');return;}
   const name=document.getElementById('rmName').value.trim();if(!name)return;
+  const hostId=document.getElementById('rmHostId').value.trim();
   const gatewayEmail=document.getElementById('rmGatewayEmail').value.trim().toLowerCase();
   const locationId=document.getElementById('rmLocation').value;
   const skills=[...document.querySelectorAll('#skillChips .selected-skill')].map(el=>el.textContent);
@@ -3814,8 +3839,8 @@ function saveRoster(){
   if(badUrl){alert('The photo, payment link and QR code fields need full https:// web addresses.');return;}
   const tip={enabled:tipEnabledDraft,photo:tipPhoto,payments:tipPayments};
   let savedId=editRosterId;
-  if(editRosterId){const h=roster.find(x=>x.id===editRosterId);if(h){h.name=name;h.skills=skills;h.venues=vs;h.rankId=rankId;h.locationId=locationId;h.tip=tip;h.gatewayEmail=gatewayEmail;}}
-  else{savedId=Date.now().toString();roster.push({id:savedId,name,skills,venues:vs,rankId,locationId,tip,gatewayEmail});}
+  if(editRosterId){const h=roster.find(x=>x.id===editRosterId);if(h){h.name=name;h.skills=skills;h.venues=vs;h.rankId=rankId;h.locationId=locationId;h.tip=tip;h.hostId=hostId;h.gatewayEmail=gatewayEmail;}}
+  else{savedId=Date.now().toString();roster.push({id:savedId,name,skills,venues:vs,rankId,locationId,tip,hostId,gatewayEmail});}
   persist('host-roster',roster,'rosterSave');
   renderRoster();filterRoster();closeRosterModal();
   syncTipHosts([savedId]);
@@ -4054,6 +4079,9 @@ function openVenueModal(id=null){
   editVenueId=id;const venue=id?venues.find(v=>v.id===id):null;
   document.getElementById('venueModalTitle').textContent=id?'Edit Venue':'Add Venue';
   document.getElementById('vmName').value=venue?venue.name:'';
+  document.getElementById('vmVenueId').value=venue?venue.venueId||'':'';
+  document.getElementById('vmGatewayEmail').value=venue?venue.gatewayEmail||'':'';
+  renderVenueGatewayStatus(venue);
   document.getElementById('vmNotes').value=venue?venue.notes||'':'';
   document.getElementById('vmPerks').value=venue?venue.perks||'':'';
   document.getElementById('vmInactive').checked=!!(venue&&venue.inactive);
@@ -4071,8 +4099,32 @@ function openVenueModal(id=null){
   document.getElementById('venueModal').classList.add('open');
 }
 function closeVenueModal(){document.getElementById('venueModal').classList.remove('open');editVenueId=null;}
+function renderVenueGatewayStatus(venue){
+  const wrap=document.getElementById('vmGatewayStatusWrap');
+  if(!venue||(!venue.venueId&&!venue.gatewayEmail)){wrap.style.display='none';return;}
+  const match=matchGatewayAccount2(venue.venueId,venue.gatewayEmail);
+  wrap.style.display='';
+  if(!match){document.getElementById('vmGatewayStatus').textContent='No matching Gateway account found yet (checked accounts already loaded in HQ).';return;}
+  const byId=venue.venueId&&match.venueId&&venue.venueId.trim().toLowerCase()===match.venueId.trim().toLowerCase();
+  document.getElementById('vmGatewayStatus').textContent='✓ Linked to '+(match.name||match.email)+(byId?' (matched by Venue ID)':' (matched by email)');
+}
+// Same priority rule as matchGatewayAccount (Host ID): an explicit ID match
+// wins over an email match. Separate function because this one matches on
+// venueId instead of hostId — kept side-by-side so either can change independently.
+function matchGatewayAccount2(venueIdVal,emailVal){
+  const vid=(venueIdVal||'').trim().toLowerCase();
+  if(vid){
+    const byId=(accounts||[]).find(a=>(a.venueId||'').trim().toLowerCase()===vid);
+    if(byId)return byId;
+  }
+  const email=(emailVal||'').trim().toLowerCase();
+  if(email)return (accounts||[]).find(a=>(a.email||'').toLowerCase()===email)||null;
+  return null;
+}
 function saveVenue(){
   const name=document.getElementById('vmName').value.trim();if(!name)return;
+  const venueId=document.getElementById('vmVenueId').value.trim();
+  const gatewayEmail=document.getElementById('vmGatewayEmail').value.trim().toLowerCase();
   const gigs=[...document.querySelectorAll('#gigChips .selected-skill')].map(el=>el.textContent);
   const notes=document.getElementById('vmNotes').value.trim();
   const perks=document.getElementById('vmPerks').value.trim();
@@ -4089,10 +4141,11 @@ function saveVenue(){
       const prev={payAmounts:Object.assign({},v.payAmounts||{}),payMethod:v.payMethod||'',startDate:v.startDate||''};
       v.name=name;v.gigs=gigs;v.notes=notes;v.perks=perks;v.locationId=locationId;v.inactive=inactive;
       v.payAmounts=payAmounts;v.payMethod=payMethod;v.startDate=startDate;v.gigSlots=gigSlots;
+      v.venueId=venueId;v.gatewayEmail=gatewayEmail;
       logVenueHistoryDiff(v,prev,{payAmounts,payMethod,startDate},today);
     }
   }else{
-    const v={id:Date.now().toString(),name,gigs,notes,perks,locationId,inactive,payAmounts,payMethod,startDate,gigSlots,history:[]};
+    const v={id:Date.now().toString(),name,gigs,notes,perks,locationId,inactive,payAmounts,payMethod,startDate,gigSlots,venueId,gatewayEmail,history:[]};
     const anyAmount=VENUE_AMOUNT_KINDS.some(k=>payAmounts[k]);
     if(startDate||anyAmount||payMethod){
       const amtText=VENUE_AMOUNT_KINDS.filter(k=>payAmounts[k]).map(k=>(k==='Events'?'Event':k)+' '+payAmounts[k]).join(', ');
@@ -4324,7 +4377,7 @@ function renderAccounts(){
     if(typeFilter && a.accountType!==typeFilter)return false;
     if(statusFilter && (a.status||'active')!==statusFilter)return false;
     if(search){
-      const hay=[a.name,a.email,a.username,a.hostId].filter(Boolean).join(' ').toLowerCase();
+      const hay=[a.name,a.email,a.username,a.hostId,a.venueId].filter(Boolean).join(' ').toLowerCase();
       if(!hay.includes(search))return false;
     }
     return true;
@@ -4351,13 +4404,23 @@ function renderAccounts(){
     return `<div class="acct-card">
       <div class="acct-header">
         <div class="acct-name-group">
-          <div class="acct-name">${a.name||'(no name)'} ${a.hostId?`<span style="color:var(--text3);font-size:0.9rem;">· ${a.hostId}</span>`:''}</div>
+          <div class="acct-name">${a.name||'(no name)'} ${a.hostId?`<span style="color:var(--text3);font-size:0.9rem;">· ${a.hostId}</span>`:''}${a.venueId?`<span style="color:var(--text3);font-size:0.9rem;">· ${a.venueId}</span>`:''}</div>
           <div class="acct-meta">${a.email||''}${a.username?' · @'+a.username:''}</div>
         </div>
         <div class="acct-badges">
           <span class="acct-type-badge ${a.accountType==='host'?'host':''}">${(a.accountType||'subscriber').replace('_',' ')}</span>
           <span class="acct-status-badge ${isBanned?'banned':''}">${isBanned?'Banned':'Active'}</span>
           ${anyAdmin?'<span class="acct-status-badge" style="background:var(--gold-dim);color:var(--gold);border-color:var(--border-gold);">Admin</span>':''}
+        </div>
+      </div>
+      <div style="display:flex;gap:0.5rem;margin-bottom:0.7rem;">
+        <div style="flex:1;">
+          <div style="font-size:0.6rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--text3);margin-bottom:0.3rem;">Host ID <span style="opacity:0.7;">— links to Host Roster</span></div>
+          <input type="text" value="${(a.hostId||'').replace(/"/g,'&quot;')}" placeholder="e.g. BD-014" onchange="setAcctHostId('${a.uid}',this.value)" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:0.3rem 0.5rem;font-size:0.72rem;">
+        </div>
+        <div style="flex:1;">
+          <div style="font-size:0.6rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--text3);margin-bottom:0.3rem;">Venue ID <span style="opacity:0.7;">— links to Our Venues</span></div>
+          <input type="text" value="${(a.venueId||'').replace(/"/g,'&quot;')}" placeholder="e.g. V-014" onchange="setAcctVenueId('${a.uid}',this.value)" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:0.3rem 0.5rem;font-size:0.72rem;">
         </div>
       </div>
       <div style="font-size:0.6rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--text3);margin-bottom:0.3rem;">Can Use</div>
@@ -4461,6 +4524,48 @@ function setAcctLocation(uid,code){
   db.collection('users').doc(uid).set({locationId:code},{merge:true}).catch(e=>{
     acct.locationId=prev;renderAccounts();
     alert('Failed to update location: '+e.message);
+  });
+}
+function setAcctHostId(uid,val){
+  const acct=accounts.find(a=>a.uid===uid);if(!acct)return;
+  const prev=acct.hostId;
+  acct.hostId=val.trim()||null;
+  renderAccounts();
+  db.collection('users').doc(uid).set({hostId:acct.hostId},{merge:true}).catch(e=>{
+    acct.hostId=prev;renderAccounts();
+    alert('Failed to update Host ID: '+e.message);
+  });
+}
+function setAcctVenueId(uid,val){
+  const acct=accounts.find(a=>a.uid===uid);if(!acct)return;
+  const prev=acct.venueId;
+  acct.venueId=val.trim()||null;
+  renderAccounts();
+  db.collection('users').doc(uid).set({venueId:acct.venueId},{merge:true}).catch(e=>{
+    acct.venueId=prev;renderAccounts();
+    alert('Failed to update Venue ID: '+e.message);
+  });
+}
+// One-time cleanup: every account created before Host/Venue signup existed
+// defaulted to accountType "subscriber". This flips all of those over to
+// "host" in one pass (nothing is deleted — just the one field changes),
+// since that's what nearly all of them actually are.
+function migrateSubscribersToHosts(){
+  if(!accounts.length){alert('Load accounts first (hit Refresh).');return;}
+  const targets=accounts.filter(a=>(a.accountType||'subscriber')==='subscriber');
+  if(!targets.length){alert('No accounts are still marked Subscriber — nothing to convert.');return;}
+  if(!confirm(`Convert ${targets.length} Subscriber account(s) to Host? This only changes their account type — nothing is deleted.`))return;
+  const batch=db.batch();
+  targets.forEach(a=>{
+    a.accountType='host';
+    batch.set(db.collection('users').doc(a.uid),{accountType:'host'},{merge:true});
+  });
+  batch.commit().then(()=>{
+    renderAccounts();
+    alert(`Converted ${targets.length} account(s) to Host.`);
+  }).catch(e=>{
+    alert('Conversion failed: '+e.message);
+    loadAccounts();
   });
 }
 function toggleAllLocations(uid){
