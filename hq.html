@@ -1202,6 +1202,10 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
       <label class="form-label">Gateway Account</label>
       <span id="vmGatewayStatus" style="font-size:0.78rem;color:var(--text2);"></span>
     </div>
+    <div class="form-group" id="vmCategoryQueueWrap" style="display:none;">
+      <label class="form-label">Category Queue (Venue-Managed)</label>
+      <div id="vmCategoryQueueStatus" style="font-size:0.78rem;color:var(--text2);line-height:1.6;"></div>
+    </div>
     <div class="form-group"><label class="form-label">Location</label><select class="form-input" id="vmLocation"></select></div>
     <div class="form-group">
       <label class="form-label">Amount Paid — By Gig Type</label>
@@ -4136,6 +4140,7 @@ function openVenueModal(id=null){
   document.getElementById('vmVenueId').value=venue?venue.venueId||'':'';
   document.getElementById('vmGatewayEmail').value=venue?venue.gatewayEmail||'':'';
   renderVenueGatewayStatus(venue);
+  renderVenueCategoryQueueStatus(venue);
   document.getElementById('vmNotes').value=venue?venue.notes||'':'';
   document.getElementById('vmPerks').value=venue?venue.perks||'':'';
   document.getElementById('vmInactive').checked=!!(venue&&venue.inactive);
@@ -4161,6 +4166,36 @@ function renderVenueGatewayStatus(venue){
   if(!match){document.getElementById('vmGatewayStatus').textContent='No matching Gateway account found yet (checked accounts already loaded in HQ).';return;}
   const byId=venue.venueId&&match.venueId&&venue.venueId.trim().toLowerCase()===match.venueId.trim().toLowerCase();
   document.getElementById('vmGatewayStatus').textContent='✓ Linked to '+(match.name||match.email)+(byId?' (matched by Venue ID)':' (matched by email)');
+}
+// Read-only look at the venue's own category queue (Trivia/Bingo/Mini Games),
+// which venues manage themselves in venue.html — this just shows HQ what's
+// locked in for the current week and what's up next, so there's nothing to
+// prep blind. Stored at venueCategoryQueues/{venue.venueId}, written by the
+// venue-facing app (compat SDK, same as the rest of hq.html).
+async function renderVenueCategoryQueueStatus(venue){
+  const wrap=document.getElementById('vmCategoryQueueWrap');
+  if(!venue||!venue.venueId){wrap.style.display='none';return;}
+  wrap.style.display='';
+  const statusEl=document.getElementById('vmCategoryQueueStatus');
+  statusEl.textContent='Loading…';
+  try{
+    const snap=await db.collection('venueCategoryQueues').doc(venue.venueId).get();
+    if(!snap.exists){statusEl.textContent='No category queue set up yet for this venue.';return;}
+    const data=snap.data()||{};
+    const lock=data.currentLock;
+    const queue=data.queue||[];
+    const qEsc=(s)=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    let html='';
+    html+='<div>🔒 <strong>This week:</strong> '+(lock?qEsc(lock.categoryName)+(lock.type?' ('+qEsc(lock.type)+')':''):'<em>nothing locked in</em>')+'</div>';
+    if(queue.length){
+      html+='<div style="margin-top:0.4rem;"><strong>Up next:</strong> '+queue.map(q=>qEsc(q.categoryName)).join(' → ')+'</div>';
+    }else{
+      html+='<div style="margin-top:0.4rem;color:var(--text4);">Nothing queued after this week yet.</div>';
+    }
+    statusEl.innerHTML=html;
+  }catch(e){
+    statusEl.textContent='Could not load category queue.';
+  }
 }
 // Same priority rule as matchGatewayAccount (Host ID): an explicit ID match
 // wins over an email match. Separate function because this one matches on
