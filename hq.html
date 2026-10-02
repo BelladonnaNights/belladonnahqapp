@@ -1079,7 +1079,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
   <div class="modal">
     <div class="modal-title" id="rosterModalTitle">Add Host</div>
     <div class="form-group"><label class="form-label">Host Name</label><input type="text" class="form-input" id="rmName" placeholder="Full name"></div>
-    <div class="form-group"><label class="form-label">Host ID <span style="font-size:0.6rem;color:var(--text4);text-transform:none;letter-spacing:0;">(matched against the Host ID set on their Gateway account in Accounts — takes priority over the email below if both are set)</span></label><input type="text" class="form-input" id="rmHostId" placeholder="e.g. BD-014"></div>
+    <div class="form-group"><label class="form-label">Host ID <span style="font-size:0.6rem;color:var(--text4);text-transform:none;letter-spacing:0;">(matched against the Host ID set on their Gateway account in Accounts — takes priority over the email below if both are set)</span></label><input type="text" class="form-input" id="rmHostId" placeholder="not set"></div>
     <div class="form-group"><label class="form-label">Gateway Account Email <span style="font-size:0.6rem;color:var(--text4);text-transform:none;letter-spacing:0;">(fallback link to their Belladonna account if no Host ID is set on either side)</span></label><input type="text" class="form-input" id="rmGatewayEmail" placeholder="the email they signed up with"></div>
     <div class="form-group" id="rmHostSetupWrap" style="display:none;">
       <label class="form-label">Host Setup</label>
@@ -1197,7 +1197,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
   <div class="modal">
     <div class="modal-title" id="venueModalTitle">Add Venue</div>
     <div class="form-group"><label class="form-label">Venue Name</label><input type="text" class="form-input" id="vmName" placeholder="Venue name"></div>
-    <div class="form-group"><label class="form-label">Venue ID <span style="font-size:0.6rem;color:var(--text4);text-transform:none;letter-spacing:0;">(matched against the Venue ID set on their Gateway account in Accounts — takes priority over the email below if both are set)</span></label><input type="text" class="form-input" id="vmVenueId" placeholder="e.g. V-014"></div>
+    <div class="form-group"><label class="form-label">Venue ID <span style="font-size:0.6rem;color:var(--text4);text-transform:none;letter-spacing:0;">(matched against the Venue ID set on their Gateway account in Accounts — takes priority over the email below if both are set)</span></label><input type="text" class="form-input" id="vmVenueId" placeholder="not set"></div>
     <div class="form-group"><label class="form-label">Gateway Account Email <span style="font-size:0.6rem;color:var(--text4);text-transform:none;letter-spacing:0;">(fallback link to their Belladonna account if no Venue ID is set on either side)</span></label><input type="text" class="form-input" id="vmGatewayEmail" placeholder="the email they signed up with"></div>
     <div class="form-group" id="vmGatewayStatusWrap" style="display:none;">
       <label class="form-label">Gateway Account</label>
@@ -4414,14 +4414,23 @@ function renderAccounts(){
         </div>
       </div>
       <div style="display:flex;gap:0.5rem;margin-bottom:0.7rem;">
-        <div style="flex:1;">
-          <div style="font-size:0.6rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--text3);margin-bottom:0.3rem;">Host ID <span style="opacity:0.7;">— links to Host Roster</span></div>
-          <input type="text" value="${(a.hostId||'').replace(/"/g,'&quot;')}" placeholder="e.g. BD-014" onchange="setAcctHostId('${a.uid}',this.value)" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:0.3rem 0.5rem;font-size:0.72rem;">
-        </div>
+        ${a.accountType==='venue' ? `
         <div style="flex:1;">
           <div style="font-size:0.6rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--text3);margin-bottom:0.3rem;">Venue ID <span style="opacity:0.7;">— links to Our Venues</span></div>
-          <input type="text" value="${(a.venueId||'').replace(/"/g,'&quot;')}" placeholder="e.g. V-014" onchange="setAcctVenueId('${a.uid}',this.value)" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:0.3rem 0.5rem;font-size:0.72rem;">
+          <input type="text" value="${(a.venueId||'').replace(/"/g,'&quot;')}" placeholder="not set" onchange="setAcctVenueId('${a.uid}',this.value)" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:0.3rem 0.5rem;font-size:0.72rem;">
+        </div>` : a.accountType==='host' ? `
+        <div style="flex:1;">
+          <div style="font-size:0.6rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--text3);margin-bottom:0.3rem;">Host ID <span style="opacity:0.7;">— links to Host Roster</span></div>
+          <input type="text" value="${(a.hostId||'').replace(/"/g,'&quot;')}" placeholder="not set" onchange="setAcctHostId('${a.uid}',this.value)" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:0.3rem 0.5rem;font-size:0.72rem;">
+        </div>` : `
+        <div style="flex:1;">
+          <div style="font-size:0.6rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--text3);margin-bottom:0.3rem;">Host ID <span style="opacity:0.7;">— not yet typed as Host or Venue; both shown until you run the conversion or set one below</span></div>
+          <input type="text" value="${(a.hostId||'').replace(/"/g,'&quot;')}" placeholder="not set" onchange="setAcctHostId('${a.uid}',this.value)" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:0.3rem 0.5rem;font-size:0.72rem;">
         </div>
+        <div style="flex:1;">
+          <div style="font-size:0.6rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--text3);margin-bottom:0.3rem;">Venue ID</div>
+          <input type="text" value="${(a.venueId||'').replace(/"/g,'&quot;')}" placeholder="not set" onchange="setAcctVenueId('${a.uid}',this.value)" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:0.3rem 0.5rem;font-size:0.72rem;">
+        </div>`}
       </div>
       <div style="font-size:0.6rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--text3);margin-bottom:0.3rem;">Can Use</div>
       <div class="acct-entitlements">${entChips}</div>
