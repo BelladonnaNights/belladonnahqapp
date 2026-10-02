@@ -1081,9 +1081,10 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
     <div class="form-group"><label class="form-label">Gateway Account Email <span style="font-size:0.6rem;color:var(--text4);text-transform:none;letter-spacing:0;">(fallback link to their Belladonna account if no Host ID is set on either side)</span></label><input type="text" class="form-input" id="rmGatewayEmail" placeholder="the email they signed up with"></div>
     <div class="form-group" id="rmHostSetupWrap" style="display:none;">
       <label class="form-label">Host Setup</label>
-      <div style="display:flex;align-items:center;gap:0.6rem;">
+      <div style="display:flex;align-items:center;gap:0.6rem;flex-wrap:wrap;">
         <span id="rmHostSetupStatus" style="font-size:0.78rem;color:var(--text2);"></span>
         <button class="btn-sm" type="button" onclick="viewHostSetupForRoster()">View Answers</button>
+        <button class="btn-sm" type="button" onclick="viewStarsForRoster()">View Stars</button>
       </div>
     </div>
     <div class="form-group"><label class="form-label">Location</label><select class="form-input" id="rmLocation"></select></div>
@@ -1275,6 +1276,17 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
     <div id="hsvBody"></div>
     <div class="modal-actions">
       <button class="modal-cancel" onclick="document.getElementById('hostSetupViewModal').classList.remove('open')">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- HOST ROSTER — VIEW STARRED CATEGORIES (read-only, from Host Roster) -->
+<div class="modal-bg" id="starsViewModal">
+  <div class="modal" style="max-width:480px;max-height:85vh;overflow-y:auto;">
+    <div class="modal-title" id="svName">Starred Categories</div>
+    <div id="svBody"></div>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="document.getElementById('starsViewModal').classList.remove('open')">Close</button>
     </div>
   </div>
 </div>
@@ -3516,6 +3528,49 @@ function renderRosterHostSetupStatus(host){
 }
 function viewHostSetupForRoster(){
   if(rmHostSetupMatchUid)viewHostSetupAnswers(rmHostSetupMatchUid);
+}
+
+// ── STARRED CATEGORIES — a host's "pick their poison" picks from venue.html,
+// stored on their Gateway account as starredCategories: ["night:<id>", "singa:<id>"].
+// Resolved here against the live venueMenuNights / venueMenuCategories collections
+// and shown grouped by type (Themed Nights vs Sing-Alongs). ──────────────────
+function viewStarsForRoster(){
+  if(!rmHostSetupMatchUid){alert('No matching Gateway account found yet for this host.');return;}
+  viewHostStars(rmHostSetupMatchUid);
+}
+function viewHostStars(uid){
+  if(!db||!uid)return;
+  const body=document.getElementById('svBody');
+  body.innerHTML='<div class="empty-state">Loading…</div>';
+  document.getElementById('starsViewModal').classList.add('open');
+  Promise.all([
+    db.collection('users').doc(uid).get(),
+    db.collection('venueMenuNights').get(),
+    db.collection('venueMenuCategories').get()
+  ]).then(([userSnap,nightsSnap,catsSnap])=>{
+    const profile=userSnap.exists?userSnap.data():{};
+    document.getElementById('svName').textContent=(profile.name||profile.email||'Host')+' — Starred Categories';
+    const starred=profile.starredCategories||[];
+    const nightNames={};
+    nightsSnap.forEach(d=>{nightNames[d.id]=(d.data()||{}).name||'(untitled)';});
+    const catNames={};
+    catsSnap.forEach(d=>{catNames[d.id]=(d.data()||{}).name||'(untitled)';});
+    const nights=[],singas=[];
+    starred.forEach(entry=>{
+      const idx=entry.indexOf(':');
+      if(idx<0)return;
+      const kind=entry.slice(0,idx), id=entry.slice(idx+1);
+      if(kind==='night')nights.push(nightNames[id]||'(removed/unknown night)');
+      else if(kind==='singa')singas.push(catNames[id]||'(removed/unknown category)');
+    });
+    if(!nights.length&&!singas.length){body.innerHTML='<div class="empty-state">This host hasn\'t starred any categories yet.</div>';return;}
+    const section=(title,list)=>list.length?`
+      <div style="margin-bottom:1.1rem;">
+        <div style="font-size:0.62rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--gold);margin-bottom:0.5rem;">${title} (${list.length})</div>
+        ${list.map(n=>`<div style="font-size:0.82rem;color:var(--text);padding:0.2rem 0;">★ ${hsEscHtml(n)}</div>`).join('')}
+      </div>`:'';
+    body.innerHTML=section('Themed Nights',nights)+section('Sing-Alongs',singas);
+  }).catch(e=>{body.innerHTML='<div class="empty-state">Could not load starred categories: '+e.message+'</div>';});
 }
 
 const PAY_PLATFORMS=['Venmo','Cash App','PayPal','Zelle','Apple Cash','Other'];
