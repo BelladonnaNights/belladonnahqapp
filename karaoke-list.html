@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Karaoke Song List — Belladonna</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Josefin+Sans:wght@200;300;400&display=swap');
+  *{margin:0;padding:0;box-sizing:border-box;}
+  :root{
+    --bg:#000000;--surface:#0d0d0d;--surface2:#141414;
+    --border:rgba(201,169,110,0.2);--border2:rgba(201,169,110,0.4);
+    --gold:#c9a96e;--text:#f0ece0;--text2:#b0a890;--text3:#8a8272;
+  }
+  body{background:var(--bg);color:var(--text);font-family:'Josefin Sans',sans-serif;font-weight:300;min-height:100vh;letter-spacing:0.04em;}
+  .page{max-width:520px;margin:0 auto;padding:2.4rem 1.3rem 3rem;}
+  .hub-brand{font-family:'Playfair Display',serif;font-size:1.7rem;font-weight:700;color:var(--gold);letter-spacing:0.18em;text-transform:uppercase;text-align:center;}
+  .hub-sub{font-size:0.68rem;letter-spacing:0.45em;text-transform:uppercase;color:var(--text3);margin-top:0.2rem;text-align:center;}
+  .hub-ornament{color:#3a3428;font-family:'Cormorant Garamond',serif;font-size:1.05rem;letter-spacing:0.4em;margin:0.7rem 0 1.5rem;text-align:center;}
+
+  .theme-title{font-family:'Playfair Display',serif;font-size:1.7rem;color:var(--text);text-align:center;margin-bottom:0.2rem;}
+  .theme-sub{font-size:0.68rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--text3);text-align:center;margin-bottom:1.6rem;}
+
+  .search-wrap{margin-bottom:1.2rem;}
+  input#songSearch{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'Josefin Sans',sans-serif;font-size:0.9rem;padding:0.7rem 0.9rem;letter-spacing:0.03em;}
+  input#songSearch:focus{outline:none;border-color:var(--border2);}
+  input#songSearch::placeholder{color:var(--text3);}
+
+  .song-count{font-size:0.65rem;letter-spacing:0.1em;color:var(--text3);text-align:center;margin-bottom:1rem;text-transform:uppercase;}
+
+  .song-list{display:flex;flex-direction:column;gap:0.5rem;}
+  .song-row{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:0.7rem 1rem;display:flex;justify-content:space-between;align-items:baseline;gap:0.8rem;}
+  .song-title{color:var(--text);font-size:0.9rem;}
+  .song-artist{color:var(--text3);font-size:0.74rem;text-align:right;white-space:nowrap;flex-shrink:0;}
+
+  .loading,.msg-empty{text-align:center;color:var(--text3);font-size:0.78rem;letter-spacing:0.1em;padding:3rem 0;}
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="hub-brand">Belladonna</div>
+  <div class="hub-sub">Karaoke Night</div>
+  <div class="hub-ornament">✦ ✦ ✦</div>
+
+  <div id="main"><div class="loading">Loading song list…</div></div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+<script>
+  firebase.initializeApp({apiKey:"AIzaSyCIfAE1JGHsUGzzVH2pz1Vyj5b5OhA0tDQ",authDomain:"belladonna-hq.firebaseapp.com",databaseURL:"https://belladonna-hq-default-rtdb.firebaseio.com",projectId:"belladonna-hq",storageBucket:"belladonna-hq.firebasestorage.app",messagingSenderId:"1021873183587",appId:"1:1021873183587:web:def283bb7b5ca48e4f9156"});
+  const db = firebase.firestore();
+
+  let allSongs=[];
+
+  function getParam(name){
+    return new URLSearchParams(window.location.search).get(name);
+  }
+
+  async function load(){
+    const listId=getParam('list');
+    const main=document.getElementById('main');
+    if(!listId){
+      main.innerHTML='<div class="msg-empty">No song list specified.</div>';
+      return;
+    }
+    try{
+      const doc=await db.collection('karaoke_lists').doc(listId).get();
+      if(!doc.exists){
+        main.innerHTML='<div class="msg-empty">That song list couldn\'t be found.</div>';
+        return;
+      }
+      const data=doc.data();
+      allSongs=(data.songs||[]).slice().sort((a,b)=>{
+        const an=(a.artist||'').toLowerCase(), bn=(b.artist||'').toLowerCase();
+        if(an!==bn)return an<bn?-1:1;
+        return (a.title||'').toLowerCase()<(b.title||'').toLowerCase()?-1:1;
+      });
+      renderPage(data);
+    }catch(e){
+      main.innerHTML='<div class="msg-empty">Could not load the song list.</div>';
+    }
+  }
+
+  function renderPage(data){
+    const main=document.getElementById('main');
+    main.innerHTML=`
+      <div class="theme-title">${data.title||'Karaoke'}</div>
+      <div class="theme-sub">${allSongs.length} song${allSongs.length===1?'':'s'}</div>
+      <div class="search-wrap"><input type="text" id="songSearch" placeholder="Search songs or artists…"></div>
+      <div class="song-count" id="songCount"></div>
+      <div class="song-list" id="songList"></div>
+    `;
+    document.getElementById('songSearch').addEventListener('input',e=>renderSongs(e.target.value));
+    renderSongs('');
+  }
+
+  function renderSongs(query){
+    const q=query.trim().toLowerCase();
+    const filtered=q?allSongs.filter(s=>(s.title||'').toLowerCase().includes(q)||(s.artist||'').toLowerCase().includes(q)):allSongs;
+    document.getElementById('songCount').textContent=q?`${filtered.length} match${filtered.length===1?'':'es'}`:'';
+    const list=document.getElementById('songList');
+    if(!filtered.length){
+      list.innerHTML='<div class="msg-empty">No songs match that search.</div>';
+      return;
+    }
+    list.innerHTML=filtered.map(s=>`<div class="song-row"><span class="song-title">${escapeHtml(s.title||'')}</span><span class="song-artist">${escapeHtml(s.artist||'')}</span></div>`).join('');
+  }
+
+  function escapeHtml(str){
+    const d=document.createElement('div');
+    d.textContent=str;
+    return d.innerHTML;
+  }
+
+  load();
+</script>
+</body>
+</html>

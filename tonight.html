@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tonight — Belladonna Host Hub</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Josefin+Sans:wght@200;300;400&display=swap');
+  *{margin:0;padding:0;box-sizing:border-box;}
+  :root{
+    --bg:#000000;--surface:#0d0d0d;--surface2:#141414;--surface3:#1a1a1a;
+    --border:rgba(201,169,110,0.2);--border2:rgba(201,169,110,0.4);
+    --gold:#c9a96e;--rose2:#b0505a;--teal2:#3aa08a;--purple2:#a68a5c;
+    --text:#f0ece0;--text2:#b0a890;--text3:#8a8272;
+    --live:#3aaa6a;--live-dim:rgba(58,170,106,0.12);
+  }
+  body{background:var(--bg);color:var(--text);font-family:'Josefin Sans',sans-serif;font-weight:300;min-height:100vh;letter-spacing:0.04em;overflow-x:hidden;}
+  .page{max-width:460px;margin:0 auto;padding:2.4rem 1.5rem 3rem;}
+  .hub-brand{font-family:'Playfair Display',serif;font-size:1.9rem;font-weight:700;color:var(--gold);letter-spacing:0.2em;text-transform:uppercase;text-align:center;}
+  .hub-sub{font-size:0.72rem;letter-spacing:0.5em;text-transform:uppercase;color:var(--text3);margin-top:0.2rem;text-align:center;}
+  .hub-ornament{color:#3a3428;font-family:'Cormorant Garamond',serif;font-size:1.1rem;letter-spacing:0.4em;margin:0.7rem 0 1.6rem;text-align:center;}
+  .back-link{display:block;font-size:0.68rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--text3);text-decoration:none;margin-bottom:1.2rem;}
+  .back-link:hover{color:var(--gold);}
+
+  .picker{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1rem 1.1rem;margin-bottom:1.6rem;}
+  .picker-row{display:flex;gap:0.6rem;align-items:center;}
+  .picker-row + .picker-row{margin-top:0.7rem;}
+  .picker-label{font-size:0.6rem;letter-spacing:0.3em;text-transform:uppercase;color:var(--text3);width:3.6rem;flex-shrink:0;}
+  select.picker-input,input.picker-input{flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'Josefin Sans',sans-serif;font-size:0.85rem;padding:0.55rem 0.7rem;letter-spacing:0.03em;}
+  select.picker-input:focus,input.picker-input:focus{outline:none;border-color:var(--border2);}
+  .date-nav{display:flex;gap:0.4rem;align-items:center;flex:1;}
+  .date-nav button{background:var(--surface2);border:1px solid var(--border);color:var(--gold);width:2rem;height:2rem;border-radius:8px;font-size:0.95rem;cursor:pointer;flex-shrink:0;}
+  .date-nav button:hover{border-color:var(--border2);}
+  .date-nav .date-display{flex:1;text-align:center;font-size:0.82rem;color:var(--text2);}
+  .date-today-pill{font-size:0.58rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--live);background:var(--live-dim);border-radius:20px;padding:0.15rem 0.5rem;margin-left:0.4rem;white-space:nowrap;}
+
+  .venue-title{text-align:center;margin-bottom:1.6rem;}
+  .venue-title .vname{font-family:'Playfair Display',serif;font-size:1.3rem;color:var(--text);}
+  .venue-title .vdate{font-size:0.68rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--text3);margin-top:0.25rem;}
+
+  .seg-card{background:var(--surface);border:1px solid var(--border);border-radius:13px;padding:1.2rem 1.3rem;margin-bottom:1rem;position:relative;overflow:hidden;}
+  .seg-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);}
+  .seg-card.empty{opacity:0.5;}
+  .seg-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:0.5rem;}
+  .seg-name{font-size:0.95rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);}
+  .seg-status{font-size:0.58rem;letter-spacing:0.15em;text-transform:uppercase;padding:0.2rem 0.55rem;border-radius:20px;}
+  .seg-status.on{color:var(--live);background:var(--live-dim);}
+  .seg-status.off{color:var(--text3);background:var(--surface2);}
+  .seg-status.cancelled{color:var(--rose2);background:rgba(176,80,90,0.12);}
+  .seg-detail{font-size:0.8rem;color:var(--text2);line-height:1.5;margin-bottom:0.2rem;}
+  .seg-sub{font-size:0.68rem;color:var(--text3);margin-bottom:0.9rem;}
+  .seg-btn{display:block;text-align:center;width:100%;background:transparent;border:1px solid var(--border2);color:var(--gold);font-family:'Josefin Sans',sans-serif;letter-spacing:0.12em;text-transform:uppercase;font-size:0.78rem;padding:0.65rem;border-radius:9px;text-decoration:none;cursor:pointer;transition:all 0.2s;}
+  .seg-btn:hover{background:rgba(201,169,110,0.08);}
+  .seg-btn[disabled]{opacity:0.35;cursor:default;pointer-events:none;}
+  .seg-note{font-size:0.62rem;color:var(--text3);margin-top:0.5rem;text-align:center;}
+
+  .loading,.msg-empty{text-align:center;color:var(--text3);font-size:0.75rem;letter-spacing:0.1em;padding:2rem 0;}
+</style>
+</head>
+<body>
+<div class="page">
+  <a href="host-hub.html" class="back-link">‹ Host Hub</a>
+  <div class="hub-brand">Belladonna</div>
+  <div class="hub-sub">Tonight</div>
+  <div class="hub-ornament">✦ ✦ ✦</div>
+
+  <div class="picker">
+    <div class="picker-row">
+      <div class="picker-label">Venue</div>
+      <select class="picker-input" id="venueSelect"><option value="">Loading venues…</option></select>
+    </div>
+    <div class="picker-row">
+      <div class="picker-label">Date</div>
+      <div class="date-nav">
+        <button onclick="shiftDate(-1)">‹</button>
+        <div class="date-display" id="dateDisplay">—</div>
+        <button onclick="shiftDate(1)">›</button>
+      </div>
+      <input type="date" class="picker-input" id="dateInput" style="flex:0 0 0;width:0;padding:0;border:0;opacity:0;position:absolute;">
+    </div>
+  </div>
+
+  <div id="main">
+    <div class="loading">Pick a venue to see tonight's lineup</div>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+<script>
+  firebase.initializeApp({apiKey:"AIzaSyCIfAE1JGHsUGzzVH2pz1Vyj5b5OhA0tDQ",authDomain:"belladonna-hq.firebaseapp.com",databaseURL:"https://belladonna-hq-default-rtdb.firebaseio.com",projectId:"belladonna-hq",storageBucket:"belladonna-hq.firebasestorage.app",messagingSenderId:"1021873183587",appId:"1:1021873183587:web:def283bb7b5ca48e4f9156"});
+  const db = firebase.firestore();
+  const rtdb = firebase.database();
+
+  const PLANNER_DAY_MAP={Sun:0,Mon:1,Tue:2,Wed:3,Thu:4,Fri:5,Sat:6};
+  function normVenueName(v){return (v||'').toString().toLowerCase().trim();}
+  function dateToKey(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+
+  let venues=[];
+  let selectedVenueId='';
+  let currentDate=new Date();
+
+  // ── load venue list (hq_data/venues-list, same source HQ's gig scheduler uses) ──
+  db.collection('hq_data').doc('venues-list').get().then(snap=>{
+    try{venues=(snap.exists&&snap.data().value)?JSON.parse(snap.data().value):[];}catch(e){venues=[];}
+    renderVenueOptions();
+  }).catch(()=>{renderVenueOptions();});
+
+  function renderVenueOptions(){
+    const sel=document.getElementById('venueSelect');
+    if(!venues.length){sel.innerHTML='<option value="">No venues found</option>';return;}
+    sel.innerHTML='<option value="">Select a venue…</option>'+venues.map(v=>`<option value="${v.id}">${v.name}</option>`).join('');
+    // restore last-used venue for this device, if any
+    const last=localStorage.getItem('tonight-venue');
+    if(last&&venues.some(v=>v.id===last)){sel.value=last;selectedVenueId=last;loadTonight();}
+  }
+  document.getElementById('venueSelect').addEventListener('change',e=>{
+    selectedVenueId=e.target.value;
+    try{localStorage.setItem('tonight-venue',selectedVenueId);}catch(err){}
+    loadTonight();
+  });
+
+  function updateDateDisplay(){
+    const todayKey=dateToKey(new Date());
+    const thisKey=dateToKey(currentDate);
+    const label=currentDate.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
+    document.getElementById('dateDisplay').innerHTML=label+(thisKey===todayKey?' <span class="date-today-pill">Today</span>':'');
+  }
+  function shiftDate(delta){
+    currentDate=new Date(currentDate);
+    currentDate.setDate(currentDate.getDate()+delta);
+    updateDateDisplay();
+    loadTonight();
+  }
+  updateDateDisplay();
+
+  function venueById(id){return venues.find(v=>v.id===id);}
+
+  async function loadTonight(){
+    const main=document.getElementById('main');
+    if(!selectedVenueId){main.innerHTML='<div class="loading">Pick a venue to see tonight\'s lineup</div>';return;}
+    const venue=venueById(selectedVenueId);
+    if(!venue){main.innerHTML='<div class="loading">Venue not found</div>';return;}
+    main.innerHTML='<div class="loading">Loading tonight\'s lineup…</div>';
+
+    const dk=dateToKey(currentDate);
+    const dow=currentDate.getDay();
+    const vName=normVenueName(venue.name);
+
+    // 1. HQ's own gig_schedule — the source of truth when it has an entry for this venue/date.
+    let hqGigs=[];
+    try{
+      const snap=await db.collection('gig_schedule').where('date','==',dk).get();
+      hqGigs=snap.docs.map(d=>({id:d.id,...d.data()})).filter(g=>normVenueName(g.venue)===vName);
+    }catch(e){}
+
+    const segments={Trivia:null,Bingo:null,Karaoke:null};
+    hqGigs.forEach(g=>{
+      const kind=g.kind;
+      if(!segments.hasOwnProperty(kind))return;
+      segments[kind]={
+        source:'HQ Schedule',
+        cancelled:g.status==='cancelled',
+        theme:g.notes||'',
+        host:g.host||'Unassigned',
+        gigId:g.id
+      };
+    });
+
+    // 2. Trivia Planner (Realtime DB) — this per-date record is the one place
+    // HQ and the Planner app both write "host" into, so it's consulted even
+    // when HQ already has its own entry, specifically for the host — whoever
+    // set it last over there is the current answer.
+    try{
+      const pvSnap=await rtdb.ref('trivia/planner/venues').once('value');
+      const pv=pvSnap.val()||{};
+      const match=Object.entries(pv).find(([id,v])=>normVenueName(v.name)===vName);
+      if(match){
+        const [venueId,v]=match;
+        const gSnap=await rtdb.ref('trivia/planner/gigs/'+venueId+'/'+dk).once('value');
+        const g=gSnap.val();
+        if(!segments.Trivia&&(v.status==='active'||v.status==='seasonal')&&PLANNER_DAY_MAP[v.day]===dow){
+          segments.Trivia={
+            source:'Trivia Planner',
+            cancelled:!!(g&&g.status==='cancelled'),
+            theme:(g&&(g.themeName||g.note))||'',
+            host:(g&&g.host)||v.host||'Unassigned',
+            plannerVenueId:venueId,
+            themeId:g&&g.themeId||null
+          };
+        }else if(segments.Trivia){
+          segments.Trivia.plannerVenueId=venueId;
+          segments.Trivia.themeId=(g&&g.themeId)||null;
+          if(g&&g.host)segments.Trivia.host=g.host;
+        }
+      }
+    }catch(e){}
+
+    // 3. Bingo app (Realtime DB) — same idea: the schedule entry is the one
+    // place host lives for Bingo, whether HQ or the Bingo app's own scheduler
+    // set it last.
+    try{
+      const bvSnap=await rtdb.ref('bingo/landing/venues').once('value');
+      const bv=bvSnap.val()||{};
+      const match=Object.entries(bv).find(([id,v])=>normVenueName(v.name)===vName);
+      if(match){
+        const [venueId]=match;
+        const schedSnap=await rtdb.ref('bingo/landing/schedule').once('value');
+        const schedList=Object.entries(schedSnap.val()||{}).map(([id,e])=>({id,...e}));
+        const entry=schedList.find(e=>e.venueId===venueId&&e.date===dk);
+        if(entry){
+          let roundNames=[];
+          const catIds=entry.rounds||entry.categoryIds||[];
+          if(catIds.length){
+            const catSnap=await rtdb.ref('bingo/landing/categories').once('value');
+            const cats=catSnap.val()||{};
+            roundNames=catIds.map(cid=>cats[cid]?cats[cid].title:null).filter(Boolean);
+          }
+          if(!segments.Bingo){
+            segments.Bingo={
+              source:'Bingo App',
+              cancelled:false,
+              theme:roundNames.length?roundNames.join(', '):(entry.notes||''),
+              host:entry.host||'Unassigned',
+              bingoEntryId:entry.id,
+              bingoVenueId:venueId,
+              categoryIds:catIds
+            };
+          }else{
+            segments.Bingo.bingoEntryId=entry.id;
+            segments.Bingo.bingoVenueId=venueId;
+            segments.Bingo.categoryIds=catIds;
+            if(entry.host)segments.Bingo.host=entry.host;
+          }
+        }
+      }
+    }catch(e){}
+
+    // 4. Karaoke — HQ gig_schedule only (no separate planner app yet). Try to
+    // resolve the theme name typed in Notes to an actual song list, if one
+    // has been set up in the karaoke_lists collection.
+    if(segments.Karaoke&&segments.Karaoke.theme){
+      try{
+        const klSnap=await db.collection('karaoke_lists').where('title','==',segments.Karaoke.theme).limit(1).get();
+        if(!klSnap.empty){segments.Karaoke.listId=klSnap.docs[0].id;}
+      }catch(e){}
+    }
+
+    renderSegments(venue,segments);
+  }
+
+  function renderSegments(venue,segments){
+    const main=document.getElementById('main');
+    const dateLabel=currentDate.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+    let html=`<div class="venue-title"><div class="vname">${venue.name}</div><div class="vdate">${dateLabel}</div></div>`;
+
+    html+=segCardTrivia(segments.Trivia);
+    html+=segCardBingo(segments.Bingo);
+    html+=segCardKaraoke(segments.Karaoke);
+
+    main.innerHTML=html;
+  }
+
+  function statusPill(seg){
+    if(!seg)return '<span class="seg-status off">Not Scheduled</span>';
+    if(seg.cancelled)return '<span class="seg-status cancelled">Cancelled</span>';
+    return '<span class="seg-status on">Tonight</span>';
+  }
+
+  function segCardTrivia(seg){
+    const active=seg&&!seg.cancelled;
+    let btn;
+    if(active&&seg.plannerVenueId){
+      const url=`https://belladonnanights.github.io/belladonnatrivia/planner.html?venueId=${encodeURIComponent(seg.plannerVenueId)}&date=${encodeURIComponent(dateToKey(currentDate))}${seg.themeId?`&themeId=${encodeURIComponent(seg.themeId)}`:''}`;
+      btn=`<a href="${url}" target="_blank" class="seg-btn">Open Trivia Planner</a><div class="seg-note">Preloads tonight's venue once the Planner app supports the venueId/date link — until then, pick it manually.</div>`;
+    }else if(active){
+      btn=`<a href="https://belladonnanights.github.io/belladonnatrivia/planner.html" target="_blank" class="seg-btn">Open Trivia Planner</a>`;
+    }else{
+      btn=`<button class="seg-btn" disabled>Open Trivia Planner</button>`;
+    }
+    return `<div class="seg-card${active?'':' empty'}">
+      <div class="seg-head"><div class="seg-name">Trivia</div>${statusPill(seg)}</div>
+      ${seg&&seg.theme?`<div class="seg-detail">${seg.theme}</div>`:''}
+      ${seg?`<div class="seg-sub">${seg.source}${seg.host&&seg.host!=='Unassigned'?' · '+seg.host:''}</div>`:''}
+      ${btn}
+    </div>`;
+  }
+
+  function segCardBingo(seg){
+    const active=seg&&!seg.cancelled;
+    let btn;
+    if(active){
+      const protoUrl=`belladonna-bingo://open?venueId=${encodeURIComponent(seg.bingoVenueId||'')}&entryId=${encodeURIComponent(seg.bingoEntryId||'')}&date=${encodeURIComponent(dateToKey(currentDate))}`;
+      btn=`<a href="#" class="seg-btn" onclick="openBingo(event,'${protoUrl}')">Open Bingo</a>
+        <div class="seg-note" id="bingoFallbackNote" style="display:none;">Bingo app didn't open — make sure it's installed on this computer, then try again.</div>`;
+    }else{
+      btn=`<button class="seg-btn" disabled>Open Bingo</button>`;
+    }
+    return `<div class="seg-card${active?'':' empty'}">
+      <div class="seg-head"><div class="seg-name">Bingo</div>${statusPill(seg)}</div>
+      ${seg&&seg.theme?`<div class="seg-detail">${seg.theme}</div>`:''}
+      ${seg?`<div class="seg-sub">${seg.source}</div>`:''}
+      ${btn}
+    </div>`;
+  }
+
+  function segCardKaraoke(seg){
+    const active=seg&&!seg.cancelled;
+    let btn;
+    if(active&&seg.listId){
+      btn=`<a href="karaoke-list.html?list=${encodeURIComponent(seg.listId)}" target="_blank" class="seg-btn">Open Song List</a>`;
+    }else if(active){
+      btn=`<button class="seg-btn" disabled>Open Song List</button><div class="seg-note">No song list matched to "${seg.theme||'this theme'}" yet.</div>`;
+    }else{
+      btn=`<button class="seg-btn" disabled>Open Song List</button>`;
+    }
+    return `<div class="seg-card${active?'':' empty'}">
+      <div class="seg-head"><div class="seg-name">Karaoke</div>${statusPill(seg)}</div>
+      ${seg&&seg.theme?`<div class="seg-detail">${seg.theme}</div>`:''}
+      ${seg?`<div class="seg-sub">${seg.source}${seg.host&&seg.host!=='Unassigned'?' · '+seg.host:''}</div>`:''}
+      ${btn}
+    </div>`;
+  }
+
+  // Electron-detect-with-fallback: try the custom protocol; if the app isn't
+  // installed, the browser just does nothing and focus never leaves the page,
+  // so a short timer that checks document visibility tells us whether to show
+  // the fallback note.
+  function openBingo(ev,protoUrl){
+    ev.preventDefault();
+    const note=document.getElementById('bingoFallbackNote');
+    let left=false;
+    const onBlur=()=>{left=true;};
+    window.addEventListener('blur',onBlur);
+    window.location.href=protoUrl;
+    setTimeout(()=>{
+      window.removeEventListener('blur',onBlur);
+      if(!left&&note)note.style.display='block';
+    },1200);
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Belladonna — Tonight</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Josefin+Sans:wght@200;300;400&display=swap');
+  *{margin:0;padding:0;box-sizing:border-box;}
+  :root{
+    --bg:#000000;--surface:#0d0d0d;
+    --border:rgba(201,169,110,0.25);
+    --gold:#c9a96e;--text:#f0ece0;--text2:#b0a890;--text3:#8a8272;
+  }
+  html,body{background:var(--bg);color:var(--text);font-family:'Josefin Sans',sans-serif;font-weight:300;width:100%;height:100%;overflow:hidden;}
+  .wrap{width:100vw;height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:4vh 4vw;position:relative;}
+
+  .brand{font-family:'Playfair Display',serif;font-weight:700;color:var(--gold);letter-spacing:0.22em;text-transform:uppercase;font-size:2.6vw;position:absolute;top:4vh;left:0;right:0;}
+  .venue-name{font-size:1.1vw;letter-spacing:0.35em;text-transform:uppercase;color:var(--text3);position:absolute;top:4vh;left:0;right:0;margin-top:3.2vw;}
+
+  .theme-art{width:34vw;max-width:520px;height:34vw;max-height:520px;border-radius:18px;object-fit:cover;border:1px solid var(--border);margin-bottom:3vh;box-shadow:0 0 60px rgba(201,169,110,0.08);}
+  .theme-title{font-family:'Playfair Display',serif;font-size:4vw;color:var(--text);margin-bottom:0.6vh;line-height:1.1;}
+  .segment-tag{font-size:1.1vw;letter-spacing:0.4em;text-transform:uppercase;color:var(--gold);margin-bottom:2vh;}
+
+  .qr-box{background:#fff;padding:1.2vw;border-radius:14px;margin:1.5vh 0;}
+  .qr-box canvas,.qr-box img{display:block;width:16vw;height:16vw;max-width:260px;max-height:260px;}
+  .scan-label{font-size:1vw;letter-spacing:0.2em;text-transform:uppercase;color:var(--text2);margin-top:1.5vh;}
+
+  .ambient-ornament{color:#3a3428;font-family:'Cormorant Garamond',serif;font-size:2vw;letter-spacing:0.5em;margin-top:2vh;}
+  .ambient-sub{font-size:1.2vw;letter-spacing:0.25em;text-transform:uppercase;color:var(--text3);margin-top:1vh;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand">Belladonna</div>
+  <div class="venue-name" id="venueName"></div>
+  <div id="content">
+    <div class="ambient-ornament">✦ ✦ ✦</div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+<script>
+  firebase.initializeApp({apiKey:"AIzaSyCIfAE1JGHsUGzzVH2pz1Vyj5b5OhA0tDQ",authDomain:"belladonna-hq.firebaseapp.com",databaseURL:"https://belladonna-hq-default-rtdb.firebaseio.com",projectId:"belladonna-hq",storageBucket:"belladonna-hq.firebasestorage.app",messagingSenderId:"1021873183587",appId:"1:1021873183587:web:def283bb7b5ca48e4f9156"});
+  const db = firebase.firestore();
+
+  function slugify(str){return (str||'').toString().toLowerCase().trim().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'');}
+  function normVenueName(v){return (v||'').toString().toLowerCase().trim();}
+  function dateToKey(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+  function getParam(name){return new URLSearchParams(window.location.search).get(name);}
+
+  let venue=null;
+  let unsubGig=null;
+  let currentDk=null;
+
+  async function init(){
+    const venueParam=getParam('venue');
+    if(!venueParam){
+      document.getElementById('venueName').textContent='No venue specified';
+      return;
+    }
+    try{
+      const snap=await db.collection('hq_data').doc('venues-list').get();
+      let list=[];
+      try{list=(snap.exists&&snap.data().value)?JSON.parse(snap.data().value):[];}catch(e2){}
+      venue=list.find(v=>v.id===venueParam||slugify(v.name)===slugify(venueParam));
+    }catch(e){}
+    if(!venue){
+      document.getElementById('venueName').textContent='Venue not found';
+      return;
+    }
+    document.getElementById('venueName').textContent=venue.name;
+    watchToday();
+    // re-anchor the listener at local midnight so the screen rolls to the next night automatically
+    setInterval(()=>{
+      const dk=dateToKey(new Date());
+      if(dk!==currentDk)watchToday();
+    },60000);
+  }
+
+  function watchToday(){
+    if(unsubGig)unsubGig();
+    currentDk=dateToKey(new Date());
+    unsubGig=db.collection('gig_schedule')
+      .where('date','==',currentDk)
+      .onSnapshot(snap=>{
+        const match=snap.docs.map(d=>({id:d.id,...d.data()})).find(g=>normVenueName(g.venue)===normVenueName(venue.name)&&g.status!=='cancelled');
+        renderTonight(match);
+      },()=>{renderAmbient();});
+  }
+
+  let lastListId=null;
+  async function renderTonight(gig){
+    const content=document.getElementById('content');
+    if(!gig){renderAmbient();return;}
+
+    if(gig.kind==='Karaoke'){
+      let listDoc=null;
+      if(gig.notes){
+        try{
+          const klSnap=await db.collection('karaoke_lists').where('title','==',gig.notes).limit(1).get();
+          if(!klSnap.empty)listDoc={id:klSnap.docs[0].id,...klSnap.docs[0].data()};
+        }catch(e){}
+      }
+      if(listDoc&&listDoc.id===lastListId)return; // already showing this, avoid QR flicker on unrelated snapshot updates
+      lastListId=listDoc?listDoc.id:null;
+      const art=listDoc&&listDoc.artUrl?`<img class="theme-art" src="${listDoc.artUrl}" alt="">`:'';
+      content.innerHTML=`
+        <div class="segment-tag">Karaoke Tonight</div>
+        ${art}
+        <div class="theme-title">${(listDoc&&listDoc.title)||gig.notes||'Karaoke'}</div>
+        ${listDoc?`<div class="qr-box" id="qrBox"></div><div class="scan-label">Scan for tonight's song list</div>`:''}
+      `;
+      if(listDoc){
+        const url=window.location.origin+window.location.pathname.replace(/screen\.html.*$/,'')+'karaoke-list.html?list='+encodeURIComponent(listDoc.id);
+        new QRCode(document.getElementById('qrBox'),{text:url,width:260,height:260,colorDark:'#000000',colorLight:'#ffffff'});
+      }
+      return;
+    }
+
+    lastListId=null;
+    content.innerHTML=`
+      <div class="segment-tag">${gig.kind} Tonight</div>
+      <div class="theme-title">${gig.notes||venue.name}</div>
+    `;
+  }
+
+  function renderAmbient(){
+    lastListId=null;
+    document.getElementById('content').innerHTML=`
+      <div class="ambient-ornament">✦ ✦ ✦</div>
+      <div class="ambient-sub">See you next time</div>
+    `;
+  }
+
+  init();
+</script>
+</body>
+</html>
