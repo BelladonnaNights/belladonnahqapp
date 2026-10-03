@@ -155,23 +155,27 @@
       hqGigs=snap.docs.map(d=>({id:d.id,...d.data()})).filter(g=>normVenueName(g.venue)===vName);
     }catch(e){}
 
-    const segments={Trivia:null,Bingo:null,Karaoke:null};
+    // Every scheduled thing tonight is one item in a flat list — not capped
+    // to "one Trivia, one Bingo, one Karaoke". A venue can have more than one
+    // of the same kind in a night, or a kind that isn't one of the three
+    // special-cased ones at all (Events, Private Events, anything typed into
+    // HQ Schedule) — all of it shows.
+    let items=[];
     hqGigs.forEach(g=>{
-      const kind=g.kind;
-      if(!segments.hasOwnProperty(kind))return;
-      segments[kind]={
+      items.push({
+        kind:g.kind||'Gig',
         source:'HQ Schedule',
         cancelled:g.status==='cancelled',
         theme:g.notes||'',
         host:g.host||'Unassigned',
         gigId:g.id
-      };
+      });
     });
 
     // 2. Trivia Planner (Realtime DB) — this per-date record is the one place
-    // HQ and the Planner app both write "host" into, so it's consulted even
-    // when HQ already has its own entry, specifically for the host — whoever
-    // set it last over there is the current answer.
+    // HQ and the Planner app both write "host" into. If HQ already has a
+    // Trivia item (or several) for tonight, this only overlays host/theme
+    // detail onto it — it adds a new item only when HQ has none at all.
     try{
       const pvSnap=await rtdb.ref('trivia/planner/venues').once('value');
       const pv=pvSnap.val()||{};
@@ -180,19 +184,29 @@
         const [venueId,v]=match;
         const gSnap=await rtdb.ref('trivia/planner/gigs/'+venueId+'/'+dk).once('value');
         const g=gSnap.val();
-        if(!segments.Trivia&&(v.status==='active'||v.status==='seasonal')&&PLANNER_DAY_MAP[v.day]===dow){
-          segments.Trivia={
-            source:'Trivia Planner',
-            cancelled:!!(g&&g.status==='cancelled'),
-            theme:(g&&(g.themeName||g.note))||'',
-            host:(g&&g.host)||v.host||'Unassigned',
-            plannerVenueId:venueId,
-            themeId:g&&g.themeId||null
-          };
-        }else if(segments.Trivia){
-          segments.Trivia.plannerVenueId=venueId;
-          segments.Trivia.themeId=(g&&g.themeId)||null;
-          if(g&&g.host)segments.Trivia.host=g.host;
+        const hqTriviaItems=items.filter(it=>it.kind==='Trivia');
+        if(!hqTriviaItems.length){
+          if((g&&g.themeName)||(g&&g.status==='cancelled')||((v.status==='active'||v.status==='seasonal')&&PLANNER_DAY_MAP[v.day]===dow)){
+            items.push({
+              kind:'Trivia',
+              source:'Trivia Planner',
+              cancelled:!!(g&&g.status==='cancelled'),
+              theme:(g&&(g.themeName||g.note))||'',
+              host:(g&&g.host)||v.host||'Unassigned',
+              plannerVenueId:venueId,
+              themeId:g&&g.themeId||null
+            });
+          }
+        }else{
+          // Exactly one HQ Trivia item tonight — safe to merge the live
+          // host/theme detail straight onto it. With more than one, which one
+          // it belongs to is ambiguous, so just attach the Planner link and
+          // leave host as HQ already has it.
+          hqTriviaItems.forEach(it=>{
+            it.plannerVenueId=venueId;
+            it.themeId=(g&&g.themeId)||null;
+          });
+          if(hqTriviaItems.length===1&&g&&g.host)hqTriviaItems[0].host=g.host;
         }
       }
     }catch(e){}
@@ -217,8 +231,10 @@
             const cats=catSnap.val()||{};
             roundNames=catIds.map(cid=>cats[cid]?cats[cid].title:null).filter(Boolean);
           }
-          if(!segments.Bingo){
-            segments.Bingo={
+          const hqBingoItems=items.filter(it=>it.kind==='Bingo');
+          if(!hqBingoItems.length){
+            items.push({
+              kind:'Bingo',
               source:'Bingo App',
               cancelled:false,
               theme:roundNames.length?roundNames.join(', '):(entry.notes||''),
@@ -226,50 +242,70 @@
               bingoEntryId:entry.id,
               bingoVenueId:venueId,
               categoryIds:catIds
-            };
+            });
           }else{
-            segments.Bingo.bingoEntryId=entry.id;
-            segments.Bingo.bingoVenueId=venueId;
-            segments.Bingo.categoryIds=catIds;
-            if(entry.host)segments.Bingo.host=entry.host;
+            hqBingoItems.forEach(it=>{
+              it.bingoEntryId=entry.id;
+              it.bingoVenueId=venueId;
+              it.categoryIds=catIds;
+            });
+            if(hqBingoItems.length===1&&entry.host)hqBingoItems[0].host=entry.host;
           }
         }
       }
     }catch(e){}
 
     // 4. Karaoke — HQ gig_schedule only (no separate planner app yet). Try to
-    // resolve the theme name typed in Notes to an actual song list, if one
-    // has been set up in the karaoke_lists collection.
-    if(segments.Karaoke&&segments.Karaoke.theme){
+    // resolve the theme name typed in Notes to an actual song list, for every
+    // Karaoke item tonight, not just a single one.
+    for(const it of items.filter(it=>it.kind==='Karaoke'&&it.theme)){
       try{
-        const klSnap=await db.collection('karaoke_lists').where('title','==',segments.Karaoke.theme).limit(1).get();
-        if(!klSnap.empty){segments.Karaoke.listId=klSnap.docs[0].id;}
+        const klSnap=await db.collection('karaoke_lists').where('title','==',it.theme).limit(1).get();
+        if(!klSnap.empty)it.listId=klSnap.docs[0].id;
       }catch(e){}
     }
 
-    renderSegments(venue,segments);
+    renderSegments(venue,items);
   }
 
-  function renderSegments(venue,segments){
+  function renderSegments(venue,items){
     const main=document.getElementById('main');
     const dateLabel=currentDate.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
     let html=`<div class="venue-title"><div class="vname">${venue.name}</div><div class="vdate">${dateLabel}</div></div>`;
 
-    html+=segCardTrivia(segments.Trivia);
-    html+=segCardBingo(segments.Bingo);
-    html+=segCardKaraoke(segments.Karaoke);
+    if(!items.length){
+      html+='<div class="msg-empty">Unscheduled</div>';
+    }else{
+      html+=items.map(segCardFor).join('');
+    }
 
     main.innerHTML=html;
   }
+  function segCardFor(it){
+    if(it.kind==='Trivia')return segCardTrivia(it);
+    if(it.kind==='Bingo')return segCardBingo(it);
+    if(it.kind==='Karaoke')return segCardKaraoke(it);
+    return segCardGeneric(it);
+  }
+  // Anything that isn't Trivia/Bingo/Karaoke (Events, Private Events, or
+  // whatever else gets typed into HQ Schedule) still shows — just without a
+  // dedicated "Open X" button, since there's no app on the other end for it.
+  function segCardGeneric(seg){
+    const active=!seg.cancelled;
+    return `<div class="seg-card${active?'':' empty'}">
+      <div class="seg-head"><div class="seg-name">${seg.kind||'Gig'}</div>${statusPill(seg)}</div>
+      ${seg.theme?`<div class="seg-detail">${seg.theme}</div>`:''}
+      <div class="seg-sub">${seg.source}${seg.host&&seg.host!=='Unassigned'?' · '+seg.host:''}</div>
+    </div>`;
+  }
 
   function statusPill(seg){
-    if(!seg)return '<span class="seg-status off">Not Scheduled</span>';
     if(seg.cancelled)return '<span class="seg-status cancelled">Cancelled</span>';
     return '<span class="seg-status on">Tonight</span>';
   }
 
   function segCardTrivia(seg){
-    const active=seg&&!seg.cancelled;
+    const active=!seg.cancelled;
     let btn;
     if(active&&seg.plannerVenueId){
       const url=`https://belladonnanights.github.io/belladonnatrivia/planner.html?venueId=${encodeURIComponent(seg.plannerVenueId)}&date=${encodeURIComponent(dateToKey(currentDate))}${seg.themeId?`&themeId=${encodeURIComponent(seg.themeId)}`:''}`;
@@ -281,14 +317,14 @@
     }
     return `<div class="seg-card${active?'':' empty'}">
       <div class="seg-head"><div class="seg-name">Trivia</div>${statusPill(seg)}</div>
-      ${seg&&seg.theme?`<div class="seg-detail">${seg.theme}</div>`:''}
-      ${seg?`<div class="seg-sub">${seg.source}${seg.host&&seg.host!=='Unassigned'?' · '+seg.host:''}</div>`:''}
+      ${seg.theme?`<div class="seg-detail">${seg.theme}</div>`:''}
+      <div class="seg-sub">${seg.source}${seg.host&&seg.host!=='Unassigned'?' · '+seg.host:''}</div>
       ${btn}
     </div>`;
   }
 
   function segCardBingo(seg){
-    const active=seg&&!seg.cancelled;
+    const active=!seg.cancelled;
     let btn;
     if(active){
       const protoUrl=`belladonna-bingo://open?venueId=${encodeURIComponent(seg.bingoVenueId||'')}&entryId=${encodeURIComponent(seg.bingoEntryId||'')}&date=${encodeURIComponent(dateToKey(currentDate))}`;
@@ -299,14 +335,14 @@
     }
     return `<div class="seg-card${active?'':' empty'}">
       <div class="seg-head"><div class="seg-name">Bingo</div>${statusPill(seg)}</div>
-      ${seg&&seg.theme?`<div class="seg-detail">${seg.theme}</div>`:''}
-      ${seg?`<div class="seg-sub">${seg.source}</div>`:''}
+      ${seg.theme?`<div class="seg-detail">${seg.theme}</div>`:''}
+      <div class="seg-sub">${seg.source}</div>
       ${btn}
     </div>`;
   }
 
   function segCardKaraoke(seg){
-    const active=seg&&!seg.cancelled;
+    const active=!seg.cancelled;
     let btn;
     if(active&&seg.listId){
       btn=`<a href="karaoke-list.html?list=${encodeURIComponent(seg.listId)}" target="_blank" class="seg-btn">Open Song List</a>`;
@@ -317,8 +353,8 @@
     }
     return `<div class="seg-card${active?'':' empty'}">
       <div class="seg-head"><div class="seg-name">Karaoke</div>${statusPill(seg)}</div>
-      ${seg&&seg.theme?`<div class="seg-detail">${seg.theme}</div>`:''}
-      ${seg?`<div class="seg-sub">${seg.source}${seg.host&&seg.host!=='Unassigned'?' · '+seg.host:''}</div>`:''}
+      ${seg.theme?`<div class="seg-detail">${seg.theme}</div>`:''}
+      <div class="seg-sub">${seg.source}${seg.host&&seg.host!=='Unassigned'?' · '+seg.host:''}</div>
       ${btn}
     </div>`;
   }
