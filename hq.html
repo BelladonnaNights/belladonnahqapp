@@ -401,6 +401,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
     <button class="tab" onclick="showTab('venues',this)">Venues</button>
     <button class="tab" onclick="showTab('schedule',this)">Schedule</button>
     <button class="tab" onclick="showTab('inventory',this);loadInventory()">Inventory</button>
+    <button class="tab" onclick="showTab('feedback',this);loadTriviaFeedback()">Trivia Feedback</button>
     <button class="tab" onclick="showTab('accounts',this)">Accounts</button>
   </div>
 </div>
@@ -980,6 +981,30 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
   <div id="inventoryList"></div>
 </div>
 
+<!-- TRIVIA FEEDBACK -->
+<div class="panel" id="panel-feedback">
+  <div class="section-header">
+    <div class="section-title">Trivia Feedback</div>
+    <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+      <button class="btn-sm" onclick="loadTriviaFeedback()">Refresh</button>
+    </div>
+  </div>
+  <div class="signin-filters">
+    <input type="text" class="roster-search-input" id="fbSearch" placeholder="Search question or note text..." oninput="renderTriviaFeedback()" style="flex:2;min-width:160px;">
+    <select class="roster-filter-select" id="fbSortBy" onchange="renderTriviaFeedback()">
+      <option value="flagged">Most Flagged First</option>
+      <option value="recent">Most Recent First</option>
+      <option value="notes">Most Notes First</option>
+    </select>
+    <select class="roster-filter-select" id="fbFilter" onchange="renderTriviaFeedback()">
+      <option value="">All Feedback</option>
+      <option value="down">Flagged (👎) Only</option>
+      <option value="notes">With Notes Only</option>
+    </select>
+  </div>
+  <div id="feedbackList"><div class="empty-state">Loading…</div></div>
+</div>
+
 <!-- INVENTORY ITEM MODAL -->
 <div class="modal-bg" id="inventoryModal">
   <div class="modal" style="max-width:440px;">
@@ -1517,6 +1542,7 @@ function showTab(id,el){
   if(id==='dashboard')renderDashboardWeek();
   if(id==='schedule'){populateSchedFilters();loadShiftsData().then(renderScheduleAll);}
   if(id==='accounts'){loadAccounts();loadAccessRequests();}
+  if(id==='feedback')loadTriviaFeedback();
 }
 function showSub(tab,id,el){
   document.querySelectorAll(`#panel-${tab} .subpanel`).forEach(p=>p.classList.remove('active'));
@@ -3065,6 +3091,67 @@ function transferLeadToVenue(id){
 // ── INVENTORY ──
 let inventory=[];
 let editingInvId=null;
+// ── TRIVIA FEEDBACK — thumbs/notes hosts leave on question slides in trivia.html ──
+let triviaFeedbackCache={};
+function loadTriviaFeedback(){
+  if(!rtdb){document.getElementById('feedbackList').innerHTML='<div class="empty-state">Not connected.</div>';return;}
+  rtdb.ref('trivia/questionFeedback').once('value').then(snap=>{
+    triviaFeedbackCache=snap.val()||{};
+    renderTriviaFeedback();
+  }).catch(()=>{triviaFeedbackCache={};renderTriviaFeedback();});
+}
+function renderTriviaFeedback(){
+  const el=document.getElementById('feedbackList');
+  if(!el)return;
+  const search=(document.getElementById('fbSearch')?.value||'').trim().toLowerCase();
+  const sortBy=document.getElementById('fbSortBy')?.value||'flagged';
+  const filter=document.getElementById('fbFilter')?.value||'';
+  let rows=Object.keys(triviaFeedbackCache).map(key=>({key,...triviaFeedbackCache[key]}));
+  rows=rows.map(r=>({...r,notesList:r.notes?Object.keys(r.notes).map(nid=>({id:nid,...r.notes[nid]})).sort((a,b)=>(b.ts||0)-(a.ts||0)):[]}));
+  if(search){
+    rows=rows.filter(r=>(r.question||'').toLowerCase().includes(search)||(r.answer||'').toLowerCase().includes(search)||r.notesList.some(n=>(n.text||'').toLowerCase().includes(search)));
+  }
+  if(filter==='down')rows=rows.filter(r=>(r.thumbsDown||0)>0);
+  if(filter==='notes')rows=rows.filter(r=>r.notesList.length>0);
+  if(sortBy==='recent')rows.sort((a,b)=>(b.lastFeedbackAt||0)-(a.lastFeedbackAt||0));
+  else if(sortBy==='notes')rows.sort((a,b)=>b.notesList.length-a.notesList.length);
+  else rows.sort((a,b)=>((b.thumbsDown||0)*2+(b.notesList.length||0))-((a.thumbsDown||0)*2+(a.notesList.length||0)));
+  if(!rows.length){el.innerHTML='<div class="empty-state">No feedback logged yet.</div>';return;}
+  el.innerHTML=rows.map(r=>{
+    const notesHtml=r.notesList.map(n=>`
+      <div style="display:flex;justify-content:space-between;gap:0.5rem;padding:0.4rem 0;border-top:1px solid var(--border);">
+        <div style="flex:1;font-size:0.78rem;color:var(--text2);">${(n.text||'').replace(/</g,'&lt;')}<div style="font-size:0.6rem;color:var(--text3);margin-top:0.15rem;">${n.ts?new Date(n.ts).toLocaleString():''}</div></div>
+        <button class="btn-sm" style="flex-shrink:0;height:fit-content;" onclick="deleteFeedbackNote('${r.key}','${n.id}')">Clear</button>
+      </div>`).join('');
+    const sheetLink=r.sheetUrl?`<a href="${r.sheetUrl}" target="_blank" style="color:var(--gold);">Open Sheet${r.tabName?' — '+r.tabName:''}${r.rowIndex?' (row '+r.rowIndex+')':''}</a>`:(r.tabName||'');
+    return `<div class="roster-card" style="margin-bottom:0.7rem;">
+      <div style="display:flex;justify-content:space-between;gap:0.6rem;align-items:flex-start;">
+        <div style="flex:1;">
+          <div style="font-weight:600;font-size:0.9rem;">${(r.question||'(question text unavailable)').replace(/</g,'&lt;')}</div>
+          <div style="font-size:0.78rem;color:var(--text2);margin-top:0.2rem;">Answer: ${(r.answer||'—').replace(/</g,'&lt;')}</div>
+          <div style="font-size:0.72rem;color:var(--text3);margin-top:0.2rem;">${sheetLink}</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:0.3rem;flex-shrink:0;">
+          <div style="font-size:0.85rem;white-space:nowrap;">👍 ${r.thumbsUp||0} &nbsp; 👎 ${r.thumbsDown||0}</div>
+          <button class="btn-sm" onclick="deleteFeedbackEntry('${r.key}')">Clear All</button>
+        </div>
+      </div>
+      ${notesHtml?`<div style="margin-top:0.5rem;">${notesHtml}</div>`:''}
+    </div>`;
+  }).join('');
+}
+function deleteFeedbackEntry(key){
+  if(!rtdb||!confirm('Clear all feedback for this question?'))return;
+  rtdb.ref('trivia/questionFeedback/'+key).remove().then(()=>{delete triviaFeedbackCache[key];renderTriviaFeedback();});
+}
+function deleteFeedbackNote(key,noteId){
+  if(!rtdb)return;
+  rtdb.ref('trivia/questionFeedback/'+key+'/notes/'+noteId).remove().then(()=>{
+    if(triviaFeedbackCache[key]&&triviaFeedbackCache[key].notes)delete triviaFeedbackCache[key].notes[noteId];
+    renderTriviaFeedback();
+  });
+}
+
 function loadInventory(){
   if(!db)return;
   db.collection('inventory').get().then(snap=>{
