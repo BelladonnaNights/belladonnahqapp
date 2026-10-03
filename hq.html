@@ -401,7 +401,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
     <button class="tab" onclick="showTab('venues',this)">Venues</button>
     <button class="tab" onclick="showTab('schedule',this)">Schedule</button>
     <button class="tab" onclick="showTab('inventory',this);loadInventory()">Inventory</button>
-    <button class="tab" onclick="showTab('feedback',this);loadTriviaFeedback()">Trivia Feedback</button>
+    <button class="tab" onclick="showTab('feedback',this);loadTriviaFeedback()">Trivia Feedback<span id="fbTabBadge" title="Questions with host notes waiting for review" style="display:none;margin-left:0.45rem;min-width:1.1rem;padding:0.05rem 0.4rem;border-radius:999px;background:var(--gold);color:#0a0a0a;font-size:0.6rem;font-weight:700;letter-spacing:0;vertical-align:middle;"></span></button>
     <button class="tab" onclick="showTab('accounts',this)">Accounts</button>
   </div>
 </div>
@@ -986,6 +986,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
   <div class="section-header">
     <div class="section-title">Trivia Feedback</div>
     <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+      <a class="btn-sm btn-gold" href="https://belladonnanights.github.io/belladonnatrivia/questions.html" target="_blank" rel="noopener" style="text-decoration:none;">Open Question Vault ↗</a>
       <button class="btn-sm" onclick="loadTriviaFeedback()">Refresh</button>
     </div>
   </div>
@@ -1419,6 +1420,7 @@ if(authInst){
         myLocationId=profile.locationId||null;
         myAllLocations=!!profile.allLocations;
         myLeadsAccess=!!(profile.leadsAccess||(profile.adminAccess&&profile.adminAccess.hq));
+        refreshFeedbackBadge();
         const leadsTabBtn=document.getElementById('leadsTabBtn');
         if(leadsTabBtn)leadsTabBtn.style.display=myLeadsAccess?'':'none';
         loadLocations().then(function(){
@@ -3093,6 +3095,18 @@ let inventory=[];
 let editingInvId=null;
 // ── TRIVIA FEEDBACK — thumbs/notes hosts leave on question slides in trivia.html ──
 let triviaFeedbackCache={};
+// Gold count on the Trivia Feedback tab = how many questions have host notes waiting for review.
+function updateFeedbackBadge(){
+  const b=document.getElementById('fbTabBadge');
+  if(!b)return;
+  const n=Object.keys(triviaFeedbackCache||{}).filter(k=>{const r=triviaFeedbackCache[k];return r&&r.notes&&Object.keys(r.notes).length;}).length;
+  b.textContent=n;b.style.display=n?'inline-block':'none';
+}
+function refreshFeedbackBadge(){
+  if(!rtdb)return;
+  rtdb.ref('trivia/questionFeedback').once('value').then(snap=>{triviaFeedbackCache=snap.val()||{};updateFeedbackBadge();}).catch(()=>{});
+}
+setInterval(refreshFeedbackBadge,5*60*1000);
 function loadTriviaFeedback(){
   if(!rtdb){document.getElementById('feedbackList').innerHTML='<div class="empty-state">Not connected.</div>';return;}
   rtdb.ref('trivia/questionFeedback').once('value').then(snap=>{
@@ -3101,6 +3115,7 @@ function loadTriviaFeedback(){
   }).catch(()=>{triviaFeedbackCache={};renderTriviaFeedback();});
 }
 function renderTriviaFeedback(){
+  updateFeedbackBadge();
   const el=document.getElementById('feedbackList');
   if(!el)return;
   const search=(document.getElementById('fbSearch')?.value||'').trim().toLowerCase();
@@ -3123,7 +3138,8 @@ function renderTriviaFeedback(){
         <div style="flex:1;font-size:0.78rem;color:var(--text2);">${(n.text||'').replace(/</g,'&lt;')}<div style="font-size:0.6rem;color:var(--text3);margin-top:0.15rem;">${n.ts?new Date(n.ts).toLocaleString():''}</div></div>
         <button class="btn-sm" style="flex-shrink:0;height:fit-content;" onclick="deleteFeedbackNote('${r.key}','${n.id}')">Clear</button>
       </div>`).join('');
-    const sheetLink=r.sheetUrl?`<a href="${r.sheetUrl}" target="_blank" style="color:var(--gold);">Open Sheet${r.tabName?' — '+r.tabName:''}${r.rowIndex?' (row '+r.rowIndex+')':''}</a>`:(r.tabName||'');
+    const vaultLink=r.vaultCatId?`<a href="https://belladonnanights.github.io/belladonnatrivia/questions.html" target="_blank" rel="noopener" style="color:var(--gold);">Question Vault</a>`:'';
+    const sheetLink=vaultLink?vaultLink:r.sheetUrl?`<a href="${r.sheetUrl}" target="_blank" style="color:var(--gold);">Open Sheet${r.tabName?' — '+r.tabName:''}${r.rowIndex?' (row '+r.rowIndex+')':''}</a>`:(r.tabName||'');
     return `<div class="roster-card" style="margin-bottom:0.7rem;">
       <div style="display:flex;justify-content:space-between;gap:0.6rem;align-items:flex-start;">
         <div style="flex:1;">
