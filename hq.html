@@ -1213,6 +1213,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
       <div id="vmCategoryQueueStatus" style="font-size:0.78rem;color:var(--text2);line-height:1.6;"></div>
     </div>
     <div class="form-group"><label class="form-label">Location</label><select class="form-input" id="vmLocation"></select></div>
+    <div class="form-group"><label class="form-label">Default Host <span style="font-size:0.6rem;color:var(--text4);text-transform:none;letter-spacing:0;">(who regularly hosts here — a specific date's assignment in Host Roster or the Planner always overrides this for that date only)</span></label><select class="form-input" id="vmHost"></select></div>
     <div class="form-group">
       <label class="form-label">Amount Paid — By Gig Type</label>
       <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
@@ -2079,10 +2080,19 @@ function getExternalGigsForDate(dk,dow){
   const hqVenuesForDate=new Set(gigSchedule.filter(g=>g.date===dk).map(g=>normVenueName(g.venue)));
   if(plannerVenues){
     Object.entries(plannerVenues).forEach(([id,v])=>{
-      if(v.status!=='active'&&v.status!=='seasonal')return;
-      if(PLANNER_DAY_MAP[v.day]!==dow)return;
       if(hqVenuesForDate.has(normVenueName(v.name)))return;
       const override=(plannerGigs&&plannerGigs[id])?plannerGigs[id][dk]:null;
+      // A real per-date record (an assigned theme, a note, an explicit cancel)
+      // is the actual source of truth for "something is happening here" — it
+      // always shows, no matter the venue's status or usual weekday. Lacking
+      // that, fall back to the old guess: active/seasonal venue, date matches
+      // its normal recurring day. This is what used to silently hide venues
+      // marked "finished" at spreadsheet import (or anything whose actual
+      // scheduled date didn't match its "usual day") even though the theme
+      // assignment itself was saved correctly and visible in the Planner.
+      const hasExplicitRecord=!!override;
+      const recurs=(v.status==='active'||v.status==='seasonal')&&PLANNER_DAY_MAP[v.day]===dow;
+      if(!hasExplicitRecord&&!recurs)return;
       const cancelled=!!(override&&override.status==='cancelled');
       out.push({venue:v.name,host:(override&&override.host)||v.host||'Unassigned',kind:'Trivia',cancelled,source:'Trivia Planner',notes:override&&override.themeName?override.themeName:(override&&override.note?override.note:'')});
     });
@@ -2368,7 +2378,17 @@ function populateGigVenueChips(sel){
   selectedGigVenue=sel||'';
   document.getElementById('gigVenueChips').innerHTML=getVenueNames().map(v=>`<div class="chip${v===selectedGigVenue?' selected-skill':''}" onclick="selectGigVenue(this,'${v}')">${v}</div>`).join('');
 }
-function selectGigVenue(el,v){selectedGigVenue=v;document.querySelectorAll('#gigVenueChips .chip').forEach(c=>c.classList.remove('selected-skill'));el.classList.add('selected-skill');}
+function selectGigVenue(el,v){
+  selectedGigVenue=v;
+  document.querySelectorAll('#gigVenueChips .chip').forEach(c=>c.classList.remove('selected-skill'));
+  el.classList.add('selected-skill');
+  // New gig, no host picked yet (including via "+ Assign Gig" from Host
+  // Roster, which already set one) — fall back to this venue's default host.
+  if(!editingGigId&&selectedGigHost==='Unassigned'){
+    const venueObj=venues.find(x=>x.name===v);
+    if(venueObj&&venueObj.host)populateGigHostChips(venueObj.host);
+  }
+}
 function populateGigHostChips(sel){
   selectedGigHost=sel||'Unassigned';
   document.getElementById('gigHostChips').innerHTML=['Unassigned',...roster.map(h=>h.name)].map(n=>`<div class="chip${n===selectedGigHost?' selected-skill':''}" onclick="selectGigHost(this,'${n}')">${n}</div>`).join('');
@@ -2379,7 +2399,7 @@ function populateGigKindChips(sel){
   document.getElementById('gigKindChips').innerHTML=SKILLS.map(k=>`<div class="chip${k===selectedGigKind?' selected-skill':''}" onclick="selectGigKind(this,'${k}')">${k}</div>`).join('');
 }
 function selectGigKind(el,k){selectedGigKind=k;document.querySelectorAll('#gigKindChips .chip').forEach(c=>c.classList.remove('selected-skill'));el.classList.add('selected-skill');}
-function openGigModal(id){
+function openGigModal(id,presetHost){
   editingGigId=id||null;
   const g=id?gigSchedule.find(x=>x.id===id):null;
   document.getElementById('gigModalTitle').textContent=id?'Edit Gig':'Schedule Gig';
@@ -2389,7 +2409,7 @@ function openGigModal(id){
   document.getElementById('gigNotes').value=g?g.notes||'':'';
   populateGigKindChips(g?g.kind:null);
   populateGigVenueChips(g?g.venue:null);
-  populateGigHostChips(g?g.host:null);
+  populateGigHostChips(g?g.host:(presetHost||null));
   document.getElementById('gigCancelRow').style.display=id?'block':'none';
   document.getElementById('gigCancelCheckbox').checked=!!(g&&g.status==='cancelled');
   document.getElementById('gigDeleteBtn').style.display=id?'inline-block':'none';
@@ -2404,6 +2424,15 @@ function openGigModal(id){
   document.getElementById('gigModal').classList.add('open');
 }
 function openGigModalOnDate(dateStr){pendingGigDate=dateStr;openGigModal(null);}
+// From a Host Roster card's "+ Assign Gig" — opens a brand-new gig with this
+// host already selected; pick the venue/date/kind as usual and save. Goes
+// through the exact same save path as Schedule, so it bridges to the Trivia
+// Planner / Bingo app the same way too.
+function openGigModalFromHost(hostId){
+  const h=roster.find(x=>x.id===hostId);
+  pendingGigDate=null;
+  openGigModal(null,h?h.name:null);
+}
 function closeGigModal(){document.getElementById('gigModal').classList.remove('open');editingGigId=null;}
 function saveGig(){
   const date=document.getElementById('gigDate').value;
@@ -3863,6 +3892,7 @@ function renderRosterCards(list){
         </div>
         <div class="acct-badges">
           ${rankBadge}
+          <button class="btn-sm" style="padding:0.3rem 0.6rem;font-size:0.6rem;" title="Assign this host to a gig" onclick="openGigModalFromHost('${h.id}')">+ Assign Gig</button>
           <button class="action-btn edit" onclick="openRosterModal('${h.id}')">✎</button>
           <button class="action-btn delete" onclick="deleteHost('${h.id}')">✕</button>
         </div>
@@ -4115,7 +4145,8 @@ function renderVenueManage(){
     const payLine=hasPay?`<div style="font-size:0.68rem;color:var(--text3);margin-top:0.4rem;">${amountParts.join(', ')}${amountParts.length&&v.payMethod?' via ':(v.payMethod?'Pays via ':'')}${v.payMethod||''}${(amountParts.length||v.payMethod)&&v.startDate?' · ':''}${v.startDate?'Started '+formatDateShort(v.startDate):''}</div>`:'';
     const slots=v.gigSlots||[];
     const slotsLine=slots.length?`<div style="font-size:0.66rem;color:var(--text3);margin-top:0.3rem;display:flex;flex-direction:column;gap:0.15rem;">${slots.map(s=>`<div>${s.kind||''} · ${s.day||''}${s.time?' '+formatTimeShort(s.time):''}${s.endTime?'–'+formatTimeShort(s.endTime):''}${s.price?' · '+s.price:''}</div>`).join('')}</div>`:'';
-    return `<div class="venue-manage-card"${v.inactive?' style="opacity:0.55;"':''}><div class="venue-manage-header"><div class="venue-manage-name">${v.name}${v.inactive?' <span style="font-size:0.62rem;color:var(--text4);font-weight:400;text-transform:uppercase;letter-spacing:0.08em;">· Inactive</span>':''}${v.locationId?` <span style="font-size:0.65rem;color:var(--text3);font-weight:400;">· ${locationLabel(v.locationId)}</span>`:''}</div><div style="display:flex;gap:0.4rem;align-items:center;"><button class="btn-sm modal-history-btn" style="padding:0.3rem 0.6rem;font-size:0.6rem;" onclick="openVenueHistoryModal('${v.id}')">History</button><button class="action-btn edit" onclick="openVenueModal('${v.id}')">✎</button><button class="action-btn delete" onclick="deleteVenue('${v.id}')">✕</button></div></div><div class="venue-gig-tags">${(v.gigs||[]).map(g=>`<span class="venue-gig-tag ${gigClass(g)}">${g}</span>`).join('')}</div>${payLine}${slotsLine}${v.notes?`<div style="font-size:0.81rem;color:var(--text3);margin-top:0.5rem;">${v.notes}</div>`:''}</div>`;
+    const hostLine=v.host?`<div style="font-size:0.68rem;color:var(--gold);margin-top:0.4rem;">Default host: ${v.host}</div>`:'';
+    return `<div class="venue-manage-card"${v.inactive?' style="opacity:0.55;"':''}><div class="venue-manage-header"><div class="venue-manage-name">${v.name}${v.inactive?' <span style="font-size:0.62rem;color:var(--text4);font-weight:400;text-transform:uppercase;letter-spacing:0.08em;">· Inactive</span>':''}${v.locationId?` <span style="font-size:0.65rem;color:var(--text3);font-weight:400;">· ${locationLabel(v.locationId)}</span>`:''}</div><div style="display:flex;gap:0.4rem;align-items:center;"><button class="btn-sm modal-history-btn" style="padding:0.3rem 0.6rem;font-size:0.6rem;" onclick="openVenueHistoryModal('${v.id}')">History</button><button class="action-btn edit" onclick="openVenueModal('${v.id}')">✎</button><button class="action-btn delete" onclick="deleteVenue('${v.id}')">✕</button></div></div><div class="venue-gig-tags">${(v.gigs||[]).map(g=>`<span class="venue-gig-tag ${gigClass(g)}">${g}</span>`).join('')}</div>${payLine}${slotsLine}${hostLine}${v.notes?`<div style="font-size:0.81rem;color:var(--text3);margin-top:0.5rem;">${v.notes}</div>`:''}</div>`;
   }).join('');
 }
 const VENUE_GIG_SLOT_DAYS=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
@@ -4187,11 +4218,25 @@ function openVenueModal(id=null){
   const locSel=document.getElementById('vmLocation');
   locSel.innerHTML=locations.map(l=>`<option value="${l.code}">${l.label}</option>`).join('');
   locSel.value=(venue&&venue.locationId)?venue.locationId:(currentLocationScope!=='ALL'?currentLocationScope:((locations[0]&&locations[0].code)||''));
+  renderVenueHostSelect(venue&&venue.host?venue.host:'');
   document.getElementById('gigChips').innerHTML=['Karaoke','Bingo','Trivia','Events','Private Events'].map(g=>{const sel=venue&&(venue.gigs||[]).includes(g);return`<div class="chip${sel?' selected-skill':''}" onclick="toggleChip(this,'skill')">${g}</div>`;}).join('');
   renderChecklistInto('onboardChecklist-venueModal','venue',ONBOARD_CHECKLIST_ITEMS.venue);
   document.getElementById('venueModal').classList.add('open');
 }
 function closeVenueModal(){document.getElementById('venueModal').classList.remove('open');editVenueId=null;}
+// Same roster-aware pattern as the Planner's own host dropdown: active hosts
+// first, plus whatever name is already set even if retired/off-roster, so a
+// venue never silently loses its assigned default host just by opening it.
+function renderVenueHostSelect(currentName){
+  const sel=document.getElementById('vmHost');
+  if(!sel)return;
+  const names=(roster||[]).filter(h=>h&&h.name&&!h.retired).map(h=>h.name);
+  const nameSet=new Set(names);
+  let opts=['<option value="">— No default host —</option>'];
+  names.sort((a,b)=>a.localeCompare(b)).forEach(n=>{opts.push(`<option value="${n.replace(/"/g,'&quot;')}"${n===currentName?' selected':''}>${n}</option>`);});
+  if(currentName&&!nameSet.has(currentName)){opts.push(`<option value="${currentName.replace(/"/g,'&quot;')}" selected>${currentName} (not on current roster)</option>`);}
+  sel.innerHTML=opts.join('');
+}
 function renderVenueGatewayStatus(venue){
   const wrap=document.getElementById('vmGatewayStatusWrap');
   if(!venue||(!venue.venueId&&!venue.gatewayEmail)){wrap.style.display='none';return;}
@@ -4257,6 +4302,7 @@ function saveVenue(){
   const payMethod=document.getElementById('vmPayMethod').value;
   const startDate=document.getElementById('vmStartDate').value;
   const gigSlots=readVenueGigSlotRows();
+  const host=document.getElementById('vmHost').value||null;
   const today=new Date().toISOString().slice(0,10);
   if(editVenueId){
     const v=venues.find(x=>x.id===editVenueId);
@@ -4264,11 +4310,11 @@ function saveVenue(){
       const prev={payAmounts:Object.assign({},v.payAmounts||{}),payMethod:v.payMethod||'',startDate:v.startDate||''};
       v.name=name;v.gigs=gigs;v.notes=notes;v.perks=perks;v.locationId=locationId;v.inactive=inactive;
       v.payAmounts=payAmounts;v.payMethod=payMethod;v.startDate=startDate;v.gigSlots=gigSlots;
-      v.venueId=venueId;v.gatewayEmail=gatewayEmail;
+      v.venueId=venueId;v.gatewayEmail=gatewayEmail;v.host=host;
       logVenueHistoryDiff(v,prev,{payAmounts,payMethod,startDate},today);
     }
   }else{
-    const v={id:Date.now().toString(),name,gigs,notes,perks,locationId,inactive,payAmounts,payMethod,startDate,gigSlots,venueId,gatewayEmail,history:[]};
+    const v={id:Date.now().toString(),name,gigs,notes,perks,locationId,inactive,payAmounts,payMethod,startDate,gigSlots,venueId,gatewayEmail,host,history:[]};
     const anyAmount=VENUE_AMOUNT_KINDS.some(k=>payAmounts[k]);
     if(startDate||anyAmount||payMethod){
       const amtText=VENUE_AMOUNT_KINDS.filter(k=>payAmounts[k]).map(k=>(k==='Events'?'Event':k)+' '+payAmounts[k]).join(', ');
