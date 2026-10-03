@@ -1470,6 +1470,9 @@ function loadRoster(){
     }
     rosterLoadedFromServer=true;
     renderRoster();filterRoster();renderVenueManage();populateRosterFilters();
+    // Keep the Planner app's host picker current even on sessions where nobody
+    // edits the roster — mirror whatever we just pulled, not just what we save.
+    if(rtdb){try{const mirror={};roster.forEach(h=>{if(h&&h.id)mirror[h.id]={name:h.name||'',retired:!!h.retired};});rtdb.ref('hosts/roster').set(mirror);}catch(e){}}
   }).catch(()=>{rosterLoadedFromServer=true;});
 }
 // Safety net: for the record-list blobs that burned us once already (a whole array of
@@ -1491,6 +1494,17 @@ function persist(key,val,dotId){
   }
   LS.set(key,JSON.stringify(val));
   if(db){try{db.collection('hq_data').doc(key).set({value:JSON.stringify(val)});}catch(e){}}
+  // The Planner app has no access to HQ's Firestore roster, so for host-roster
+  // specifically we also mirror a lightweight copy into the Realtime DB (same
+  // project Planner already reads) — just id/name/retired, enough to populate
+  // a host picker over there without duplicating all of HQ's roster data.
+  if(key==='host-roster'&&rtdb){
+    try{
+      const mirror={};
+      (val||[]).forEach(h=>{if(h&&h.id)mirror[h.id]={name:h.name||'',retired:!!h.retired};});
+      rtdb.ref('hosts/roster').set(mirror);
+    }catch(e){}
+  }
   if(dotId){const d=document.getElementById(dotId);if(d){d.classList.add('show');setTimeout(()=>d.classList.remove('show'),2000);}}
 }
 
@@ -2050,7 +2064,7 @@ function fetchBingoGigsForDate(dk,dow){
   return bingoScheduleList.filter(e=>e.date===dk).map(e=>{
     const venue=(bingoVenuesMap&&bingoVenuesMap[e.venueId])?bingoVenuesMap[e.venueId].name:'Unknown Venue';
     const roundNames=(e.rounds||e.categoryIds||[]).map(cid=>(bingoCategoriesMap&&bingoCategoriesMap[cid])?bingoCategoriesMap[cid].title:null).filter(Boolean);
-    return {venue,host:'Unassigned',kind:'Bingo',cancelled:false,source:'Bingo App',notes:(roundNames.length?'Rounds: '+roundNames.join(', '):'')+(e.notes?(roundNames.length?' — ':'')+e.notes:'')};
+    return {venue,host:e.host||'Unassigned',kind:'Bingo',cancelled:false,source:'Bingo App',notes:(roundNames.length?'Rounds: '+roundNames.join(', '):'')+(e.notes?(roundNames.length?' — ':'')+e.notes:'')};
   });
 }
 function startOfWeekMonday(d){const x=new Date(d);x.setHours(0,0,0,0);x.setDate(x.getDate()-((x.getDay()+6)%7));return x;}
@@ -2070,7 +2084,7 @@ function getExternalGigsForDate(dk,dow){
       if(hqVenuesForDate.has(normVenueName(v.name)))return;
       const override=(plannerGigs&&plannerGigs[id])?plannerGigs[id][dk]:null;
       const cancelled=!!(override&&override.status==='cancelled');
-      out.push({venue:v.name,host:v.host||'Unassigned',kind:'Trivia',cancelled,source:'Trivia Planner',notes:override&&override.themeName?override.themeName:(override&&override.note?override.note:'')});
+      out.push({venue:v.name,host:(override&&override.host)||v.host||'Unassigned',kind:'Trivia',cancelled,source:'Trivia Planner',notes:override&&override.themeName?override.themeName:(override&&override.note?override.note:'')});
     });
   }
   out.push(...fetchBingoGigsForDate(dk,dow).filter(it=>!hqVenuesForDate.has(normVenueName(it.venue))));
@@ -2165,6 +2179,10 @@ function pushGigToExternalPlanner(entry,isDelete){
   const kind=(entry.kind||'').toLowerCase();
   const vName=normVenueName(entry.venue);
   const cancelled=isDelete||entry.status==='cancelled';
+  // host is the one field HQ and the Planner app must never keep separate copies
+  // of — this writes straight into the same per-date record Planner itself reads
+  // and writes, so whichever app changes it last is just... the current value.
+  const hostForPush=(entry.host&&entry.host!=='Unassigned')?entry.host:null;
   if(kind==='trivia'){
     if(!plannerVenues)return;
     const match=Object.entries(plannerVenues).find(([id,v])=>normVenueName(v.name)===vName);
@@ -2172,11 +2190,11 @@ function pushGigToExternalPlanner(entry,isDelete){
     const venueId=match[0];
     const path='trivia/planner/gigs/'+venueId+'/'+entry.date;
     if(cancelled){
-      rtdb.ref(path).set({themeId:null,themeName:null,status:'cancelled',note:entry.notes||'(cancelled from HQ)'}).catch(()=>{});
+      rtdb.ref(path).set({themeId:null,themeName:null,status:'cancelled',note:entry.notes||'(cancelled from HQ)',host:hostForPush}).catch(()=>{});
     }else{
       rtdb.ref(path).once('value').then(snap=>{
         const existing=snap.val()||{};
-        rtdb.ref(path).set(Object.assign({},existing,{status:'planned',note:entry.notes||existing.note||'(from HQ — open Planner to set a theme)'})).catch(()=>{});
+        rtdb.ref(path).set(Object.assign({},existing,{status:'planned',note:entry.notes||existing.note||'(from HQ — open Planner to set a theme)',host:hostForPush!=null?hostForPush:(existing.host||null)})).catch(()=>{});
       }).catch(()=>{});
     }
   }else if(kind==='bingo'){
@@ -2189,7 +2207,7 @@ function pushGigToExternalPlanner(entry,isDelete){
       if(existing)rtdb.ref('bingo/landing/schedule/'+existing.id).remove().catch(()=>{});
     }else{
       const id=existing?existing.id:rtdb.ref('bingo/landing/schedule').push().key;
-      rtdb.ref('bingo/landing/schedule/'+id).set(Object.assign({},existing||{},{id,date:entry.date,venueId,notes:entry.notes||(existing&&existing.notes)||''})).catch(()=>{});
+      rtdb.ref('bingo/landing/schedule/'+id).set(Object.assign({},existing||{},{id,date:entry.date,venueId,notes:entry.notes||(existing&&existing.notes)||'',host:hostForPush!=null?hostForPush:((existing&&existing.host)||null)})).catch(()=>{});
     }
   }
 }
