@@ -102,7 +102,10 @@
   // Bingo recognize them automatically (a quick "Continue as", not a full
   // re-login) — this is the SSO Ahnna's referring to. It's also what lets
   // Tonight actually read live trivia/bingo schedule data at all.
-  const GATEWAY_APP_KEY='tonight';
+  // 'shifts' is the gateway's "any signed-in Belladonna account" key (same one check-in/check-out
+  // use). 'tonight' isn't a real access type, so using it bounced everyone, even admins, to the
+  // "doesn't have access" screen.
+  const GATEWAY_APP_KEY='shifts';
   const GATEWAY_SESSION_MS=6*60*60*1000;
   function hasValidGatewaySession(){
     try{
@@ -229,8 +232,8 @@
     if(!rounds.length)return null;
     const catMap=await getTriviaCategories();
     const resolved=rounds.map(r=>({round:r,cat:resolveCategoryForRound(r,catMap)}));
-    const usable=resolved.filter(r=>r.cat&&r.cat.sheetUrl);
-    const missing=resolved.filter(r=>!(r.cat&&r.cat.sheetUrl)).map(r=>r.round.label);
+    const usable=resolved.filter(r=>r.cat&&(r.cat.sheetUrl||r.cat.vaultCatId));
+    const missing=resolved.filter(r=>!(r.cat&&(r.cat.sheetUrl||r.cat.vaultCatId))).map(r=>r.round.label);
     if(!usable.length)return {url:null,missing};
     const params=new URLSearchParams();
     params.set('venue',seg.plannerVenueId);
@@ -240,6 +243,7 @@
     params.set('rounds',usable.length);
     usable.forEach(({round,cat},i)=>{
       params.set(`r${i}_url`,cat.sheetUrl||'');
+      params.set(`r${i}_vault`,cat.vaultCatId||'');
       params.set(`r${i}_tab`,cat.tabName||'');
       params.set(`r${i}_type`,cat.type||'trivia');
       params.set(`r${i}_folder`,cat.folderUrl||'');
