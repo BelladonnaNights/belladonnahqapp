@@ -60,6 +60,7 @@
 <body>
 <div class="page">
   <a href="host-hub.html" class="back-link">‹ Host Hub</a>
+  <a href="#" onclick="gatewaySignOut();return false;" class="back-link" style="float:right;">Sign Out</a>
   <div class="hub-brand">Belladonna</div>
   <div class="hub-sub">Tonight</div>
   <div class="hub-ornament">✦ ✦ ✦</div>
@@ -88,16 +89,36 @@
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 <script>
   firebase.initializeApp({apiKey:"AIzaSyCIfAE1JGHsUGzzVH2pz1Vyj5b5OhA0tDQ",authDomain:"belladonna-hq.firebaseapp.com",databaseURL:"https://belladonna-hq-default-rtdb.firebaseio.com",projectId:"belladonna-hq",storageBucket:"belladonna-hq.firebasestorage.app",messagingSenderId:"1021873183587",appId:"1:1021873183587:web:def283bb7b5ca48e4f9156"});
   const db = firebase.firestore();
   const rtdb = firebase.database();
-  // No login here, same as checkin/checkout — Tonight stays a quick, no-
-  // friction glance for hosts. That means the specific Realtime Database
-  // paths below (trivia/planner/venues & gigs, bingo/landing/venues,
-  // schedule & categories) need to be rules-readable without auth — see the
-  // RTDB rules snippet Ahnna has, which opens read (never write) on just
-  // those paths.
+  const auth = firebase.auth();
+
+  // ── GATEWAY LOGIN GATE — same full-app gate as Trivia and Bingo now use ──
+  // Firebase Auth is shared across every app on this same origin
+  // (belladonnanights.github.io), so once a host signs in here, Trivia and
+  // Bingo recognize them automatically (a quick "Continue as", not a full
+  // re-login) — this is the SSO Ahnna's referring to. It's also what lets
+  // Tonight actually read live trivia/bingo schedule data at all.
+  const GATEWAY_APP_KEY='tonight';
+  const GATEWAY_SESSION_MS=6*60*60*1000;
+  function hasValidGatewaySession(){
+    try{
+      const raw=localStorage.getItem('gatewaySession_'+GATEWAY_APP_KEY);
+      if(!raw)return false;
+      const s=JSON.parse(raw);
+      return (Date.now()-s.ts)<GATEWAY_SESSION_MS;
+    }catch(e){return false;}
+  }
+  if(!hasValidGatewaySession()){
+    window.location.href='https://belladonnanights.github.io/belladonna-gateway/accounts.html?return='+encodeURIComponent(window.location.href)+'&app='+GATEWAY_APP_KEY;
+  }
+  function gatewaySignOut(){
+    try{Object.keys(localStorage).filter(k=>k.startsWith('gatewaySession_')).forEach(k=>localStorage.removeItem(k));}catch(e){}
+    auth.signOut().then(()=>{ window.location.href='https://belladonnanights.github.io/belladonna-gateway/accounts.html?return='+encodeURIComponent(window.location.href)+'&app='+GATEWAY_APP_KEY; });
+  }
 
   const PLANNER_DAY_MAP={Sun:0,Mon:1,Tue:2,Wed:3,Thu:4,Fri:5,Sat:6};
   function normVenueName(v){return (v||'').toString().toLowerCase().trim();}
@@ -107,11 +128,32 @@
   let selectedVenueId='';
   let currentDate=new Date();
 
-  // ── load venue list (hq_data/venues-list, same source HQ's gig scheduler uses) ──
+  // Firestore's hq_data/venues-list loads right away (publicly readable,
+  // same as screen.html/karaoke-list.html) — but loadTonight() itself waits
+  // on authReady below before touching RTDB, which is what actually needs
+  // the signed-in session.
   db.collection('hq_data').doc('venues-list').get().then(snap=>{
     try{venues=(snap.exists&&snap.data().value)?JSON.parse(snap.data().value):[];}catch(e){venues=[];}
     renderVenueOptions();
   }).catch(()=>{renderVenueOptions();});
+
+  // Don't query RTDB until Firebase confirms the signed-in session (the gate
+  // above only checked a local flag), and force a fresh ID token first —
+  // auth.onAuthStateChanged can fire slightly before RTDB's own connection
+  // has re-authenticated with that session, which would silently
+  // permission-deny the very first load.
+  let authReady=false;
+  auth.onAuthStateChanged(function(user){
+    if(!user){
+      window.location.href='https://belladonnanights.github.io/belladonna-gateway/accounts.html?return='+encodeURIComponent(window.location.href)+'&app='+GATEWAY_APP_KEY;
+      return;
+    }
+    user.getIdToken(true).then(afterSignIn).catch(afterSignIn);
+    function afterSignIn(){
+      authReady=true;
+      if(selectedVenueId)loadTonight();
+    }
+  });
 
   function renderVenueOptions(){
     const sel=document.getElementById('venueSelect');
@@ -148,6 +190,7 @@
     if(!selectedVenueId){main.innerHTML='<div class="loading">Pick a venue to see tonight\'s lineup</div>';return;}
     const venue=venueById(selectedVenueId);
     if(!venue){main.innerHTML='<div class="loading">Venue not found</div>';return;}
+    if(!authReady){main.innerHTML='<div class="loading">Signing in…</div>';return;} // re-fires itself once auth.onAuthStateChanged resolves, above
     main.innerHTML='<div class="loading">Loading tonight\'s lineup…</div>';
 
     const dk=dateToKey(currentDate);
@@ -310,16 +353,23 @@
     return '<span class="seg-status on">Tonight</span>';
   }
 
+  // Opens trivia.html — the host's actual live game control panel — never
+  // planner.html (that's the admin scheduling tool, not for hosts). Passing
+  // venue/venueName/gigDate matches trivia.html's own initVenueIntro(), so
+  // it already shows tonight's scheduled theme on arrival. Full round/
+  // category auto-load (building out state.rounds itself, not just the
+  // intro screen) needs trivia.html's own ?rounds=/r{i}_* launch params,
+  // which also need a Google Sheet URL + tab per category — pending that.
   function segCardTrivia(seg){
     const active=!seg.cancelled;
     let btn;
     if(active&&seg.plannerVenueId){
-      const url=`https://belladonnanights.github.io/belladonnatrivia/planner.html?venueId=${encodeURIComponent(seg.plannerVenueId)}&date=${encodeURIComponent(dateToKey(currentDate))}${seg.themeId?`&themeId=${encodeURIComponent(seg.themeId)}`:''}`;
-      btn=`<a href="${url}" target="_blank" class="seg-btn">Open Trivia Planner</a><div class="seg-note">Preloads tonight's venue once the Planner app supports the venueId/date link — until then, pick it manually.</div>`;
+      const url=`https://belladonnanights.github.io/belladonnatrivia/trivia.html?venue=${encodeURIComponent(seg.plannerVenueId)}&venueName=${encodeURIComponent(venueById(selectedVenueId).name)}&gigDate=${encodeURIComponent(dateToKey(currentDate))}`;
+      btn=`<a href="${url}" target="_blank" class="seg-btn">Open Trivia</a>`;
     }else if(active){
-      btn=`<a href="https://belladonnanights.github.io/belladonnatrivia/planner.html" target="_blank" class="seg-btn">Open Trivia Planner</a>`;
+      btn=`<a href="https://belladonnanights.github.io/belladonnatrivia/trivia.html" target="_blank" class="seg-btn">Open Trivia</a>`;
     }else{
-      btn=`<button class="seg-btn" disabled>Open Trivia Planner</button>`;
+      btn=`<button class="seg-btn" disabled>Open Trivia</button>`;
     }
     return `<div class="seg-card${active?'':' empty'}">
       <div class="seg-head"><div class="seg-name">Trivia</div>${statusPill(seg)}</div>
