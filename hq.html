@@ -2141,6 +2141,7 @@ function renderDashboardWeek(){
         const idx=dashboardItemsFlat.length;dashboardItemsFlat.push(it);
         return `<div class="daybox-item${it.cancelled?' cancelled':''}" onclick="showDashGigDetail(${idx})">
           <span class="daybox-kind-tag">${it.kind}</span><br>${it.venue}<small>${it.host}${it.cancelled?' · CANCELLED':''}</small>
+          ${it.notes?`<div style="font-size:0.62rem;color:var(--text3);margin-top:0.15rem;line-height:1.3;">${it.notes}</div>`:''}
         </div>`;
       }).join(''):'<div class="daybox-item" style="color:var(--text3);cursor:default;">Nothing scheduled</div>'}
     </div>`;
