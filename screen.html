@@ -56,7 +56,26 @@
   let unsubGig=null;
   let currentDk=null;
 
+  // Tablet / TV mode: screen.html?id=<karaoke category id> shows that list's
+  // name and a big QR code to its song-list page — no venue or date needed.
+  async function showList(id){
+    document.getElementById('venueName').textContent='';
+    let v=null;
+    try{ v=(await firebase.database().ref('publicKaraoke/'+id).once('value')).val(); }catch(e){}
+    const content=document.getElementById('content');
+    if(!v){ content.innerHTML='<div class="ambient-sub">That song list isn\'t available</div>'; return; }
+    const esc=t=>String(t).replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
+    content.innerHTML=`
+      <div class="segment-tag">Karaoke Tonight</div>
+      <div class="theme-title">${esc(v.name||'Karaoke')}</div>
+      ${v.altName?`<div class="ambient-sub" style="margin-top:0">${esc(v.altName)}</div>`:''}
+      <div class="qr-box" id="qrBox"></div><div class="scan-label">Scan for tonight's song list</div>`;
+    const url=window.location.origin+window.location.pathname.replace(/screen\.html.*$/,'')+'karaoke-list.html?id='+encodeURIComponent(id);
+    new QRCode(document.getElementById('qrBox'),{text:url,width:260,height:260,colorDark:'#000000',colorLight:'#ffffff'});
+  }
+
   async function init(){
+    if(getParam('id')) return showList(getParam('id'));
     const venueParam=getParam('venue');
     if(!venueParam){
       document.getElementById('venueName').textContent='No venue specified';
