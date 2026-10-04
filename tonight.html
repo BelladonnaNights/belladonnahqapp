@@ -459,6 +459,8 @@
           if(!it.theme)it.theme=c.altName?c.name+' ('+c.altName+')':c.name||'';
           const songs=Array.isArray(c.karaokeSongs)?c.karaokeSongs:(typeof c.karaokeSongs==='string'?c.karaokeSongs.split('\n'):[]);
           it.songs=songs.map(x=>String(x).trim()).filter(Boolean);
+          // Keep the guests' public copy in step (only succeeds for admin accounts; harmless otherwise).
+          if(it.songs.length){ try{ rtdb.ref('publicKaraoke/'+it.karaokeThemeId).set({name:c.name||'',altName:c.altName||'',songs:it.songs,updatedAt:Date.now()}).catch(()=>{}); }catch(e){} }
         }
       }catch(e){}
     }
