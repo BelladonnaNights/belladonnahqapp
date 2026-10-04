@@ -401,10 +401,47 @@
       }
     }catch(e){}
 
-    // 4. Karaoke — HQ gig_schedule only (no separate planner app yet). Try to
-    // resolve the theme name typed in Notes to an actual song list, for every
-    // Karaoke item tonight, not just a single one.
-    for(const it of items.filter(it=>it.kind==='Karaoke'&&it.theme)){
+    // 4. Karaoke — planned in the Planner's Karaoke mode (RTDB
+    // trivia/planner/karaokeVenues + karaokeGigs, keyed by category ID; songs
+    // live on the category record itself in trivia/categories/<id>/karaokeSongs).
+    // Same overlay idea as Trivia: Planner wins; an HQ Karaoke item only gets
+    // host/theme detail laid over it, and a Planner-only night adds its own item.
+    try{
+      const kvSnap=await rtdb.ref('trivia/planner/karaokeVenues').once('value');
+      const kv=kvSnap.val()||{};
+      const kMatch=Object.entries(kv).find(([id,v])=>normVenueName(v.name)===vName);
+      if(kMatch){
+        const [kVenueId,v]=kMatch;
+        const kgSnap=await rtdb.ref('trivia/planner/karaokeGigs/'+kVenueId+'/'+dk).once('value');
+        const g=kgSnap.val();
+        const hqK=items.filter(it=>it.kind==='Karaoke');
+        const scheduledByDay=(v.status==='active'||v.status==='seasonal')&&PLANNER_DAY_MAP[v.day]===dow;
+        if(!hqK.length){
+          if(g||scheduledByDay){
+            items.push({kind:'Karaoke',source:'Karaoke Planner',cancelled:!!(g&&g.status==='cancelled'),
+              theme:(g&&(g.themeName||g.note))||'',host:(g&&g.host)||v.host||'Unassigned',
+              karaokeThemeId:(g&&g.themeId)||null});
+          }
+        }else if(g){
+          hqK.forEach(it=>{ it.karaokeThemeId=g.themeId||null; if(g.themeName)it.theme=g.themeName; });
+          if(hqK.length===1&&g.host)hqK[0].host=g.host;
+          if(g.status==='cancelled')hqK.forEach(it=>{it.cancelled=true;});
+        }
+      }
+    }catch(e){}
+    for(const it of items.filter(it=>it.kind==='Karaoke'&&it.karaokeThemeId)){
+      try{
+        const cs=await rtdb.ref('trivia/categories/'+it.karaokeThemeId).once('value');
+        const c=cs.val();
+        if(c){
+          if(!it.theme)it.theme=c.altName?c.name+' ('+c.altName+')':c.name||'';
+          const songs=Array.isArray(c.karaokeSongs)?c.karaokeSongs:(typeof c.karaokeSongs==='string'?c.karaokeSongs.split('\n'):[]);
+          it.songs=songs.map(x=>String(x).trim()).filter(Boolean);
+        }
+      }catch(e){}
+    }
+    // Fallback for anything still unresolved: the old karaoke_lists title match.
+    for(const it of items.filter(it=>it.kind==='Karaoke'&&it.theme&&!it.songs)){
       try{
         const klSnap=await db.collection('karaoke_lists').where('title','==',it.theme).limit(1).get();
         if(!klSnap.empty)it.listId=klSnap.docs[0].id;
@@ -503,10 +540,21 @@
     </div>`;
   }
 
+  window.filterKaraoke=function(inp){
+    const q=inp.value.trim().toLowerCase();
+    inp.parentElement.querySelectorAll('li').forEach(li=>{li.style.display=!q||li.textContent.toLowerCase().includes(q)?'':'none';});
+  };
   function segCardKaraoke(seg){
     const active=!seg.cancelled;
     let btn;
-    if(active&&seg.listId){
+    if(active&&seg.songs&&seg.songs.length){
+      const esc2=t=>String(t).replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
+      btn=`<details class="kl"><summary class="seg-btn">Song List (${seg.songs.length})</summary>
+        <input type="text" placeholder="Search songs…" oninput="filterKaraoke(this)" style="width:100%;margin:8px 0;padding:8px;background:transparent;border:1px solid var(--border2);color:inherit;border-radius:8px">
+        <ol style="margin:0;padding-left:1.4rem;font-size:0.85rem;line-height:1.6;max-height:50vh;overflow:auto">${seg.songs.map(x=>`<li>${esc2(x)}</li>`).join('')}</ol></details>`;
+    }else if(active&&!seg.listId&&!seg.theme&&seg.source==='Karaoke Planner'){
+      btn=`<div class="seg-note">Regular karaoke tonight — no themed list.</div>`;
+    }else if(active&&seg.listId){
       btn=`<a href="karaoke-list.html?list=${encodeURIComponent(seg.listId)}" target="_blank" class="seg-btn">Open Song List</a>`;
     }else if(active){
       btn=`<button class="seg-btn" disabled>Open Song List</button><div class="seg-note">No song list matched to "${seg.theme||'this theme'}" yet.</div>`;
