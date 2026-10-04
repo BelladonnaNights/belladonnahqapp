@@ -21,6 +21,13 @@
   .hub-ornament{color:#3a3428;font-family:'Cormorant Garamond',serif;font-size:1.1rem;letter-spacing:0.4em;margin:0.7rem 0 1.6rem;text-align:center;}
   .back-link{display:block;font-size:0.68rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--text3);text-decoration:none;margin-bottom:1.2rem;}
   .back-link:hover{color:var(--gold);}
+  .top-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.2rem;}
+  .top-row .back-link{margin-bottom:0;}
+  .signout-btn{font-size:0.62rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);text-decoration:none;border:1px solid var(--border2);border-radius:8px;padding:0.4rem 0.8rem;}
+  .signout-btn:hover{background:rgba(201,168,76,.1);}
+  .rnd{display:flex;gap:0.6rem;align-items:baseline;margin:0.35rem 0;}
+  .rnd-n{font-size:0.6rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--text3);min-width:3.6rem;}
+  .rnd-name{font-size:1.02rem;color:var(--text);}
 
   .picker{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1rem 1.1rem;margin-bottom:1.6rem;}
   .picker-row{display:flex;gap:0.6rem;align-items:center;}
@@ -59,8 +66,10 @@
 </head>
 <body>
 <div class="page">
-  <a href="host-hub.html" class="back-link">‹ Host Hub</a>
-  <a href="#" onclick="gatewaySignOut();return false;" class="back-link" style="float:right;">Sign Out</a>
+  <div class="top-row">
+    <a href="host-hub.html" class="back-link">‹ Host Hub</a>
+    <a href="#" onclick="gatewaySignOut();return false;" class="signout-btn">Sign Out</a>
+  </div>
   <div class="hub-brand">Belladonna</div>
   <div class="hub-sub">Tonight</div>
   <div class="hub-ornament">✦ ✦ ✦</div>
@@ -227,10 +236,18 @@
   // defaults admin.html itself starts a fresh lineup slot with — she can
   // still fine-tune in admin.html same as always, this just gets the right
   // categories loaded in the right rounds on arrival.
+  function isKaraokeCat(c){ return !!c && (c.plannerTier==='karaoke' || String(c.type||'').toLowerCase()==='karaoke'); }
+  function isBingoCat(c){ const t=String(c&&c.type||'').toLowerCase(); return !!c && (c.plannerTier==='music-bingo' || t==='bingo' || t==='music-bingo' || t==='music bingo'); }
+  // Any round that is really a Karaoke or Bingo category (in any position) is
+  // not a trivia round — it gets its own card instead.
+  function isNonTriviaCat(c){ return isKaraokeCat(c) || isBingoCat(c); }
   async function buildTriviaLaunchUrl(seg){
-    const rounds=buildTriviaRoundsFromGig(seg.plannerGig);
+    const catMap0=await getTriviaCategories();
+    // Karaoke categories scheduled into a night's rounds are not trivia rounds —
+    // they get their own Karaoke card instead of being sent to the trivia app.
+    const rounds=buildTriviaRoundsFromGig(seg.plannerGig).filter(r=>!isNonTriviaCat(resolveCategoryForRound(r,catMap0)));
     if(!rounds.length)return null;
-    const catMap=await getTriviaCategories();
+    const catMap=catMap0;
     const resolved=rounds.map(r=>({round:r,cat:resolveCategoryForRound(r,catMap)}));
     const usable=resolved.filter(r=>r.cat&&(r.cat.sheetUrl||r.cat.vaultCatId));
     const missing=resolved.filter(r=>!(r.cat&&(r.cat.sheetUrl||r.cat.vaultCatId))).map(r=>r.round.label);
@@ -351,6 +368,23 @@
     // be resolved to a category with its own sheetUrl is left out and named
     // in triviaLaunchMissing so the card can say so.
     for(const it of items.filter(it=>it.kind==='Trivia'&&it.plannerGig)){
+      try{
+        const catMapK=await getTriviaCategories();
+        const resolvedAll=buildTriviaRoundsFromGig(it.plannerGig).map(r=>({round:r,cat:resolveCategoryForRound(r,catMapK)}));
+        it.roundList=resolvedAll.filter(x=>!isNonTriviaCat(x.cat)).map(x=>x.cat&&x.cat.name||x.round.label);
+        const kRounds=resolvedAll.filter(x=>isNonTriviaCat(x.cat));
+        let at=items.indexOf(it)+1;
+        kRounds.forEach(x=>{
+          const kid=x.round.id||(Object.entries(catMapK).find(([id,c])=>c===x.cat)||[])[0]||null;
+          if(isBingoCat(x.cat)){
+            items.splice(at++,0,{kind:'Bingo',source:'Trivia Planner',cancelled:it.cancelled,
+              theme:x.cat.name||x.round.label,host:it.host});
+          }else{
+            items.splice(at++,0,{kind:'Karaoke',source:'Trivia Planner',cancelled:it.cancelled,
+              theme:x.cat.name||x.round.label,host:it.host,karaokeThemeId:kid,songs:undefined});
+          }
+        });
+      }catch(e){}
       try{
         const built=await buildTriviaLaunchUrl(it);
         if(built){ it.triviaLaunchUrl=built.url; it.triviaLaunchMissing=built.missing; }
@@ -515,7 +549,7 @@
     }
     return `<div class="seg-card${active?'':' empty'}">
       <div class="seg-head"><div class="seg-name">Trivia</div>${statusPill(seg)}</div>
-      ${seg.theme?`<div class="seg-detail">${seg.theme}</div>`:''}
+      ${seg.roundList&&seg.roundList.length?seg.roundList.map((n,i)=>`<div class="rnd"><span class="rnd-n">Round ${i+1}</span><span class="rnd-name">${n}</span></div>`).join(''):(seg.theme?`<div class="seg-detail">${seg.theme}</div>`:'')}
       <div class="seg-sub">${seg.source}${seg.host&&seg.host!=='Unassigned'?' · '+seg.host:''}</div>
       ${btn}
       ${note}
