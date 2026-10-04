@@ -25,6 +25,13 @@
   .top-row .back-link{margin-bottom:0;}
   .signout-btn{font-size:0.62rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);text-decoration:none;border:1px solid var(--border2);border-radius:8px;padding:0.4rem 0.8rem;}
   .signout-btn:hover{background:rgba(201,168,76,.1);}
+  .kq-row{display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-top:0.6rem;}
+  .kq-btn{font-family:'Josefin Sans',sans-serif;letter-spacing:0.1em;text-transform:uppercase;font-size:0.66rem;color:var(--gold);background:transparent;border:1px solid var(--border2);border-radius:9px;padding:0.6rem 0.3rem;text-align:center;text-decoration:none;cursor:pointer;}
+  .kq-btn:hover{background:rgba(201,169,110,.1);}
+  .kq-panel{display:none;margin-top:0.8rem;text-align:center;}
+  .kq-panel.open{display:block;}
+  .kq-panel .qr{background:#fff;display:inline-block;padding:10px;border-radius:10px;}
+  .kq-panel .qr svg{width:210px;height:210px;display:block;}
   .rnd{display:flex;gap:0.6rem;align-items:baseline;margin:0.35rem 0;}
   .rnd-n{font-size:0.6rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--text3);min-width:3.6rem;}
   .rnd-name{font-size:1.02rem;color:var(--text);}
@@ -95,6 +102,7 @@
   </div>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
@@ -252,35 +260,15 @@
     const usable=resolved.filter(r=>r.cat&&(r.cat.sheetUrl||r.cat.vaultCatId));
     const missing=resolved.filter(r=>!(r.cat&&(r.cat.sheetUrl||r.cat.vaultCatId))).map(r=>r.round.label);
     if(!usable.length)return {url:null,missing};
+    // Open the Trivia admin (host tools live there) with tonight's rounds
+    // already dropped into the lineup, in order.
     const params=new URLSearchParams();
+    params.set('tonight','1');
     params.set('venue',seg.plannerVenueId);
-    const v=venueById(selectedVenueId);
-    params.set('venueName',(v&&v.name)||'');
-    params.set('gigDate',dateToKey(currentDate));
-    params.set('rounds',usable.length);
-    usable.forEach(({round,cat},i)=>{
-      params.set(`r${i}_url`,cat.sheetUrl||'');
-      params.set(`r${i}_vault`,cat.vaultCatId||'');
-      params.set(`r${i}_tab`,cat.tabName||'');
-      params.set(`r${i}_type`,cat.type||'trivia');
-      params.set(`r${i}_folder`,cat.folderUrl||'');
-      params.set(`r${i}_canvaId`,cat.canvaDesignId||'');
-      if(cat.type==='canva')params.set(`r${i}_bgQuestion`,cat.canvaBgUrl||'');
-      params.set(`r${i}_bg`,cat.bgImage||'');
-      params.set(`r${i}_bgIntro`,cat.bgIntro||cat.bgImage||'');
-      params.set(`r${i}_bgQuestion`,cat.bgQuestion||cat.bgImage||'');
-      params.set(`r${i}_bgPlain`,cat.bgPlain||'');
-      params.set(`r${i}_thankYou`,cat.thankYouUrl||'');
-      params.set(`r${i}_catType`,cat.catType||'');
-      params.set(`r${i}_name`,cat.name||round.label||'');
-      params.set(`r${i}_qcount`,20);
-      params.set(`r${i}_showAnswers`,'0');
-      params.set(`r${i}_twoPass`,'0');
-      params.set(`r${i}_timed`,'0');
-      params.set(`r${i}_isMainRound`,'0');
-      params.set(`r${i}_segmentSize`,5);
-    });
-    return {url:`https://belladonnanights.github.io/belladonnatrivia/trivia.html?${params.toString()}`,missing};
+    params.set('date',dateToKey(currentDate));
+    const ids=usable.map(({round,cat})=>round.id||(Object.entries(catMap).find(([id,c])=>c===cat)||[])[0]).filter(Boolean);
+    params.set('cats',ids.join(','));
+    return {url:`https://belladonnanights.github.io/belladonnatrivia/admin.html?${params.toString()}`,missing:[]};
   }
 
   async function loadTonight(){
@@ -498,6 +486,7 @@
 
     main.innerHTML=html;
   }
+  function subLine(seg){ return seg.host&&seg.host!=='Unassigned'?`<div class="seg-sub">${seg.host}</div>`:`<div style="height:0.9rem"></div>`; }
   function segCardFor(it){
     if(it.kind==='Trivia')return segCardTrivia(it);
     if(it.kind==='Bingo')return segCardBingo(it);
@@ -512,7 +501,7 @@
     return `<div class="seg-card${active?'':' empty'}">
       <div class="seg-head"><div class="seg-name">${seg.kind||'Gig'}</div>${statusPill(seg)}</div>
       ${seg.theme?`<div class="seg-detail">${seg.theme}</div>`:''}
-      <div class="seg-sub">${seg.source}${seg.host&&seg.host!=='Unassigned'?' · '+seg.host:''}</div>
+      ${subLine(seg)}
     </div>`;
   }
 
@@ -537,20 +526,20 @@
         note=`<div class="seg-note">Couldn't auto-load: ${seg.triviaLaunchMissing.join(', ')} — no sheet set up for ${seg.triviaLaunchMissing.length===1?'it':'these'} yet. Add ${seg.triviaLaunchMissing.length===1?'it':'them'} manually once the app opens.</div>`;
       }
     }else if(active&&seg.plannerVenueId){
-      const url=`https://belladonnanights.github.io/belladonnatrivia/trivia.html?venue=${encodeURIComponent(seg.plannerVenueId)}&venueName=${encodeURIComponent((venueById(selectedVenueId)||{}).name||'')}&gigDate=${encodeURIComponent(dateToKey(currentDate))}`;
+      const url=`https://belladonnanights.github.io/belladonnatrivia/admin.html?tonight=1&venue=${encodeURIComponent(seg.plannerVenueId)}&date=${encodeURIComponent(dateToKey(currentDate))}`;
       btn=`<a href="${url}" target="_blank" class="seg-btn">Open Trivia</a>`;
       if(seg.triviaLaunchMissing&&seg.triviaLaunchMissing.length){
         note=`<div class="seg-note">No sheet set up yet for: ${seg.triviaLaunchMissing.join(', ')} — rounds will need to be built by hand in admin.html.</div>`;
       }
     }else if(active){
-      btn=`<a href="https://belladonnanights.github.io/belladonnatrivia/trivia.html" target="_blank" class="seg-btn">Open Trivia</a>`;
+      btn=`<a href="https://belladonnanights.github.io/belladonnatrivia/admin.html" target="_blank" class="seg-btn">Open Trivia</a>`;
     }else{
       btn=`<button class="seg-btn" disabled>Open Trivia</button>`;
     }
     return `<div class="seg-card${active?'':' empty'}">
       <div class="seg-head"><div class="seg-name">Trivia</div>${statusPill(seg)}</div>
       ${seg.roundList&&seg.roundList.length?seg.roundList.map((n,i)=>`<div class="rnd"><span class="rnd-n">Round ${i+1}</span><span class="rnd-name">${n}</span></div>`).join(''):(seg.theme?`<div class="seg-detail">${seg.theme}</div>`:'')}
-      <div class="seg-sub">${seg.source}${seg.host&&seg.host!=='Unassigned'?' · '+seg.host:''}</div>
+      ${subLine(seg)}
       ${btn}
       ${note}
     </div>`;
@@ -569,11 +558,76 @@
     return `<div class="seg-card${active?'':' empty'}">
       <div class="seg-head"><div class="seg-name">Bingo</div>${statusPill(seg)}</div>
       ${seg.theme?`<div class="seg-detail">${seg.theme}</div>`:''}
-      <div class="seg-sub">${seg.source}</div>
+      ${subLine(seg)}
       ${btn}
     </div>`;
   }
 
+  // ── Karaoke QR / sharing ─────────────────────────────────────────────
+  // The QR encodes only the list's permanent ID, so it never changes when songs
+  // are edited — print it once and it stays good.
+  function kListUrl(id,display){
+    const u=new URL('karaoke-songs.html',location.href);
+    u.search='?id='+encodeURIComponent(id)+(display?'&display=1':'');
+    return u.href;
+  }
+  function kQrSvg(url){
+    const q=qrcode(0,'M'); q.addData(url); q.make();
+    return q.createSvgTag({cellSize:8,margin:0,scalable:true});
+  }
+  window.kqToggle=function(btn){
+    const panel=btn.closest('.kq-wrap').querySelector('.kq-panel');
+    if(!panel.dataset.ready){ panel.querySelector('.qr').innerHTML=kQrSvg(panel.dataset.url); panel.dataset.ready='1'; }
+    panel.classList.toggle('open');
+  };
+  window.kqCopy=function(btn){
+    const url=btn.closest('.kq-wrap').dataset.url;
+    (navigator.clipboard?navigator.clipboard.writeText(url):Promise.reject()).then(()=>{btn.textContent='Copied ✓';setTimeout(()=>btn.textContent='Copy link',1500);}).catch(()=>{prompt('Copy this link:',url);});
+  };
+  window.kqSend=function(btn){
+    const w=btn.closest('.kq-wrap'), url=w.dataset.url, name=w.dataset.name;
+    if(navigator.share){ navigator.share({title:name+' — Karaoke Song List',url}).catch(()=>{}); }
+    else{ location.href='mailto:?subject='+encodeURIComponent(name+' — Karaoke Song List')+'&body='+encodeURIComponent('Open this on the tablet:\n'+url); }
+  };
+  window.kqPrint=function(btn){
+    const w=btn.closest('.kq-wrap'), url=w.dataset.url, name=w.dataset.name;
+    const win=window.open('','_blank'); if(!win) return alert('Allow pop-ups to print the QR code.');
+    win.document.write('<!doctype html><title>'+name.replace(/</g,'')+' QR</title><body style="font-family:Georgia,serif;text-align:center;margin:0;padding:48px"><h1 style="letter-spacing:.2em;text-transform:uppercase;font-size:28px;margin:0">Karaoke</h1><h2 style="font-weight:400;margin:8px 0 28px">'+name.replace(/</g,'&lt;')+'</h2><div style="width:420px;margin:0 auto">'+kQrSvg(url).replace('<svg','<svg style="width:420px;height:420px"')+'</div><p style="font-size:20px;margin-top:28px">Scan to see the song list</p></body>');
+    win.document.close(); setTimeout(()=>win.print(),400);
+  };
+  window.kqDownload=function(btn){
+    const w=btn.closest('.kq-wrap'), url=w.dataset.url, name=w.dataset.name;
+    const svg=kQrSvg(url).replace('<svg','<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024"');
+    const img=new Image();
+    img.onload=()=>{
+      const c=document.createElement('canvas'); c.width=c.height=1100;
+      const x=c.getContext('2d'); x.fillStyle='#fff'; x.fillRect(0,0,1100,1100); x.drawImage(img,38,38,1024,1024);
+      c.toBlob(b=>{ const a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download=name.replace(/[^\w]+/g,'-')+'-karaoke-qr.png'; a.click(); },'image/png');
+    };
+    img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg);
+  };
+  function karaokeShareHtml(seg){
+    if(!seg.karaokeThemeId) return '';
+    const url=kListUrl(seg.karaokeThemeId,false), disp=kListUrl(seg.karaokeThemeId,true);
+    const nm=String(seg.theme||'Karaoke').replace(/"/g,'&quot;');
+    return `<div class="kq-wrap" data-url="${url}" data-name="${nm}">
+      <div class="kq-row">
+        <button class="kq-btn" onclick="kqToggle(this)">Show QR Code</button>
+        <a class="kq-btn" href="${url}" target="_blank">Open Here</a>
+        <button class="kq-btn" onclick="kqSend(this)">Send to Tablet</button>
+        <a class="kq-btn" href="${disp}" target="_blank">Big-Screen View</a>
+      </div>
+      <div class="kq-panel" data-url="${url}">
+        <div class="qr"></div>
+        <div class="kq-row" style="margin-top:0.7rem">
+          <button class="kq-btn" onclick="kqPrint(this)">Print QR</button>
+          <button class="kq-btn" onclick="kqDownload(this)">Download PNG</button>
+          <button class="kq-btn" onclick="kqCopy(this)" style="grid-column:1/3">Copy link</button>
+        </div>
+        <div class="seg-note">Static code — the same code works every night, even after the songs change.</div>
+      </div>
+    </div>`;
+  }
   window.filterKaraoke=function(inp){
     const q=inp.value.trim().toLowerCase();
     inp.parentElement.querySelectorAll('li').forEach(li=>{li.style.display=!q||li.textContent.toLowerCase().includes(q)?'':'none';});
@@ -598,8 +652,9 @@
     return `<div class="seg-card${active?'':' empty'}">
       <div class="seg-head"><div class="seg-name">Karaoke</div>${statusPill(seg)}</div>
       ${seg.theme?`<div class="seg-detail">${seg.theme}</div>`:''}
-      <div class="seg-sub">${seg.source}${seg.host&&seg.host!=='Unassigned'?' · '+seg.host:''}</div>
+      ${subLine(seg)}
       ${btn}
+      ${karaokeShareHtml(seg)}
     </div>`;
   }
 
@@ -607,17 +662,33 @@
   // installed, the browser just does nothing and focus never leaves the page,
   // so a short timer that checks document visibility tells us whether to show
   // the fallback note.
+  // The browser Bingo page. Set this to the full address of your web Bingo app
+  // (leave '' if there isn't one — Tonight then just shows the "not installed" note).
+  const BINGO_WEB_URL='';
   function openBingo(ev,protoUrl){
     ev.preventDefault();
     const note=document.getElementById('bingoFallbackNote');
     let left=false;
     const onBlur=()=>{left=true;};
+    const onHide=()=>{ if(document.hidden) left=true; };
     window.addEventListener('blur',onBlur);
+    document.addEventListener('visibilitychange',onHide);
     window.location.href=protoUrl;
     setTimeout(()=>{
       window.removeEventListener('blur',onBlur);
-      if(!left&&note)note.style.display='block';
-    },1200);
+      document.removeEventListener('visibilitychange',onHide);
+      if(left) return;                       // the desktop app took over
+      // App not installed (or didn't respond): open the browser version instead.
+      if(BINGO_WEB_URL){
+        const q=protoUrl.slice(protoUrl.indexOf('?'));
+        const url=BINGO_WEB_URL+(BINGO_WEB_URL.includes('?')?'&'+q.slice(1):q);
+        const w=window.open(url,'_blank');
+        if(w) return;
+        if(note){ note.innerHTML='Bingo app not found. <a href="'+url+'" target="_blank" style="color:var(--gold)">Open Bingo in the browser</a>'; note.style.display='block'; }
+        return;
+      }
+      if(note)note.style.display='block';
+    },1500);
   }
 </script>
 </body>
