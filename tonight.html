@@ -566,9 +566,10 @@
   // ── Karaoke QR / sharing ─────────────────────────────────────────────
   // The QR encodes only the list's permanent ID, so it never changes when songs
   // are edited — print it once and it stays good.
-  function kListUrl(id,display){
-    const u=new URL('karaoke-songs.html',location.href);
-    u.search='?id='+encodeURIComponent(id)+(display?'&display=1':'');
+  // Guests' song list = karaoke-list.html; tablet/TV = screen.html (big QR).
+  function kListUrl(id,screen){
+    const u=new URL(screen?'screen.html':'karaoke-list.html',location.href);
+    u.search='?id='+encodeURIComponent(id);
     return u.href;
   }
   function kQrSvg(url){
@@ -585,9 +586,10 @@
     (navigator.clipboard?navigator.clipboard.writeText(url):Promise.reject()).then(()=>{btn.textContent='Copied ✓';setTimeout(()=>btn.textContent='Copy link',1500);}).catch(()=>{prompt('Copy this link:',url);});
   };
   window.kqSend=function(btn){
-    const w=btn.closest('.kq-wrap'), url=w.dataset.url, name=w.dataset.name;
-    if(navigator.share){ navigator.share({title:name+' — Karaoke Song List',url}).catch(()=>{}); }
-    else{ location.href='mailto:?subject='+encodeURIComponent(name+' — Karaoke Song List')+'&body='+encodeURIComponent('Open this on the tablet:\n'+url); }
+    // The tablet gets the big-QR screen page, not the guest list.
+    const w=btn.closest('.kq-wrap'), url=w.dataset.screen, name=w.dataset.name;
+    if(navigator.share){ navigator.share({title:name+' — Karaoke Screen',url}).catch(()=>{}); }
+    else{ location.href='mailto:?subject='+encodeURIComponent(name+' — Karaoke Screen')+'&body='+encodeURIComponent('Open this on the tablet:\n'+url); }
   };
   window.kqPrint=function(btn){
     const w=btn.closest('.kq-wrap'), url=w.dataset.url, name=w.dataset.name;
@@ -610,12 +612,12 @@
     if(!seg.karaokeThemeId) return '';
     const url=kListUrl(seg.karaokeThemeId,false), disp=kListUrl(seg.karaokeThemeId,true);
     const nm=String(seg.theme||'Karaoke').replace(/"/g,'&quot;');
-    return `<div class="kq-wrap" data-url="${url}" data-name="${nm}">
+    return `<div class="kq-wrap" data-url="${url}" data-screen="${disp}" data-name="${nm}">
       <div class="kq-row">
         <button class="kq-btn" onclick="kqToggle(this)">Show QR Code</button>
         <a class="kq-btn" href="${url}" target="_blank">Open Here</a>
         <button class="kq-btn" onclick="kqSend(this)">Send to Tablet</button>
-        <a class="kq-btn" href="${disp}" target="_blank">Big-Screen View</a>
+        <a class="kq-btn" href="${disp}" target="_blank">Tablet / TV Screen</a>
       </div>
       <div class="kq-panel" data-url="${url}">
         <div class="qr"></div>
