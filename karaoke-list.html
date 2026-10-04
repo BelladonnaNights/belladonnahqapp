@@ -47,6 +47,7 @@
 
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 <script>
   firebase.initializeApp({apiKey:"AIzaSyCIfAE1JGHsUGzzVH2pz1Vyj5b5OhA0tDQ",authDomain:"belladonna-hq.firebaseapp.com",databaseURL:"https://belladonna-hq-default-rtdb.firebaseio.com",projectId:"belladonna-hq",storageBucket:"belladonna-hq.firebasestorage.app",messagingSenderId:"1021873183587",appId:"1:1021873183587:web:def283bb7b5ca48e4f9156"});
   const db = firebase.firestore();
@@ -57,7 +58,30 @@
     return new URLSearchParams(window.location.search).get(name);
   }
 
+  // Planner karaoke categories: ?id=<categoryId>. Songs are plain lines
+  // ("Title - Artist" or just "Title"), read from the public copy the Planner keeps.
+  function songFromLine(line){
+    const m=String(line).split(/\s+[-\u2013\u2014]\s+/);
+    return m.length>1?{title:m[0].trim(),artist:m.slice(1).join(' - ').trim()}:{title:String(line).trim(),artist:''};
+  }
+  async function loadPlanner(id){
+    const main=document.getElementById('main');
+    try{
+      const snap=await firebase.database().ref('publicKaraoke/'+id).once('value');
+      const v=snap.val();
+      if(!v){ main.innerHTML='<div class="msg-empty">That song list couldn\'t be found.</div>'; return; }
+      allSongs=(Array.isArray(v.songs)?v.songs:[]).map(songFromLine).filter(s=>s.title).sort((a,b)=>{
+        const an=(a.artist||a.title).toLowerCase(), bn=(b.artist||b.title).toLowerCase();
+        return an<bn?-1:an>bn?1:(a.title.toLowerCase()<b.title.toLowerCase()?-1:1);
+      });
+      renderPage({title:v.name||'Karaoke'});
+      if(v.altName){ const t=document.querySelector('.theme-title'); if(t) t.insertAdjacentHTML('afterend','<div class="theme-sub" style="margin-top:-1rem">'+escapeHtml(v.altName)+'</div>'); }
+    }catch(e){ main.innerHTML='<div class="msg-empty">Could not load the song list.</div>'; }
+  }
+
   async function load(){
+    const planId=getParam('id');
+    if(planId){ return loadPlanner(planId); }
     const listId=getParam('list');
     const main=document.getElementById('main');
     if(!listId){
