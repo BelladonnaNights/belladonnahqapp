@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Belladonna Host Hub</title>
+<title>Tonight — Belladonna Host Hub</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=DM+Sans:wght@300;400;500;600;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400&family=Cinzel:wght@400;600;700&display=swap');
   *{margin:0;padding:0;box-sizing:border-box;}
@@ -18,224 +18,709 @@
     --purple-btn:#c9a96e;
   }
   body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-weight:300;min-height:100vh;letter-spacing:0.04em;overflow-x:hidden;}
+  .page{max-width:460px;margin:0 auto;padding:2.4rem 1.5rem 3rem;}
+  .hub-brand{font-family:'Bebas Neue',sans-serif;font-size:1.9rem;font-weight:400;color:var(--text);letter-spacing:0.06em;text-transform:uppercase;text-align:center;}
+  .hub-sub{font-size:0.72rem;letter-spacing:0.5em;text-transform:uppercase;color:var(--text3);margin-top:0.2rem;text-align:center;}
+  .hub-ornament{color:#3a3428;font-family:'Cormorant Garamond',serif;font-size:1.1rem;letter-spacing:0.4em;margin:0.7rem 0 1.6rem;text-align:center;}
+  .back-link{display:block;font-size:0.68rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--text3);text-decoration:none;margin-bottom:1.2rem;}
+  .back-link:hover{color:var(--gold);}
+  .top-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.2rem;}
+  .top-row .back-link{margin-bottom:0;}
+  .signout-btn{font-size:0.62rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);text-decoration:none;border:1px solid var(--border2);border-radius:999px;padding:0.4rem 0.8rem;}
+  .signout-btn:hover{background:rgba(201,168,76,.1);}
+  .kq-row{display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-top:0.6rem;}
+  .kq-btn{font-family:'DM Sans',sans-serif;letter-spacing:0.1em;text-transform:uppercase;font-size:0.66rem;color:var(--gold);background:transparent;border:1px solid var(--border2);border-radius:999px;padding:0.6rem 0.3rem;text-align:center;text-decoration:none;cursor:pointer;}
+  .kq-btn:hover{background:rgba(201,169,110,.1);}
+  .kq-panel{display:none;margin-top:0.8rem;text-align:center;}
+  .kq-panel.open{display:block;}
+  .kq-panel .qr{background:#fff;display:inline-block;padding:10px;border-radius:0;}
+  .kq-panel .qr svg{width:210px;height:210px;display:block;}
+  .rnd{display:flex;gap:0.6rem;align-items:baseline;margin:0.35rem 0;}
+  .rnd-n{font-size:0.6rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--text3);min-width:3.6rem;}
+  .rnd-name{font-size:1.02rem;color:var(--text);}
 
-  /* ── PAGE WRAPPER ── */
-  .page{max-width:400px;margin:0 auto;padding:3rem 1.5rem 2.5rem;text-align:center;}
+  .picker{background:var(--surface);border:1px solid var(--border);border-radius:0;padding:1rem 1.1rem;margin-bottom:1.6rem;}
+  .picker-row{display:flex;gap:0.6rem;align-items:center;}
+  .picker-row + .picker-row{margin-top:0.7rem;}
+  .picker-label{font-size:0.6rem;letter-spacing:0.3em;text-transform:uppercase;color:var(--text3);width:3.6rem;flex-shrink:0;}
+  select.picker-input,input.picker-input{flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:0;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;padding:0.55rem 0.7rem;letter-spacing:0.03em;}
+  select.picker-input:focus,input.picker-input:focus{outline:none;border-color:var(--border2);}
+  .date-nav{display:flex;gap:0.4rem;align-items:center;flex:1;}
+  .date-nav button{background:var(--surface2);border:1px solid var(--border);color:var(--gold);width:2rem;height:2rem;border-radius:0;font-size:0.95rem;cursor:pointer;flex-shrink:0;}
+  .date-nav button:hover{border-color:var(--border2);}
+  .date-nav .date-display{flex:1;text-align:center;font-size:0.82rem;color:var(--text2);}
+  .date-today-pill{font-size:0.58rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--live);background:var(--live-dim);border-radius:20px;padding:0.15rem 0.5rem;margin-left:0.4rem;white-space:nowrap;}
 
-  /* ── WOTD ── */
-  .wotd-block{background:var(--surface);border:1px solid var(--border);border-radius:0;padding:1.1rem 1.4rem;margin-bottom:1.8rem;position:relative;overflow:hidden;text-align:center;}
-.wotd-label{font-size:0.52rem;letter-spacing:0.4em;text-transform:uppercase;color:var(--text3);margin-bottom:0.4rem;}
-  .wotd-word{font-family:'Cormorant Garamond',serif;font-size:2.8rem;font-weight:300;color:var(--gold);letter-spacing:0.18em;line-height:1;}
-  .wotd-sub{font-size:0.6rem;letter-spacing:0.15em;color:var(--text3);margin-top:0.35rem;text-transform:uppercase;}
+  .venue-title{text-align:center;margin-bottom:1.6rem;}
+  .venue-title .vname{font-family:'Cormorant Garamond',serif;font-size:1.3rem;color:var(--text);}
+  .venue-title .vdate{font-size:0.68rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--text3);margin-top:0.25rem;}
 
-  /* ── BRAND ── */
-  /* Wordmark — white BELLADONNA over gold page name, same as the Trivia header */
-  .hub-brand{font-family:'Bebas Neue',sans-serif;font-size:2.8rem;font-weight:400;color:#fff;letter-spacing:0.06em;line-height:1;text-transform:uppercase;}
-    .hub-sub{font-family:'Bebas Neue',sans-serif;font-size:1.9rem;font-weight:400;letter-spacing:0.1em;line-height:1.05;text-transform:uppercase;margin-top:0.1rem;background:linear-gradient(180deg,var(--gold2),var(--gold));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:var(--gold);}
-  .hub-ornament{display:none;}
+  .seg-card{background:var(--surface);border:1px solid var(--border);border-radius:0;padding:1.2rem 1.3rem;margin-bottom:1rem;position:relative;overflow:hidden;}
+.seg-card.empty{opacity:0.5;}
+  .seg-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:0.5rem;}
+  .seg-name{font-size:0.95rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);}
+  .seg-status{font-size:0.58rem;letter-spacing:0.15em;text-transform:uppercase;padding:0.2rem 0.55rem;border-radius:20px;}
+  .seg-status.on{color:var(--live);background:var(--live-dim);}
+  .seg-status.off{color:var(--text3);background:var(--surface2);}
+  .seg-status.cancelled{color:var(--rose2);background:rgba(176,80,90,0.12);}
+  .seg-detail{font-size:0.8rem;color:var(--text2);line-height:1.5;margin-bottom:0.2rem;}
+  .seg-sub{font-size:0.68rem;color:var(--text3);margin-bottom:0.9rem;}
+  .seg-btn{display:block;text-align:center;width:100%;background:var(--gold-dim);border:1px solid var(--border-gold);color:var(--gold);font-family:'DM Sans',sans-serif;font-weight:400;letter-spacing:0.22em;text-transform:uppercase;cursor:pointer;transition:all 0.2s;border-radius:0;font-size:0.68rem;padding:0.7rem;text-decoration:none;}
+  .seg-btn:hover{background:rgba(201,169,110,0.08);}
+  .seg-btn[disabled]{opacity:0.35;cursor:default;pointer-events:none;}
+  .seg-note{font-size:0.62rem;color:var(--text3);margin-top:0.5rem;text-align:center;}
 
-  /* ── SECTIONS ── */
-  .hub-section-label{font-size:0.68rem;letter-spacing:0.38em;text-transform:uppercase;color:var(--text3);margin-bottom:0.7rem;text-align:left;}
-  .hub-links{display:flex;flex-direction:column;gap:0.6rem;margin-bottom:1.5rem;}
-  .hub-card{display:block;background:var(--surface);border:1px solid var(--border);border-radius:0;padding:1rem 1.2rem;text-decoration:none;transition:all 0.22s;position:relative;overflow:hidden;text-align:left;}
-.hub-card:hover{border-color:rgba(201,169,110,0.45);transform:translateY(-2px);}
-  .hub-card-inner{display:flex;align-items:center;justify-content:space-between;}
-  .hub-card-title{font-size:0.88rem;letter-spacing:0.16em;text-transform:uppercase;color:var(--gold);margin-bottom:0.15rem;}
-  .hub-card-desc{font-size:1.01rem;color:var(--text3);line-height:1.4;}
-  .hub-footer{font-size:0.68rem;letter-spacing:0.18em;color:var(--text3);margin-top:1.5rem;text-transform:uppercase;}
+  .loading,.msg-empty{text-align:center;color:var(--text3);font-size:0.75rem;letter-spacing:0.1em;padding:2rem 0;}
 
   .submit-btn:hover,.confirm-btn:hover,.seg-btn:hover{background:rgba(201,169,110,0.2);color:var(--text);}
   .submit-btn:disabled,.confirm-btn:disabled{opacity:0.5;cursor:not-allowed;}
-
-  /* Top-of-page logo (swappable with the Word of the Day box from Admin) */
-  .hub-logo{display:block;width:170px;max-width:60%;height:auto;margin:0 auto 1.4rem;opacity:0.95;}
-  .hub-head{margin-bottom:2rem;}
-  /* Tiny admin */
-  .admin-link{display:block;margin:1.4rem auto 0;background:none;border:none;color:var(--text4);font-family:'DM Sans',sans-serif;font-size:0.58rem;letter-spacing:0.25em;text-transform:uppercase;cursor:pointer;}
-  .admin-link:hover{color:var(--text3);}
-  .admin-panel{display:none;margin-top:0.8rem;background:var(--surface);border:1px solid var(--border);padding:1rem;text-align:left;}
-  .admin-panel.open{display:block;}
-  .admin-title{font-size:0.62rem;letter-spacing:0.3em;text-transform:uppercase;color:var(--text3);margin-bottom:0.7rem;}
-  .admin-row{display:flex;gap:0.5rem;}
-  .admin-input{flex:1;background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:0.55rem 0.8rem;font-size:0.85rem;font-family:'DM Sans',sans-serif;letter-spacing:0.1em;outline:none;}
-  .admin-input:focus{border-color:var(--gold);}
-  .admin-btn{background:var(--gold-dim);border:1px solid var(--border-gold);color:var(--gold);padding:0.55rem 1rem;font-size:0.62rem;letter-spacing:0.18em;text-transform:uppercase;cursor:pointer;font-family:'DM Sans',sans-serif;}
-  .admin-btn:hover{background:rgba(201,169,110,0.2);color:var(--text);}
-  .admin-btn.on{background:rgba(201,169,110,0.22);border-color:var(--gold);color:var(--text);}
-  .admin-msg{font-size:0.68rem;color:var(--text3);margin-top:0.6rem;line-height:1.5;}
-  .admin-msg.err{color:#d68a91;}
-  .admin-msg.ok{color:var(--live);}
+  .kl-list{max-height:50vh;overflow:auto;text-align:left;}
+  .kl-head{font-family:'Cinzel',serif;font-weight:600;font-size:0.68rem;letter-spacing:0.24em;text-transform:uppercase;color:var(--gold);padding:1.1rem 0 0.4rem;border-bottom:1px solid var(--border-gold);}
+  .kl-list > .kl-head:first-child{padding-top:0.3rem;}
+  .kl-row{display:flex;justify-content:space-between;align-items:baseline;gap:0.8rem;padding:0.45rem 0;border-bottom:1px solid var(--border);font-size:0.85rem;}
+  .kl-a{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:1rem;color:var(--text2);text-align:right;flex-shrink:0;max-width:46%;}
 </style>
 </head>
 <body>
 <div class="page">
-
-  <!-- Top of page: logo OR Word of the Day box. Which one shows is set in the tiny Admin at the bottom. -->
-  <img src="logo.png" alt="Belladonna" class="hub-logo" id="topLogo" onerror="this.style.display='none'">
-
-  <div class="wotd-block" id="wotdBlock" style="display:none;">
-    <div class="wotd-label">Word of the Day</div>
-    <div class="wotd-word" id="wotdWord">—</div>
-    <div class="wotd-sub" id="wotdSub"></div>
+  <div class="top-row">
+    <a href="host-hub.html" class="back-link">‹ Host Hub</a>
+    <a href="#" onclick="gatewaySignOut();return false;" class="signout-btn">Sign Out</a>
   </div>
+  <div class="hub-brand">Belladonna</div>
+  <div class="hub-sub">Tonight</div>
+  <div class="hub-ornament">✦ ✦ ✦</div>
 
-  <div class="hub-head">
-    <div class="hub-brand">Belladonna</div>
-    <div class="hub-sub">Host Hub</div>
-  </div>
-
-  <div class="hub-section-label">Your Shift</div>
-  <div class="hub-links">
-    <a href="checkin.html" class="hub-card" target="_blank">
-      <div class="hub-card-inner">
-        <div><div class="hub-card-title">Check-In</div><div class="hub-card-desc">Sign in at the start of your shift</div></div>
-        <span style="color:var(--text3)">›</span>
-      </div>
-    </a>
-    <a href="checkout.html" class="hub-card" target="_blank">
-      <div class="hub-card-inner">
-        <div><div class="hub-card-title">Check-Out</div><div class="hub-card-desc">Complete your end of shift report</div></div>
-        <span style="color:var(--text3)">›</span>
-      </div>
-    </a>
-  </div>
-
-  <div class="hub-section-label">Tonight</div>
-  <div class="hub-links">
-    <a href="tonight.html" class="hub-card" target="_blank">
-      <div class="hub-card-inner">
-        <div><div class="hub-card-title">Tonight</div><div class="hub-card-desc">See &amp; launch tonight's Trivia, Bingo &amp; Karaoke</div></div>
-        <span style="color:var(--text3)">›</span>
-      </div>
-    </a>
-  </div>
-
-  <div class="hub-section-label">Tools &amp; Games</div>
-  <div class="hub-links">
-    <a href="venue-perks.html" class="hub-card" target="_blank">
-      <div class="hub-card-inner">
-        <div><div class="hub-card-title">Venue Perks</div><div class="hub-card-desc">Discounts &amp; freebies hosts get at each venue</div></div>
-        <span style="color:var(--text3)">›</span>
-      </div>
-    </a>
-    <a href="equipment.html" class="hub-card" target="_blank">
-      <div class="hub-card-inner">
-        <div><div class="hub-card-title">Equipment Checkout</div><div class="hub-card-desc">Check out or return Belladonna equipment</div></div>
-        <span style="color:var(--text3)">›</span>
-      </div>
-    </a>
-  </div>
-
-  <div class="hub-footer">Belladonna Audio Alchemies ✦ Host Hub</div>
-
-  <button class="admin-link" onclick="toggleAdmin()">Admin</button>
-  <div class="admin-panel" id="adminPanel">
-    <div id="adminLock">
-      <div class="admin-title">Admin</div>
-      <div class="admin-row">
-        <input type="password" class="admin-input" id="adminPw" placeholder="Password" autocomplete="off" onkeydown="if(event.key==='Enter')adminUnlock()">
-        <button class="admin-btn" onclick="adminUnlock()">Unlock</button>
-      </div>
+  <div class="picker">
+    <div class="picker-row">
+      <div class="picker-label">Venue</div>
+      <select class="picker-input" id="venueSelect"><option value="">Loading venues…</option></select>
     </div>
-    <div id="adminBody" style="display:none;">
-      <div class="admin-title">Top of the page shows</div>
-      <div class="admin-row">
-        <button class="admin-btn" id="optLogo" onclick="setTopMode('logo')">Logo</button>
-        <button class="admin-btn" id="optWotd" onclick="setTopMode('wotd')">Word of the Day</button>
+    <div class="picker-row">
+      <div class="picker-label">Date</div>
+      <div class="date-nav">
+        <button onclick="shiftDate(-1)">‹</button>
+        <div class="date-display" id="dateDisplay">—</div>
+        <button onclick="shiftDate(1)">›</button>
       </div>
+      <input type="date" class="picker-input" id="dateInput" style="flex:0 0 0;width:0;padding:0;border:0;opacity:0;position:absolute;">
     </div>
-    <div class="admin-msg" id="adminMsg"></div>
+  </div>
+
+  <div id="main">
+    <div class="loading">Pick a venue to see tonight's lineup</div>
   </div>
 </div>
 
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 <script>
-  const SHEETS_KEY    = 'AIzaSyACMjXQCXjVo75hbMXtag_JctR4SoX70So';
-  const WOTD_SHEET_ID = '1HeSQXaLhwvmvhm_Z4SE_CFrFXoNT4Umd0Dtg-kqXWto';
-  const WOTD_TAB      = 'Sheet1';
+  firebase.initializeApp({apiKey:"AIzaSyCIfAE1JGHsUGzzVH2pz1Vyj5b5OhA0tDQ",authDomain:"belladonna-hq.firebaseapp.com",databaseURL:"https://belladonna-hq-default-rtdb.firebaseio.com",projectId:"belladonna-hq",storageBucket:"belladonna-hq.firebasestorage.app",messagingSenderId:"1021873183587",appId:"1:1021873183587:web:def283bb7b5ca48e4f9156"});
+  const db = firebase.firestore();
+  const rtdb = firebase.database();
+  const auth = firebase.auth();
 
-  async function renderWOTD() {
-    const el  = document.getElementById('wotdWord');
-    const sub = document.getElementById('wotdSub');
-    const now = new Date();
-    const mm  = String(now.getMonth()+1).padStart(2,'0');
-    const dd  = String(now.getDate()).padStart(2,'0');
-    const yyyy = now.getFullYear();
-    const today = `${mm}-${dd}-${yyyy}`;
-    try {
-      const url  = `https://sheets.googleapis.com/v4/spreadsheets/${WOTD_SHEET_ID}/values/${encodeURIComponent(WOTD_TAB)}?key=${SHEETS_KEY}`;
-      const res  = await fetch(url);
-      const data = await res.json();
-      if (data.error) throw new Error(data.error.message);
-      const rows  = data.values || [];
-      const match = rows.slice(1).find(r => (r[0]||'').trim() === today);
-      if (match) {
-        el.textContent  = (match[1] || '—').toUpperCase();
-        if (sub) sub.textContent = (match[2] || '').toLowerCase();
-      } else {
-        el.textContent = '—';
-        if (sub) sub.textContent = 'no word set for today';
-      }
-    } catch(e) {
-      el.textContent = '—';
-      if (sub) sub.textContent = 'could not load';
-    }
-  }
-
-  // ── TOP OF PAGE: LOGO <-> WORD OF THE DAY ──────────────────────────────
-  // The choice lives in Firestore (hq_data/host-hub-settings) so every host's
-  // phone sees the same thing; localStorage is just a fast first paint and a
-  // fallback if Firestore can't be reached. The Word of the Day box and its
-  // code are all still here — this only decides which one is visible.
-  let hubDb=null;
-  try{
-    firebase.initializeApp({apiKey:"AIzaSyCIfAE1JGHsUGzzVH2pz1Vyj5b5OhA0tDQ",authDomain:"belladonna-hq.firebaseapp.com",projectId:"belladonna-hq",storageBucket:"belladonna-hq.firebasestorage.app",messagingSenderId:"1021873183587",appId:"1:1021873183587:web:def283bb7b5ca48e4f9156"});
-    hubDb=firebase.firestore();
-  }catch(e){}
-  const ADMIN_PW='1111';
-  let topMode='logo', wotdLoaded=false;
-  function applyTopMode(m){
-    topMode=(m==='wotd')?'wotd':'logo';
-    document.getElementById('topLogo').style.display=topMode==='logo'?'':'none';
-    document.getElementById('wotdBlock').style.display=topMode==='wotd'?'':'none';
-    if(topMode==='wotd'&&!wotdLoaded){wotdLoaded=true;renderWOTD();}
-    document.getElementById('optLogo').classList.toggle('on',topMode==='logo');
-    document.getElementById('optWotd').classList.toggle('on',topMode==='wotd');
-  }
-  function adminMsg(t,cls){const el=document.getElementById('adminMsg');el.textContent=t||'';el.className='admin-msg'+(cls?' '+cls:'');}
-  function toggleAdmin(){document.getElementById('adminPanel').classList.toggle('open');}
-  function adminUnlock(){
-    if(document.getElementById('adminPw').value===ADMIN_PW){
-      document.getElementById('adminLock').style.display='none';
-      document.getElementById('adminBody').style.display='block';
-      adminMsg('');
-    }else{adminMsg('Wrong password.','err');}
-  }
-  async function setTopMode(m){
-    applyTopMode(m);
-    try{localStorage.setItem('hostHubTopMode',topMode);}catch(e){}
-    if(!hubDb){adminMsg('Saved on this device only (could not reach the database).','err');return;}
+  // ── GATEWAY LOGIN GATE — same full-app gate as Trivia and Bingo now use ──
+  // Firebase Auth is shared across every app on this same origin
+  // (belladonnanights.github.io), so once a host signs in here, Trivia and
+  // Bingo recognize them automatically (a quick "Continue as", not a full
+  // re-login) — this is the SSO Ahnna's referring to. It's also what lets
+  // Tonight actually read live trivia/bingo schedule data at all.
+  // 'shifts' is the gateway's "any signed-in Belladonna account" key (same one check-in/check-out
+  // use). 'tonight' isn't a real access type, so using it bounced everyone, even admins, to the
+  // "doesn't have access" screen.
+  const GATEWAY_APP_KEY='shifts';
+  const GATEWAY_SESSION_MS=6*60*60*1000;
+  function hasValidGatewaySession(){
     try{
-      await hubDb.collection('hq_data').doc('host-hub-settings').set({topMode:topMode,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
-      adminMsg('Saved — every host will see this.','ok');
-    }catch(e){
-      adminMsg('Changed on this device only. The database refused the save, so other devices will not see it until the rule below is added.','err');
-    }
+      const raw=localStorage.getItem('gatewaySession_'+GATEWAY_APP_KEY);
+      if(!raw)return false;
+      const s=JSON.parse(raw);
+      return (Date.now()-s.ts)<GATEWAY_SESSION_MS;
+    }catch(e){return false;}
   }
-  (function initTopMode(){
-    let cached='logo';
-    try{cached=localStorage.getItem('hostHubTopMode')||'logo';}catch(e){}
-    applyTopMode(cached);
-    if(hubDb){
-      hubDb.collection('hq_data').doc('host-hub-settings').get().then(snap=>{
-        if(snap.exists&&snap.data().topMode){
-          applyTopMode(snap.data().topMode);
-          try{localStorage.setItem('hostHubTopMode',topMode);}catch(e){}
-        }
-      }).catch(()=>{});
+  if(!hasValidGatewaySession()){
+    window.location.href='https://belladonnanights.github.io/belladonna-gateway/accounts.html?return='+encodeURIComponent(window.location.href)+'&app='+GATEWAY_APP_KEY;
+  }
+  function gatewaySignOut(){
+    try{Object.keys(localStorage).filter(k=>k.startsWith('gatewaySession_')).forEach(k=>localStorage.removeItem(k));}catch(e){}
+    auth.signOut().then(()=>{ window.location.href='https://belladonnanights.github.io/belladonna-gateway/accounts.html?return='+encodeURIComponent(window.location.href)+'&app='+GATEWAY_APP_KEY; });
+  }
+
+  const PLANNER_DAY_MAP={Sun:0,Mon:1,Tue:2,Wed:3,Thu:4,Fri:5,Sat:6};
+  function normVenueName(v){return (v||'').toString().toLowerCase().trim();}
+  function dateToKey(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+
+  let venues=[];
+  let selectedVenueId='';
+  let currentDate=new Date();
+
+  // Firestore's hq_data/venues-list loads right away (publicly readable,
+  // same as screen.html/karaoke-list.html) — but loadTonight() itself waits
+  // on authReady below before touching RTDB, which is what actually needs
+  // the signed-in session.
+  db.collection('hq_data').doc('venues-list').get().then(snap=>{
+    try{venues=(snap.exists&&snap.data().value)?JSON.parse(snap.data().value):[];}catch(e){venues=[];}
+    renderVenueOptions();
+  }).catch(()=>{renderVenueOptions();});
+
+  // Don't query RTDB until Firebase confirms the signed-in session (the gate
+  // above only checked a local flag), and force a fresh ID token first —
+  // auth.onAuthStateChanged can fire slightly before RTDB's own connection
+  // has re-authenticated with that session, which would silently
+  // permission-deny the very first load.
+  let authReady=false;
+  auth.onAuthStateChanged(function(user){
+    if(!user){
+      window.location.href='https://belladonnanights.github.io/belladonna-gateway/accounts.html?return='+encodeURIComponent(window.location.href)+'&app='+GATEWAY_APP_KEY;
+      return;
     }
-  })();
+    user.getIdToken(true).then(afterSignIn).catch(afterSignIn);
+    function afterSignIn(){
+      authReady=true;
+      if(selectedVenueId)loadTonight();
+    }
+  });
+
+  function renderVenueOptions(){
+    const sel=document.getElementById('venueSelect');
+    if(!venues.length){sel.innerHTML='<option value="">No venues found</option>';return;}
+    sel.innerHTML='<option value="">Select a venue…</option>'+venues.map(v=>`<option value="${v.id}">${v.name}</option>`).join('');
+    // restore last-used venue for this device, if any
+    const last=localStorage.getItem('tonight-venue');
+    if(last&&venues.some(v=>v.id===last)){sel.value=last;selectedVenueId=last;loadTonight();}
+  }
+  document.getElementById('venueSelect').addEventListener('change',e=>{
+    selectedVenueId=e.target.value;
+    try{localStorage.setItem('tonight-venue',selectedVenueId);}catch(err){}
+    loadTonight();
+  });
+
+  function updateDateDisplay(){
+    const todayKey=dateToKey(new Date());
+    const thisKey=dateToKey(currentDate);
+    const label=currentDate.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
+    document.getElementById('dateDisplay').innerHTML=label+(thisKey===todayKey?' <span class="date-today-pill">Today</span>':'');
+  }
+  function shiftDate(delta){
+    currentDate=new Date(currentDate);
+    currentDate.setDate(currentDate.getDate()+delta);
+    updateDateDisplay();
+    loadTonight();
+  }
+  updateDateDisplay();
+
+  function venueById(id){return venues.find(v=>v.id===id);}
+
+  // ── TRIVIA ROUND AUTO-LAUNCH ──────────────────────────────────────────
+  // Mirrors admin.html's own launchTrivia(): each category record under
+  // trivia/categories has its own sheetUrl + tabName (a separate Google
+  // Sheet per category, not one shared book) — fetched once and cached here.
+  let triviaCategoriesCache=null;
+  function getTriviaCategories(){
+    if(triviaCategoriesCache)return Promise.resolve(triviaCategoriesCache);
+    return rtdb.ref('trivia/categories').once('value').then(snap=>{
+      triviaCategoriesCache=snap.val()||{};
+      return triviaCategoriesCache;
+    }).catch(()=>({}));
+  }
+  // Same shape admin.html builds from a Planner gig record: R1 = themeName/
+  // themeId, R2 = round3Name/round3ThemeId, anything past that = extraCategories.
+  function buildTriviaRoundsFromGig(g){
+    const rounds=[];
+    if(g&&g.themeName)rounds.push({label:g.themeName,id:g.themeId||null});
+    if(g&&g.round3Name)rounds.push({label:g.round3Name,id:g.round3ThemeId||null});
+    if(g&&Array.isArray(g.extraCategories)){
+      g.extraCategories.forEach(ec=>{ if(ec&&ec.name)rounds.push({label:ec.name,id:ec.id||null}); });
+    }
+    return rounds;
+  }
+  // A round saved with a real themeId resolves directly; one saved as plain
+  // typed text (no match at save time) falls back to matching by name, same
+  // as everywhere else in this suite that resolves a typed category.
+  function resolveCategoryForRound(round,catMap){
+    if(round.id&&catMap[round.id])return catMap[round.id];
+    const key=(round.label||'').trim().toLowerCase();
+    if(!key)return null;
+    const found=Object.values(catMap).find(c=>(c.name||'').trim().toLowerCase()===key);
+    return found||null;
+  }
+  // Builds the exact query string admin.html's launchTrivia() builds, just
+  // sourced from tonight's scheduled rounds instead of a hand-picked lineup.
+  // Per-round settings (question count, show answers, etc.) use the same
+  // defaults admin.html itself starts a fresh lineup slot with — she can
+  // still fine-tune in admin.html same as always, this just gets the right
+  // categories loaded in the right rounds on arrival.
+  function isKaraokeCat(c){ return !!c && (c.plannerTier==='karaoke' || String(c.type||'').toLowerCase()==='karaoke'); }
+  function isBingoCat(c){ const t=String(c&&c.type||'').toLowerCase(); return !!c && (c.plannerTier==='music-bingo' || t==='bingo' || t==='music-bingo' || t==='music bingo'); }
+  // Any round that is really a Karaoke or Bingo category (in any position) is
+  // not a trivia round — it gets its own card instead.
+  function isNonTriviaCat(c){ return isKaraokeCat(c) || isBingoCat(c); }
+  async function buildTriviaLaunchUrl(seg){
+    const catMap0=await getTriviaCategories();
+    // Karaoke categories scheduled into a night's rounds are not trivia rounds —
+    // they get their own Karaoke card instead of being sent to the trivia app.
+    const rounds=buildTriviaRoundsFromGig(seg.plannerGig).filter(r=>!isNonTriviaCat(resolveCategoryForRound(r,catMap0)));
+    if(!rounds.length)return null;
+    const catMap=catMap0;
+    const resolved=rounds.map(r=>({round:r,cat:resolveCategoryForRound(r,catMap)}));
+    const usable=resolved.filter(r=>r.cat&&(r.cat.sheetUrl||r.cat.vaultCatId));
+    const missing=resolved.filter(r=>!(r.cat&&(r.cat.sheetUrl||r.cat.vaultCatId))).map(r=>r.round.label);
+    if(!usable.length)return {url:null,missing};
+    // Open the Trivia admin (host tools live there) with tonight's rounds
+    // already dropped into the lineup, in order.
+    const params=new URLSearchParams();
+    params.set('tonight','1');
+    params.set('venue',seg.plannerVenueId);
+    params.set('date',dateToKey(currentDate));
+    const ids=usable.map(({round,cat})=>round.id||(Object.entries(catMap).find(([id,c])=>c===cat)||[])[0]).filter(Boolean);
+    params.set('cats',ids.join(','));
+    return {url:`https://belladonnanights.github.io/belladonnatrivia/admin.html?${params.toString()}`,missing:[]};
+  }
+
+  async function loadTonight(){
+    const main=document.getElementById('main');
+    if(!selectedVenueId){main.innerHTML='<div class="loading">Pick a venue to see tonight\'s lineup</div>';return;}
+    const venue=venueById(selectedVenueId);
+    if(!venue){main.innerHTML='<div class="loading">Venue not found</div>';return;}
+    if(!authReady){main.innerHTML='<div class="loading">Signing in…</div>';return;} // re-fires itself once auth.onAuthStateChanged resolves, above
+    main.innerHTML='<div class="loading">Loading tonight\'s lineup…</div>';
+
+    const dk=dateToKey(currentDate);
+    const dow=currentDate.getDay();
+    const vName=normVenueName(venue.name);
+
+    // 1. HQ's own gig_schedule — the source of truth when it has an entry for this venue/date.
+    let hqGigs=[];
+    try{
+      const snap=await db.collection('gig_schedule').where('date','==',dk).get();
+      hqGigs=snap.docs.map(d=>({id:d.id,...d.data()})).filter(g=>normVenueName(g.venue)===vName);
+    }catch(e){}
+
+    // Every scheduled thing tonight is one item in a flat list — not capped
+    // to "one Trivia, one Bingo, one Karaoke". A venue can have more than one
+    // of the same kind in a night, or a kind that isn't one of the three
+    // special-cased ones at all (Events, Private Events, anything typed into
+    // HQ Schedule) — all of it shows.
+    let items=[];
+    hqGigs.forEach(g=>{
+      items.push({
+        kind:g.kind||'Gig',
+        source:'HQ Schedule',
+        cancelled:g.status==='cancelled',
+        theme:g.notes||'',
+        host:g.host||'Unassigned',
+        gigId:g.id
+      });
+    });
+
+    // 2. Trivia Planner (Realtime DB) — this per-date record is the one place
+    // HQ and the Planner app both write "host" into. If HQ already has a
+    // Trivia item (or several) for tonight, this only overlays host/theme
+    // detail onto it — it adds a new item only when HQ has none at all.
+    try{
+      const pvSnap=await rtdb.ref('trivia/planner/venues').once('value');
+      const pv=pvSnap.val()||{};
+      const match=Object.entries(pv).find(([id,v])=>normVenueName(v.name)===vName);
+      if(match){
+        const [venueId,v]=match;
+        const gSnap=await rtdb.ref('trivia/planner/gigs/'+venueId+'/'+dk).once('value');
+        const g=gSnap.val();
+        const hqTriviaItems=items.filter(it=>it.kind==='Trivia');
+        if(!hqTriviaItems.length){
+          if((g&&g.themeName)||(g&&g.status==='cancelled')||((v.status==='active'||v.status==='seasonal')&&PLANNER_DAY_MAP[v.day]===dow)){
+            items.push({
+              kind:'Trivia',
+              source:'Trivia Planner',
+              cancelled:!!(g&&g.status==='cancelled'),
+              theme:(g&&(g.themeName||g.note))||'',
+              host:(g&&g.host)||v.host||'Unassigned',
+              plannerVenueId:venueId,
+              themeId:g&&g.themeId||null,
+              plannerGig:g||null
+            });
+          }
+        }else{
+          // Exactly one HQ Trivia item tonight — safe to merge the live
+          // host/theme detail straight onto it. With more than one, which one
+          // it belongs to is ambiguous, so just attach the Planner link and
+          // leave host as HQ already has it.
+          hqTriviaItems.forEach(it=>{
+            it.plannerVenueId=venueId;
+            it.themeId=(g&&g.themeId)||null;
+            it.plannerGig=g||null;
+          });
+          if(hqTriviaItems.length===1&&g&&g.host)hqTriviaItems[0].host=g.host;
+        }
+      }
+    }catch(e){}
+
+    // Build the full Trivia round-launch link for every Trivia item that has
+    // a Planner gig record — same exact mechanism admin.html's own "Launch
+    // Trivia" button uses (trivia.html?rounds=N&r{i}_url=...&r{i}_tab=...),
+    // just auto-built from tonight's scheduled themeName/round3Name/
+    // extraCategories instead of a hand-picked lineup. Any round that can't
+    // be resolved to a category with its own sheetUrl is left out and named
+    // in triviaLaunchMissing so the card can say so.
+    for(const it of items.filter(it=>it.kind==='Trivia'&&it.plannerGig)){
+      try{
+        const catMapK=await getTriviaCategories();
+        const resolvedAll=buildTriviaRoundsFromGig(it.plannerGig).map(r=>({round:r,cat:resolveCategoryForRound(r,catMapK)}));
+        it.roundList=resolvedAll.filter(x=>!isNonTriviaCat(x.cat)).map(x=>x.cat&&x.cat.name||x.round.label);
+        const kRounds=resolvedAll.filter(x=>isNonTriviaCat(x.cat));
+        let at=items.indexOf(it)+1;
+        kRounds.forEach(x=>{
+          const kid=x.round.id||(Object.entries(catMapK).find(([id,c])=>c===x.cat)||[])[0]||null;
+          if(isBingoCat(x.cat)){
+            items.splice(at++,0,{kind:'Bingo',source:'Trivia Planner',cancelled:it.cancelled,
+              theme:x.cat.name||x.round.label,host:it.host});
+          }else{
+            items.splice(at++,0,{kind:'Karaoke',source:'Trivia Planner',cancelled:it.cancelled,
+              theme:x.cat.name||x.round.label,host:it.host,karaokeThemeId:kid,songs:undefined});
+          }
+        });
+      }catch(e){}
+      try{
+        const built=await buildTriviaLaunchUrl(it);
+        if(built){ it.triviaLaunchUrl=built.url; it.triviaLaunchMissing=built.missing; }
+      }catch(e){}
+    }
+
+    // 3. Bingo app (Realtime DB) — same idea: the schedule entry is the one
+    // place host lives for Bingo, whether HQ or the Bingo app's own scheduler
+    // set it last.
+    try{
+      const bvSnap=await rtdb.ref('bingo/landing/venues').once('value');
+      const bv=bvSnap.val()||{};
+      const match=Object.entries(bv).find(([id,v])=>normVenueName(v.name)===vName);
+      if(match){
+        const [venueId]=match;
+        const schedSnap=await rtdb.ref('bingo/landing/schedule').once('value');
+        const schedList=Object.entries(schedSnap.val()||{}).map(([id,e])=>({id,...e}));
+        const entry=schedList.find(e=>e.venueId===venueId&&e.date===dk);
+        if(entry){
+          let roundNames=[];
+          const catIds=entry.rounds||entry.categoryIds||[];
+          if(catIds.length){
+            const catSnap=await rtdb.ref('bingo/landing/categories').once('value');
+            const cats=catSnap.val()||{};
+            roundNames=catIds.map(cid=>cats[cid]?cats[cid].title:null).filter(Boolean);
+          }
+          const hqBingoItems=items.filter(it=>it.kind==='Bingo');
+          if(!hqBingoItems.length){
+            items.push({
+              kind:'Bingo',
+              source:'Bingo App',
+              cancelled:false,
+              theme:roundNames.length?roundNames.join(', '):(entry.notes||''),
+              host:entry.host||'Unassigned',
+              bingoEntryId:entry.id,
+              bingoVenueId:venueId,
+              categoryIds:catIds
+            });
+          }else{
+            hqBingoItems.forEach(it=>{
+              it.bingoEntryId=entry.id;
+              it.bingoVenueId=venueId;
+              it.categoryIds=catIds;
+            });
+            if(hqBingoItems.length===1&&entry.host)hqBingoItems[0].host=entry.host;
+          }
+        }
+      }
+    }catch(e){}
+
+    // 4. Karaoke — planned in the Planner's Karaoke mode (RTDB
+    // trivia/planner/karaokeVenues + karaokeGigs, keyed by category ID; songs
+    // live on the category record itself in trivia/categories/<id>/karaokeSongs).
+    // Same overlay idea as Trivia: Planner wins; an HQ Karaoke item only gets
+    // host/theme detail laid over it, and a Planner-only night adds its own item.
+    try{
+      const kvSnap=await rtdb.ref('trivia/planner/karaokeVenues').once('value');
+      const kv=kvSnap.val()||{};
+      const kMatch=Object.entries(kv).find(([id,v])=>normVenueName(v.name)===vName);
+      if(kMatch){
+        const [kVenueId,v]=kMatch;
+        const kgSnap=await rtdb.ref('trivia/planner/karaokeGigs/'+kVenueId+'/'+dk).once('value');
+        const g=kgSnap.val();
+        const hqK=items.filter(it=>it.kind==='Karaoke');
+        const scheduledByDay=(v.status==='active'||v.status==='seasonal')&&PLANNER_DAY_MAP[v.day]===dow;
+        if(!hqK.length){
+          if(g||scheduledByDay){
+            items.push({kind:'Karaoke',source:'Karaoke Planner',cancelled:!!(g&&g.status==='cancelled'),
+              theme:(g&&(g.themeName||g.note))||'',host:(g&&g.host)||v.host||'Unassigned',
+              karaokeThemeId:(g&&g.themeId)||null});
+          }
+        }else if(g){
+          hqK.forEach(it=>{ it.karaokeThemeId=g.themeId||null; if(g.themeName)it.theme=g.themeName; });
+          if(hqK.length===1&&g.host)hqK[0].host=g.host;
+          if(g.status==='cancelled')hqK.forEach(it=>{it.cancelled=true;});
+        }
+      }
+    }catch(e){}
+    for(const it of items.filter(it=>it.kind==='Karaoke'&&it.karaokeThemeId)){
+      try{
+        const cs=await rtdb.ref('trivia/categories/'+it.karaokeThemeId).once('value');
+        const c=cs.val();
+        if(c){
+          if(!it.theme)it.theme=c.altName?c.name+' ('+c.altName+')':c.name||'';
+          const songs=Array.isArray(c.karaokeSongs)?c.karaokeSongs:(typeof c.karaokeSongs==='string'?c.karaokeSongs.split('\n'):[]);
+          it.songs=songs.map(x=>String(x).trim()).filter(Boolean);
+          // Keep the guests' public copy in step (only succeeds for admin accounts; harmless otherwise).
+          if(it.songs.length){ try{ rtdb.ref('publicKaraoke/'+it.karaokeThemeId).set({name:c.name||'',altName:c.altName||'',songs:it.songs,updatedAt:Date.now()}).catch(()=>{}); }catch(e){} }
+        }
+      }catch(e){}
+    }
+    // Fallback for anything still unresolved: the old karaoke_lists title match.
+    for(const it of items.filter(it=>it.kind==='Karaoke'&&it.theme&&!it.songs)){
+      try{
+        const klSnap=await db.collection('karaoke_lists').where('title','==',it.theme).limit(1).get();
+        if(!klSnap.empty)it.listId=klSnap.docs[0].id;
+      }catch(e){}
+    }
+
+    renderSegments(venue,items);
+  }
+
+  function renderSegments(venue,items){
+    const main=document.getElementById('main');
+    const dateLabel=currentDate.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+    let html=`<div class="venue-title"><div class="vname">${venue.name}</div><div class="vdate">${dateLabel}</div></div>`;
+
+    if(!items.length){
+      html+='<div class="msg-empty">Unscheduled</div>';
+    }else{
+      html+=items.map(segCardFor).join('');
+    }
+
+    main.innerHTML=html;
+  }
+  function subLine(seg){ return seg.host&&seg.host!=='Unassigned'?`<div class="seg-sub">${seg.host}</div>`:`<div style="height:0.9rem"></div>`; }
+  function segCardFor(it){
+    if(it.kind==='Trivia')return segCardTrivia(it);
+    if(it.kind==='Bingo')return segCardBingo(it);
+    if(it.kind==='Karaoke')return segCardKaraoke(it);
+    return segCardGeneric(it);
+  }
+  // Anything that isn't Trivia/Bingo/Karaoke (Events, Private Events, or
+  // whatever else gets typed into HQ Schedule) still shows — just without a
+  // dedicated "Open X" button, since there's no app on the other end for it.
+  function segCardGeneric(seg){
+    const active=!seg.cancelled;
+    return `<div class="seg-card${active?'':' empty'}">
+      <div class="seg-head"><div class="seg-name">${seg.kind||'Gig'}</div>${statusPill(seg)}</div>
+      ${seg.theme?`<div class="seg-detail">${seg.theme}</div>`:''}
+      ${subLine(seg)}
+    </div>`;
+  }
+
+  function statusPill(seg){
+    if(seg.cancelled)return '<span class="seg-status cancelled">Cancelled</span>';
+    return '<span class="seg-status on">Tonight</span>';
+  }
+
+  // Opens trivia.html — the host's actual live game control panel — never
+  // planner.html (that's the admin scheduling tool, not for hosts). Passing
+  // venue/venueName/gigDate matches trivia.html's own initVenueIntro(), so
+  // it already shows tonight's scheduled theme on arrival. Full round/
+  // category auto-load (building out state.rounds itself, not just the
+  // intro screen) needs trivia.html's own ?rounds=/r{i}_* launch params,
+  // which also need a Google Sheet URL + tab per category — pending that.
+  function segCardTrivia(seg){
+    const active=!seg.cancelled;
+    let btn, note='';
+    if(active&&seg.triviaLaunchUrl){
+      btn=`<a href="${seg.triviaLaunchUrl}" target="_blank" class="seg-btn">Launch Trivia — Rounds Ready</a>`;
+      if(seg.triviaLaunchMissing&&seg.triviaLaunchMissing.length){
+        note=`<div class="seg-note">Couldn't auto-load: ${seg.triviaLaunchMissing.join(', ')} — no sheet set up for ${seg.triviaLaunchMissing.length===1?'it':'these'} yet. Add ${seg.triviaLaunchMissing.length===1?'it':'them'} manually once the app opens.</div>`;
+      }
+    }else if(active&&seg.plannerVenueId){
+      const url=`https://belladonnanights.github.io/belladonnatrivia/admin.html?tonight=1&venue=${encodeURIComponent(seg.plannerVenueId)}&date=${encodeURIComponent(dateToKey(currentDate))}`;
+      btn=`<a href="${url}" target="_blank" class="seg-btn">Open Trivia</a>`;
+      if(seg.triviaLaunchMissing&&seg.triviaLaunchMissing.length){
+        note=`<div class="seg-note">No sheet set up yet for: ${seg.triviaLaunchMissing.join(', ')} — rounds will need to be built by hand in admin.html.</div>`;
+      }
+    }else if(active){
+      btn=`<a href="https://belladonnanights.github.io/belladonnatrivia/admin.html" target="_blank" class="seg-btn">Open Trivia</a>`;
+    }else{
+      btn=`<button class="seg-btn" disabled>Open Trivia</button>`;
+    }
+    return `<div class="seg-card${active?'':' empty'}">
+      <div class="seg-head"><div class="seg-name">Trivia</div>${statusPill(seg)}</div>
+      ${seg.roundList&&seg.roundList.length?seg.roundList.map((n,i)=>`<div class="rnd"><span class="rnd-n">Round ${i+1}</span><span class="rnd-name">${n}</span></div>`).join(''):(seg.theme?`<div class="seg-detail">${seg.theme}</div>`:'')}
+      ${subLine(seg)}
+      ${btn}
+      ${note}
+    </div>`;
+  }
+
+  function segCardBingo(seg){
+    const active=!seg.cancelled;
+    let btn;
+    if(active){
+      const protoUrl=`belladonna-bingo://open?venueId=${encodeURIComponent(seg.bingoVenueId||'')}&entryId=${encodeURIComponent(seg.bingoEntryId||'')}&date=${encodeURIComponent(dateToKey(currentDate))}`;
+      btn=`<a href="#" class="seg-btn" onclick="openBingo(event,'${protoUrl}')">Open Bingo</a>
+        <div class="seg-note" id="bingoFallbackNote" style="display:none;">Bingo app didn't open — make sure it's installed on this computer, then try again.</div>`;
+    }else{
+      btn=`<button class="seg-btn" disabled>Open Bingo</button>`;
+    }
+    return `<div class="seg-card${active?'':' empty'}">
+      <div class="seg-head"><div class="seg-name">Bingo</div>${statusPill(seg)}</div>
+      ${seg.theme?`<div class="seg-detail">${seg.theme}</div>`:''}
+      ${subLine(seg)}
+      ${btn}
+    </div>`;
+  }
+
+  // ── Karaoke QR / sharing ─────────────────────────────────────────────
+  // The QR encodes only the list's permanent ID, so it never changes when songs
+  // are edited — print it once and it stays good.
+  // Guests' song list = karaoke-list.html; tablet/TV = screen.html (big QR).
+  function kListUrl(id,screen){
+    const u=new URL(screen?'screen.html':'karaoke-list.html',location.href);
+    u.search='?id='+encodeURIComponent(id);
+    return u.href;
+  }
+  function kQrSvg(url){
+    const q=qrcode(0,'M'); q.addData(url); q.make();
+    return q.createSvgTag({cellSize:8,margin:0,scalable:true});
+  }
+  window.kqToggle=function(btn){
+    const panel=btn.closest('.kq-wrap').querySelector('.kq-panel');
+    if(!panel.dataset.ready){ panel.querySelector('.qr').innerHTML=kQrSvg(panel.dataset.url); panel.dataset.ready='1'; }
+    panel.classList.toggle('open');
+  };
+  window.kqCopy=function(btn){
+    const url=btn.closest('.kq-wrap').dataset.url;
+    (navigator.clipboard?navigator.clipboard.writeText(url):Promise.reject()).then(()=>{btn.textContent='Copied ✓';setTimeout(()=>btn.textContent='Copy link',1500);}).catch(()=>{prompt('Copy this link:',url);});
+  };
+  window.kqSend=function(btn){
+    // The tablet gets the big-QR screen page, not the guest list.
+    const w=btn.closest('.kq-wrap'), url=w.dataset.screen, name=w.dataset.name;
+    if(navigator.share){ navigator.share({title:name+' — Karaoke Screen',url}).catch(()=>{}); }
+    else{ location.href='mailto:?subject='+encodeURIComponent(name+' — Karaoke Screen')+'&body='+encodeURIComponent('Open this on the tablet:\n'+url); }
+  };
+  window.kqPrint=function(btn){
+    const w=btn.closest('.kq-wrap'), url=w.dataset.url, name=w.dataset.name;
+    const win=window.open('','_blank'); if(!win) return alert('Allow pop-ups to print the QR code.');
+    win.document.write('<!doctype html><title>'+name.replace(/</g,'')+' QR</title><body style="font-family:Georgia,serif;text-align:center;margin:0;padding:48px"><h1 style="letter-spacing:.2em;text-transform:uppercase;font-size:28px;margin:0">Karaoke</h1><h2 style="font-weight:400;margin:8px 0 28px">'+name.replace(/</g,'&lt;')+'</h2><div style="width:420px;margin:0 auto">'+kQrSvg(url).replace('<svg','<svg style="width:420px;height:420px"')+'</div><p style="font-size:20px;margin-top:28px">Scan to see the song list</p></body>');
+    win.document.close(); setTimeout(()=>win.print(),400);
+  };
+  window.kqDownload=function(btn){
+    const w=btn.closest('.kq-wrap'), url=w.dataset.url, name=w.dataset.name;
+    const svg=kQrSvg(url).replace('<svg','<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024"');
+    const img=new Image();
+    img.onload=()=>{
+      const c=document.createElement('canvas'); c.width=c.height=1100;
+      const x=c.getContext('2d'); x.fillStyle='#fff'; x.fillRect(0,0,1100,1100); x.drawImage(img,38,38,1024,1024);
+      c.toBlob(b=>{ const a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download=name.replace(/[^\w]+/g,'-')+'-karaoke-qr.png'; a.click(); },'image/png');
+    };
+    img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg);
+  };
+  function karaokeShareHtml(seg){
+    if(!seg.karaokeThemeId) return '';
+    const url=kListUrl(seg.karaokeThemeId,false), disp=kListUrl(seg.karaokeThemeId,true);
+    const nm=String(seg.theme||'Karaoke').replace(/"/g,'&quot;');
+    return `<div class="kq-wrap" data-url="${url}" data-screen="${disp}" data-name="${nm}">
+      <div class="kq-row">
+        <button class="kq-btn" onclick="kqToggle(this)">Show QR Code</button>
+        <a class="kq-btn" href="${url}" target="_blank">Open Here</a>
+        <button class="kq-btn" onclick="kqSend(this)">Send to Tablet</button>
+        <a class="kq-btn" href="${disp}" target="_blank">Tablet / TV Screen</a>
+      </div>
+      <div class="kq-panel" data-url="${url}">
+        <div class="qr"></div>
+        <div class="kq-row" style="margin-top:0.7rem">
+          <button class="kq-btn" onclick="kqPrint(this)">Print QR</button>
+          <button class="kq-btn" onclick="kqDownload(this)">Download PNG</button>
+          <button class="kq-btn" onclick="kqCopy(this)" style="grid-column:1/3">Copy link</button>
+        </div>
+        <div class="seg-note">Static code — the same code works every night, even after the songs change.</div>
+      </div>
+    </div>`;
+  }
+  window.filterKaraoke=function(inp){
+    const q=inp.value.trim().toLowerCase(), box=inp.parentElement.querySelector('.kl-list'); if(!box) return;
+    let head=null, headShown=false;
+    [...box.children].forEach(el=>{
+      if(el.classList.contains('kl-head')){ head=el; headShown=false; el.style.display=q?'none':''; return; }
+      const ok=!q||el.textContent.toLowerCase().includes(q);
+      el.style.display=ok?'':'none';
+      if(ok&&q&&head&&!headShown){ head.style.display=''; headShown=true; }
+    });
+  };
+  // Song-list lines: "# Heading" / "== Heading ==" / ALL-CAPS line = section title; "Title - Artist" = song.
+  function parseKaraokeLine(raw){
+    let s=String(raw==null?'':raw).trim(); if(!s) return null;
+    const m=s.match(/^#+\s*(.+)$/)||s.match(/^=+\s*(.+?)\s*=+$/); if(m) return {head:m[1].trim()};
+    s=s.replace(/^[-\u2013\u2014\u2022*]\s+/,'');
+    const p=s.split(/\s+[-\u2013\u2014]\s+/);
+    if(p.length===1&&/[A-Z]/.test(s)&&s===s.toUpperCase()&&s.length>=4&&s.length<=70) return {head:s};
+    return p.length>1?{title:p[0].trim(),artist:p.slice(1).join(' - ').trim()}:{title:s,artist:''};
+  }
+  function segCardKaraoke(seg){
+    const active=!seg.cancelled;
+    let btn;
+    if(active&&seg.songs&&seg.songs.length){
+      const esc2=t=>String(t).replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
+      const klItems=seg.songs.map(parseKaraokeLine).filter(Boolean);
+      const klCount=klItems.filter(x=>!x.head).length;
+      btn=`<details class="kl"><summary class="seg-btn">Song List (${klCount})</summary>
+        <input type="text" placeholder="Search songs…" oninput="filterKaraoke(this)" style="width:100%;margin:8px 0;padding:8px;background:transparent;border:1px solid var(--border2);color:inherit;border-radius:0">
+        <div class="kl-list">${klItems.map(x=>x.head?`<div class="kl-head">${esc2(x.head)}</div>`:`<div class="kl-row"><span class="kl-t">${esc2(x.title)}</span><span class="kl-a">${esc2(x.artist)}</span></div>`).join('')}</div></details>`;
+    }else if(active&&!seg.listId&&!seg.theme&&seg.source==='Karaoke Planner'){
+      btn=`<div class="seg-note">Regular karaoke tonight — no themed list.</div>`;
+    }else if(active&&seg.listId){
+      btn=`<a href="karaoke-list.html?list=${encodeURIComponent(seg.listId)}" target="_blank" class="seg-btn">Open Song List</a>`;
+    }else if(active){
+      btn=`<button class="seg-btn" disabled>Open Song List</button><div class="seg-note">No song list matched to "${seg.theme||'this theme'}" yet.</div>`;
+    }else{
+      btn=`<button class="seg-btn" disabled>Open Song List</button>`;
+    }
+    return `<div class="seg-card${active?'':' empty'}">
+      <div class="seg-head"><div class="seg-name">Karaoke</div>${statusPill(seg)}</div>
+      ${seg.theme?`<div class="seg-detail">${seg.theme}</div>`:''}
+      ${subLine(seg)}
+      ${btn}
+      ${karaokeShareHtml(seg)}
+    </div>`;
+  }
+
+  // Electron-detect-with-fallback: try the custom protocol; if the app isn't
+  // installed, the browser just does nothing and focus never leaves the page,
+  // so a short timer that checks document visibility tells us whether to show
+  // the fallback note.
+  // The browser Bingo page. Set this to the full address of your web Bingo app
+  // (leave '' if there isn't one — Tonight then just shows the "not installed" note).
+  const BINGO_WEB_URL='https://belladonnanights.github.io/bingo/index.html';
+  function openBingo(ev,protoUrl){
+    ev.preventDefault();
+    const note=document.getElementById('bingoFallbackNote');
+    let left=false;
+    const onBlur=()=>{left=true;};
+    const onHide=()=>{ if(document.hidden) left=true; };
+    window.addEventListener('blur',onBlur);
+    document.addEventListener('visibilitychange',onHide);
+    window.location.href=protoUrl;
+    setTimeout(()=>{
+      window.removeEventListener('blur',onBlur);
+      document.removeEventListener('visibilitychange',onHide);
+      if(left) return;                       // the desktop app took over
+      // App not installed (or didn't respond): open the browser version instead.
+      if(BINGO_WEB_URL){
+        const q=protoUrl.slice(protoUrl.indexOf('?'));
+        const url=BINGO_WEB_URL+(BINGO_WEB_URL.includes('?')?'&'+q.slice(1):q);
+        const w=window.open(url,'_blank');
+        if(w) return;
+        if(note){ note.innerHTML='Bingo app not found. <a href="'+url+'" target="_blank" style="color:var(--gold)">Open Bingo in the browser</a>'; note.style.display='block'; }
+        return;
+      }
+      if(note)note.style.display='block';
+    },1500);
+  }
 </script>
 </body>
 </html>
