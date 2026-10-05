@@ -5,35 +5,27 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Belladonna — Tonight</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=DM+Sans:wght@300;400;500;600;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400&family=Cinzel:wght@400;600;700&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400&family=Cinzel:wght@400;600;700&family=Josefin+Sans:wght@200;300;400;600&display=swap');
   *{margin:0;padding:0;box-sizing:border-box;}
   :root{
-    /* Belladonna HQ palette — shared across every app */
-    --bg:#000000;--surface:#0d0d0d;--surface2:#141414;--surface3:#1a1a1a;--surface4:#212121;
-    --border:rgba(180,150,100,0.16);--border2:rgba(180,150,100,0.34);--border-gold:rgba(201,169,110,0.4);
-    --gold:#c9a96e;--gold2:#e0bc7e;--gold-dim:rgba(201,169,110,0.12);
-    --purple:#a68a5c;--purple2:#8f7550;--purple3:#5c4b32;--purple-dim:rgba(180,150,100,0.1);
-    --rose:#b0505a;--rose2:#b0505a;--teal:#5a8a78;--teal2:#5a8a78;--live:#3a9a5a;--live-dim:rgba(58,154,90,0.12);
-    --text:#f0ece0;--text2:#b8ad98;--text3:#8a8272;--text4:#4a4638;
-    --purple-btn:#c9a96e;
+    --bg:#000000;--surface:#0d0d0d;
+    --border:rgba(201,169,110,0.25);
+    --gold:#c9a96e;--text:#f0ece0;--text2:#b0a890;--text3:#8a8272;
   }
-  html,body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-weight:300;width:100%;height:100%;overflow:hidden;}
+  html,body{background:var(--bg);color:var(--text);font-family:'Josefin Sans',sans-serif;font-weight:300;width:100%;height:100%;overflow:hidden;}
   .wrap{width:100vw;height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:4vh 4vw;position:relative;}
-
   .brand{font-family:'Bebas Neue',sans-serif;font-weight:400;color:var(--text);letter-spacing:0.06em;text-transform:uppercase;font-size:2.6vw;position:absolute;top:4vh;left:0;right:0;}
   .venue-name{font-size:1.1vw;letter-spacing:0.35em;text-transform:uppercase;color:var(--text3);position:absolute;top:4vh;left:0;right:0;margin-top:3.2vw;}
-
-  .theme-art{width:34vw;max-width:520px;height:34vw;max-height:520px;border-radius:0;object-fit:cover;border:1px solid var(--border);margin-bottom:3vh;box-shadow:0 0 60px rgba(201,169,110,0.08);}
+  .theme-art{width:34vw;max-width:520px;height:34vw;max-height:520px;border-radius:18px;object-fit:cover;border:1px solid var(--border);margin-bottom:3vh;box-shadow:0 0 60px rgba(201,169,110,0.08);}
   .theme-title{font-family:'Cormorant Garamond',serif;font-size:4vw;color:var(--text);margin-bottom:0.6vh;line-height:1.1;}
   .segment-tag{font-size:1.1vw;letter-spacing:0.4em;text-transform:uppercase;color:var(--gold);margin-bottom:2vh;}
-
-  .qr-box{background:#fff;padding:1.2vw;border-radius:0;margin:1.5vh 0;}
+  .qr-box{background:#fff;padding:1.2vw;border-radius:14px;margin:1.5vh 0;}
   .qr-box canvas,.qr-box img{display:block;width:16vw;height:16vw;max-width:260px;max-height:260px;}
   .scan-label{font-size:1vw;letter-spacing:0.2em;text-transform:uppercase;color:var(--text2);margin-top:1.5vh;}
-
   .ambient-ornament{color:#3a3428;font-family:'Cormorant Garamond',serif;font-size:2vw;letter-spacing:0.5em;margin-top:2vh;}
   .ambient-sub{font-size:1.2vw;letter-spacing:0.25em;text-transform:uppercase;color:var(--text3);margin-top:1vh;}
-
+  :root{--gold2:#e0bc7e;--border-gold:rgba(201,169,110,0.4);--text4:#4a4638;--gold-dim:rgba(201,169,110,0.12);--surface2:#141414;--border2:rgba(201,169,110,0.4);}
+  /* additions */
   .submit-btn:hover,.confirm-btn:hover,.seg-btn:hover{background:rgba(201,169,110,0.2);color:var(--text);}
   .submit-btn:disabled,.confirm-btn:disabled{opacity:0.5;cursor:not-allowed;}
 </style>
