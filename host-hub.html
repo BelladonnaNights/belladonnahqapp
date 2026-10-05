@@ -29,10 +29,9 @@
   .wotd-sub{font-size:0.6rem;letter-spacing:0.15em;color:var(--text3);margin-top:0.35rem;text-transform:uppercase;}
 
   /* ── BRAND ── */
-  /* Wordmark — white BELLADONNA over gold page name, same as the Trivia header */
-  .hub-brand{font-family:'Bebas Neue',sans-serif;font-size:2.8rem;font-weight:400;color:#fff;letter-spacing:0.06em;line-height:1;text-transform:uppercase;}
-    .hub-sub{font-family:'Bebas Neue',sans-serif;font-size:1.9rem;font-weight:400;letter-spacing:0.1em;line-height:1.05;text-transform:uppercase;margin-top:0.1rem;background:linear-gradient(180deg,var(--gold2),var(--gold));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:var(--gold);}
-  .hub-ornament{display:none;}
+  .hub-brand{font-family:'Bebas Neue',sans-serif;font-size:2.4rem;font-weight:400;color:var(--text);letter-spacing:0.06em;text-transform:uppercase;}
+  .hub-sub{font-size:0.73rem;letter-spacing:0.5em;text-transform:uppercase;color:var(--text3);margin-top:0.2rem;}
+  .hub-ornament{color:#3a3428;font-family:'Cormorant Garamond',serif;font-size:1.17rem;letter-spacing:0.4em;margin:0.8rem 0 2rem;}
 
   /* ── SECTIONS ── */
   .hub-section-label{font-size:0.68rem;letter-spacing:0.38em;text-transform:uppercase;color:var(--text3);margin-bottom:0.7rem;text-align:left;}
@@ -46,43 +45,20 @@
 
   .submit-btn:hover,.confirm-btn:hover,.seg-btn:hover{background:rgba(201,169,110,0.2);color:var(--text);}
   .submit-btn:disabled,.confirm-btn:disabled{opacity:0.5;cursor:not-allowed;}
-
-  /* Top-of-page logo (swappable with the Word of the Day box from Admin) */
-  .hub-logo{display:block;width:170px;max-width:60%;height:auto;margin:0 auto 1.4rem;opacity:0.95;}
-  .hub-head{margin-bottom:2rem;}
-  /* Tiny admin */
-  .admin-link{display:block;margin:1.4rem auto 0;background:none;border:none;color:var(--text4);font-family:'DM Sans',sans-serif;font-size:0.58rem;letter-spacing:0.25em;text-transform:uppercase;cursor:pointer;}
-  .admin-link:hover{color:var(--text3);}
-  .admin-panel{display:none;margin-top:0.8rem;background:var(--surface);border:1px solid var(--border);padding:1rem;text-align:left;}
-  .admin-panel.open{display:block;}
-  .admin-title{font-size:0.62rem;letter-spacing:0.3em;text-transform:uppercase;color:var(--text3);margin-bottom:0.7rem;}
-  .admin-row{display:flex;gap:0.5rem;}
-  .admin-input{flex:1;background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:0.55rem 0.8rem;font-size:0.85rem;font-family:'DM Sans',sans-serif;letter-spacing:0.1em;outline:none;}
-  .admin-input:focus{border-color:var(--gold);}
-  .admin-btn{background:var(--gold-dim);border:1px solid var(--border-gold);color:var(--gold);padding:0.55rem 1rem;font-size:0.62rem;letter-spacing:0.18em;text-transform:uppercase;cursor:pointer;font-family:'DM Sans',sans-serif;}
-  .admin-btn:hover{background:rgba(201,169,110,0.2);color:var(--text);}
-  .admin-btn.on{background:rgba(201,169,110,0.22);border-color:var(--gold);color:var(--text);}
-  .admin-msg{font-size:0.68rem;color:var(--text3);margin-top:0.6rem;line-height:1.5;}
-  .admin-msg.err{color:#d68a91;}
-  .admin-msg.ok{color:var(--live);}
 </style>
 </head>
 <body>
 <div class="page">
 
-  <!-- Top of page: logo OR Word of the Day box. Which one shows is set in the tiny Admin at the bottom. -->
-  <img src="logo.png" alt="Belladonna" class="hub-logo" id="topLogo" onerror="this.style.display='none'">
-
-  <div class="wotd-block" id="wotdBlock" style="display:none;">
+  <div class="wotd-block">
     <div class="wotd-label">Word of the Day</div>
     <div class="wotd-word" id="wotdWord">—</div>
     <div class="wotd-sub" id="wotdSub"></div>
   </div>
 
-  <div class="hub-head">
-    <div class="hub-brand">Belladonna</div>
-    <div class="hub-sub">Host Hub</div>
-  </div>
+  <div class="hub-brand">Belladonna</div>
+  <div class="hub-sub">Host Hub</div>
+  <div class="hub-ornament">✦ ✦ ✦</div>
 
   <div class="hub-section-label">Your Shift</div>
   <div class="hub-links">
@@ -127,29 +103,8 @@
   </div>
 
   <div class="hub-footer">Belladonna Audio Alchemies ✦ Host Hub</div>
-
-  <button class="admin-link" onclick="toggleAdmin()">Admin</button>
-  <div class="admin-panel" id="adminPanel">
-    <div id="adminLock">
-      <div class="admin-title">Admin</div>
-      <div class="admin-row">
-        <input type="password" class="admin-input" id="adminPw" placeholder="Password" autocomplete="off" onkeydown="if(event.key==='Enter')adminUnlock()">
-        <button class="admin-btn" onclick="adminUnlock()">Unlock</button>
-      </div>
-    </div>
-    <div id="adminBody" style="display:none;">
-      <div class="admin-title">Top of the page shows</div>
-      <div class="admin-row">
-        <button class="admin-btn" id="optLogo" onclick="setTopMode('logo')">Logo</button>
-        <button class="admin-btn" id="optWotd" onclick="setTopMode('wotd')">Word of the Day</button>
-      </div>
-    </div>
-    <div class="admin-msg" id="adminMsg"></div>
-  </div>
 </div>
 
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 <script>
   const SHEETS_KEY    = 'AIzaSyACMjXQCXjVo75hbMXtag_JctR4SoX70So';
   const WOTD_SHEET_ID = '1HeSQXaLhwvmvhm_Z4SE_CFrFXoNT4Umd0Dtg-kqXWto';
@@ -183,59 +138,7 @@
     }
   }
 
-  // ── TOP OF PAGE: LOGO <-> WORD OF THE DAY ──────────────────────────────
-  // The choice lives in Firestore (hq_data/host-hub-settings) so every host's
-  // phone sees the same thing; localStorage is just a fast first paint and a
-  // fallback if Firestore can't be reached. The Word of the Day box and its
-  // code are all still here — this only decides which one is visible.
-  let hubDb=null;
-  try{
-    firebase.initializeApp({apiKey:"AIzaSyCIfAE1JGHsUGzzVH2pz1Vyj5b5OhA0tDQ",authDomain:"belladonna-hq.firebaseapp.com",projectId:"belladonna-hq",storageBucket:"belladonna-hq.firebasestorage.app",messagingSenderId:"1021873183587",appId:"1:1021873183587:web:def283bb7b5ca48e4f9156"});
-    hubDb=firebase.firestore();
-  }catch(e){}
-  const ADMIN_PW='1111';
-  let topMode='logo', wotdLoaded=false;
-  function applyTopMode(m){
-    topMode=(m==='wotd')?'wotd':'logo';
-    document.getElementById('topLogo').style.display=topMode==='logo'?'':'none';
-    document.getElementById('wotdBlock').style.display=topMode==='wotd'?'':'none';
-    if(topMode==='wotd'&&!wotdLoaded){wotdLoaded=true;renderWOTD();}
-    document.getElementById('optLogo').classList.toggle('on',topMode==='logo');
-    document.getElementById('optWotd').classList.toggle('on',topMode==='wotd');
-  }
-  function adminMsg(t,cls){const el=document.getElementById('adminMsg');el.textContent=t||'';el.className='admin-msg'+(cls?' '+cls:'');}
-  function toggleAdmin(){document.getElementById('adminPanel').classList.toggle('open');}
-  function adminUnlock(){
-    if(document.getElementById('adminPw').value===ADMIN_PW){
-      document.getElementById('adminLock').style.display='none';
-      document.getElementById('adminBody').style.display='block';
-      adminMsg('');
-    }else{adminMsg('Wrong password.','err');}
-  }
-  async function setTopMode(m){
-    applyTopMode(m);
-    try{localStorage.setItem('hostHubTopMode',topMode);}catch(e){}
-    if(!hubDb){adminMsg('Saved on this device only (could not reach the database).','err');return;}
-    try{
-      await hubDb.collection('hq_data').doc('host-hub-settings').set({topMode:topMode,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
-      adminMsg('Saved — every host will see this.','ok');
-    }catch(e){
-      adminMsg('Changed on this device only. The database refused the save, so other devices will not see it until the rule below is added.','err');
-    }
-  }
-  (function initTopMode(){
-    let cached='logo';
-    try{cached=localStorage.getItem('hostHubTopMode')||'logo';}catch(e){}
-    applyTopMode(cached);
-    if(hubDb){
-      hubDb.collection('hq_data').doc('host-hub-settings').get().then(snap=>{
-        if(snap.exists&&snap.data().topMode){
-          applyTopMode(snap.data().topMode);
-          try{localStorage.setItem('hostHubTopMode',topMode);}catch(e){}
-        }
-      }).catch(()=>{});
-    }
-  })();
+  renderWOTD();
 </script>
 </body>
 </html>
