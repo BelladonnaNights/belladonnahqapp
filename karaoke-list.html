@@ -5,35 +5,43 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Karaoke Song List — Belladonna</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Josefin+Sans:wght@200;300;400&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=DM+Sans:wght@300;400;500;600;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400&family=Cinzel:wght@400;600;700&display=swap');
   *{margin:0;padding:0;box-sizing:border-box;}
   :root{
-    --bg:#000000;--surface:#0d0d0d;--surface2:#141414;
-    --border:rgba(201,169,110,0.2);--border2:rgba(201,169,110,0.4);
-    --gold:#c9a96e;--text:#f0ece0;--text2:#b0a890;--text3:#8a8272;
+    /* Belladonna HQ palette — shared across every app */
+    --bg:#000000;--surface:#0d0d0d;--surface2:#141414;--surface3:#1a1a1a;--surface4:#212121;
+    --border:rgba(180,150,100,0.16);--border2:rgba(180,150,100,0.34);--border-gold:rgba(201,169,110,0.4);
+    --gold:#c9a96e;--gold2:#e0bc7e;--gold-dim:rgba(201,169,110,0.12);
+    --purple:#a68a5c;--purple2:#8f7550;--purple3:#5c4b32;--purple-dim:rgba(180,150,100,0.1);
+    --rose:#b0505a;--rose2:#b0505a;--teal:#5a8a78;--teal2:#5a8a78;--live:#3a9a5a;--live-dim:rgba(58,154,90,0.12);
+    --text:#f0ece0;--text2:#b8ad98;--text3:#8a8272;--text4:#4a4638;
+    --purple-btn:#c9a96e;
   }
-  body{background:var(--bg);color:var(--text);font-family:'Josefin Sans',sans-serif;font-weight:300;min-height:100vh;letter-spacing:0.04em;}
+  body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-weight:300;min-height:100vh;letter-spacing:0.04em;}
   .page{max-width:520px;margin:0 auto;padding:2.4rem 1.3rem 3rem;}
-  .hub-brand{font-family:'Playfair Display',serif;font-size:1.7rem;font-weight:700;color:var(--gold);letter-spacing:0.18em;text-transform:uppercase;text-align:center;}
+  .hub-brand{font-family:'Bebas Neue',sans-serif;font-size:1.7rem;font-weight:400;color:var(--text);letter-spacing:0.06em;text-transform:uppercase;text-align:center;}
   .hub-sub{font-size:0.68rem;letter-spacing:0.45em;text-transform:uppercase;color:var(--text3);margin-top:0.2rem;text-align:center;}
   .hub-ornament{color:#3a3428;font-family:'Cormorant Garamond',serif;font-size:1.05rem;letter-spacing:0.4em;margin:0.7rem 0 1.5rem;text-align:center;}
 
-  .theme-title{font-family:'Playfair Display',serif;font-size:1.7rem;color:var(--text);text-align:center;margin-bottom:0.2rem;}
+  .theme-title{font-family:'Cormorant Garamond',serif;font-size:1.7rem;color:var(--text);text-align:center;margin-bottom:0.2rem;}
   .theme-sub{font-size:0.68rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--text3);text-align:center;margin-bottom:1.6rem;}
 
   .search-wrap{margin-bottom:1.2rem;}
-  input#songSearch{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'Josefin Sans',sans-serif;font-size:0.9rem;padding:0.7rem 0.9rem;letter-spacing:0.03em;}
+  input#songSearch{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:0;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.9rem;padding:0.7rem 0.9rem;letter-spacing:0.03em;}
   input#songSearch:focus{outline:none;border-color:var(--border2);}
   input#songSearch::placeholder{color:var(--text3);}
 
   .song-count{font-size:0.65rem;letter-spacing:0.1em;color:var(--text3);text-align:center;margin-bottom:1rem;text-transform:uppercase;}
 
   .song-list{display:flex;flex-direction:column;gap:0.5rem;}
-  .song-row{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:0.7rem 1rem;display:flex;justify-content:space-between;align-items:baseline;gap:0.8rem;}
+  .song-row{background:var(--surface);border:1px solid var(--border);border-radius:0;padding:0.7rem 1rem;display:flex;justify-content:space-between;align-items:baseline;gap:0.8rem;}
   .song-title{color:var(--text);font-size:0.9rem;}
   .song-artist{color:var(--text3);font-size:0.74rem;text-align:right;white-space:nowrap;flex-shrink:0;}
 
   .loading,.msg-empty{text-align:center;color:var(--text3);font-size:0.78rem;letter-spacing:0.1em;padding:3rem 0;}
+
+  .submit-btn:hover,.confirm-btn:hover,.seg-btn:hover{background:rgba(201,169,110,0.2);color:var(--text);}
+  .submit-btn:disabled,.confirm-btn:disabled{opacity:0.5;cursor:not-allowed;}
 </style>
 </head>
 <body>
