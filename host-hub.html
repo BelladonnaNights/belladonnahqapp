@@ -5,43 +5,46 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Belladonna Host Hub</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Josefin+Sans:wght@200;300;400&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=DM+Sans:wght@300;400;500;600;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400&family=Cinzel:wght@400;600;700&display=swap');
   *{margin:0;padding:0;box-sizing:border-box;}
   :root{
-    --bg:#000000;--surface:#0d0d0d;--surface2:#141414;--surface3:#1a1a1a;
-    --border:rgba(201,169,110,0.2);--border2:rgba(201,169,110,0.4);
-    --gold:#c9a96e;--rose2:#b0505a;--teal2:#3aa08a;--purple2:#a68a5c;
-    --text:#f0ece0;--text2:#b0a890;--text3:#8a8272;
-    --live:#3aaa6a;--live-dim:rgba(58,170,106,0.12);
+    /* Belladonna HQ palette — shared across every app */
+    --bg:#000000;--surface:#0d0d0d;--surface2:#141414;--surface3:#1a1a1a;--surface4:#212121;
+    --border:rgba(180,150,100,0.16);--border2:rgba(180,150,100,0.34);--border-gold:rgba(201,169,110,0.4);
+    --gold:#c9a96e;--gold2:#e0bc7e;--gold-dim:rgba(201,169,110,0.12);
+    --purple:#a68a5c;--purple2:#8f7550;--purple3:#5c4b32;--purple-dim:rgba(180,150,100,0.1);
+    --rose:#b0505a;--rose2:#b0505a;--teal:#5a8a78;--teal2:#5a8a78;--live:#3a9a5a;--live-dim:rgba(58,154,90,0.12);
+    --text:#f0ece0;--text2:#b8ad98;--text3:#8a8272;--text4:#4a4638;
     --purple-btn:#c9a96e;
   }
-  body{background:var(--bg);color:var(--text);font-family:'Josefin Sans',sans-serif;font-weight:300;min-height:100vh;letter-spacing:0.04em;overflow-x:hidden;}
+  body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-weight:300;min-height:100vh;letter-spacing:0.04em;overflow-x:hidden;}
 
   /* ── PAGE WRAPPER ── */
   .page{max-width:400px;margin:0 auto;padding:3rem 1.5rem 2.5rem;text-align:center;}
 
   /* ── WOTD ── */
-  .wotd-block{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1.1rem 1.4rem;margin-bottom:1.8rem;position:relative;overflow:hidden;text-align:center;}
-  .wotd-block::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);}
-  .wotd-label{font-size:0.52rem;letter-spacing:0.4em;text-transform:uppercase;color:var(--text3);margin-bottom:0.4rem;}
-  .wotd-word{font-family:'Playfair Display',serif;font-size:2.8rem;font-weight:700;color:var(--gold);letter-spacing:0.18em;line-height:1;}
+  .wotd-block{background:var(--surface);border:1px solid var(--border);border-radius:0;padding:1.1rem 1.4rem;margin-bottom:1.8rem;position:relative;overflow:hidden;text-align:center;}
+.wotd-label{font-size:0.52rem;letter-spacing:0.4em;text-transform:uppercase;color:var(--text3);margin-bottom:0.4rem;}
+  .wotd-word{font-family:'Cormorant Garamond',serif;font-size:2.8rem;font-weight:300;color:var(--gold);letter-spacing:0.18em;line-height:1;}
   .wotd-sub{font-size:0.6rem;letter-spacing:0.15em;color:var(--text3);margin-top:0.35rem;text-transform:uppercase;}
 
   /* ── BRAND ── */
-  .hub-brand{font-family:'Playfair Display',serif;font-size:2.4rem;font-weight:700;color:var(--gold);letter-spacing:0.2em;text-transform:uppercase;}
+  .hub-brand{font-family:'Bebas Neue',sans-serif;font-size:2.4rem;font-weight:400;color:var(--text);letter-spacing:0.06em;text-transform:uppercase;}
   .hub-sub{font-size:0.73rem;letter-spacing:0.5em;text-transform:uppercase;color:var(--text3);margin-top:0.2rem;}
   .hub-ornament{color:#3a3428;font-family:'Cormorant Garamond',serif;font-size:1.17rem;letter-spacing:0.4em;margin:0.8rem 0 2rem;}
 
   /* ── SECTIONS ── */
   .hub-section-label{font-size:0.68rem;letter-spacing:0.38em;text-transform:uppercase;color:var(--text3);margin-bottom:0.7rem;text-align:left;}
   .hub-links{display:flex;flex-direction:column;gap:0.6rem;margin-bottom:1.5rem;}
-  .hub-card{display:block;background:var(--surface);border:1px solid rgba(201,169,110,0.22);border-radius:11px;padding:1rem 1.2rem;text-decoration:none;transition:all 0.22s;position:relative;overflow:hidden;text-align:left;}
-  .hub-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);}
-  .hub-card:hover{border-color:rgba(201,169,110,0.45);transform:translateY(-2px);}
+  .hub-card{display:block;background:var(--surface);border:1px solid var(--border);border-radius:0;padding:1rem 1.2rem;text-decoration:none;transition:all 0.22s;position:relative;overflow:hidden;text-align:left;}
+.hub-card:hover{border-color:rgba(201,169,110,0.45);transform:translateY(-2px);}
   .hub-card-inner{display:flex;align-items:center;justify-content:space-between;}
   .hub-card-title{font-size:0.88rem;letter-spacing:0.16em;text-transform:uppercase;color:var(--gold);margin-bottom:0.15rem;}
   .hub-card-desc{font-size:1.01rem;color:var(--text3);line-height:1.4;}
   .hub-footer{font-size:0.68rem;letter-spacing:0.18em;color:var(--text3);margin-top:1.5rem;text-transform:uppercase;}
+
+  .submit-btn:hover,.confirm-btn:hover,.seg-btn:hover{background:rgba(201,169,110,0.2);color:var(--text);}
+  .submit-btn:disabled,.confirm-btn:disabled{opacity:0.5;cursor:not-allowed;}
 </style>
 </head>
 <body>
