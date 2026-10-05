@@ -2117,16 +2117,31 @@ function confirmImportShifts(btn){
 // has no assigned-host concept at the schedule level, so those entries show
 // as Unassigned until a host actually starts a live session).
 const PLANNER_DAY_MAP={Sun:0,Mon:1,Tue:2,Wed:3,Thu:4,Fri:5,Sat:6};
-let plannerVenues=null,plannerGigs=null,plannerKaraokeVenues=null,plannerKaraokeGigs=null,bingoVenuesMap=null,bingoScheduleList=null,bingoCategoriesMap=null,dashboardItemsFlat=[];
+let plannerVenues=null,plannerGigs=null,plannerKaraokeVenues=null,plannerKaraokeGigs=null,plannerEventVenues=null,plannerEventGigs=null,bingoVenuesMap=null,bingoScheduleList=null,bingoCategoriesMap=null,dashboardItemsFlat=[];
 let dashboardKindFilter='all';
 let _plannerListening=false,_pendingPlannerPushes=[],_venueCreates={};
-function plannerReady(){return plannerVenues&&plannerGigs&&plannerKaraokeVenues&&plannerKaraokeGigs&&bingoVenuesMap&&bingoScheduleList;}
+function plannerReady(){return plannerVenues&&plannerGigs&&plannerKaraokeVenues&&plannerKaraokeGigs&&plannerEventVenues&&plannerEventGigs&&bingoVenuesMap&&bingoScheduleList;}
 function flushPlannerPushes(){
   if(!plannerReady()||!_pendingPlannerPushes.length)return;
   const q=_pendingPlannerPushes;_pendingPlannerPushes=[];
   q.forEach(a=>pushGigToExternalPlanner(a[0],a[1]));
 }
-function plannerRefresh(){renderDashboardWeek();renderGigCalendar();flushPlannerPushes();}
+const _autoPushed=new Set();
+// Anything scheduled here that the Planner doesn't have yet gets pushed over automatically
+// (once per gig per session) — no button needed.
+function autoSyncMissingToPlanner(){
+  if(!plannerReady()||!gigSchedule.length)return;
+  const today=dateToKey(new Date());
+  gigSchedule.filter(g=>g.date>=today&&g.status!=='cancelled'&&!_autoPushed.has(g.id)&&!plannerSyncProblem(g)).forEach(g=>{
+    const dow=new Date(g.date+'T12:00:00').getDay();
+    let has=false;
+    if(g.kind==='Bingo')has=(bingoScheduleList||[]).some(e=>e.date===g.date&&bingoVenuesMap&&bingoVenuesMap[e.venueId]&&normVenueName(bingoVenuesMap[e.venueId].name)===normVenueName(g.venue));
+    else{const pv=findPlannerVenue(g.kind,g.venue,dow);const gg=plannerGigsFor(g.kind)||{};has=!!(pv&&gg[pv.id]&&gg[pv.id][g.date]);}
+    _autoPushed.add(g.id);
+    if(!has)pushGigToExternalPlanner(g,false);
+  });
+}
+function plannerRefresh(){renderDashboardWeek();renderGigCalendar();try{renderVenueManage();}catch(e){}flushPlannerPushes();autoSyncMissingToPlanner();reconcileGigsFromPlanner();}
 // Live listeners (not one-shot reads) so a host changed in the Planner shows up
 // here immediately, and vice-versa — one source of truth, two windows onto it.
 function loadPlannerData(){
@@ -2137,6 +2152,8 @@ function loadPlannerData(){
   L('trivia/planner/gigs',v=>{plannerGigs=v||{};},{});
   L('trivia/planner/karaokeVenues',v=>{plannerKaraokeVenues=v||{};},{});
   L('trivia/planner/karaokeGigs',v=>{plannerKaraokeGigs=v||{};},{});
+  L('trivia/planner/eventVenues',v=>{plannerEventVenues=v||{};},{});
+  L('trivia/planner/eventGigs',v=>{plannerEventGigs=v||{};},{});
   L('bingo/landing/venues',v=>{bingoVenuesMap=v||{};},{});
   L('bingo/landing/schedule',v=>{bingoScheduleList=Object.values(v||{});},[]);
   L('bingo/landing/categories',v=>{bingoCategoriesMap=v||{};},{});
@@ -2160,7 +2177,7 @@ function getExternalGigsForDate(dk,dow){
   // an entry right here in gigSchedule too — skip it as "external" so it doesn't
   // render twice on the calendar.
   const hqVenuesForDate=new Set(gigSchedule.filter(g=>g.date===dk).map(g=>normVenueName(g.venue)));
-  [['Trivia',plannerVenues,plannerGigs,'Trivia Planner'],['Karaoke',plannerKaraokeVenues,plannerKaraokeGigs,'Karaoke Planner']].forEach(([kind,pv,pg,src])=>{
+  [['Trivia',plannerVenues,plannerGigs,'Trivia Planner'],['Karaoke',plannerKaraokeVenues,plannerKaraokeGigs,'Karaoke Planner'],['Events',plannerEventVenues,plannerEventGigs,'Events Planner']].forEach(([kindKey,pv,pg,src])=>{
     if(!pv)return;
     Object.entries(pv).forEach(([id,v])=>{
       if(hqVenuesForDate.has(normVenueName(v.name)))return;
@@ -2170,7 +2187,8 @@ function getExternalGigsForDate(dk,dow){
       const recurs=(v.status==='active'||v.status==='seasonal')&&PLANNER_DAY_MAP[v.day]===dow;
       if(!hasExplicitRecord&&!recurs)return;
       const cancelled=!!(override&&override.status==='cancelled');
-      out.push({venue:v.name,host:(override&&override.host)||v.host||'Unassigned',regularHost:v.host||'',time:v.time||'',dk,kindKey:kind,pVenueId:id,kind,cancelled,source:src,notes:override&&override.themeName?override.themeName:(override&&override.note?override.note:'')});
+      const kind=kindKey==='Events'?((override&&override.eventKind)||v.eventKind||'Events'):kindKey;
+      out.push({venue:v.name,host:(override&&override.host)||v.host||'Unassigned',regularHost:v.host||'',time:v.time||'',dk,kindKey,pVenueId:id,kind,cancelled,source:src,notes:override&&override.themeName?override.themeName:(override&&override.note?override.note:'')});
     });
   });
   out.push(...fetchBingoGigsForDate(dk,dow).filter(it=>!hqVenuesForDate.has(normVenueName(it.venue))));
@@ -2179,7 +2197,10 @@ function getExternalGigsForDate(dk,dow){
 function getDashboardGigsForDate(dk,dow){
   const out=[];
   gigSchedule.filter(g=>g.date===dk).forEach(g=>{
-    out.push({venue:g.venue,host:g.host||'Unassigned',regularHost:regularHostForGig(g),time:gigTimeFor(g),dk,hqGigId:g.id,kind:g.kind||'Gig',cancelled:g.status==='cancelled'||gigCheckoutCancelled(g),source:'HQ Schedule',notes:g.notes||''});
+    // The Planner's record for this night is part of the same gig — its theme, host and
+    // cancel state show here too, so the two never disagree on screen.
+    const rec=plannerRecordForGig(g);
+    out.push({venue:g.venue,host:(rec&&rec.host)||g.host||'Unassigned',regularHost:regularHostForGig(g),time:gigTimeFor(g),dk,hqGigId:g.id,kind:g.kind||'Gig',cancelled:g.status==='cancelled'||(rec&&rec.status==='cancelled')||gigCheckoutCancelled(g),source:'HQ Schedule',notes:(rec&&rec.themeName)||g.notes||''});
   });
   out.push(...getExternalGigsForDate(dk,dow));
   if(dashboardKindFilter!=='all'&&dashboardKindFilter!=='hosts')return out.filter(it=>(it.kind||'').toLowerCase()===dashboardKindFilter);
@@ -2255,8 +2276,7 @@ function renderDashboardWeek(){
         return `<div class="daybox-item${it.cancelled?' cancelled':''}" onclick="showDashGigDetail(${idx})">
           <span class="daybox-kind-tag">${esc(it.kind)}</span>${it.time?` <span style="font-size:9px;color:var(--text3)">${esc(fmtGigTime(it.time))}</span>`:''}${it.cancelled?' <span style="font-size:9px">· CANCELLED</span>':''}<br>${esc(it.venue)}
           ${it.notes?`<div class="dash-theme">${esc(it.notes)}</div>`:''}
-          <div class="dash-host-line${fill?' fill':''}">${esc(it.host&&it.host!=='Unassigned'?it.host:'Unassigned')}</div>
-          ${fill?`<div class="dash-fillnote">fill-in for ${esc(it.regularHost)}</div>`:''}
+          ${fill?`<div class="dash-host-line" style="text-decoration:line-through;color:var(--text3)">${esc(it.regularHost)}</div><div class="dash-host-line fill" style="margin-left:12px">${esc(it.host)}</div>`:`<div class="dash-host-line">${esc(it.host&&it.host!=='Unassigned'?it.host:'Unassigned')}</div>`}
         </div>`;
       }).join('');
     }
@@ -2291,18 +2311,21 @@ function showDashGigDetail(idx,fromSchedule){
 //  • HQ-made gigs carry `host` on the gig itself; a repeating series changes together.
 // Every place that shows a host (this-week dashboard, calendar detail, Venues, Host
 // Roster) goes through the functions below, so they all stay in step.
+function plannerKindKey(kind){const k=(kind||'').toLowerCase();return k==='trivia'?'Trivia':k==='karaoke'?'Karaoke':k==='bingo'?'Bingo':(k==='events'||k==='private events')?'Events':null;}
 const PLANNER_KIND_PATHS={
+  Events:{v:'trivia/planner/eventVenues',g:'trivia/planner/eventGigs'},
   Trivia:{v:'trivia/planner/venues',g:'trivia/planner/gigs'},
   Karaoke:{v:'trivia/planner/karaokeVenues',g:'trivia/planner/karaokeGigs'},
   Bingo:{v:'bingo/landing/venues',g:'bingo/landing/schedule'}
 };
-function plannerVenuesFor(kind){return kind==='Trivia'?plannerVenues:kind==='Karaoke'?plannerKaraokeVenues:kind==='Bingo'?bingoVenuesMap:null;}
-function plannerGigsFor(kind){return kind==='Trivia'?plannerGigs:kind==='Karaoke'?plannerKaraokeGigs:null;}
+function plannerVenuesFor(kind){const k=plannerKindKey(kind);return k==='Trivia'?plannerVenues:k==='Karaoke'?plannerKaraokeVenues:k==='Bingo'?bingoVenuesMap:k==='Events'?plannerEventVenues:null;}
+function plannerGigsFor(kind){const k=plannerKindKey(kind);return k==='Trivia'?plannerGigs:k==='Karaoke'?plannerKaraokeGigs:k==='Events'?plannerEventGigs:null;}
 function findPlannerVenue(kind,name,dow){
   const pv=plannerVenuesFor(kind);if(!pv)return null;
   const hits=Object.entries(pv).filter(([id,v])=>normVenueName(v.name)===normVenueName(name));
   if(!hits.length)return null;
-  const byDay=hits.find(([id,v])=>dow==null||PLANNER_DAY_MAP[v.day]===dow);
+  const evt=plannerKindKey(kind)==='Events';
+  const byDay=evt?hits[0]:hits.find(([id,v])=>dow==null||PLANNER_DAY_MAP[v.day]===dow);
   const pick=byDay||hits[0];
   return {id:pick[0],v:pick[1]};
 }
@@ -2330,6 +2353,49 @@ function regularHostForGig(g){
   }
   const vo=venues.find(x=>normVenueName(x.name)===normVenueName(g.venue));
   return (vo&&vo.host)||'';
+}
+function plannerRecordForGig(g){
+  const key=plannerKindKey(g.kind);if(!key||!plannerReady())return null;
+  if(key==='Bingo'){
+    const bv=Object.entries(bingoVenuesMap||{}).find(([id,v])=>normVenueName(v.name)===normVenueName(g.venue));if(!bv)return null;
+    const e=(bingoScheduleList||[]).find(x=>x.venueId===bv[0]&&x.date===g.date);if(!e)return null;
+    return {host:e.host||null,status:'planned',themeName:'',note:e.notes||''};
+  }
+  const pv=findPlannerVenue(g.kind,g.venue,new Date(g.date+'T12:00:00').getDay());if(!pv)return null;
+  const gg=plannerGigsFor(g.kind)||{};
+  return (gg[pv.id]&&gg[pv.id][g.date])||null;
+}
+const _gigLastLoc={},_gigTouched={},_carryRec={};
+function noteGigLoc(g){_gigLastLoc[g.id]={kind:g.kind||'',venue:g.venue||'',date:g.date||''};}
+// Planner → HQ: a cancel or host change made in the Planner is written back onto the HQ gig.
+function reconcileGigsFromPlanner(){
+  if(!plannerReady()||!gigSchedule.length)return;
+  const today=dateToKey(new Date()),now=Date.now();
+  gigSchedule.filter(g=>g.date>=today&&plannerKindKey(g.kind)&&now-(_gigTouched[g.id]||0)>20000).forEach(g=>{
+    const rec=plannerRecordForGig(g);if(!rec)return;
+    let changed=false;
+    if(rec.status==='cancelled'&&!rec.cancelledByHQ&&g.status!=='cancelled'){g.status='cancelled';changed=true;}
+    if(rec.host&&rec.host!=='Unassigned'&&rec.host!==g.host){g.host=rec.host;changed=true;}
+    if(changed)persistGig(g,false);
+  });
+}
+// A gig edited in HQ to a new date / venue / type: take the night off its old Planner slot
+// (carrying any theme already set there along with it) before the new one is written.
+async function relocatePlannerGig(old,entry){
+  if(!plannerReady())return;
+  const key=plannerKindKey(old.kind);if(!key)return;
+  const paths=PLANNER_KIND_PATHS[key];
+  if(key==='Bingo'){
+    const bv=Object.entries(bingoVenuesMap||{}).find(([id,v])=>normVenueName(v.name)===normVenueName(old.venue));if(!bv)return;
+    const ex=(bingoScheduleList||[]).find(e=>e.venueId===bv[0]&&e.date===old.date);
+    if(ex){_carryRec[entry.id]=ex;await rtdb.ref(paths.g+'/'+ex.id).remove();}
+    return;
+  }
+  const pv=findPlannerVenue(old.kind,old.venue,new Date(old.date+'T12:00:00').getDay());if(!pv)return;
+  const path=paths.g+'/'+pv.id+'/'+old.date;
+  const snap=await rtdb.ref(path).once('value');const rec=snap.val();if(!rec)return;
+  _carryRec[entry.id]=rec;
+  await rtdb.ref(path).remove();
 }
 function canMakePermanent(it){
   if(it.hqGigId){const g=gigSchedule.find(x=>x.id===it.hqGigId);return !!(g&&(g.seriesId||findPlannerVenue(g.kind,g.venue,new Date(g.date+'T12:00:00').getDay())));}
@@ -2471,17 +2537,22 @@ async function removeRegularNight(kind,id){
 const MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
 let gigSchedule=[],editingGigId=null,pendingGigDate=null,selectedGigVenue='',selectedGigHost='Unassigned',selectedGigKind='';
 function loadGigSchedule(){
-  try{const g=LS.get('gig-schedule');if(g)gigSchedule=JSON.parse(g);}catch(e){}
-  if(db){db.collection('gig_schedule').get().then(snap=>{if(!snap.empty){gigSchedule=snap.docs.map(d=>({id:d.id,...d.data()})).filter(g=>locationScopeMatches(g.locationId));renderScheduleAll();renderDashboardWeek();scheduleTipScheduleSync();}}).catch(()=>{});}
+  try{const g=LS.get('gig-schedule');if(g){gigSchedule=JSON.parse(g);gigSchedule.forEach(noteGigLoc);}}catch(e){}
+  if(db){db.collection('gig_schedule').get().then(snap=>{if(!snap.empty){gigSchedule=snap.docs.map(d=>({id:d.id,...d.data()})).filter(g=>locationScopeMatches(g.locationId));gigSchedule.forEach(noteGigLoc);renderScheduleAll();renderDashboardWeek();scheduleTipScheduleSync();autoSyncMissingToPlanner();}}).catch(()=>{});}
 }
 function saveGigScheduleLocal(){LS.set('gig-schedule',JSON.stringify(gigSchedule));}
 function persistGig(entry,isDelete){
+  _gigTouched[entry.id]=Date.now();
+  const oldLoc=_gigLastLoc[entry.id];
   saveGigScheduleLocal();
   scheduleTipScheduleSync();
   if(db){try{if(isDelete)db.collection('gig_schedule').doc(entry.id).delete();else db.collection('gig_schedule').doc(entry.id).set({date:entry.date,time:entry.time||'',endTime:entry.endTime||'',kind:entry.kind||'',venue:entry.venue,host:entry.host||'Unassigned',status:entry.status||'scheduled',notes:entry.notes||'',seriesId:entry.seriesId||null,locationId:entry.locationId||(currentLocationScope!=='ALL'?currentLocationScope:(locations[0]&&locations[0].code)||null)});}catch(e){}}
   // mirror to the Sheet so the Apps Script triggers (no-show + auto sign-out) can read it
   try{fetch(SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({form_type:'schedule',action:isDelete?'delete':'upsert',id:entry.id,date:entry.date,time:entry.time||'',endTime:entry.endTime||'',venue:entry.venue,host:entry.host||'Unassigned',status:entry.status||'scheduled',notes:entry.notes||''})});}catch(e){}
-  pushGigToExternalPlanner(entry,isDelete);
+  const moved=!isDelete&&oldLoc&&(oldLoc.date!==entry.date||normVenueName(oldLoc.venue)!==normVenueName(entry.venue)||plannerKindKey(oldLoc.kind)!==plannerKindKey(entry.kind));
+  if(moved)relocatePlannerGig(oldLoc,entry).catch(()=>{}).then(()=>pushGigToExternalPlanner(entry,false));
+  else pushGigToExternalPlanner(entry,isDelete);
+  if(isDelete)delete _gigLastLoc[entry.id];else noteGigLoc(entry);
 }
 // HQ's gig_schedule (Firestore) and the Trivia Planner / Bingo app (Realtime DB,
 // trivia/planner/* and bingo/landing/*) are two separate systems — this is the
@@ -2492,9 +2563,8 @@ function persistGig(entry,isDelete){
 // in HQ, it just won't appear in that other app.
 function pushGigToExternalPlanner(entry,isDelete){
   if(!rtdb||!entry||!entry.kind||!entry.venue)return;
-  const kindLc=(entry.kind||'').toLowerCase();
-  const kind=kindLc==='trivia'?'Trivia':kindLc==='karaoke'?'Karaoke':kindLc==='bingo'?'Bingo':null;
-  if(!kind)return; // Events / Private Events have no Planner equivalent
+  const kind=plannerKindKey(entry.kind);
+  if(!kind)return;
   // Wait until the Planner data has loaded, then replay — never silently drop a push.
   if(!plannerReady()){_pendingPlannerPushes.push([entry,isDelete]);return;}
   const vName=normVenueName(entry.venue);
@@ -2502,28 +2572,34 @@ function pushGigToExternalPlanner(entry,isDelete){
   const hostForPush=(entry.host&&entry.host!=='Unassigned')?entry.host:null;
   const dow=new Date(entry.date+'T12:00:00').getDay();
   const paths=PLANNER_KIND_PATHS[kind];
-  if(kind==='Trivia'||kind==='Karaoke'){
-    const writeGig=venueId=>{
+  const evExtra=kind==='Events'?{eventKind:entry.kind}:{};
+  if(kind==='Trivia'||kind==='Karaoke'||kind==='Events'){
+    const writeGig=(venueId,venueRec)=>{
       const path=paths.g+'/'+venueId+'/'+entry.date;
+      if(isDelete){
+        // A deleted gig on a regular weekly night = that night is cancelled; a one-off simply disappears.
+        const recurring=venueRec&&(venueRec.status==='active'||venueRec.status==='seasonal')&&PLANNER_DAY_MAP[venueRec.day]===dow&&kind!=='Events';
+        if(recurring)return rtdb.ref(path).set(Object.assign({themeId:null,themeName:null,status:'cancelled',note:entry.notes||'(cancelled from HQ)',host:hostForPush,locationId:entry.locationId||null,cancelledByHQ:true},evExtra)).catch(()=>{});
+        return rtdb.ref(path).remove().catch(()=>{});
+      }
       if(cancelled){
-        return rtdb.ref(path).set({themeId:null,themeName:null,status:'cancelled',note:entry.notes||'(cancelled from HQ)',host:hostForPush,locationId:entry.locationId||null}).catch(()=>{});
+        return rtdb.ref(path).set(Object.assign({themeId:null,themeName:null,status:'cancelled',note:entry.notes||'(cancelled from HQ)',host:hostForPush,locationId:entry.locationId||null,cancelledByHQ:true},evExtra)).catch(()=>{});
       }
       return rtdb.ref(path).once('value').then(snap=>{
-        const existing=snap.val()||{};
-        return rtdb.ref(path).set(Object.assign({},existing,{status:existing.status==='cancelled'?'planned':(existing.status||'planned'),note:entry.notes||existing.note||'',host:hostForPush!=null?hostForPush:(existing.host||null),locationId:existing.locationId||entry.locationId||null,fromHQ:true}));
+        const existing=Object.assign({},_carryRec[entry.id]||{},snap.val()||{});
+        delete _carryRec[entry.id];
+        return rtdb.ref(path).set(Object.assign({},existing,evExtra,{status:existing.status==='cancelled'?'planned':(existing.status||'planned'),note:entry.notes||existing.note||'',host:hostForPush!=null?hostForPush:(existing.host||null),locationId:existing.locationId||entry.locationId||null,cancelledByHQ:null,fromHQ:true}));
       }).catch(()=>{});
     };
-    const match=findPlannerVenue(kind,entry.venue,dow);
-    if(match){writeGig(match.id);return;}
+    const match=findPlannerVenue(entry.kind,entry.venue,dow);
+    if(match){writeGig(match.id,match.v);return;}
     if(cancelled)return;
-    // No Planner venue with this name yet — create one so the gig actually shows up there
-    // (a repeating HQ series becomes a regular weekly night; a one-off stays off the weekly list).
-    const key=kind+'|'+vName+'|'+dow;
+    const key=kind+'|'+vName+'|'+(kind==='Events'?'':dow);
     if(!_venueCreates[key]){
       const id=rtdb.ref(paths.v).push().key;
-      _venueCreates[key]=rtdb.ref(paths.v+'/'+id).set({name:entry.venue,groupName:entry.venue,day:Object.keys(PLANNER_DAY_MAP).find(k=>PLANNER_DAY_MAP[k]===dow)||'',time:entry.time?fmtGigTime(entry.time):'',pay:{amount:null,method:''},status:entry.seriesId?'active':'finished',source:'hq',cadence:'weekly',notes:'Created from HQ',host:entry.seriesId?(hostForPush||''):'',locationId:entry.locationId||null,createdAt:Date.now()}).then(()=>id);
+      _venueCreates[key]=rtdb.ref(paths.v+'/'+id).set(Object.assign({name:entry.venue,groupName:entry.venue,day:Object.keys(PLANNER_DAY_MAP).find(k=>PLANNER_DAY_MAP[k]===dow)||'',time:entry.time?fmtGigTime(entry.time):'',pay:{amount:null,method:''},status:(entry.seriesId&&kind!=='Events')?'active':'finished',source:'hq',cadence:'weekly',notes:'Created from HQ',host:(entry.seriesId&&kind!=='Events')?(hostForPush||''):'',locationId:entry.locationId||null,createdAt:Date.now()},evExtra)).then(()=>id);
     }
-    _venueCreates[key].then(id=>writeGig(id)).catch(()=>{});
+    _venueCreates[key].then(id=>writeGig(id,null)).catch(()=>{});
   }else if(kind==='Bingo'){
     // Bingo venues are the public landing-page venues, so HQ never creates one — it only
     // fills in a date on a venue that already exists there.
@@ -2534,17 +2610,19 @@ function pushGigToExternalPlanner(entry,isDelete){
     if(cancelled){
       if(existing)rtdb.ref(paths.g+'/'+existing.id).remove().catch(()=>{});
     }else{
+      const base=existing||_carryRec[entry.id]||{};
+      delete _carryRec[entry.id];
       const id=existing?existing.id:rtdb.ref(paths.g).push().key;
-      rtdb.ref(paths.g+'/'+id).set(Object.assign({},existing||{},{id,date:entry.date,venueId,notes:entry.notes||(existing&&existing.notes)||'',host:hostForPush!=null?hostForPush:((existing&&existing.host)||null)})).catch(()=>{});
+      rtdb.ref(paths.g+'/'+id).set(Object.assign({},base,{id,date:entry.date,venueId,notes:entry.notes||base.notes||'',host:hostForPush!=null?hostForPush:(base.host||null)})).catch(()=>{});
     }
   }
 }
 // Why (if at all) a gig can't be mirrored into the Planner — used by the Sync report.
 function plannerSyncProblem(g){
-  const k=(g.kind||'').toLowerCase();
-  if(!g.kind)return 'no type set (pick Trivia, Karaoke or Bingo)';
-  if(k!=='trivia'&&k!=='karaoke'&&k!=='bingo')return g.kind+' gigs have no Planner equivalent';
-  if(k==='bingo'&&!Object.values(bingoVenuesMap||{}).some(v=>normVenueName(v.name)===normVenueName(g.venue)))return 'no Bingo venue named "'+g.venue+'" in the Bingo app';
+  const k=plannerKindKey(g.kind);
+  if(!g.kind)return 'no type set (pick Trivia, Karaoke, Bingo or Events)';
+  if(!k)return g.kind+' gigs have no Planner equivalent';
+  if(k==='Bingo'&&!Object.values(bingoVenuesMap||{}).some(v=>normVenueName(v.name)===normVenueName(g.venue)))return 'no Bingo venue named "'+g.venue+'" in the Bingo app';
   return '';
 }
 function syncAllGigsToPlanner(){
@@ -4564,7 +4642,13 @@ function renderVenueManage(){
     const payLine=hasPay?`<div style="font-size:0.68rem;color:var(--text3);margin-top:0.4rem;">${amountParts.join(', ')}${amountParts.length&&v.payMethod?' via ':(v.payMethod?'Pays via ':'')}${v.payMethod||''}${(amountParts.length||v.payMethod)&&v.startDate?' · ':''}${v.startDate?'Started '+formatDateShort(v.startDate):''}</div>`:'';
     const slots=v.gigSlots||[];
     const slotsLine=slots.length?`<div style="font-size:0.66rem;color:var(--text3);margin-top:0.3rem;display:flex;flex-direction:column;gap:0.15rem;">${slots.map(s=>`<div>${s.kind||''} · ${s.day||''}${s.time?' '+formatTimeShort(s.time):''}${s.endTime?'–'+formatTimeShort(s.endTime):''}${s.price?' · '+s.price:''}</div>`).join('')}</div>`:'';
-    const hostLine=v.host?`<div style="font-size:0.68rem;color:var(--gold);margin-top:0.4rem;">Default host: ${v.host}</div>`:'';
+    // The Planner's nights for this venue are the source of truth for who hosts — shown live here,
+    // each with a dropdown that changes the PERMANENT host (a one-off fill-in is done from the
+    // This Week dashboard or the Planner). Venues with no Planner night keep the old default host.
+    const nights=allPlannerNights().filter(n=>normVenueName(n.name)===normVenueName(v.name));
+    const hostLine=nights.length
+      ?`<div style="margin-top:0.5rem;">${nights.map(n=>`<div class="night-host-row" onclick="event.stopPropagation()"><span style="min-width:120px;font-size:0.68rem;color:var(--text3)">${esc(n.kind)}${n.day?' · '+esc(n.day):''}${n.time?' '+esc(n.time):''}</span><select class="form-input" style="padding:0.25rem 0.4rem;font-size:0.72rem;" onchange="changeRegularHost('${n.kind}','${n.id}',this)" title="Permanent host for this night">${hostOptionsHtml(n.host)}</select></div>`).join('')}</div>`
+      :(v.host?`<div style="font-size:0.68rem;color:var(--gold);margin-top:0.4rem;">Default host: ${esc(v.host)}</div>`:'');
     return `<div class="venue-manage-card"${v.inactive?' style="opacity:0.55;"':''}><div class="venue-manage-header"><div class="venue-manage-name">${v.name}${v.inactive?' <span style="font-size:0.62rem;color:var(--text4);font-weight:400;text-transform:uppercase;letter-spacing:0.08em;">· Inactive</span>':''}${v.locationId?` <span style="font-size:0.65rem;color:var(--text3);font-weight:400;">· ${locationLabel(v.locationId)}</span>`:''}</div><div style="display:flex;gap:0.4rem;align-items:center;"><button class="btn-sm modal-history-btn" style="padding:0.3rem 0.6rem;font-size:0.6rem;" onclick="openVenueHistoryModal('${v.id}')">History</button><button class="action-btn edit" onclick="openVenueModal('${v.id}')">✎</button><button class="action-btn delete" onclick="deleteVenue('${v.id}')">✕</button></div></div><div class="venue-gig-tags">${(v.gigs||[]).map(g=>`<span class="venue-gig-tag ${gigClass(g)}">${g}</span>`).join('')}</div>${payLine}${slotsLine}${hostLine}${v.notes?`<div style="font-size:0.81rem;color:var(--text3);margin-top:0.5rem;">${v.notes}</div>`:''}</div>`;
   }).join('');
 }
