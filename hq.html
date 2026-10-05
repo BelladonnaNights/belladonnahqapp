@@ -327,6 +327,20 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
 .daybox-item:last-child{border-bottom:none;}
 .daybox-item small{display:block;color:var(--text3);font-size:10px;}
 .daybox-item.cancelled{color:var(--rose);opacity:0.75;}
+.dash-host-sel{width:100%;margin-top:0.3rem;background:var(--surface2);border:1px solid var(--border);color:var(--text2);border-radius:6px;padding:0.2rem 0.3rem;font-size:0.68rem;font-family:inherit;}
+.dash-host-sel.fill{border-color:#9b59b6;color:#c9a0dc;}
+.dash-theme{font-size:0.66rem;color:var(--text3);margin-top:0.15rem;line-height:1.3;}
+.dash-fillnote{font-size:0.58rem;color:#c9a0dc;margin-top:0.15rem;}
+.dh-row{padding:6px 0;border-bottom:1px solid var(--border);font-size:12.5px;cursor:pointer;}
+.dh-row:last-child{border-bottom:none;}
+.dh-time{font-size:10px;letter-spacing:0.06em;color:var(--text3);display:block;}
+.dh-name{color:var(--text);}
+.dh-name.struck{text-decoration:line-through;color:var(--text3);}
+.dh-name.unassigned{color:var(--text3);font-style:italic;}
+.dh-fill{color:#c9a0dc;margin-left:14px;font-size:12.5px;}
+.dh-row.cancelled .dh-name{color:var(--rose);text-decoration:line-through;}
+.night-host-row{display:flex;align-items:center;gap:0.5rem;margin-bottom:0.4rem;font-size:0.72rem;color:var(--text2);}
+.night-host-row select{flex:1;}
 .daybox-kind-tag{font-size:9px;letter-spacing:0.08em;text-transform:uppercase;color:var(--gold);}
 
 /* ── TIP-A-HOST ── */
@@ -426,6 +440,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
     <button class="dash-filter-pill" onclick="setDashboardKindFilter('trivia',this)">Trivia</button>
     <button class="dash-filter-pill" onclick="setDashboardKindFilter('bingo',this)">Bingo</button>
     <button class="dash-filter-pill" onclick="setDashboardKindFilter('karaoke',this)">Karaoke</button>
+    <button class="dash-filter-pill" onclick="setDashboardKindFilter('hosts',this)">Hosts</button>
   </div>
   <div style="display:flex;align-items:center;justify-content:center;gap:0.8rem;margin-bottom:0.4rem;">
     <button class="hq-cal-nav-btn" onclick="shiftDashboardWeek(-1)">‹ Prev</button>
@@ -442,6 +457,18 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
   <div class="modal" style="max-width:380px;">
     <div id="dashGigDetailBody"></div>
     <div class="modal-actions"><button class="modal-cancel" onclick="document.getElementById('dashGigDetailModal').classList.remove('open')">Close</button></div>
+  </div>
+</div>
+
+<div class="modal-bg" id="hostScopeModal">
+  <div class="modal" style="max-width:400px;">
+    <div class="modal-title" id="hostScopeTitle">Change host</div>
+    <div id="hostScopeBody" style="font-size:0.8rem;color:var(--text2);line-height:1.7;margin-bottom:1rem;"></div>
+    <div style="display:flex;flex-direction:column;gap:0.5rem;">
+      <button class="modal-save" id="hostScopeOnceBtn" onclick="confirmHostChange('once')">Just this gig (fill-in)</button>
+      <button class="modal-save" id="hostScopeAlwaysBtn" onclick="confirmHostChange('always')" style="background:#9b59b6;">Permanently — this and every future week</button>
+    </div>
+    <div class="modal-actions"><button class="modal-cancel" onclick="cancelHostChange()">Cancel</button></div>
   </div>
 </div>
 
@@ -916,6 +943,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
     <div class="sched-toolbar">
       <button class="add-entry-btn" onclick="openGigModal()">+ Schedule Gig</button>
       <button class="btn-sm" onclick="openBulkAddModal()">+ Bulk Add</button>
+      <button class="btn-sm" onclick="syncAllGigsToPlanner()" title="Pushes every upcoming HQ gig into the Planner (trivia, karaoke, bingo)">↻ Sync to Planner</button>
       <select class="roster-filter-select" id="calFilterVenue" onchange="renderGigCalendar()"><option value="">All Venues</option></select>
       <select class="roster-filter-select" id="calFilterType" onchange="renderGigCalendar()">
         <option value="">All Types</option>
@@ -1120,6 +1148,11 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
       </div>
     </div>
     <div class="form-group"><label class="form-label">Location</label><select class="form-input" id="rmLocation"></select></div>
+    <div class="form-group" id="rmRegularWrap" style="display:none;">
+      <label class="form-label">Regular Gigs <span style="font-size:0.6rem;color:var(--text4);text-transform:none;letter-spacing:0;">(weekly nights this host permanently runs — saves immediately)</span></label>
+      <div id="rmRegularList"></div>
+      <select class="form-input" id="rmRegularAdd" onchange="addRegularNightToHost(this)" style="margin-top:0.4rem;"></select>
+    </div>
     <div class="form-group"><label class="form-label">Skills / Training</label><div class="chip-grid" id="skillChips"></div></div>
     <div class="form-group"><label class="form-label">Trained Venues</label><div class="chip-grid" id="venueChips"></div></div>
     <div class="form-group">
@@ -1240,6 +1273,10 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
     </div>
     <div class="form-group"><label class="form-label">Location</label><select class="form-input" id="vmLocation"></select></div>
     <div class="form-group"><label class="form-label">Default Host <span style="font-size:0.6rem;color:var(--text4);text-transform:none;letter-spacing:0;">(who regularly hosts here — a specific date's assignment in Host Roster or the Planner always overrides this for that date only)</span></label><select class="form-input" id="vmHost"></select></div>
+    <div class="form-group" id="vmNightHostsWrap" style="display:none;">
+      <label class="form-label">Regular Host By Night <span style="font-size:0.6rem;color:var(--text4);text-transform:none;letter-spacing:0;">(the permanent weekly host for each of this venue's nights in the Planner — saves immediately when changed)</span></label>
+      <div id="vmNightHosts"></div>
+    </div>
     <div class="form-group">
       <label class="form-label">Amount Paid — By Gig Type</label>
       <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
@@ -2078,22 +2115,37 @@ function confirmImportShifts(btn){
 // has no assigned-host concept at the schedule level, so those entries show
 // as Unassigned until a host actually starts a live session).
 const PLANNER_DAY_MAP={Sun:0,Mon:1,Tue:2,Wed:3,Thu:4,Fri:5,Sat:6};
-let plannerVenues=null,plannerGigs=null,bingoVenuesMap=null,bingoScheduleList=null,bingoCategoriesMap=null,dashboardItemsFlat=[];
+let plannerVenues=null,plannerGigs=null,plannerKaraokeVenues=null,plannerKaraokeGigs=null,bingoVenuesMap=null,bingoScheduleList=null,bingoCategoriesMap=null,dashboardItemsFlat=[];
 let dashboardKindFilter='all';
+let _plannerListening=false,_pendingPlannerPushes=[],_venueCreates={};
+function plannerReady(){return plannerVenues&&plannerGigs&&plannerKaraokeVenues&&plannerKaraokeGigs&&bingoVenuesMap&&bingoScheduleList;}
+function flushPlannerPushes(){
+  if(!plannerReady()||!_pendingPlannerPushes.length)return;
+  const q=_pendingPlannerPushes;_pendingPlannerPushes=[];
+  q.forEach(a=>pushGigToExternalPlanner(a[0],a[1]));
+}
+function plannerRefresh(){renderDashboardWeek();renderGigCalendar();flushPlannerPushes();}
+// Live listeners (not one-shot reads) so a host changed in the Planner shows up
+// here immediately, and vice-versa — one source of truth, two windows onto it.
 function loadPlannerData(){
-  if(!rtdb)return;
-  rtdb.ref('trivia/planner/venues').once('value').then(snap=>{plannerVenues=snap.val()||{};renderDashboardWeek();}).catch(()=>{plannerVenues={};});
-  rtdb.ref('trivia/planner/gigs').once('value').then(snap=>{plannerGigs=snap.val()||{};renderDashboardWeek();}).catch(()=>{plannerGigs={};});
-  rtdb.ref('bingo/landing/venues').once('value').then(snap=>{bingoVenuesMap=snap.val()||{};renderDashboardWeek();}).catch(()=>{bingoVenuesMap={};});
-  rtdb.ref('bingo/landing/schedule').once('value').then(snap=>{bingoScheduleList=Object.values(snap.val()||{});renderDashboardWeek();}).catch(()=>{bingoScheduleList=[];});
-  rtdb.ref('bingo/landing/categories').once('value').then(snap=>{bingoCategoriesMap=snap.val()||{};renderDashboardWeek();}).catch(()=>{bingoCategoriesMap={};});
+  if(!rtdb||_plannerListening)return;
+  _plannerListening=true;
+  const L=(path,assign,empty)=>rtdb.ref(path).on('value',snap=>{assign(snap.val());plannerRefresh();},()=>{assign(empty);});
+  L('trivia/planner/venues',v=>{plannerVenues=v||{};},{});
+  L('trivia/planner/gigs',v=>{plannerGigs=v||{};},{});
+  L('trivia/planner/karaokeVenues',v=>{plannerKaraokeVenues=v||{};},{});
+  L('trivia/planner/karaokeGigs',v=>{plannerKaraokeGigs=v||{};},{});
+  L('bingo/landing/venues',v=>{bingoVenuesMap=v||{};},{});
+  L('bingo/landing/schedule',v=>{bingoScheduleList=Object.values(v||{});},[]);
+  L('bingo/landing/categories',v=>{bingoCategoriesMap=v||{};},{});
 }
 function fetchBingoGigsForDate(dk,dow){
   if(!bingoScheduleList)return [];
   return bingoScheduleList.filter(e=>e.date===dk).map(e=>{
     const venue=(bingoVenuesMap&&bingoVenuesMap[e.venueId])?bingoVenuesMap[e.venueId].name:'Unknown Venue';
     const roundNames=(e.rounds||e.categoryIds||[]).map(cid=>(bingoCategoriesMap&&bingoCategoriesMap[cid])?bingoCategoriesMap[cid].title:null).filter(Boolean);
-    return {venue,host:e.host||'Unassigned',kind:'Bingo',cancelled:false,source:'Bingo App',notes:(roundNames.length?'Rounds: '+roundNames.join(', '):'')+(e.notes?(roundNames.length?' — ':'')+e.notes:'')};
+    const bv=(bingoVenuesMap&&bingoVenuesMap[e.venueId])||{};
+    return {venue,host:e.host||bv.host||'Unassigned',regularHost:bv.host||'',time:bv.time||'',dk,kindKey:'Bingo',pVenueId:e.venueId,pEntryId:e.id||null,kind:'Bingo',cancelled:false,source:'Bingo App',notes:(roundNames.length?'Rounds: '+roundNames.join(', '):'')+(e.notes?(roundNames.length?' — ':'')+e.notes:'')};
   });
 }
 function startOfWeekMonday(d){const x=new Date(d);x.setHours(0,0,0,0);x.setDate(x.getDate()-((x.getDay()+6)%7));return x;}
@@ -2106,35 +2158,29 @@ function getExternalGigsForDate(dk,dow){
   // an entry right here in gigSchedule too — skip it as "external" so it doesn't
   // render twice on the calendar.
   const hqVenuesForDate=new Set(gigSchedule.filter(g=>g.date===dk).map(g=>normVenueName(g.venue)));
-  if(plannerVenues){
-    Object.entries(plannerVenues).forEach(([id,v])=>{
+  [['Trivia',plannerVenues,plannerGigs,'Trivia Planner'],['Karaoke',plannerKaraokeVenues,plannerKaraokeGigs,'Karaoke Planner']].forEach(([kind,pv,pg,src])=>{
+    if(!pv)return;
+    Object.entries(pv).forEach(([id,v])=>{
       if(hqVenuesForDate.has(normVenueName(v.name)))return;
-      const override=(plannerGigs&&plannerGigs[id])?plannerGigs[id][dk]:null;
-      // A real per-date record (an assigned theme, a note, an explicit cancel)
-      // is the actual source of truth for "something is happening here" — it
-      // always shows, no matter the venue's status or usual weekday. Lacking
-      // that, fall back to the old guess: active/seasonal venue, date matches
-      // its normal recurring day. This is what used to silently hide venues
-      // marked "finished" at spreadsheet import (or anything whose actual
-      // scheduled date didn't match its "usual day") even though the theme
-      // assignment itself was saved correctly and visible in the Planner.
+      const override=(pg&&pg[id])?pg[id][dk]:null;
+      // A real per-date record always shows; otherwise fall back to the venue's usual weekday.
       const hasExplicitRecord=!!override;
       const recurs=(v.status==='active'||v.status==='seasonal')&&PLANNER_DAY_MAP[v.day]===dow;
       if(!hasExplicitRecord&&!recurs)return;
       const cancelled=!!(override&&override.status==='cancelled');
-      out.push({venue:v.name,host:(override&&override.host)||v.host||'Unassigned',kind:'Trivia',cancelled,source:'Trivia Planner',notes:override&&override.themeName?override.themeName:(override&&override.note?override.note:'')});
+      out.push({venue:v.name,host:(override&&override.host)||v.host||'Unassigned',regularHost:v.host||'',time:v.time||'',dk,kindKey:kind,pVenueId:id,kind,cancelled,source:src,notes:override&&override.themeName?override.themeName:(override&&override.note?override.note:'')});
     });
-  }
+  });
   out.push(...fetchBingoGigsForDate(dk,dow).filter(it=>!hqVenuesForDate.has(normVenueName(it.venue))));
   return out;
 }
 function getDashboardGigsForDate(dk,dow){
   const out=[];
   gigSchedule.filter(g=>g.date===dk).forEach(g=>{
-    out.push({venue:g.venue,host:g.host||'Unassigned',kind:g.kind||'Gig',cancelled:g.status==='cancelled'||gigCheckoutCancelled(g),source:'HQ Schedule',notes:g.notes||''});
+    out.push({venue:g.venue,host:g.host||'Unassigned',regularHost:regularHostForGig(g),time:g.time||'',dk,hqGigId:g.id,kind:g.kind||'Gig',cancelled:g.status==='cancelled'||gigCheckoutCancelled(g),source:'HQ Schedule',notes:g.notes||''});
   });
   out.push(...getExternalGigsForDate(dk,dow));
-  if(dashboardKindFilter!=='all')return out.filter(it=>(it.kind||'').toLowerCase()===dashboardKindFilter);
+  if(dashboardKindFilter!=='all'&&dashboardKindFilter!=='hosts')return out.filter(it=>(it.kind||'').toLowerCase()===dashboardKindFilter);
   return out;
 }
 function setDashboardKindFilter(kind,el){
@@ -2149,6 +2195,27 @@ function shiftDashboardWeek(delta,reset){
   document.getElementById('dashThisWeekBtn').style.display=dashWeekOffset===0?'none':'';
   renderDashboardWeek();
 }
+function fmtGigTime(t){
+  if(!t)return '';
+  if(/[ap]\.?m/i.test(t))return t;
+  const m=/^(\d{1,2}):(\d{2})/.exec(t);if(!m)return t;
+  let h=+m[1];const ap=h>=12?'PM':'AM';h=h%12||12;return h+':'+m[2]+' '+ap;
+}
+function timeSortKey(t){
+  if(!t)return '99:99';
+  const m=/^(\d{1,2}):(\d{2})\s*([ap])?/i.exec(t);if(!m)return '99:99';
+  let h=+m[1];const ap=(m[3]||'').toLowerCase();
+  if(ap==='p'&&h<12)h+=12;if(ap==='a'&&h===12)h=0;
+  return String(h).padStart(2,'0')+':'+m[2];
+}
+function isFillIn(it){return !!(it.regularHost&&it.host&&it.host!=='Unassigned'&&it.host!==it.regularHost);}
+function hostOptionsHtml(current){
+  const names=roster.map(h=>h.name);
+  const list=['Unassigned',...names];
+  if(current&&current!=='Unassigned'&&!names.includes(current))list.push(current);
+  return list.map(n=>`<option value="${escAttr(n)}"${n===(current||'Unassigned')?' selected':''}>${esc(n)}</option>`).join('');
+}
+function escAttr(x){return String(x==null?'':x).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');}
 function renderDashboardWeek(){
   const grid=document.getElementById('dashboardDayboxGrid');
   if(!grid)return;
@@ -2159,35 +2226,231 @@ function renderDashboardWeek(){
   const endLabel=new Date(start.getFullYear(),start.getMonth(),start.getDate()+6);
   document.getElementById('dashboardWeekLabel').textContent=start.toLocaleDateString('en-US',{month:'short',day:'numeric'})+' – '+endLabel.toLocaleDateString('en-US',{month:'short',day:'numeric'});
   dashboardItemsFlat=[];
+  const hostsMode=dashboardKindFilter==='hosts';
   let html='';
   for(let i=0;i<7;i++){
     const d=new Date(start);d.setDate(d.getDate()+i);
     const dk=dateToKey(d);
-    const items=getDashboardGigsForDate(dk,d.getDay());
-    html+=`<div class="daybox${dk===today?' is-today':''}"><h4>${dayNames[i]} ${d.getDate()}</h4>
-      ${items.length?items.map(it=>{
+    let items=getDashboardGigsForDate(dk,d.getDay());
+    if(hostsMode)items=items.slice().sort((a,b)=>timeSortKey(a.time).localeCompare(timeSortKey(b.time)));
+    html+=`<div class="daybox${dk===today?' is-today':''}"><h4>${dayNames[i]} ${d.getDate()}</h4>`;
+    if(!items.length){html+='<div class="daybox-item" style="color:var(--text3);cursor:default;">Nothing scheduled</div>';}
+    else if(hostsMode){
+      html+=items.map(it=>{
         const idx=dashboardItemsFlat.length;dashboardItemsFlat.push(it);
-        return `<div class="daybox-item${it.cancelled?' cancelled':''}" onclick="showDashGigDetail(${idx})">
-          <span class="daybox-kind-tag">${it.kind}</span><br>${it.venue}<small>${it.host}${it.cancelled?' · CANCELLED':''}</small>
-          ${it.notes?`<div style="font-size:0.62rem;color:var(--text3);margin-top:0.15rem;line-height:1.3;">${it.notes}</div>`:''}
+        const unassigned=!it.host||it.host==='Unassigned';
+        const fill=isFillIn(it);
+        return `<div class="dh-row${it.cancelled?' cancelled':''}" title="${escAttr(it.kind+' · '+it.venue)}" onclick="showDashGigDetail(${idx})">
+          <span class="dh-time">${esc(fmtGigTime(it.time)||'—')}</span>
+          <span class="dh-name${fill?' struck':''}${unassigned?' unassigned':''}">${esc(fill?it.regularHost:(unassigned?'Unassigned':it.host))}</span>
+          ${fill?`<div class="dh-fill">${esc(it.host)}</div>`:''}
         </div>`;
-      }).join(''):'<div class="daybox-item" style="color:var(--text3);cursor:default;">Nothing scheduled</div>'}
-    </div>`;
+      }).join('');
+    }else{
+      html+=items.map(it=>{
+        const idx=dashboardItemsFlat.length;dashboardItemsFlat.push(it);
+        const fill=isFillIn(it);
+        return `<div class="daybox-item${it.cancelled?' cancelled':''}" onclick="showDashGigDetail(${idx})">
+          <span class="daybox-kind-tag">${esc(it.kind)}</span>${it.time?` <span style="font-size:9px;color:var(--text3)">${esc(fmtGigTime(it.time))}</span>`:''}${it.cancelled?' <span style="font-size:9px">· CANCELLED</span>':''}<br>${esc(it.venue)}
+          ${it.notes?`<div class="dash-theme">${esc(it.notes)}</div>`:''}
+          <select class="dash-host-sel${fill?' fill':''}" onclick="event.stopPropagation()" onchange="onDashHostChange(${idx},this)" title="Assigned host">${hostOptionsHtml(it.host)}</select>
+          ${fill?`<div class="dash-fillnote">fill-in for ${esc(it.regularHost)}</div>`:''}
+        </div>`;
+      }).join('');
+    }
+    html+='</div>';
   }
   grid.innerHTML=html;
 }
 function showDashGigDetail(idx,fromSchedule){
   const it=fromSchedule?scheduleExternalItemsFlat[idx]:dashboardItemsFlat[idx];
   if(!it)return;
+  const fill=isFillIn(it);
   document.getElementById('dashGigDetailBody').innerHTML=`
-    <div class="modal-title">${it.venue}</div>
+    <div class="modal-title">${esc(it.venue)}</div>
     <div style="font-size:0.8rem;color:var(--text2);line-height:1.9;">
-      <div><b style="color:var(--text3)">Type:</b> ${it.kind}</div>
-      <div><b style="color:var(--text3)">Host:</b> ${it.host}</div>
+      <div><b style="color:var(--text3)">Type:</b> ${esc(it.kind)}</div>
+      ${it.dk?`<div><b style="color:var(--text3)">Date:</b> ${esc(it.dk)}${it.time?' · '+esc(fmtGigTime(it.time)):''}</div>`:''}
+      ${it.notes?`<div><b style="color:var(--text3)">Theme:</b> ${esc(it.notes)}</div>`:''}
+      <div><b style="color:var(--text3)">Host:</b>
+        <select class="dash-host-sel${fill?' fill':''}" style="width:auto;min-width:160px;margin-top:0;" onchange="onDashHostChange(${idx},this,${fromSchedule?'true':'false'})">${hostOptionsHtml(it.host)}</select>
+      </div>
+      ${fill?`<div style="color:#c9a0dc;font-size:0.72rem;">Fill-in for regular host ${esc(it.regularHost)}</div>`:(it.regularHost?`<div style="font-size:0.72rem;color:var(--text3)">Regular host: ${esc(it.regularHost)}</div>`:'')}
       ${it.cancelled?'<div style="color:var(--rose)"><b>Cancelled</b></div>':''}
-      ${it.notes?`<div><b style="color:var(--text3)">Theme:</b> ${it.notes}</div>`:''}
+      ${it.hqGigId?`<div style="margin-top:0.5rem;"><button class="btn-sm" onclick="document.getElementById('dashGigDetailModal').classList.remove('open');openGigModal('${it.hqGigId}')">Edit full gig…</button></div>`:''}
     </div>`;
   document.getElementById('dashGigDetailModal').classList.add('open');
+}
+
+// ── HOST ASSIGNMENT ──
+// Where hosts live (one source of truth, no second copy):
+//  • A venue-night's REGULAR host = Planner venue record's `host` (permanent, every week).
+//  • A one-off FILL-IN = that date's gig record's `host` (differs from the regular host).
+//  • HQ-made gigs carry `host` on the gig itself; a repeating series changes together.
+// Every place that shows a host (this-week dashboard, calendar detail, Venues, Host
+// Roster) goes through the functions below, so they all stay in step.
+const PLANNER_KIND_PATHS={
+  Trivia:{v:'trivia/planner/venues',g:'trivia/planner/gigs'},
+  Karaoke:{v:'trivia/planner/karaokeVenues',g:'trivia/planner/karaokeGigs'},
+  Bingo:{v:'bingo/landing/venues',g:'bingo/landing/schedule'}
+};
+function plannerVenuesFor(kind){return kind==='Trivia'?plannerVenues:kind==='Karaoke'?plannerKaraokeVenues:kind==='Bingo'?bingoVenuesMap:null;}
+function plannerGigsFor(kind){return kind==='Trivia'?plannerGigs:kind==='Karaoke'?plannerKaraokeGigs:null;}
+function findPlannerVenue(kind,name,dow){
+  const pv=plannerVenuesFor(kind);if(!pv)return null;
+  const hits=Object.entries(pv).filter(([id,v])=>normVenueName(v.name)===normVenueName(name));
+  if(!hits.length)return null;
+  const byDay=hits.find(([id,v])=>dow==null||PLANNER_DAY_MAP[v.day]===dow);
+  const pick=byDay||hits[0];
+  return {id:pick[0],v:pick[1]};
+}
+function regularHostForGig(g){
+  const dow=new Date(g.date+'T12:00:00').getDay();
+  const pv=findPlannerVenue(g.kind,g.venue,dow);
+  if(pv&&pv.v.host)return pv.v.host;
+  if(g.seriesId){
+    const counts={};
+    gigSchedule.filter(x=>x.seriesId===g.seriesId&&x.host&&x.host!=='Unassigned').forEach(x=>{counts[x.host]=(counts[x.host]||0)+1;});
+    const top=Object.entries(counts).sort((a,b)=>b[1]-a[1])[0];
+    if(top)return top[0];
+  }
+  const vo=venues.find(x=>normVenueName(x.name)===normVenueName(g.venue));
+  return (vo&&vo.host)||'';
+}
+function canMakePermanent(it){
+  if(it.hqGigId){const g=gigSchedule.find(x=>x.id===it.hqGigId);return !!(g&&(g.seriesId||findPlannerVenue(g.kind,g.venue,new Date(g.date+'T12:00:00').getDay())));}
+  return !!it.pVenueId;
+}
+let pendingHostChange=null;
+function onDashHostChange(idx,sel,fromSchedule){
+  const it=fromSchedule?scheduleExternalItemsFlat[idx]:dashboardItemsFlat[idx];
+  if(!it)return;
+  const newHost=sel.value;
+  if(newHost===(it.host||'Unassigned'))return;
+  pendingHostChange={it,newHost};
+  document.getElementById('dashGigDetailModal').classList.remove('open');
+  // Putting the regular host back = simply clearing the fill-in, no question needed.
+  if(it.regularHost&&newHost===it.regularHost){confirmHostChange('once');return;}
+  const perm=canMakePermanent(it);
+  document.getElementById('hostScopeTitle').textContent='Change host — '+it.venue;
+  document.getElementById('hostScopeBody').innerHTML=`${esc(it.kind)} on <b>${esc(it.dk||'')}</b>: <b>${esc(it.host||'Unassigned')}</b> → <b>${esc(newHost)}</b>.<br>Is this a one-time swap (someone called out) or the new regular host for this night?`;
+  document.getElementById('hostScopeAlwaysBtn').style.display=perm?'':'none';
+  document.getElementById('hostScopeModal').classList.add('open');
+}
+function cancelHostChange(){pendingHostChange=null;document.getElementById('hostScopeModal').classList.remove('open');renderDashboardWeek();renderGigCalendar();}
+async function confirmHostChange(scope){
+  const pc=pendingHostChange;if(!pc)return;
+  pendingHostChange=null;
+  document.getElementById('hostScopeModal').classList.remove('open');
+  try{await applyHostChange(pc.it,pc.newHost,scope);}
+  catch(e){alert('Could not change the host: '+(e&&e.message||e));}
+  renderDashboardWeek();renderGigCalendar();
+}
+async function applyHostChange(it,newHost,scope){
+  const hostVal=newHost==='Unassigned'?null:newHost;
+  if(it.hqGigId){
+    const g=gigSchedule.find(x=>x.id===it.hqGigId);if(!g)return;
+    if(scope==='always'){
+      const dow=new Date(g.date+'T12:00:00').getDay();
+      const targets=g.seriesId?gigSchedule.filter(x=>x.seriesId===g.seriesId&&x.date>=g.date):[g];
+      targets.forEach(x=>{x.host=newHost;persistGig(x,false);});
+      const pv=findPlannerVenue(g.kind,g.venue,dow);
+      if(pv)await setPlannerRegularHost(g.kind,pv.id,hostVal,g.date,true);
+    }else{
+      g.host=newHost;persistGig(g,false);
+    }
+    return;
+  }
+  if(scope==='always')await setPlannerRegularHost(it.kindKey,it.pVenueId,hostVal,it.dk);
+  else await setPlannerDateHost(it.kindKey,it.pVenueId,it.dk,hostVal);
+}
+async function setPlannerDateHost(kind,venueId,dk,hostVal){
+  if(!rtdb)throw new Error('Not connected to the Planner database');
+  const paths=PLANNER_KIND_PATHS[kind];
+  const pv=(plannerVenuesFor(kind)||{})[venueId]||{};
+  if(kind==='Bingo'){
+    const existing=(bingoScheduleList||[]).find(e=>e.venueId===venueId&&e.date===dk);
+    const id=existing?existing.id:rtdb.ref(paths.g).push().key;
+    await rtdb.ref(paths.g+'/'+id).update({id,date:dk,venueId,host:hostVal||null,locationId:pv.locationId||null});
+    return;
+  }
+  const ref=rtdb.ref(paths.g+'/'+venueId+'/'+dk);
+  const snap=await ref.once('value');
+  if(snap.exists())await ref.child('host').set(hostVal||null);
+  else await ref.set({themeId:null,themeName:null,status:'planned',note:'',host:hostVal||null,locationId:pv.locationId||null});
+}
+// Permanent: set the venue-night's regular host, then carry every FUTURE date that was
+// still on the old regular host over to the new one. Dates with a deliberate different
+// host (a fill-in) are left alone.
+async function setPlannerRegularHost(kind,venueId,hostVal,fromDk,skipHqGigs){
+  if(!rtdb)throw new Error('Not connected to the Planner database');
+  const paths=PLANNER_KIND_PATHS[kind];
+  const pv=(plannerVenuesFor(kind)||{})[venueId]||{};
+  const oldHost=pv.host||'';
+  fromDk=fromDk||dateToKey(new Date());
+  const updates={};
+  updates[paths.v+'/'+venueId+'/host']=hostVal||'';
+  if(kind==='Bingo'){
+    (bingoScheduleList||[]).filter(e=>e.venueId===venueId&&e.date>=fromDk&&(e.host===oldHost||e.date===fromDk)).forEach(e=>{updates[paths.g+'/'+e.id+'/host']=hostVal||null;});
+  }else{
+    const gigs=(plannerGigsFor(kind)||{})[venueId]||{};
+    Object.entries(gigs).forEach(([dk,rec])=>{
+      if(dk<fromDk)return;
+      if(dk===fromDk||(rec&&rec.host&&rec.host===oldHost))updates[paths.g+'/'+venueId+'/'+dk+'/host']=hostVal||null;
+    });
+  }
+  await rtdb.ref().update(updates);
+  if(!skipHqGigs){
+    const dow=PLANNER_DAY_MAP[pv.day];
+    gigSchedule.filter(g=>g.kind===kind&&normVenueName(g.venue)===normVenueName(pv.name)&&g.date>=fromDk&&(dow==null||new Date(g.date+'T12:00:00').getDay()===dow)&&(g.host===oldHost||g.date===fromDk)).forEach(g=>{g.host=hostVal||'Unassigned';persistGig(g,false);});
+  }
+}
+// All venue-nights across Trivia / Karaoke / Bingo — used by the Venue and Host Roster editors.
+function allPlannerNights(){
+  const out=[];
+  ['Trivia','Karaoke','Bingo'].forEach(kind=>{
+    const pv=plannerVenuesFor(kind);if(!pv)return;
+    Object.entries(pv).forEach(([id,v])=>{
+      if(kind!=='Bingo'&&v.status&&v.status!=='active'&&v.status!=='seasonal')return;
+      out.push({kind,id,name:v.name||'(unnamed)',day:v.day||'',time:v.time||'',host:v.host||''});
+    });
+  });
+  return out.sort((a,b)=>a.name.localeCompare(b.name)||a.kind.localeCompare(b.kind));
+}
+function nightLabel(n){return n.name+' — '+n.kind+(n.day?' · '+n.day:'')+(n.time?' '+n.time:'');}
+function renderVenueNightHosts(venueName){
+  const wrap=document.getElementById('vmNightHostsWrap'),box=document.getElementById('vmNightHosts');
+  if(!wrap||!box)return;
+  const nights=allPlannerNights().filter(n=>normVenueName(n.name)===normVenueName(venueName));
+  if(!venueName||!nights.length){wrap.style.display='none';return;}
+  wrap.style.display='';
+  box.innerHTML=nights.map(n=>`<div class="night-host-row"><span style="min-width:150px">${esc(n.kind)}${n.day?' · '+esc(n.day):''}${n.time?' '+esc(n.time):''}</span>
+    <select class="form-input" onchange="changeRegularHost('${n.kind}','${n.id}',this)">${hostOptionsHtml(n.host)}</select></div>`).join('');
+}
+async function changeRegularHost(kind,id,sel){
+  const hostVal=sel.value==='Unassigned'?null:sel.value;
+  try{await setPlannerRegularHost(kind,id,hostVal);}catch(e){alert('Could not save: '+e.message);}
+}
+function renderHostRegularGigs(host){
+  const wrap=document.getElementById('rmRegularWrap');if(!wrap)return;
+  if(!host){wrap.style.display='none';return;}
+  wrap.style.display='';
+  const nights=allPlannerNights();
+  const mine=nights.filter(n=>normVenueName(n.host)===normVenueName(host.name));
+  document.getElementById('rmRegularList').innerHTML=mine.length?mine.map(n=>`<div class="night-host-row"><span style="flex:1">${esc(nightLabel(n))}</span><button class="btn-sm" onclick="removeRegularNight('${n.kind}','${n.id}')">Remove</button></div>`).join(''):'<div style="font-size:0.7rem;color:var(--text3)">No regular nights assigned yet.</div>';
+  const others=nights.filter(n=>normVenueName(n.host)!==normVenueName(host.name));
+  document.getElementById('rmRegularAdd').innerHTML='<option value="">+ Make regular host of a night…</option>'+others.map(n=>`<option value="${n.kind}|${n.id}">${esc(nightLabel(n))}${n.host?' (now: '+esc(n.host)+')':''}</option>`).join('');
+}
+async function addRegularNightToHost(sel){
+  const host=roster.find(h=>h.id===editRosterId);if(!host||!sel.value)return;
+  const [kind,id]=sel.value.split('|');
+  try{await setPlannerRegularHost(kind,id,host.name);}catch(e){alert('Could not save: '+e.message);}
+  renderHostRegularGigs(host);
+}
+async function removeRegularNight(kind,id){
+  const host=roster.find(h=>h.id===editRosterId);
+  try{await setPlannerRegularHost(kind,id,null);}catch(e){alert('Could not save: '+e.message);}
+  renderHostRegularGigs(host);
 }
 
 // ── GIG SCHEDULE ──
@@ -2215,40 +2478,61 @@ function persistGig(entry,isDelete){
 // in HQ, it just won't appear in that other app.
 function pushGigToExternalPlanner(entry,isDelete){
   if(!rtdb||!entry||!entry.kind||!entry.venue)return;
-  const kind=(entry.kind||'').toLowerCase();
+  const kindLc=(entry.kind||'').toLowerCase();
+  const kind=kindLc==='trivia'?'Trivia':kindLc==='karaoke'?'Karaoke':kindLc==='bingo'?'Bingo':null;
+  if(!kind)return; // Events / Private Events have no Planner equivalent
+  // Wait until the Planner data has loaded, then replay — never silently drop a push.
+  if(!plannerReady()){_pendingPlannerPushes.push([entry,isDelete]);return;}
   const vName=normVenueName(entry.venue);
   const cancelled=isDelete||entry.status==='cancelled';
-  // host is the one field HQ and the Planner app must never keep separate copies
-  // of — this writes straight into the same per-date record Planner itself reads
-  // and writes, so whichever app changes it last is just... the current value.
   const hostForPush=(entry.host&&entry.host!=='Unassigned')?entry.host:null;
-  if(kind==='trivia'){
-    if(!plannerVenues)return;
-    const match=Object.entries(plannerVenues).find(([id,v])=>normVenueName(v.name)===vName);
-    if(!match)return;
-    const venueId=match[0];
-    const path='trivia/planner/gigs/'+venueId+'/'+entry.date;
-    if(cancelled){
-      rtdb.ref(path).set({themeId:null,themeName:null,status:'cancelled',note:entry.notes||'(cancelled from HQ)',host:hostForPush}).catch(()=>{});
-    }else{
-      rtdb.ref(path).once('value').then(snap=>{
+  const dow=new Date(entry.date+'T12:00:00').getDay();
+  const paths=PLANNER_KIND_PATHS[kind];
+  if(kind==='Trivia'||kind==='Karaoke'){
+    const writeGig=venueId=>{
+      const path=paths.g+'/'+venueId+'/'+entry.date;
+      if(cancelled){
+        return rtdb.ref(path).set({themeId:null,themeName:null,status:'cancelled',note:entry.notes||'(cancelled from HQ)',host:hostForPush,locationId:entry.locationId||null}).catch(()=>{});
+      }
+      return rtdb.ref(path).once('value').then(snap=>{
         const existing=snap.val()||{};
-        rtdb.ref(path).set(Object.assign({},existing,{status:'planned',note:entry.notes||existing.note||'(from HQ — open Planner to set a theme)',host:hostForPush!=null?hostForPush:(existing.host||null)})).catch(()=>{});
+        return rtdb.ref(path).set(Object.assign({},existing,{status:existing.status==='cancelled'?'planned':(existing.status||'planned'),note:entry.notes||existing.note||'',host:hostForPush!=null?hostForPush:(existing.host||null),locationId:existing.locationId||entry.locationId||null,fromHQ:true}));
       }).catch(()=>{});
+    };
+    const match=findPlannerVenue(kind,entry.venue,dow);
+    if(match){writeGig(match.id);return;}
+    if(cancelled)return;
+    // No Planner venue with this name yet — create one so the gig actually shows up there
+    // (a repeating HQ series becomes a regular weekly night; a one-off stays off the weekly list).
+    const key=kind+'|'+vName+'|'+dow;
+    if(!_venueCreates[key]){
+      const id=rtdb.ref(paths.v).push().key;
+      _venueCreates[key]=rtdb.ref(paths.v+'/'+id).set({name:entry.venue,groupName:entry.venue,day:Object.keys(PLANNER_DAY_MAP).find(k=>PLANNER_DAY_MAP[k]===dow)||'',time:entry.time?fmtGigTime(entry.time):'',pay:{amount:null,method:''},status:entry.seriesId?'active':'finished',source:'hq',cadence:'weekly',notes:'Created from HQ',host:entry.seriesId?(hostForPush||''):'',locationId:entry.locationId||null,createdAt:Date.now()}).then(()=>id);
     }
-  }else if(kind==='bingo'){
-    if(!bingoVenuesMap||!bingoScheduleList)return;
-    const match=Object.entries(bingoVenuesMap).find(([id,v])=>normVenueName(v.name)===vName);
+    _venueCreates[key].then(id=>writeGig(id)).catch(()=>{});
+  }else if(kind==='Bingo'){
+    // Bingo venues are the public landing-page venues, so HQ never creates one — it only
+    // fills in a date on a venue that already exists there.
+    const match=Object.entries(bingoVenuesMap||{}).find(([id,v])=>normVenueName(v.name)===vName);
     if(!match)return;
     const venueId=match[0];
-    const existing=bingoScheduleList.find(e=>e.venueId===venueId&&e.date===entry.date);
+    const existing=(bingoScheduleList||[]).find(e=>e.venueId===venueId&&e.date===entry.date);
     if(cancelled){
-      if(existing)rtdb.ref('bingo/landing/schedule/'+existing.id).remove().catch(()=>{});
+      if(existing)rtdb.ref(paths.g+'/'+existing.id).remove().catch(()=>{});
     }else{
-      const id=existing?existing.id:rtdb.ref('bingo/landing/schedule').push().key;
-      rtdb.ref('bingo/landing/schedule/'+id).set(Object.assign({},existing||{},{id,date:entry.date,venueId,notes:entry.notes||(existing&&existing.notes)||'',host:hostForPush!=null?hostForPush:((existing&&existing.host)||null)})).catch(()=>{});
+      const id=existing?existing.id:rtdb.ref(paths.g).push().key;
+      rtdb.ref(paths.g+'/'+id).set(Object.assign({},existing||{},{id,date:entry.date,venueId,notes:entry.notes||(existing&&existing.notes)||'',host:hostForPush!=null?hostForPush:((existing&&existing.host)||null)})).catch(()=>{});
     }
   }
+}
+function syncAllGigsToPlanner(){
+  if(!plannerReady()){alert('Planner data is still loading — try again in a few seconds.');return;}
+  const today=dateToKey(new Date());
+  const list=gigSchedule.filter(g=>g.date>=today&&g.status!=='cancelled');
+  if(!list.length){alert('No upcoming HQ gigs to sync.');return;}
+  if(!confirm('Push '+list.length+' upcoming HQ gig(s) into the Planner (Trivia, Karaoke and Bingo ones)? Existing themes and notes there are kept.'))return;
+  list.forEach(g=>pushGigToExternalPlanner(g,false));
+  alert('Sync started — the Planner will show them in a moment.');
 }
 // Creates one gig, or (if repeatMode is weekly/monthly, optionally "-forever") a whole series sharing a seriesId.
 function createGigEntry(base,repeatMode,count){
@@ -4031,6 +4315,7 @@ function openRosterModal(id=null){
   document.getElementById('rmHostId').value=host?host.hostId||'':'';
   document.getElementById('rmGatewayEmail').value=host?host.gatewayEmail||'':'';
   renderRosterHostSetupStatus(host);
+  renderHostRegularGigs(host);
   const locSel=document.getElementById('rmLocation');
   locSel.innerHTML=locations.map(l=>`<option value="${l.code}">${l.label}</option>`).join('');
   locSel.value=(host&&host.locationId)?host.locationId:(currentLocationScope!=='ALL'?currentLocationScope:((locations[0]&&locations[0].code)||''));
@@ -4323,6 +4608,7 @@ function openVenueModal(id=null){
   locSel.innerHTML=locations.map(l=>`<option value="${l.code}">${l.label}</option>`).join('');
   locSel.value=(venue&&venue.locationId)?venue.locationId:(currentLocationScope!=='ALL'?currentLocationScope:((locations[0]&&locations[0].code)||''));
   renderVenueHostSelect(venue&&venue.host?venue.host:'');
+  renderVenueNightHosts(venue?venue.name:'');
   document.getElementById('gigChips').innerHTML=['Karaoke','Bingo','Trivia','Events','Private Events'].map(g=>{const sel=venue&&(venue.gigs||[]).includes(g);return`<div class="chip${sel?' selected-skill':''}" onclick="toggleChip(this,'skill')">${g}</div>`;}).join('');
   renderChecklistInto('onboardChecklist-venueModal','venue',ONBOARD_CHECKLIST_ITEMS.venue);
   document.getElementById('venueModal').classList.add('open');
