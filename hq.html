@@ -329,6 +329,8 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
 .daybox-item.cancelled{color:var(--rose);opacity:0.75;}
 .dash-host-sel{width:100%;margin-top:0.3rem;background:var(--surface2);border:1px solid var(--border);color:var(--text2);border-radius:6px;padding:0.2rem 0.3rem;font-size:0.68rem;font-family:inherit;}
 .dash-host-sel.fill{border-color:#9b59b6;color:#c9a0dc;}
+.dash-host-line{font-size:0.72rem;color:var(--text2);margin-top:0.25rem;}
+.dash-host-line.fill{color:#c9a0dc;}
 .dash-theme{font-size:0.66rem;color:var(--text3);margin-top:0.15rem;line-height:1.3;}
 .dash-fillnote{font-size:0.58rem;color:#c9a0dc;margin-top:0.15rem;}
 .dh-row{padding:6px 0;border-bottom:1px solid var(--border);font-size:12.5px;cursor:pointer;}
@@ -2177,7 +2179,7 @@ function getExternalGigsForDate(dk,dow){
 function getDashboardGigsForDate(dk,dow){
   const out=[];
   gigSchedule.filter(g=>g.date===dk).forEach(g=>{
-    out.push({venue:g.venue,host:g.host||'Unassigned',regularHost:regularHostForGig(g),time:g.time||'',dk,hqGigId:g.id,kind:g.kind||'Gig',cancelled:g.status==='cancelled'||gigCheckoutCancelled(g),source:'HQ Schedule',notes:g.notes||''});
+    out.push({venue:g.venue,host:g.host||'Unassigned',regularHost:regularHostForGig(g),time:gigTimeFor(g),dk,hqGigId:g.id,kind:g.kind||'Gig',cancelled:g.status==='cancelled'||gigCheckoutCancelled(g),source:'HQ Schedule',notes:g.notes||''});
   });
   out.push(...getExternalGigsForDate(dk,dow));
   if(dashboardKindFilter!=='all'&&dashboardKindFilter!=='hosts')return out.filter(it=>(it.kind||'').toLowerCase()===dashboardKindFilter);
@@ -2253,7 +2255,7 @@ function renderDashboardWeek(){
         return `<div class="daybox-item${it.cancelled?' cancelled':''}" onclick="showDashGigDetail(${idx})">
           <span class="daybox-kind-tag">${esc(it.kind)}</span>${it.time?` <span style="font-size:9px;color:var(--text3)">${esc(fmtGigTime(it.time))}</span>`:''}${it.cancelled?' <span style="font-size:9px">· CANCELLED</span>':''}<br>${esc(it.venue)}
           ${it.notes?`<div class="dash-theme">${esc(it.notes)}</div>`:''}
-          <select class="dash-host-sel${fill?' fill':''}" onclick="event.stopPropagation()" onchange="onDashHostChange(${idx},this)" title="Assigned host">${hostOptionsHtml(it.host)}</select>
+          <div class="dash-host-line${fill?' fill':''}">${esc(it.host&&it.host!=='Unassigned'?it.host:'Unassigned')}</div>
           ${fill?`<div class="dash-fillnote">fill-in for ${esc(it.regularHost)}</div>`:''}
         </div>`;
       }).join('');
@@ -2303,6 +2305,18 @@ function findPlannerVenue(kind,name,dow){
   const byDay=hits.find(([id,v])=>dow==null||PLANNER_DAY_MAP[v.day]===dow);
   const pick=byDay||hits[0];
   return {id:pick[0],v:pick[1]};
+}
+// An HQ gig saved without a start time still has one on record elsewhere —
+// the matching Planner night, or the venue's own gig-slot list.
+function gigTimeFor(g){
+  if(g.time)return g.time;
+  const dow=new Date(g.date+'T12:00:00').getDay();
+  const pv=findPlannerVenue(g.kind,g.venue,dow);
+  if(pv&&pv.v.time)return pv.v.time;
+  const vo=venues.find(x=>normVenueName(x.name)===normVenueName(g.venue));
+  const names=['sun','mon','tue','wed','thu','fri','sat'];
+  const slot=vo&&(vo.gigSlots||[]).find(sl=>(sl.kind||'').toLowerCase()===(g.kind||'').toLowerCase()&&(sl.day||'').toLowerCase().slice(0,3)===names[dow]&&sl.time);
+  return slot?slot.time:'';
 }
 function regularHostForGig(g){
   const dow=new Date(g.date+'T12:00:00').getDay();
@@ -2525,14 +2539,30 @@ function pushGigToExternalPlanner(entry,isDelete){
     }
   }
 }
+// Why (if at all) a gig can't be mirrored into the Planner — used by the Sync report.
+function plannerSyncProblem(g){
+  const k=(g.kind||'').toLowerCase();
+  if(!g.kind)return 'no type set (pick Trivia, Karaoke or Bingo)';
+  if(k!=='trivia'&&k!=='karaoke'&&k!=='bingo')return g.kind+' gigs have no Planner equivalent';
+  if(k==='bingo'&&!Object.values(bingoVenuesMap||{}).some(v=>normVenueName(v.name)===normVenueName(g.venue)))return 'no Bingo venue named "'+g.venue+'" in the Bingo app';
+  return '';
+}
 function syncAllGigsToPlanner(){
   if(!plannerReady()){alert('Planner data is still loading — try again in a few seconds.');return;}
   const today=dateToKey(new Date());
   const list=gigSchedule.filter(g=>g.date>=today&&g.status!=='cancelled');
   if(!list.length){alert('No upcoming HQ gigs to sync.');return;}
-  if(!confirm('Push '+list.length+' upcoming HQ gig(s) into the Planner (Trivia, Karaoke and Bingo ones)? Existing themes and notes there are kept.'))return;
-  list.forEach(g=>pushGigToExternalPlanner(g,false));
-  alert('Sync started — the Planner will show them in a moment.');
+  const bad=list.map(g=>({g,why:plannerSyncProblem(g)})).filter(x=>x.why);
+  const good=list.filter(g=>!plannerSyncProblem(g));
+  if(!confirm('Push '+good.length+' upcoming HQ gig(s) into the Planner? Existing themes and notes there are kept.'+(bad.length?'\n\n'+bad.length+' gig(s) can\'t be sent (details after).':'')))return;
+  good.forEach(g=>pushGigToExternalPlanner(g,false));
+  const where=[...new Set(good.map(g=>g.kind))].join(' / ');
+  let msg='Sent '+good.length+' gig(s). In the Planner, switch to the matching mode pill at the top ('+(where||'Trivia / Karaoke / Bingo')+') — each type has its own calendar there.';
+  if(bad.length){
+    const shown=bad.slice(0,8).map(x=>'• '+x.g.date+' '+x.g.venue+': '+x.why).join('\n');
+    msg+='\n\nNot sent:\n'+shown+(bad.length>8?'\n…and '+(bad.length-8)+' more':'');
+  }
+  alert(msg);
 }
 // Creates one gig, or (if repeatMode is weekly/monthly, optionally "-forever") a whole series sharing a seriesId.
 function createGigEntry(base,repeatMode,count){
