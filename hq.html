@@ -460,6 +460,17 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
   <div style="font-size:0.62rem;color:var(--text3);letter-spacing:0.04em;margin-top:0.8rem;">Pulls in gigs from HQ's own schedule, the Trivia planner app, and the Bingo app. Click any gig for details.</div>
 </div>
 
+<!-- VENUE QR CODES -->
+<div class="modal-bg" id="venueQrModal">
+  <div class="modal" style="max-width:640px;">
+    <div class="modal-title">Venue QR Codes</div>
+    <div style="font-size:0.72rem;color:var(--text3);line-height:1.6;margin-bottom:0.8rem;">One permanent code per venue. Guests who scan it see whatever is on at that venue <i>tonight</i> &mdash; Music Bingo cards, the karaoke song list, trivia info &mdash; so you print it once and never change it. It works from the schedule, so nothing to update.</div>
+    <div style="display:flex;gap:0.5rem;margin-bottom:0.8rem;"><input class="form-input" id="vqSearch" placeholder="Search venues…" oninput="renderVenueQrList()"><button class="btn-sm" onclick="printVenueQr()">Print all</button></div>
+    <div id="vqList" style="max-height:55vh;overflow:auto;"></div>
+    <div class="modal-actions"><button class="modal-cancel" onclick="document.getElementById('venueQrModal').classList.remove('open')">Close</button></div>
+  </div>
+</div>
+
 <!-- DASHBOARD GIG DETAIL MODAL -->
 <div class="modal-bg" id="dashGigDetailModal">
   <div class="modal" style="max-width:380px;">
@@ -747,6 +758,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
   <div class="subpanel active" id="sub-venues-manage">
     <div class="section-header">
       <div class="section-title">Venues <span class="save-dot" id="venuesSave">Saved ✓</span></div>
+      <button class="btn-sm" onclick="openVenueQrModal()" title="One permanent QR code per venue — shows whatever is on there tonight">Venue QR Codes</button>
       <button class="btn-sm btn-gold" onclick="openVenueModal()">+ Add Venue</button>
     </div>
     <div class="sched-toolbar">
@@ -1410,6 +1422,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
   </div>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
@@ -2332,6 +2345,29 @@ function showDashGigDetail(idx,fromSchedule){
   document.getElementById('dashGigDetailModal').classList.add('open');
 }
 
+// ── Venue QR codes: one permanent code per venue → here.html shows what's on tonight ──
+const HERE_BASE='https://belladonnanights.github.io/belladonnahqapp/here.html';
+function venueSlug(name){return String(name||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');}
+function venueQrUrl(name){return HERE_BASE+'?v='+encodeURIComponent(venueSlug(name));}
+function venueQrSvg(url,cell){const q=qrcode(0,'M');q.addData(url);q.make();return q.createSvgTag({cellSize:cell||6,margin:0,scalable:true});}
+function openVenueQrModal(){document.getElementById('vqSearch').value='';renderVenueQrList();document.getElementById('venueQrModal').classList.add('open');}
+function venueQrVenues(){const q=(document.getElementById('vqSearch').value||'').toLowerCase().trim();return (venues||[]).filter(v=>v&&v.name&&!v.inactive&&(!q||v.name.toLowerCase().includes(q))).sort((a,b)=>a.name.localeCompare(b.name));}
+function renderVenueQrList(){
+  const list=venueQrVenues();
+  document.getElementById('vqList').innerHTML=list.length?list.map(v=>{const u=venueQrUrl(v.name);return `<div style="display:flex;align-items:center;gap:0.9rem;padding:0.6rem 0;border-bottom:1px solid var(--border);">
+    <div style="width:78px;height:78px;background:#fff;padding:5px;border-radius:6px;flex:none;">${venueQrSvg(u,4)}</div>
+    <div style="flex:1;min-width:0;"><div style="font-size:0.85rem;color:var(--text);">${esc(v.name)}</div><div style="font-size:0.6rem;color:var(--text3);word-break:break-all;margin-top:0.2rem;">${esc(u)}</div></div>
+    <div style="display:flex;flex-direction:column;gap:0.3rem;"><button class="btn-sm" onclick="printVenueQr('${escAttr(v.name).replace(/'/g,"\\'")}')">Print</button><button class="btn-sm" onclick="copyVenueQr('${escAttr(v.name).replace(/'/g,"\\'")}',this)">Copy link</button></div></div>`;}).join(''):'<div class="empty-state">No venues match.</div>';
+}
+function copyVenueQr(name,btn){const u=venueQrUrl(name);(navigator.clipboard?navigator.clipboard.writeText(u):Promise.reject()).then(()=>{btn.textContent='Copied ✓';setTimeout(()=>btn.textContent='Copy link',1500);}).catch(()=>prompt('Copy this link:',u));}
+function printVenueQr(onlyName){
+  const list=onlyName?[{name:onlyName}]:venueQrVenues();
+  if(!list.length)return;
+  const w=window.open('','_blank');if(!w)return alert('Allow pop-ups to print the QR codes.');
+  const pages=list.map(v=>`<section><div class="b">Belladonna</div><div class="s">Audio Alchemies</div><h1>${esc(v.name)}</h1><div class="qr">${venueQrSvg(venueQrUrl(v.name),10)}</div><div class="c">Scan to join in<br>Music Bingo &middot; Karaoke &middot; Trivia</div></section>`).join('');
+  w.document.write(`<!doctype html><title>Venue QR codes</title><style>body{font-family:Georgia,serif;text-align:center;margin:0}section{page-break-after:always;padding:56px 40px}section:last-child{page-break-after:auto}.b{letter-spacing:.35em;text-transform:uppercase;font-size:26px;font-weight:bold}.s{letter-spacing:.4em;text-transform:uppercase;font-size:12px;color:#777;margin-top:4px}h1{font-size:34px;margin:34px 0 26px;font-weight:normal}.qr{width:380px;margin:0 auto}.c{margin-top:26px;font-size:20px;letter-spacing:.08em;line-height:1.6}</style>${pages}`);
+  w.document.close();setTimeout(()=>w.print(),500);
+}
 function time24(t){
   if(!t)return '';
   if(/^\d{1,2}:\d{2}$/.test(t))return t.padStart(5,'0');
