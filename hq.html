@@ -1556,6 +1556,12 @@ const PERSIST_GUARDS={
   'host-ranks':()=>ranksLoadedFromServer,
   'host-order':()=>hostOrderLoadedFromServer
 };
+let _cloudWarnAt=0;
+function cloudSaveFailed(e){
+  console.warn('Cloud save failed',e);
+  if(Date.now()-_cloudWarnAt<15000)return;_cloudWarnAt=Date.now();
+  alert('Saved on this device only — it did NOT reach the cloud, so it will be gone after a refresh.\n\nReason: '+((e&&(e.code||e.message))||e)+'\n\nTake a screenshot of this and send it to me.');
+}
 function persist(key,val,dotId){
   const guard=PERSIST_GUARDS[key];
   if(guard&&!guard()){
@@ -1563,7 +1569,7 @@ function persist(key,val,dotId){
     return;
   }
   LS.set(key,JSON.stringify(val));
-  if(db){try{db.collection('hq_data').doc(key).set({value:JSON.stringify(val)});}catch(e){}}
+  if(db){try{db.collection('hq_data').doc(key).set({value:JSON.stringify(val)}).catch(cloudSaveFailed);}catch(e){cloudSaveFailed(e);}}
   // The Planner app has no access to HQ's Firestore roster, so for host-roster
   // specifically we also mirror a lightweight copy into the Realtime DB (same
   // project Planner already reads) — just id/name/retired, enough to populate
@@ -2315,9 +2321,32 @@ function showDashGigDetail(idx,fromSchedule){
       </div>
       ${fill?`<div style="color:#c9a0dc;font-size:0.72rem;">Fill-in for regular host ${esc(it.regularHost)}</div>`:(it.regularHost?`<div style="font-size:0.72rem;color:var(--text3)">Regular host: ${esc(it.regularHost)}</div>`:'')}
       ${it.cancelled?'<div style="color:var(--rose)"><b>Cancelled</b></div>':''}
-      ${it.hqGigId?`<div style="margin-top:0.5rem;"><button class="btn-sm" onclick="document.getElementById('dashGigDetailModal').classList.remove('open');openGigModal('${it.hqGigId}')">Edit full gig…</button></div>`:''}
+      <div style="margin-top:0.5rem;"><button class="btn-sm" onclick="editFullGigFromDash(${idx},${fromSchedule?'true':'false'})">Edit full gig…</button></div>
     </div>`;
   document.getElementById('dashGigDetailModal').classList.add('open');
+}
+
+function time24(t){
+  if(!t)return '';
+  if(/^\d{1,2}:\d{2}$/.test(t))return t.padStart(5,'0');
+  const k=timeSortKey(t);return k==='99:99'?'':k;
+}
+// Gigs that come from the Planner / Bingo schedule (not created in HQ) have no HQ record yet —
+// open the same Edit Gig popup pre-filled from them; saving it creates the HQ gig.
+function editFullGigFromDash(idx,fromSchedule){
+  const it=fromSchedule?scheduleExternalItemsFlat[idx]:dashboardItemsFlat[idx];
+  document.getElementById('dashGigDetailModal').classList.remove('open');
+  if(!it)return;
+  if(it.hqGigId&&gigSchedule.some(g=>g.id===it.hqGigId)){openGigModal(it.hqGigId);return;}
+  openGigModal(null,it.host&&it.host!=='Unassigned'?it.host:null);
+  document.getElementById('gigModalTitle').textContent='Edit Gig';
+  document.getElementById('gigDate').value=it.dk||'';
+  document.getElementById('gigTime').value=time24(it.time);
+  document.getElementById('gigEndTime').value='';
+  populateGigKindChips(it.kind||null);
+  populateGigVenueChips(it.venue||null);
+  document.getElementById('gigCancelRow').style.display='block';
+  document.getElementById('gigCancelCheckbox').checked=!!it.cancelled;
 }
 
 // ── HOST ASSIGNMENT ──
@@ -2562,7 +2591,7 @@ function persistGig(entry,isDelete){
   const oldLoc=_gigLastLoc[entry.id];
   saveGigScheduleLocal();
   scheduleTipScheduleSync();
-  if(db){try{if(isDelete)db.collection('gig_schedule').doc(entry.id).delete();else db.collection('gig_schedule').doc(entry.id).set({date:entry.date,time:entry.time||'',endTime:entry.endTime||'',kind:entry.kind||'',venue:entry.venue,host:entry.host||'Unassigned',status:entry.status||'scheduled',notes:entry.notes||'',seriesId:entry.seriesId||null,cadence:entry.cadence||null,cadenceAnchor:entry.cadenceAnchor||null,locationId:entry.locationId||(currentLocationScope!=='ALL'?currentLocationScope:(locations[0]&&locations[0].code)||null)});}catch(e){}}
+  if(db){try{if(isDelete)db.collection('gig_schedule').doc(entry.id).delete();else db.collection('gig_schedule').doc(entry.id).set({date:entry.date,time:entry.time||'',endTime:entry.endTime||'',kind:entry.kind||'',venue:entry.venue,host:entry.host||'Unassigned',status:entry.status||'scheduled',notes:entry.notes||'',seriesId:entry.seriesId||null,cadence:entry.cadence||null,cadenceAnchor:entry.cadenceAnchor||null,locationId:entry.locationId||(currentLocationScope!=='ALL'?currentLocationScope:(locations[0]&&locations[0].code)||null)}).catch(cloudSaveFailed);}catch(e){cloudSaveFailed(e);}}
   // mirror to the Sheet so the Apps Script triggers (no-show + auto sign-out) can read it
   try{fetch(SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({form_type:'schedule',action:isDelete?'delete':'upsert',id:entry.id,date:entry.date,time:entry.time||'',endTime:entry.endTime||'',venue:entry.venue,host:entry.host||'Unassigned',status:entry.status||'scheduled',notes:entry.notes||''})});}catch(e){}
   const moved=!isDelete&&oldLoc&&(oldLoc.date!==entry.date||normVenueName(oldLoc.venue)!==normVenueName(entry.venue)||plannerKindKey(oldLoc.kind)!==plannerKindKey(entry.kind));
@@ -2659,7 +2688,7 @@ function syncAllGigsToPlanner(){
   alert(msg);
 }
 // Creates one gig, or (if repeatMode is weekly/monthly, optionally "-forever") a whole series sharing a seriesId.
-function createGigEntry(base,repeatMode,count){
+function createGigEntry(base,repeatMode,count,existing){
   repeatMode=repeatMode||'none';
   const isMonthly=repeatMode.indexOf('monthly')===0;
   const isBiweekly=repeatMode.indexOf('biweekly')===0;
@@ -2669,7 +2698,8 @@ function createGigEntry(base,repeatMode,count){
   else count=(repeatMode==='none')?1:(count||12);
   const seriesId=(repeatMode!=='none')?('series_'+Date.now()+'_'+Math.random().toString(36).slice(2,7)):null;
   const baseDate=new Date(base.date+'T12:00:00');
-  for(let w=0;w<count;w++){
+  if(existing){existing.seriesId=seriesId;existing.cadence=cadence;existing.cadenceAnchor=cadence?base.date:'';persistGig(existing,false);}
+  for(let w=existing?1:0;w<count;w++){
     const d=new Date(baseDate);
     if(isMonthly)d.setMonth(d.getMonth()+w);
     else d.setDate(d.getDate()+w*(isBiweekly?14:7));
@@ -2853,7 +2883,7 @@ function openGigModal(id,presetHost){
   document.getElementById('gigCancelCheckbox').checked=!!(g&&g.status==='cancelled');
   document.getElementById('gigDeleteBtn').style.display=id?'inline-block':'none';
   // Repeat options only make sense when creating a brand new gig
-  document.getElementById('gigRepeatRow').style.display=id?'none':'block';
+  document.getElementById('gigRepeatRow').style.display=(id&&g&&g.seriesId)?'none':'block';
   document.getElementById('gigRepeatMode').value='none';
   document.getElementById('gigRepeatCountRow').style.display='none';
   document.getElementById('gigRepeatCount').value=12;
@@ -2892,7 +2922,11 @@ function saveGig(){
       return;
     }
     Object.assign(g,changes);
-    persistGig(g,false);
+    const rm=document.getElementById('gigRepeatMode').value;
+    if(rm!=='none'&&!g.seriesId){
+      const cnt=parseInt(document.getElementById('gigRepeatCount').value)||12;
+      createGigEntry({date,time,endTime,kind:selectedGigKind,venue:selectedGigVenue,host:selectedGigHost,notes},rm,cnt,g);
+    }else persistGig(g,false);
     renderScheduleAll();closeGigModal();
   }else{
     const repeatMode=document.getElementById('gigRepeatMode').value;
@@ -4668,10 +4702,7 @@ function renderVenueManage(){
     // The Planner's nights for this venue are the source of truth for who hosts — shown live here,
     // each with a dropdown that changes the PERMANENT host (a one-off fill-in is done from the
     // This Week dashboard or the Planner). Venues with no Planner night keep the old default host.
-    const nights=allPlannerNights().filter(n=>normVenueName(n.name)===normVenueName(v.name));
-    const hostLine=nights.length
-      ?`<div style="margin-top:0.5rem;">${nights.map(n=>`<div class="night-host-row" onclick="event.stopPropagation()"><span style="min-width:120px;font-size:0.68rem;color:var(--text3)">${esc(n.kind)}${n.day?' · '+esc(n.day):''}${n.time?' '+esc(n.time):''}</span><select class="form-input" style="padding:0.25rem 0.4rem;font-size:0.72rem;" onchange="changeRegularHost('${n.kind}','${n.id}',this)" title="Permanent host for this night">${hostOptionsHtml(n.host)}</select></div>`).join('')}</div>`
-      :(v.host?`<div style="font-size:0.68rem;color:var(--gold);margin-top:0.4rem;">Default host: ${esc(v.host)}</div>`:'');
+    const hostLine=v.host?`<div style="font-size:0.68rem;color:var(--gold);margin-top:0.4rem;">Default host: ${esc(v.host)}</div>`:'';
     return `<div class="venue-manage-card"${v.inactive?' style="opacity:0.55;"':''}><div class="venue-manage-header"><div class="venue-manage-name">${v.name}${v.inactive?' <span style="font-size:0.62rem;color:var(--text4);font-weight:400;text-transform:uppercase;letter-spacing:0.08em;">· Inactive</span>':''}${v.locationId?` <span style="font-size:0.65rem;color:var(--text3);font-weight:400;">· ${locationLabel(v.locationId)}</span>`:''}</div><div style="display:flex;gap:0.4rem;align-items:center;"><button class="btn-sm modal-history-btn" style="padding:0.3rem 0.6rem;font-size:0.6rem;" onclick="openVenueHistoryModal('${v.id}')">History</button><button class="action-btn edit" onclick="openVenueModal('${v.id}')">✎</button><button class="action-btn delete" onclick="deleteVenue('${v.id}')">✕</button></div></div><div class="venue-gig-tags">${(v.gigs||[]).map(g=>`<span class="venue-gig-tag ${gigClass(g)}">${g}</span>`).join('')}</div>${payLine}${slotsLine}${hostLine}${v.notes?`<div style="font-size:0.81rem;color:var(--text3);margin-top:0.5rem;">${v.notes}</div>`:''}</div>`;
   }).join('');
 }
