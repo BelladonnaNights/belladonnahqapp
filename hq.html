@@ -434,7 +434,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
   <div class="dash-head">
     <div>
       <div class="dash-title">Dashboard</div>
-      <div class="dash-sub">Everything scheduled, week by week.</div>
+      <div class="dash-sub">Everything scheduled, week by week. <span style="opacity:.45">· build 13</span></div>
     </div>
     <div class="live-badge dash-live">
       <div class="live-dot"></div>
@@ -1576,6 +1576,22 @@ const PERSIST_GUARDS={
   'host-order':()=>hostOrderLoadedFromServer
 };
 let _cloudWarnAt=0;
+function hqToast(msg,bad){
+  let t=document.getElementById('hqToast');
+  if(!t){t=document.createElement('div');t.id='hqToast';t.style.cssText='position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#111;border:1px solid var(--gold);color:var(--text);padding:10px 16px;border-radius:10px;font-size:.78rem;z-index:99999;max-width:90vw;text-align:center;box-shadow:0 6px 24px rgba(0,0,0,.6)';document.body.appendChild(t);}
+  t.style.borderColor=bad?'#d07090':'var(--gold)';t.textContent=msg;t.style.display='block';clearTimeout(t._h);t._h=setTimeout(()=>{t.style.display='none';},bad?9000:3500);
+}
+// After a gig save, read the cloud copy back and make sure the time really is there.
+function verifyGigSaved(entry){
+  if(!db||!entry||!entry.id)return;
+  db.collection('gig_schedule').doc(entry.id).get().then(sn=>{
+    const d=sn&&sn.exists?sn.data():null;
+    const label=(entry.kind||'Gig')+' · '+entry.venue+' · '+entry.date+(entry.time?' · '+fmtGigTime(entry.time):'');
+    if(!d){hqToast('NOT SAVED to the cloud: '+label+' — screenshot this and send it to me',true);return;}
+    if((d.time||'')!==(entry.time||'')){hqToast('Cloud kept a different time ('+(d.time||'none')+') than you entered ('+(entry.time||'none')+') for '+label+' — screenshot this',true);return;}
+    hqToast('\u2713 Saved to cloud: '+label);
+  }).catch(e=>cloudSaveFailed(e));
+}
 function cloudSaveFailed(e){
   console.warn('Cloud save failed',e);
   if(Date.now()-_cloudWarnAt<15000)return;_cloudWarnAt=Date.now();
@@ -2229,7 +2245,7 @@ function getExternalGigsForDate(dk,dow){
       if(!hasExplicitRecord&&!recurs)return;
       const cancelled=!!(override&&override.status==='cancelled');
       const kind=kindKey==='Events'?((override&&override.eventKind)||v.eventKind||'Events'):kindKey;
-      out.push({venue:v.name,host:(override&&override.host)||v.host||'Unassigned',regularHost:v.host||'',time:v.time||'',dk,kindKey,pVenueId:id,kind,cancelled,source:src,notes:override&&override.themeName?override.themeName:(override&&override.note?override.note:'')});
+      out.push({venue:v.name,host:(override&&override.host)||v.host||'Unassigned',regularHost:v.host||'',time:(override&&override.time)||v.time||'',dk,kindKey,pVenueId:id,kind,cancelled,source:src,notes:override&&override.themeName?override.themeName:(override&&override.note?override.note:'')});
     });
   });
   out.push(...fetchBingoGigsForDate(dk,dow).filter(it=>!hqVenuesForDate.has(normVenueName(it.venue))));
@@ -2646,6 +2662,7 @@ function persistGig(entry,isDelete){
   if(db){try{if(isDelete)db.collection('gig_schedule').doc(entry.id).delete();else db.collection('gig_schedule').doc(entry.id).set({date:entry.date,time:entry.time||'',endTime:entry.endTime||'',kind:entry.kind||'',venue:entry.venue,host:entry.host||'Unassigned',status:entry.status||'scheduled',notes:entry.notes||'',seriesId:entry.seriesId||null,cadence:entry.cadence||null,cadenceAnchor:entry.cadenceAnchor||null,locationId:entry.locationId||(currentLocationScope!=='ALL'?currentLocationScope:(locations[0]&&locations[0].code)||null)}).catch(cloudSaveFailed);}catch(e){cloudSaveFailed(e);}}
   // mirror to the Sheet so the Apps Script triggers (no-show + auto sign-out) can read it
   try{fetch(SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({form_type:'schedule',action:isDelete?'delete':'upsert',id:entry.id,date:entry.date,time:entry.time||'',endTime:entry.endTime||'',venue:entry.venue,host:entry.host||'Unassigned',status:entry.status||'scheduled',notes:entry.notes||''})});}catch(e){}
+  if(!isDelete)setTimeout(()=>verifyGigSaved(entry),1500);
   const moved=!isDelete&&oldLoc&&(oldLoc.date!==entry.date||normVenueName(oldLoc.venue)!==normVenueName(entry.venue)||plannerKindKey(oldLoc.kind)!==plannerKindKey(entry.kind));
   if(moved)relocatePlannerGig(oldLoc,entry).catch(()=>{}).then(()=>pushGigToExternalPlanner(entry,false));
   else pushGigToExternalPlanner(entry,isDelete);
@@ -2685,7 +2702,7 @@ function pushGigToExternalPlanner(entry,isDelete){
       return rtdb.ref(path).once('value').then(snap=>{
         const existing=Object.assign({},_carryRec[entry.id]||{},snap.val()||{});
         delete _carryRec[entry.id];
-        return rtdb.ref(path).set(Object.assign({},existing,evExtra,{status:existing.status==='cancelled'?'planned':(existing.status||'planned'),note:entry.notes||existing.note||'',host:hostForPush!=null?hostForPush:(existing.host||null),locationId:existing.locationId||entry.locationId||null,cancelledByHQ:null,fromHQ:true}));
+        return rtdb.ref(path).set(Object.assign({},existing,evExtra,{time:(/^\d{1,2}:\d{2}$/.test(entry.time||'')?entry.time:(existing.time||null)),status:existing.status==='cancelled'?'planned':(existing.status||'planned'),note:entry.notes||existing.note||'',host:hostForPush!=null?hostForPush:(existing.host||null),locationId:existing.locationId||entry.locationId||null,cancelledByHQ:null,fromHQ:true}));
       }).catch(()=>{});
     };
     const match=findPlannerVenue(entry.kind,entry.venue,dow);
