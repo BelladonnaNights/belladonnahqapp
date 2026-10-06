@@ -2290,15 +2290,17 @@ function shiftDashboardWeek(delta,reset){
 function fmtGigTime(t){
   if(!t)return '';
   if(/[ap]\.?m/i.test(t))return t;
-  const m=/^(\d{1,2}):(\d{2})/.exec(t);if(!m)return t;
-  let h=+m[1];const ap=h>=12?'PM':'AM';h=h%12||12;return h+':'+m[2]+' '+ap;
+  const k=timeSortKey(t);if(k==='99:99')return t;
+  let h=+k.slice(0,2);const mm=k.slice(3);const ap=h>=12?'PM':'AM';h=h%12||12;return h+':'+mm+' '+ap;
 }
 function timeSortKey(t){
   if(!t)return '99:99';
-  const m=/^(\d{1,2}):(\d{2})\s*([ap])?/i.exec(t);if(!m)return '99:99';
+  const m=/^\s*(\d{1,2})(?::(\d{2}))?\s*([ap])?/i.exec(String(t));if(!m)return '99:99';
   let h=+m[1];const ap=(m[3]||'').toLowerCase();
   if(ap==='p'&&h<12)h+=12;if(ap==='a'&&h===12)h=0;
-  return String(h).padStart(2,'0')+':'+m[2];
+  // an unpadded hour with no am/pm ("6:00", "7") is an evening event time — never 6 in the morning
+  if(!ap&&m[1].length===1&&h>=1&&h<=11)h+=12;
+  return String(h).padStart(2,'0')+':'+(m[2]||'00');
 }
 function isFillIn(it){return !!(it.regularHost&&it.host&&it.host!=='Unassigned'&&it.host!==it.regularHost);}
 function hostOptionsHtml(current){
@@ -2695,6 +2697,7 @@ const MASTER_DAYS={Sun:'Sunday',Mon:'Monday',Tue:'Tuesday',Wed:'Wednesday',Thu:'
 function masterKey(n){return String(n||'').toLowerCase().replace(/^the\s+/,'').replace(/[^a-z0-9]/g,'');}
 function masterSlug(n){return String(n||'').toLowerCase().replace(/&/g,'and').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');}
 function masterDay(d){d=String(d||'').trim();return MASTER_DAYS[d.slice(0,3)]||(Object.values(MASTER_DAYS).includes(d)?d:'');}
+let _masterMerges={};
 function buildMasterGroups(){
   const groups={};
   const g=(name)=>{const k=masterKey(name);if(!k)return null;return groups[k]=groups[k]||{key:k,names:{},hq:[],legacy:[],slots:[],ids:{}};};
@@ -2703,16 +2706,30 @@ function buildMasterGroups(){
   [['Trivia',plannerVenues],['Karaoke',plannerKaraokeVenues],['Events',plannerEventVenues],['Bingo',bingoVenuesMap]].forEach(([kind,map])=>{
     Object.entries(map||{}).forEach(([id,v])=>{if(!v||!v.name)return;const gr=g(v.name);if(!gr)return;gr.names[v.name]=1;
       gr.legacy.push({kind,id,v});if(v.venueId)gr.ids[v.venueId]=1;
-      if(v.day||v.time)gr.slots.push({kind,day:masterDay(v.day),time:time24(v.time||''),endTime:'',cadence:v.cadence||'weekly',anchor:v.cadenceAnchor||'',price:'',host:v.host||'',status:v.status||'',from:kind+' venue'});});
+      if(v.day||v.time)gr.slots.push({kind,day:masterDay(v.day),time:time24(v.time||''),endTime:'',cadence:v.cadence||'weekly',anchor:v.cadenceAnchor||'',price:'',host:v.host||'',status:v.status||'active',from:kind+' venue'});
+      if(v.pay&&(v.pay.amount||v.pay.method)&&!gr.pay)gr.pay=v.pay;if(v.notes&&!gr.notes&&v.notes!=='Created from HQ')gr.notes=v.notes;});
+  });
+  // venues she told us are the same place (picked in the preview)
+  Object.entries(_masterMerges).forEach(([from,to])=>{
+    const a=groups[from],b=groups[to];if(!a||!b||a===b)return;
+    Object.assign(b.names,a.names);b.hq.push(...a.hq);b.legacy.push(...a.legacy);b.slots.push(...a.slots);Object.assign(b.ids,a.ids);delete groups[from];
+  });
+  // a night with no time of its own: use the time of that venue's HQ gigs on that weekday
+  Object.values(groups).forEach(gr=>{
+    const names=Object.keys(gr.names).map(masterKey);
+    gr.slots.forEach(sl=>{if(sl.time||!sl.day)return;
+      const gs=(gigSchedule||[]).filter(x=>x.time&&names.includes(masterKey(x.venue))&&plannerKindKey(x.kind)===plannerKindKey(sl.kind)&&MASTER_DAYS[['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][new Date(x.date+'T12:00:00').getDay()]]===sl.day).sort((a,b)=>b.date.localeCompare(a.date));
+      if(gs.length){sl.time=time24(gs[0].time);sl.from+=' (time from HQ gig)';}});
   });
   // collapse slots that are the same night (kind+day+cadence) — keep the one that actually has a time
   Object.values(groups).forEach(gr=>{
     const by={};gr.conflicts=[];
-    gr.slots.forEach(sl=>{const k=[sl.kind,sl.day,sl.cadence].join('|');const ex=by[k];
+    gr.slots.forEach(sl=>{sl.live=!sl.status||sl.status==='active'||sl.status==='seasonal'||sl.status==='one-time';const k=[sl.kind,sl.day,sl.cadence,sl.live?'live':'off'].join('|');const ex=by[k];
       if(!ex){by[k]=Object.assign({},sl);return;}
       if(ex.time&&sl.time&&ex.time!==sl.time)gr.conflicts.push(sl.kind+' '+sl.day+': '+ex.time+' ('+ex.from+') vs '+sl.time+' ('+sl.from+')');
       ['time','endTime','price','host','anchor'].forEach(f=>{if(!ex[f]&&sl[f])ex[f]=sl[f];});});
-    gr.slotList=Object.values(by);
+    gr.slotList=Object.values(by).sort((a,b)=>(b.live-a.live));
+    gr.liveNights=gr.slotList.some(x=>x.live);
   });
   return Object.values(groups).sort((a,b)=>Object.keys(a.names)[0].localeCompare(Object.keys(b.names)[0]));
 }
@@ -2721,19 +2738,24 @@ function masterIdFor(gr){
   return masterSlug(Object.keys(gr.names)[0]);
 }
 let _masterGroups=[];
+function masterMerge(fromKey,toKey){if(toKey)_masterMerges[fromKey]=toKey;else delete _masterMerges[fromKey];renderVenueMaster();}
 function openVenueMaster(){
   if(!plannerReady()){alert('Still loading the Planner and Bingo data — wait a few seconds and try again.');return;}
+  _masterMerges={};renderVenueMaster();
+  document.getElementById('venueMasterModal').classList.add('open');
+}
+function renderVenueMaster(){
   _masterGroups=buildMasterGroups();
+  const opts=_masterGroups.map(g=>`<option value="${g.key}">${esc(Object.keys(g.names)[0])}</option>`).join('');
   const body=document.getElementById('vmasterBody');
   body.innerHTML=_masterGroups.map(gr=>{
     const name=Object.keys(gr.names)[0],id=masterIdFor(gr);
     const links=[gr.hq.length?'HQ':'',...['Trivia','Karaoke','Events','Bingo'].map(k=>{const n=gr.legacy.filter(l=>l.kind===k).length;return n?k+(n>1?' ×'+n:''):'';})].filter(Boolean).join(' · ');
-    const slots=gr.slotList.map(sl=>esc(sl.kind+' '+(sl.day||'?')+' '+(sl.time?fmtGigTime(sl.time):'(no time)')+(sl.cadence!=='weekly'?' · '+sl.cadence:''))).join('<br>')||'<span style="color:var(--text3)">no nights on record</span>';
+    const slots=gr.slotList.map(sl=>`<span style="${sl.live?'':'opacity:.5;'}">`+esc(sl.kind+' '+(sl.day||'?')+' '+(sl.time?fmtGigTime(sl.time):'(no time)')+(sl.cadence!=='weekly'?' · '+sl.cadence:'')+(sl.host?' · '+sl.host:'')+(sl.live?'':' · '+sl.status+' (not running)'))+'</span>').join('<br>')||'<span style="color:var(--text3)">no nights on record</span>';
     const warn=(gr.conflicts.length?'<div style="color:#e0a050;font-size:0.66rem;margin-top:0.3rem;">⚠ Times disagree — HQ slot wins, otherwise Planner: '+esc(gr.conflicts.join('; '))+'</div>':'')+(Object.keys(gr.names).length>1?'<div style="color:var(--text3);font-size:0.66rem;margin-top:0.2rem;">Also spelled: '+esc(Object.keys(gr.names).slice(1).join(', '))+'</div>':'');
-    return `<div style="padding:0.7rem 0;border-bottom:1px solid var(--border);"><div style="display:flex;justify-content:space-between;gap:1rem;"><b style="color:var(--gold)">${esc(name)}</b><span style="font-size:0.62rem;color:var(--text3)">ID: ${esc(id)}</span></div><div style="font-size:0.66rem;color:var(--text3);margin:0.15rem 0">Found in: ${esc(links)}</div><div style="font-size:0.74rem;color:var(--text2);line-height:1.5">${slots}</div>${warn}</div>`;
+    return `<div style="padding:0.7rem 0;border-bottom:1px solid var(--border);"><div style="display:flex;justify-content:space-between;gap:1rem;"><b style="color:var(--gold)">${esc(name)}</b><span style="font-size:0.62rem;color:var(--text3)">ID: ${esc(id)}</span></div><div style="margin:0.2rem 0"><select class="form-input" style="font-size:0.66rem;padding:0.2rem 0.4rem;max-width:260px" onchange="masterMerge('${gr.key}',this.value)"><option value="">Same venue as another one? Merge into…</option>${opts.replace(new RegExp('<option value="'+gr.key+'">[^<]*</option>'),'')}</select></div><div style="font-size:0.66rem;color:var(--text3);margin:0.15rem 0">Found in: ${esc(links)}</div><div style="font-size:0.74rem;color:var(--text2);line-height:1.5">${slots}</div>${warn}</div>`;
   }).join('')||'<div class="msg">No venues found.</div>';
   document.getElementById('vmasterApply').textContent='Create / update '+_masterGroups.length+' master records';
-  document.getElementById('venueMasterModal').classList.add('open');
 }
 async function applyVenueMaster(){
   if(!rtdb){alert('Not connected to the database.');return;}
@@ -2743,12 +2765,12 @@ async function applyVenueMaster(){
     for(const gr of _masterGroups){
       const id=masterIdFor(gr),name=Object.keys(gr.names)[0];
       const hq=gr.hq[0]||{};
-      const slots={};gr.slotList.forEach((sl,i)=>{const sid=masterSlug([sl.kind,sl.day,sl.cadence].join('-'));slots[sid]=Object.fromEntries(Object.entries(sl).filter(([k,v])=>v!==''&&v!=null&&k!=='from'));});
+      const slots={};gr.slotList.forEach((sl,i)=>{const sid=masterSlug([sl.kind,sl.day,sl.cadence,sl.live===false?sl.status:''].join('-'));slots[sid]=Object.fromEntries(Object.entries(sl).filter(([k,v])=>v!==''&&v!=null&&k!=='from'&&k!=='live'));});
       const links={hq:hq.id||null};['Trivia','Karaoke','Events'].forEach(k=>{const l=gr.legacy.find(x=>x.kind===k);if(l)links[k.toLowerCase()]=l.id;});
       const bl=gr.legacy.filter(x=>x.kind==='Bingo').map(x=>x.id);if(bl.length)links.bingo=bl;
       const ref=rtdb.ref('venues/'+id);
       const cur=(await ref.once('value')).val()||{};
-      const rec={id,name:cur.name||name,locationId:cur.locationId||hq.locationId||((gr.legacy[0]||{}).v||{}).locationId||null,active:cur.active!=null?cur.active:!hq.inactive,
+      const rec={id,name:cur.name||name,locationId:cur.locationId||hq.locationId||((gr.legacy[0]||{}).v||{}).locationId||null,active:cur.active!=null?cur.active:(!hq.inactive&&(gr.liveNights||!gr.legacy.length)),pay:cur.pay||gr.pay||(hq.payAmounts||hq.payMethod?{amounts:hq.payAmounts||null,method:hq.payMethod||''}:null),notes:cur.notes||hq.notes||gr.notes||'',perks:cur.perks||hq.perks||'',
         host:cur.host||hq.host||((gr.legacy.find(l=>l.v.host)||{}).v||{}).host||'',
         slots:Object.assign({},slots,cur.slots||{}),   // anything already edited on the master wins
         links,migratedAt:cur.migratedAt||Date.now(),updatedAt:Date.now()};
