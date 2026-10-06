@@ -314,7 +314,14 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
 .bulk-repeat-label input{accent-color:var(--gold);width:14px;height:14px;cursor:pointer;}
 
 /* DASHBOARD — "This Week" day-box grid, styled to match the Trivia planner app */
-.dashboard-week-label{font-size:0.68rem;color:var(--text3);letter-spacing:0.08em;margin-bottom:0.9rem;}
+.dashboard-week-label{font-size:0.8rem;color:var(--text2);letter-spacing:0.08em;margin:0 0.3rem;}
+.dash-head{display:flex;align-items:flex-end;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-bottom:0.9rem;}
+.dash-title{font-family:'Bebas Neue',sans-serif;font-size:1.7rem;letter-spacing:0.06em;text-transform:uppercase;color:var(--gold);line-height:1.1;}
+.dash-sub{font-family:'EB Garamond',serif;font-style:italic;font-size:0.95rem;color:var(--text3);margin-top:0.2rem;}
+.live-badge.dash-live{padding:0.3rem 0.9rem;gap:0.55rem;}
+.live-badge.dash-live .live-count{font-size:1.3rem;line-height:1;}
+.live-badge.dash-live .live-label{font-size:0.62rem;line-height:1;}
+.dash-nav{display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;margin-bottom:1rem;}
 .dash-filter-pills{display:flex;gap:0.5rem;margin-bottom:0.9rem;flex-wrap:wrap;}
 .dash-filter-pill{background:var(--surface2);border:1px solid var(--border);color:var(--text3);padding:0.35rem 1rem;border-radius:999px;font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.2s;}
 .dash-filter-pill:hover{border-color:var(--border2);color:var(--text2);}
@@ -424,17 +431,15 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
 
 <!-- DASHBOARD -->
 <div class="panel active" id="panel-dashboard">
-  <div class="section-header" style="align-items:flex-start;">
-    <div class="section-title">This Week</div>
-    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:0.5rem;">
-      <div class="live-badge">
-        <div class="live-dot"></div>
-        <div>
-          <div class="live-count" id="liveCount">—</div>
-          <div class="live-label">On Shift<br>Now</div>
-        </div>
-      </div>
-      <button class="hq-cal-nav-btn" onclick="renderDashboardWeek()">Refresh</button>
+  <div class="dash-head">
+    <div>
+      <div class="dash-title">Dashboard</div>
+      <div class="dash-sub">Everything scheduled, week by week.</div>
+    </div>
+    <div class="live-badge dash-live">
+      <div class="live-dot"></div>
+      <div class="live-count" id="liveCount">—</div>
+      <div class="live-label">On shift now</div>
     </div>
   </div>
   <div class="dash-filter-pills">
@@ -444,12 +449,13 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
     <button class="dash-filter-pill" onclick="setDashboardKindFilter('karaoke',this)">Karaoke</button>
     <button class="dash-filter-pill" onclick="setDashboardKindFilter('hosts',this)">Hosts</button>
   </div>
-  <div style="display:flex;align-items:center;justify-content:center;gap:0.8rem;margin-bottom:0.4rem;">
+  <div class="dash-nav">
     <button class="hq-cal-nav-btn" onclick="shiftDashboardWeek(-1)">‹ Prev</button>
     <div class="dashboard-week-label" id="dashboardWeekLabel"></div>
     <button class="hq-cal-nav-btn" onclick="shiftDashboardWeek(1)">Next ›</button>
+    <button class="hq-cal-nav-btn" id="dashThisWeekBtn" onclick="shiftDashboardWeek(0,true)" style="display:none;">Today</button>
+    <button class="hq-cal-nav-btn" onclick="renderDashboardWeek()" title="Reload this week">↻ Refresh</button>
   </div>
-  <div style="text-align:center;margin-bottom:0.6rem;"><button class="hq-cal-nav-btn" id="dashThisWeekBtn" onclick="shiftDashboardWeek(0,true)" style="display:none;">Today</button></div>
   <div class="daybox-grid" id="dashboardDayboxGrid"></div>
   <div style="font-size:0.62rem;color:var(--text3);letter-spacing:0.04em;margin-top:0.8rem;">Pulls in gigs from HQ's own schedule, the Trivia planner app, and the Bingo app. Click any gig for details.</div>
 </div>
