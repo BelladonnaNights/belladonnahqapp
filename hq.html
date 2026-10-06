@@ -1139,7 +1139,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
     <div class="modal-title" id="rosterModalTitle">Add Host</div>
     <div class="form-group"><label class="form-label">Host Name</label><input type="text" class="form-input" id="rmName" placeholder="Full name"></div>
     <div class="form-group"><label class="form-label">Last Name <span style="font-size:0.6rem;color:var(--text4);text-transform:none;letter-spacing:0;">(shown on the host card here in HQ — never sent to the tip-a-host page)</span></label><input type="text" class="form-input" id="rmLastName" placeholder="Last name"></div>
-    <div class="form-group"><label class="form-label">Host ID <span style="font-size:0.6rem;color:var(--text4);text-transform:none;letter-spacing:0;">(matched against the Host ID set on their Gateway account in Accounts — takes priority over the email below if both are set)</span></label><input type="text" class="form-input" id="rmHostId" placeholder="not set"></div>
+    <div class="form-group"><label class="form-label">Host ID <span style="font-size:0.6rem;color:var(--text4);text-transform:none;letter-spacing:0;">(matched against the Host ID set on their Gateway account in Accounts — takes priority over the email below if both are set)</span></label><div style="display:flex;gap:0.4rem;align-items:center;"><input type="text" class="form-input" id="rmHostId" placeholder="not set" readonly style="color:var(--text3);" onblur="lockRmHostId()"><button type="button" class="hq-btn-ghost" style="padding:0.45rem 0.8rem;" onclick="unlockRmHostId()">Edit</button></div></div>
     <div class="form-group"><label class="form-label">Gateway Account Email <span style="font-size:0.6rem;color:var(--text4);text-transform:none;letter-spacing:0;">(fallback link to their Belladonna account if no Host ID is set on either side)</span></label><input type="text" class="form-input" id="rmGatewayEmail" placeholder="the email they signed up with"></div>
     <div class="form-group" id="rmHostSetupWrap" style="display:none;">
       <label class="form-label">Host Setup</label>
@@ -1406,6 +1406,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-functions-compat.js"></script>
 <script>
 const SHEETS_KEY="AIzaSyACMjXQCXjVo75hbMXtag_JctR4SoX70So";
 const SHEET_ID="1-MkZoNKkPqjAoJggahKiUsDUgjUhMTkoQ8rUBG4W-w0";
@@ -4415,12 +4416,17 @@ function hostDrop(e,el){
   hostOrder=ids;saveHostOrder();renderRoster();
 }
 function hostDragEnd(){document.querySelectorAll('.roster-card').forEach(el=>{el.classList.remove('dragging','drag-over-host');});}
+function unlockRmHostId(){const i=document.getElementById('rmHostId');i.readOnly=false;i.style.color='';i.focus();i.select();}
+function lockRmHostId(){setTimeout(()=>{const i=document.getElementById('rmHostId');if(i){i.readOnly=true;i.style.color='var(--text3)';}},150);}
 function openRosterModal(id=null){
   editRosterId=id;const host=id?roster.find(h=>h.id===id):null;
   document.getElementById('rosterModalTitle').textContent=id?'Edit Host':'Add Host';
   document.getElementById('rmName').value=host?host.name:'';
   document.getElementById('rmLastName').value=host?host.lastName||'':'';
   document.getElementById('rmHostId').value=host?host.hostId||'':'';
+  lockRmHostId();
+  // No Host ID on this roster entry yet but its Gateway account has one (matched by email)? Pre-fill it — it only saves when you press Save.
+  if(host&&!host.hostId&&host.gatewayEmail){const m=matchGatewayAccount('',host.gatewayEmail);if(m&&m.hostId)document.getElementById('rmHostId').value=m.hostId;}
   document.getElementById('rmGatewayEmail').value=host?host.gatewayEmail||'':'';
   renderRosterHostSetupStatus(host);
   renderHostRegularGigs(host);
@@ -5094,11 +5100,11 @@ function renderAccounts(){
         </div>` : a.accountType==='host' ? `
         <div style="flex:1;">
           <div style="font-size:0.6rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--text3);margin-bottom:0.3rem;">Host ID <span style="opacity:0.7;">— links to Host Roster</span></div>
-          <input type="text" value="${(a.hostId||'').replace(/"/g,'&quot;')}" placeholder="not set" onchange="setAcctHostId('${a.uid}',this.value)" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:0.3rem 0.5rem;font-size:0.72rem;">
+          ${acctHostIdField(a)}
         </div>` : `
         <div style="flex:1;">
           <div style="font-size:0.6rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--text3);margin-bottom:0.3rem;">Host ID <span style="opacity:0.7;">— not yet typed as Host or Venue; both shown until you run the conversion or set one below</span></div>
-          <input type="text" value="${(a.hostId||'').replace(/"/g,'&quot;')}" placeholder="not set" onchange="setAcctHostId('${a.uid}',this.value)" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:0.3rem 0.5rem;font-size:0.72rem;">
+          ${acctHostIdField(a)}
         </div>
         <div style="flex:1;">
           <div style="font-size:0.6rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--text3);margin-bottom:0.3rem;">Venue ID</div>
@@ -5283,12 +5289,46 @@ function setAcctLocation(uid,code){
     alert('Failed to update location: '+e.message);
   });
 }
+
+// Host IDs are handed out by the Gateway (BD-005, BD-006 …) and shouldn't be changed by
+// accident, so they sit greyed out and read-only until the small Edit button is pressed.
+function acctHostIdField(a){
+  const v=(a.hostId||'').replace(/"/g,'&quot;');
+  const box='width:100%;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--text3);padding:0.3rem 0.5rem;font-size:0.72rem;';
+  const btn='background:none;border:1px solid var(--border);color:var(--text3);border-radius:6px;padding:0.28rem 0.6rem;font-size:0.6rem;letter-spacing:0.12em;text-transform:uppercase;cursor:pointer;white-space:nowrap;';
+  return `<div style="display:flex;gap:0.4rem;align-items:center;">
+    <input type="text" value="${v}" placeholder="not set" readonly onchange="setAcctHostId('${a.uid}',this.value)" onblur="lockHostIdInput(this)" style="${box}">
+    ${a.hostId?`<button type="button" style="${btn}" onclick="unlockHostIdInput(this)">Edit</button>`
+      :`<button type="button" style="${btn}" onclick="assignAcctHostId('${a.uid}',this)">Assign next</button>`}
+  </div>`;
+}
+function unlockHostIdInput(btn){
+  const inp=btn.parentElement.querySelector('input');
+  inp.readOnly=false;inp.style.color='var(--text)';inp.style.borderColor='var(--border-gold)';inp.focus();inp.select();
+}
+function lockHostIdInput(inp){
+  setTimeout(()=>{inp.readOnly=true;inp.style.color='var(--text3)';inp.style.borderColor='var(--border)';},150);
+}
+async function assignAcctHostId(uid,btn){
+  btn.disabled=true;btn.textContent='…';
+  try{
+    const r=await firebase.functions().httpsCallable('assignHostId')({uid});
+    const acct=accounts.find(x=>x.uid===uid);if(acct)acct.hostId=r.data.hostId;
+    renderAccounts();
+  }catch(e){btn.disabled=false;btn.textContent='Assign next';alert('Could not assign a Host ID: '+(e&&e.message||e));}
+}
 function setAcctHostId(uid,val){
   const acct=accounts.find(a=>a.uid===uid);if(!acct)return;
   const prev=acct.hostId;
   acct.hostId=val.trim()||null;
   renderAccounts();
-  db.collection('users').doc(uid).set({hostId:acct.hostId},{merge:true}).catch(e=>{
+  db.collection('users').doc(uid).set({hostId:acct.hostId},{merge:true}).then(()=>{
+    // Keep "type your Host ID to sign in" working: point the new ID at this account's email.
+    try{
+      if(prev&&prev.trim().toLowerCase()!==(acct.hostId||'').toLowerCase())db.collection('loginLookup').doc(prev.trim().toLowerCase()).delete().catch(()=>{});
+      if(acct.hostId&&acct.email)db.collection('loginLookup').doc(acct.hostId.toLowerCase()).set({email:acct.email}).catch(()=>{});
+    }catch(_){}
+  }).catch(e=>{
     acct.hostId=prev;renderAccounts();
     alert('Failed to update Host ID: '+e.message);
   });
