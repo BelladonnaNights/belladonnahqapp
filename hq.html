@@ -1205,12 +1205,14 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
     <div class="form-group"><label class="form-label">Notes (optional)</label><textarea class="form-textarea" id="gigNotes" placeholder="Any details about this gig..." style="min-height:60px;"></textarea></div>
     <div class="form-group" id="gigRepeatRow">
       <label class="form-label">Repeat</label>
-      <select class="form-input" id="gigRepeatMode" onchange="const v=this.value;document.getElementById('gigRepeatCountRow').style.display=(v==='none'||v==='weekly-forever'||v==='monthly-forever')?'none':'flex';document.getElementById('gigRepeatUnitLabel').textContent=v==='monthly'?'months':'weeks';">
-        <option value="none">Does not repeat</option>
-        <option value="weekly">Repeats every week</option>
-        <option value="monthly">Repeats every month</option>
-        <option value="weekly-forever">Repeats every week, indefinitely</option>
-        <option value="monthly-forever">Repeats every month, indefinitely</option>
+      <select class="form-input" id="gigRepeatMode" onchange="const v=this.value;document.getElementById('gigRepeatCountRow').style.display=(v==='none'||v.indexOf('forever')!==-1)?'none':'flex';document.getElementById('gigRepeatUnitLabel').textContent=v==='monthly'?'months':(v==='biweekly'?'times (every 2 weeks)':'weeks');">
+        <option value="none">Single (one time only)</option>
+        <option value="weekly">Weekly</option>
+        <option value="biweekly">Bi-weekly (every other week)</option>
+        <option value="monthly">Monthly (same weekday each month)</option>
+        <option value="weekly-forever">Weekly, indefinitely</option>
+        <option value="biweekly-forever">Bi-weekly, indefinitely</option>
+        <option value="monthly-forever">Monthly, indefinitely</option>
       </select>
       <div style="font-size:0.65rem;color:var(--text3);margin-top:0.4rem;">"Indefinitely" schedules 2 years out — long enough that you'll never notice it end, without literally being infinite in the database. Re-open this gig later to extend it further whenever you want.</div>
     </div>
@@ -2172,6 +2174,19 @@ function startOfWeekMonday(d){const x=new Date(d);x.setHours(0,0,0,0);x.setDate(
 function dateToKey(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
 // Gigs from OTHER apps (Trivia planner, Bingo) — not HQ's own gigSchedule.
 // Shared by the Dashboard's week view and the Schedule tab's calendar.
+// Same frequency rules the Planner uses (weekly / biweekly / monthly / single).
+function plannerVenueRunsOn(v,dk){
+  if(!v)return false;
+  const cad=v.cadence||'weekly',st=v.status||'active';
+  const d=new Date(dk+'T12:00:00');
+  if(cad==='single')return !!v.cadenceAnchor&&v.cadenceAnchor===dk&&(st==='active'||st==='seasonal'||st==='one-time');
+  if(!(st==='active'||st==='seasonal'))return false;
+  if(PLANNER_DAY_MAP[v.day]!==d.getDay())return false;
+  const a=v.cadenceAnchor?new Date(v.cadenceAnchor+'T12:00:00'):null;
+  if(cad==='biweekly'&&a){const diff=Math.round((d-a)/86400000);return Math.abs(Math.floor(diff/7))%2===0;}
+  if(cad==='monthly'&&a)return Math.ceil(d.getDate()/7)===Math.ceil(a.getDate()/7);
+  return true;
+}
 function getExternalGigsForDate(dk,dow){
   const out=[];
   // Anything HQ already pushed into Planner/Bingo (pushGigToExternalPlanner) has
@@ -2185,7 +2200,7 @@ function getExternalGigsForDate(dk,dow){
       const override=(pg&&pg[id])?pg[id][dk]:null;
       // A real per-date record always shows; otherwise fall back to the venue's usual weekday.
       const hasExplicitRecord=!!override;
-      const recurs=(v.status==='active'||v.status==='seasonal')&&PLANNER_DAY_MAP[v.day]===dow;
+      const recurs=plannerVenueRunsOn(v,dk);
       if(!hasExplicitRecord&&!recurs)return;
       const cancelled=!!(override&&override.status==='cancelled');
       const kind=kindKey==='Events'?((override&&override.eventKind)||v.eventKind||'Events'):kindKey;
@@ -2547,7 +2562,7 @@ function persistGig(entry,isDelete){
   const oldLoc=_gigLastLoc[entry.id];
   saveGigScheduleLocal();
   scheduleTipScheduleSync();
-  if(db){try{if(isDelete)db.collection('gig_schedule').doc(entry.id).delete();else db.collection('gig_schedule').doc(entry.id).set({date:entry.date,time:entry.time||'',endTime:entry.endTime||'',kind:entry.kind||'',venue:entry.venue,host:entry.host||'Unassigned',status:entry.status||'scheduled',notes:entry.notes||'',seriesId:entry.seriesId||null,locationId:entry.locationId||(currentLocationScope!=='ALL'?currentLocationScope:(locations[0]&&locations[0].code)||null)});}catch(e){}}
+  if(db){try{if(isDelete)db.collection('gig_schedule').doc(entry.id).delete();else db.collection('gig_schedule').doc(entry.id).set({date:entry.date,time:entry.time||'',endTime:entry.endTime||'',kind:entry.kind||'',venue:entry.venue,host:entry.host||'Unassigned',status:entry.status||'scheduled',notes:entry.notes||'',seriesId:entry.seriesId||null,cadence:entry.cadence||null,cadenceAnchor:entry.cadenceAnchor||null,locationId:entry.locationId||(currentLocationScope!=='ALL'?currentLocationScope:(locations[0]&&locations[0].code)||null)});}catch(e){}}
   // mirror to the Sheet so the Apps Script triggers (no-show + auto sign-out) can read it
   try{fetch(SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({form_type:'schedule',action:isDelete?'delete':'upsert',id:entry.id,date:entry.date,time:entry.time||'',endTime:entry.endTime||'',venue:entry.venue,host:entry.host||'Unassigned',status:entry.status||'scheduled',notes:entry.notes||''})});}catch(e){}
   const moved=!isDelete&&oldLoc&&(oldLoc.date!==entry.date||normVenueName(oldLoc.venue)!==normVenueName(entry.venue)||plannerKindKey(oldLoc.kind)!==plannerKindKey(entry.kind));
@@ -2579,7 +2594,7 @@ function pushGigToExternalPlanner(entry,isDelete){
       const path=paths.g+'/'+venueId+'/'+entry.date;
       if(isDelete){
         // A deleted gig on a regular weekly night = that night is cancelled; a one-off simply disappears.
-        const recurring=venueRec&&(venueRec.status==='active'||venueRec.status==='seasonal')&&PLANNER_DAY_MAP[venueRec.day]===dow&&kind!=='Events';
+        const recurring=venueRec&&plannerVenueRunsOn(venueRec,entry.date)&&kind!=='Events';
         if(recurring)return rtdb.ref(path).set(Object.assign({themeId:null,themeName:null,status:'cancelled',note:entry.notes||'(cancelled from HQ)',host:hostForPush,locationId:entry.locationId||null,cancelledByHQ:true},evExtra)).catch(()=>{});
         return rtdb.ref(path).remove().catch(()=>{});
       }
@@ -2598,7 +2613,7 @@ function pushGigToExternalPlanner(entry,isDelete){
     const key=kind+'|'+vName+'|'+(kind==='Events'?'':dow);
     if(!_venueCreates[key]){
       const id=rtdb.ref(paths.v).push().key;
-      _venueCreates[key]=rtdb.ref(paths.v+'/'+id).set(Object.assign({name:entry.venue,groupName:entry.venue,day:Object.keys(PLANNER_DAY_MAP).find(k=>PLANNER_DAY_MAP[k]===dow)||'',time:entry.time?fmtGigTime(entry.time):'',pay:{amount:null,method:''},status:(entry.seriesId&&kind!=='Events')?'active':'finished',source:'hq',cadence:'weekly',notes:'Created from HQ',host:(entry.seriesId&&kind!=='Events')?(hostForPush||''):'',locationId:entry.locationId||null,createdAt:Date.now()},evExtra)).then(()=>id);
+      _venueCreates[key]=rtdb.ref(paths.v+'/'+id).set(Object.assign({name:entry.venue,groupName:entry.venue,day:Object.keys(PLANNER_DAY_MAP).find(k=>PLANNER_DAY_MAP[k]===dow)||'',time:entry.time?fmtGigTime(entry.time):'',pay:{amount:null,method:''},status:(entry.seriesId&&kind!=='Events')?'active':'finished',source:'hq',cadence:entry.cadence||'weekly',cadenceAnchor:(entry.cadence&&entry.cadence!=='weekly')?entry.date:'',notes:'Created from HQ',host:(entry.seriesId&&kind!=='Events')?(hostForPush||''):'',locationId:entry.locationId||null,createdAt:Date.now()},evExtra)).then(()=>id);
     }
     _venueCreates[key].then(id=>writeGig(id,null)).catch(()=>{});
   }else if(kind==='Bingo'){
@@ -2647,17 +2662,19 @@ function syncAllGigsToPlanner(){
 function createGigEntry(base,repeatMode,count){
   repeatMode=repeatMode||'none';
   const isMonthly=repeatMode.indexOf('monthly')===0;
+  const isBiweekly=repeatMode.indexOf('biweekly')===0;
+  const cadence=repeatMode==='none'?null:(isMonthly?'monthly':(isBiweekly?'biweekly':'weekly'));
   const isForever=repeatMode.indexOf('forever')!==-1;
-  if(isForever)count=isMonthly?24:104; // ~2 years out, re-open the gig later to extend further
+  if(isForever)count=isMonthly?24:(isBiweekly?52:104); // ~2 years out, re-open the gig later to extend further
   else count=(repeatMode==='none')?1:(count||12);
   const seriesId=(repeatMode!=='none')?('series_'+Date.now()+'_'+Math.random().toString(36).slice(2,7)):null;
   const baseDate=new Date(base.date+'T12:00:00');
   for(let w=0;w<count;w++){
     const d=new Date(baseDate);
     if(isMonthly)d.setMonth(d.getMonth()+w);
-    else d.setDate(d.getDate()+w*7);
+    else d.setDate(d.getDate()+w*(isBiweekly?14:7));
     const dateStr=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
-    const entry={id:Date.now().toString()+'_'+w+'_'+Math.random().toString(36).slice(2,6),date:dateStr,time:base.time||'',endTime:base.endTime||'',kind:base.kind||'',venue:base.venue,host:base.host||'Unassigned',status:'scheduled',notes:base.notes||'',seriesId};
+    const entry={id:Date.now().toString()+'_'+w+'_'+Math.random().toString(36).slice(2,6),date:dateStr,time:base.time||'',endTime:base.endTime||'',kind:base.kind||'',venue:base.venue,host:base.host||'Unassigned',status:'scheduled',notes:base.notes||'',seriesId,cadence,cadenceAnchor:cadence?base.date:''};
     gigSchedule.push(entry);
     persistGig(entry,false);
   }
@@ -4647,7 +4664,7 @@ function renderVenueManage(){
     const hasPay=amountParts.length||v.payMethod||v.startDate;
     const payLine=hasPay?`<div style="font-size:0.68rem;color:var(--text3);margin-top:0.4rem;">${amountParts.join(', ')}${amountParts.length&&v.payMethod?' via ':(v.payMethod?'Pays via ':'')}${v.payMethod||''}${(amountParts.length||v.payMethod)&&v.startDate?' · ':''}${v.startDate?'Started '+formatDateShort(v.startDate):''}</div>`:'';
     const slots=v.gigSlots||[];
-    const slotsLine=slots.length?`<div style="font-size:0.66rem;color:var(--text3);margin-top:0.3rem;display:flex;flex-direction:column;gap:0.15rem;">${slots.map(s=>`<div>${s.kind||''} · ${s.day||''}${s.time?' '+formatTimeShort(s.time):''}${s.endTime?'–'+formatTimeShort(s.endTime):''}${s.price?' · '+s.price:''}</div>`).join('')}</div>`:'';
+    const slotsLine=slots.length?`<div style="font-size:0.66rem;color:var(--text3);margin-top:0.3rem;display:flex;flex-direction:column;gap:0.15rem;">${slots.map(s=>`<div>${s.kind||''} · ${({biweekly:'Every other ',monthly:'Monthly · ',single:'Single · '})[s.cadence]||''}${s.cadence==='single'&&s.anchor?formatDateShort(s.anchor):(s.day||'')}${s.time?' '+formatTimeShort(s.time):''}${s.endTime?'–'+formatTimeShort(s.endTime):''}${s.price?' · '+s.price:''}</div>`).join('')}</div>`:'';
     // The Planner's nights for this venue are the source of truth for who hosts — shown live here,
     // each with a dropdown that changes the PERMANENT host (a one-off fill-in is done from the
     // This Week dashboard or the Planner). Venues with no Planner night keep the old default host.
@@ -4678,6 +4695,10 @@ function renderVenueGigSlotRows(slots){
         <select class="form-input vm-slot-day">${VENUE_GIG_SLOT_DAYS.map(d=>`<option value="${d}"${s.day===d?' selected':''}>${d}</option>`).join('')}</select>
       </div>
       <div class="tp-top">
+        <select class="form-input vm-slot-cadence" onchange="this.closest('.tip-pay-row').querySelector('.vm-slot-anchor').style.display=this.value==='weekly'?'none':''">${[['weekly','Weekly'],['biweekly','Bi-weekly'],['monthly','Monthly'],['single','Single']].map(([k,l])=>`<option value="${k}"${(s.cadence||'weekly')===k?' selected':''}>${l}</option>`).join('')}</select>
+        <input type="date" class="form-input vm-slot-anchor" value="${s.anchor||''}" title="A date it runs (single = the date; bi-weekly/monthly = one date it falls on)" style="${(s.cadence||'weekly')==='weekly'?'display:none':''}">
+      </div>
+      <div class="tp-top">
         <input type="time" class="form-input vm-slot-time" value="${s.time||''}" title="Start time">
         <input type="time" class="form-input vm-slot-endtime" value="${s.endTime||''}" title="End time">
       </div>
@@ -4689,7 +4710,7 @@ function renderVenueGigSlotRows(slots){
 }
 function addVenueGigSlotRow(){
   const rows=readVenueGigSlotRows();
-  rows.push({id:Date.now().toString()+'_'+Math.random().toString(36).slice(2,5),kind:'Karaoke',day:'Monday',time:'',endTime:'',price:''});
+  rows.push({id:Date.now().toString()+'_'+Math.random().toString(36).slice(2,5),kind:'Karaoke',day:'Monday',cadence:'weekly',anchor:'',time:'',endTime:'',price:''});
   renderVenueGigSlotRows(rows);
 }
 function readVenueGigSlotRows(){
@@ -4697,6 +4718,8 @@ function readVenueGigSlotRows(){
     id:row.dataset.slotid,
     kind:row.querySelector('.vm-slot-kind').value,
     day:row.querySelector('.vm-slot-day').value,
+    cadence:row.querySelector('.vm-slot-cadence').value,
+    anchor:row.querySelector('.vm-slot-cadence').value==='weekly'?'':row.querySelector('.vm-slot-anchor').value,
     time:row.querySelector('.vm-slot-time').value,
     endTime:row.querySelector('.vm-slot-endtime').value,
     price:row.querySelector('.vm-slot-price').value.trim()
