@@ -29,6 +29,17 @@
   .up{display:flex;justify-content:space-between;border-bottom:1px solid var(--border);padding:.6rem 0;font-size:.85rem;color:var(--text2)}
   .up b{color:var(--text);font-weight:400}
   .foot{margin-top:2rem;text-align:center;font-size:.6rem;letter-spacing:.2em;text-transform:uppercase;color:var(--text3)}
+  .choice{display:block;width:100%;text-align:left;cursor:pointer;background:var(--surface);border:1px solid var(--border2);border-radius:14px;padding:1.2rem 1.2rem;margin-bottom:1rem;color:var(--text);font-family:inherit;letter-spacing:inherit;text-decoration:none}
+  .choice:active,.choice:hover{background:rgba(201,169,110,.10)}
+  .choice .c-t{font-family:'Playfair Display',serif;font-size:1.3rem;color:var(--gold);letter-spacing:.05em;display:flex;justify-content:space-between;align-items:center}
+  .choice .c-s{font-size:.8rem;color:var(--text2);margin-top:.35rem;line-height:1.5}
+  .choice.primary{border-color:var(--gold);background:rgba(201,169,110,.08)}
+  .back{background:none;border:none;color:var(--text3);font-family:inherit;letter-spacing:.14em;text-transform:uppercase;font-size:.68rem;cursor:pointer;margin-bottom:1rem;padding:.2rem 0}
+  .day{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1rem 1.1rem;margin-bottom:.8rem}
+  .day-h{font-size:.68rem;letter-spacing:.16em;text-transform:uppercase;color:var(--text3);margin-bottom:.4rem}
+  .ev{padding:.45rem 0;border-top:1px solid var(--border)}.day-h+.ev{border-top:none}
+  .ev-n{font-family:'Playfair Display',serif;color:var(--gold);font-size:1.05rem}.ev-n span{font-family:'Josefin Sans',sans-serif;font-size:.72rem;color:var(--text2);letter-spacing:.1em;margin-left:.4rem}
+  .ev-d{font-size:.82rem;color:var(--text2);line-height:1.55;margin-top:.1rem}
 </style>
 </head>
 <body>
@@ -46,6 +57,10 @@
   var KARAOKE_LIST = 'karaoke-list.html?id=';
   var TRIVIA_PLAY = 'https://belladonnanights.github.io/belladonnatrivia/play.html?g=';
   var pendingTrivia = false;
+  var CUR = {venue:'', date:''};
+  // Same recipe the Bingo app uses, so players and the host land in one shared game
+  function venueToken(n){ return String(n||'').toLowerCase().replace(/^the\s+/,'').replace(/[^a-z0-9]/g,''); }
+  function bingoPlayUrl(id){ return BINGO_APP+encodeURIComponent(id)+'&play&session='+encodeURIComponent(id+'_'+venueToken(CUR.venue)+'-'+CUR.date); }
 
   function esc(s){ var d=document.createElement('div'); d.textContent=s==null?'':String(s); return d.innerHTML; }
   function niceDate(k){ var p=k.split('-'); return new Date(+p[0],+p[1]-1,+p[2]).toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'}); }
@@ -59,7 +74,8 @@
     if(n.kind==='Bingo'){
       var rounds = (n.bingo && n.bingo.rounds) || [];
       if(rounds.length){
-        rounds.forEach(function(r,i){ var u=BINGO_APP+encodeURIComponent(r.id); links.push(u); h += '<a class="btn" href="'+u+'"><small>Round '+(i+1)+'</small>'+esc(r.title)+'</a>'; });
+        var nowOne = rounds.filter(function(r){return r.now;}).length;
+        rounds.forEach(function(r,i){ var u=bingoPlayUrl(r.id); if(!nowOne || r.now) links.push(u); var lab = r.now ? 'Playing now' : (r.round ? 'Round '+r.round : 'Round '+(i+1)); h += '<a class="btn" href="'+u+'"><small>'+lab+'</small>'+esc(r.title)+'</a>'; });
         h += '<div class="note">Tap a round to open your bingo card and play on your phone.</div>';
       } else h += '<div class="note">Tonight\'s categories aren\'t posted yet &mdash; ask your host and they\'ll get you set up.</div>';
     } else if(n.kind==='Karaoke'){
@@ -74,30 +90,81 @@
     return h + '</div>';
   }
 
+  var D = null;
+  function kindName(n){ return n.kind==='Bingo' ? 'Music Bingo' : (n.label || n.kind); }
+  function viewName(){ var h=(location.hash||'').replace('#',''); return (h==='play'||h==='upcoming') ? h : 'home'; }
+  function go(v){ location.hash = v==='home' ? '' : v; }   // hashchange re-renders; the phone's back button works
+
+  function head(d){ return '<div class="venue">'+esc(d.venue)+'</div><div class="date">'+esc(niceDate(d.date))+'</div>'; }
+
+  function homeView(d){
+    var live = (d.nights||[]).filter(function(n){return !n.cancelled;});
+    var h = head(d);
+    if(live.length){
+      var names = live.map(function(n){ return kindName(n)+(n.time?' &middot; '+esc(n.time):''); }).join('<br>');
+      var nm = live.map(function(n){ return esc(kindName(n)); });
+      h += '<button class="choice primary" onclick="go(\'play\')"><div class="c-t">Play tonight <span>&rarr;</span></div><div class="c-s">'+names+'</div></button>';
+    } else {
+      h += '<div class="msg" style="margin:.4rem 0 1.2rem">Nothing is scheduled here tonight.</div>';
+    }
+    var more = (d.ahead||[]).length;
+    h += '<button class="choice" onclick="go(\'upcoming\')"><div class="c-t">Upcoming events <span>&rarr;</span></div><div class="c-s">'+(more ? 'See what\'s coming up at '+esc(d.venue)+' &mdash; nights, themes and bingo categories.' : 'Nothing else is posted yet &mdash; check back soon.')+'</div></button>';
+    return h;
+  }
+
+  function upcomingView(d){
+    var h = '<button class="back" onclick="go(\'home\')">&larr; Back</button>' + head(d).replace(/<div class="date">.*<\/div>/,'<div class="date">Coming up</div>');
+    var ahead = d.ahead || [];
+    if(!ahead.length) return h + '<div class="msg">Nothing else is posted yet.<br>Check back soon.</div>';
+    ahead.forEach(function(day){
+      h += '<div class="day"><div class="day-h">'+esc(niceDate(day.date))+'</div>';
+      day.nights.forEach(function(n){
+        h += '<div class="ev"><div class="ev-n">'+esc(kindName(n))+(n.time?'<span>'+esc(n.time)+'</span>':'')+'</div>';
+        var det = [];
+        if(n.theme) det.push(esc(n.theme));
+        if(n.kind==='Bingo' && n.bingo && n.bingo.rounds && n.bingo.rounds.length) det.push(n.bingo.rounds.map(function(r,i){ return 'Round '+(i+1)+': '+esc(r.title); }).join('<br>'));
+        else if(n.kind==='Bingo') det.push('Categories to be announced');
+        if(n.kind==='Karaoke' && n.karaoke && n.karaoke.name && n.karaoke.name!==n.theme) det.push(esc(n.karaoke.name));
+        if(det.length) h += '<div class="ev-d">'+det.join('<br>')+'</div>';
+        h += '</div>';
+      });
+      h += '</div>';
+    });
+    return h;
+  }
+
+  function playView(d){
+    var live = (d.nights||[]);
+    var h = '<button class="back" onclick="go(\'home\')">&larr; Back</button>' + head(d);
+    if(!live.length) return h + '<div class="msg">Nothing is scheduled here tonight.</div>';
+    var links = []; pendingTrivia = false;
+    h += live.map(function(n){ return cardFor(n, links); }).join('');
+    return h;
+  }
+
   function render(d){
     var main = document.getElementById('main');
     if(!d.found){ main.innerHTML = '<div class="msg">We couldn\'t find that venue.<br>Ask your host for help.</div>'; return; }
-    var live = (d.nights||[]);
-    var h = '<div class="venue">'+esc(d.venue)+'</div><div class="date">'+esc(niceDate(d.date))+'</div>';
-    if(!live.length){
-      h += '<div class="msg">Nothing is scheduled here tonight.</div>';
-      if((d.upcoming||[]).length){ h += '<div class="card"><div class="k-name" style="font-size:1rem;margin-bottom:.4rem">Coming up</div>'+d.upcoming.map(function(u){ return '<div class="up"><span>'+esc(shortDate(u.date))+'</span><b>'+esc(u.kind)+(u.time?' &middot; '+esc(u.time):'')+'</b></div>'; }).join('')+'</div>'; }
-      main.innerHTML = h; return;
-    }
-    var links = []; pendingTrivia = false;
-    h += live.map(function(n){ return cardFor(n, links); }).join('');
-    // Exactly one place to go and nothing else to read? Just take them there.
-    if(links.length===1 && live.filter(function(n){return !n.cancelled;}).length===1){ location.replace(links[0]); return; }
-    main.innerHTML = h;
-    if(pendingTrivia) setTimeout(load, 10000); // flips to "Join Trivia" on its own
+    D = d; CUR.venue=d.venue; CUR.date=d.date;
+    paint();
   }
+  function paint(){
+    if(!D) return;
+    var v = viewName(), main = document.getElementById('main');
+    pendingTrivia = false;
+    main.innerHTML = v==='play' ? playView(D) : v==='upcoming' ? upcomingView(D) : homeView(D);
+    window.scrollTo(0,0);
+    // only the Play screen needs to keep refreshing (trivia flips to "Join Trivia" by itself)
+    if(v==='play' && pendingTrivia) setTimeout(function(){ if(viewName()==='play') load(true); }, 10000);
+  }
+  window.addEventListener('hashchange', paint);
 
   var slug = new URLSearchParams(location.search).get('v');
   if(!slug){ document.getElementById('main').innerHTML = '<div class="msg">This link is missing its venue.<br>Scan the QR code at your table again.</div>'; }
   else load();
-  function load(){
+  function load(quiet){
     fetch(API+'?v='+encodeURIComponent(slug)).then(function(r){ if(!r.ok) throw new Error(r.status); return r.json(); }).then(render)
-      .catch(function(){ if(!document.getElementById('main').querySelector('.card')) document.getElementById('main').innerHTML = '<div class="msg">Couldn\'t load tonight\'s info.<br>Check your connection and scan again.</div>'; });
+      .catch(function(){ if(!quiet && !D) document.getElementById('main').innerHTML = '<div class="msg">Couldn\'t load tonight\'s info.<br>Check your connection and scan again.</div>'; });
   }
 </script>
 </body>
