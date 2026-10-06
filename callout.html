@@ -101,33 +101,59 @@ auth.onAuthStateChanged(async user=>{
 const myNames=me=>[me.name,me.displayName,me.fullName].map(norm).filter(Boolean);
 async function start(user,me){
   const names=myNames(me), isAdmin=me.role==='admin';
-  let gigs=[],open={};
+  let all=[],open={},showAll=false,qDate='',qText='';
+  const today=todayKey();
   try{
-    const g=await fs.collection('gig_schedule').where('date','>=',todayKey()).get();
-    g.forEach(d=>{const x=d.data();x.id=d.id;if(x.status==='cancelled')return;if(isAdmin||names.includes(norm(x.host)))gigs.push(x);});
+    const g=await fs.collection('gig_schedule').where('date','>=',today).get();
+    g.forEach(d=>{const x=d.data();x.id=d.id;if(x.status!=='cancelled')all.push(x);});
     const o=await fs.collection('shiftCallouts').where('originalHostUid','==',user.uid).where('status','==','open').get();
     o.forEach(d=>{open[d.data().gigId]=d.id;});
   }catch(e){say('<div class="empty">Could not load your shifts. '+esc(errText(e))+'</div>');return;}
-  gigs.sort((a,b)=>(a.date+(a.time||'')).localeCompare(b.date+(b.time||'')));
-  if(!gigs.length){say('<div class="empty">You have no upcoming shifts on the schedule.</div>');return;}
-  say('<div class="detail" style="margin-bottom:.4rem">Pick the shift you can\'t make. Every opted-in host in your area gets a text, and the first one to claim it takes the shift.</div>'+
-    gigs.map(g=>'<div class="gig"><div class="gig-t">'+esc(g.venue||'Venue')+'</div><div class="gig-s">'+esc(pDate(g.date))+(g.time?' · '+esc(g.time):'')+(g.kind?' · '+esc(g.kind):'')+(isAdmin&&g.host?' · '+esc(g.host):'')+'</div>'+
-      (open[g.id]?'<span class="gig-tag">Open — hosts texted</span><button class="submit-btn" data-cancel="'+open[g.id]+'">Cancel — I can make it</button>':
-      '<button class="submit-btn warn-btn" data-gig="'+g.id+'">I can\'t make this one</button>')+'</div>').join('')+'<div class="msg" id="msg"></div>');
+  all.sort((a,b)=>(a.date+(a.time||'')).localeCompare(b.date+(b.time||'')));
+  const mine=g=>(isAdmin&&showAll)||names.includes(norm(g.host));
+  const card1=g=>'<div class="gig"><div class="gig-t">'+esc(g.venue||'Venue')+'</div><div class="gig-s">'+esc(pDate(g.date))+(g.time?' · '+esc(g.time):'')+(g.kind?' · '+esc(g.kind):'')+(isAdmin&&showAll&&g.host?' · '+esc(g.host):'')+'</div>'+
+    (open[g.id]?'<span class="gig-tag">Open — hosts texted</span><button class="submit-btn" data-cancel="'+open[g.id]+'">Cancel — I can make it</button>':
+    '<button class="submit-btn warn-btn" data-gig="'+g.id+'">I can\'t make this one</button>')+'</div>';
+  function draw(){
+    const my=all.filter(mine);
+    const todays=my.filter(g=>g.date===today);
+    let res=null;
+    if(qDate||qText){
+      res=my.filter(g=>(!qDate||g.date===qDate)&&(!qText||norm(g.venue+' '+g.kind).includes(norm(qText))));
+    }
+    const keep=document.activeElement&&document.activeElement.id;
+    say('<div class="detail" style="margin-bottom:.4rem">Find the shift you can\'t make. Every opted-in host in your area gets a text, and the first one to claim it takes the shift.</div>'+
+      '<div class="sec">Today</div>'+(todays.length?todays.map(card1).join(''):'<div class="empty" style="padding:.3rem 0">No shifts today.</div>')+
+      '<div class="sec">Find a shift</div>'+
+      '<div class="field"><label class="field-label" for="qd">Date</label><input type="date" class="field-input" id="qd" min="'+today+'" value="'+esc(qDate)+'"></div>'+
+      '<div class="field"><label class="field-label" for="qt">Venue or night</label><input type="text" class="field-input" id="qt" placeholder="e.g. Brews" value="'+esc(qText)+'"></div>'+
+      (isAdmin?'<label style="font-size:.7rem;color:var(--text3);display:block;margin-bottom:1rem"><input type="checkbox" id="qa"'+(showAll?' checked':'')+'> Show all hosts\' shifts (admin)</label>':'')+
+      (res===null?'<div class="empty">Pick a date or type a venue to see shifts.</div>':
+        (res.length?res.slice(0,30).map(card1).join('')+(res.length>30?'<div class="empty">Showing the first 30 — narrow it down.</div>':''):'<div class="empty">No shifts match that.</div>'))+
+      '<div class="msg" id="msg"></div>');
+    const qd=document.getElementById('qd'),qt=document.getElementById('qt'),qa=document.getElementById('qa');
+    qd.onchange=()=>{qDate=qd.value;draw();};
+    qt.oninput=()=>{qText=qt.value;draw();const n=document.getElementById('qt');n.focus();n.setSelectionRange(n.value.length,n.value.length);};
+    if(qa)qa.onchange=()=>{showAll=qa.checked;draw();};
+    wire();
+  }
   const msg=(t,ok)=>{const m=document.getElementById('msg');m.className='msg '+(ok?'msg-success':'msg-error');m.textContent=t;m.style.display='block';};
-  card.querySelectorAll('[data-gig]').forEach(b=>b.onclick=async()=>{
-    if(!confirm('Open this shift up and text the other hosts?'))return;
-    b.disabled=true;b.textContent='Sending…';
-    try{const r=(await fns.httpsCallable('requestCoverage')({gigId:b.dataset.gig})).data;
-      msg('Done — '+r.sent+' host'+(r.sent===1?'':'s')+' texted'+(r.notTexted?' ('+r.notTexted+' not reachable by text)':'')+'. You\'ll get a text when someone claims it. Until then, the shift is still yours.',true);
-      setTimeout(()=>start(user,me),2500);
-    }catch(e){b.disabled=false;b.textContent='I can\'t make this one';msg(errText(e),false);}
-  });
-  card.querySelectorAll('[data-cancel]').forEach(b=>b.onclick=async()=>{
-    b.disabled=true;
-    try{await fns.httpsCallable('cancelCoverage')({calloutId:b.dataset.cancel});start(user,me);}
-    catch(e){b.disabled=false;msg(errText(e),false);}
-  });
+  function wire(){
+    card.querySelectorAll('[data-gig]').forEach(b=>b.onclick=async()=>{
+      if(!confirm('Open this shift up and text the other hosts?'))return;
+      b.disabled=true;b.textContent='Sending…';
+      try{const r=(await fns.httpsCallable('requestCoverage')({gigId:b.dataset.gig})).data;
+        open[b.dataset.gig]=r.calloutId;
+        draw();msg('Done — '+r.sent+' host'+(r.sent===1?'':'s')+' texted'+(r.notTexted?' ('+r.notTexted+' not reachable by text)':'')+'. You\'ll get a text when someone claims it. Until then, the shift is still yours.',true);
+      }catch(e){b.disabled=false;b.textContent='I can\'t make this one';msg(errText(e),false);}
+    });
+    card.querySelectorAll('[data-cancel]').forEach(b=>b.onclick=async()=>{
+      b.disabled=true;
+      try{await fns.httpsCallable('cancelCoverage')({calloutId:b.dataset.cancel});
+        Object.keys(open).forEach(k=>{if(open[k]===b.dataset.cancel)delete open[k];});draw();}
+      catch(e){b.disabled=false;msg(errText(e),false);}
+    });
+  }
+  draw();
 }
-
 </script></body></html>
