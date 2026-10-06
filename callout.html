@@ -65,6 +65,18 @@
   .big{font-family:'Cormorant Garamond',serif;font-size:1.6rem;color:var(--text);text-align:center;line-height:1.3;margin:.3rem 0 .2rem;}
   .detail{text-align:center;color:var(--text2);font-size:.82rem;line-height:1.8;letter-spacing:.06em;margin-bottom:1.2rem;}
   .back{display:block;text-align:center;margin-top:1.4rem;font-size:.65rem;letter-spacing:.2em;text-transform:uppercase;color:var(--text3);text-decoration:none;}
+
+  .sugg{position:relative;} .sugg-list{position:absolute;left:0;right:0;top:100%;z-index:20;margin-top:4px;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;overflow:hidden;box-shadow:0 8px 24px rgba(0,0,0,.6);}
+  .sugg-item{padding:.65rem 1rem;font-size:.78rem;letter-spacing:.05em;color:var(--text2);cursor:pointer;border-bottom:1px solid var(--border);} .sugg-item:last-child{border-bottom:none;} .sugg-item:hover,.sugg-item.act{background:rgba(201,169,110,.12);color:var(--text);} .sugg-item small{display:block;font-size:.62rem;color:var(--text3);letter-spacing:.1em;margin-top:.15rem;}
+  .datebtn{width:100%;text-align:left;display:flex;justify-content:space-between;align-items:center;cursor:pointer;} .datebtn span:last-child{color:var(--gold);font-size:.7rem;}
+  .cal{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:.8rem;margin-top:.5rem;}
+  .cal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:.6rem;} .cal-title{font-family:'Cormorant Garamond',serif;font-size:1.15rem;color:var(--text);letter-spacing:.06em;}
+  .cal-nav{background:none;border:1px solid var(--border);color:var(--gold);border-radius:8px;width:2rem;height:2rem;cursor:pointer;font-size:1rem;line-height:1;} .cal-nav:hover{border-color:var(--gold);}
+  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;} .cal-dow{font-size:.55rem;letter-spacing:.15em;color:var(--text3);text-align:center;padding:.2rem 0;text-transform:uppercase;}
+  .cal-day{position:relative;aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:.75rem;color:var(--text3);border-radius:8px;border:1px solid transparent;background:none;font-family:inherit;cursor:default;padding:0;}
+  .cal-day.has{color:var(--text);cursor:pointer;background:rgba(201,169,110,.08);} .cal-day.has::after{content:'';position:absolute;bottom:4px;width:4px;height:4px;border-radius:50%;background:var(--gold);} .cal-day.has:hover{border-color:var(--gold);}
+  .cal-day.today{border-color:var(--border2);} .cal-day.sel{background:rgba(201,169,110,.28);border-color:var(--gold);color:var(--text);}
+  .cal-foot{display:flex;justify-content:space-between;margin-top:.6rem;font-size:.62rem;letter-spacing:.15em;text-transform:uppercase;color:var(--text3);} .cal-foot button{background:none;border:none;color:var(--gold);cursor:pointer;font:inherit;letter-spacing:inherit;text-transform:inherit;}
 </style></head><body>
 <div class="form-wrap">
   <div class="form-header"><div class="brand">Belladonna</div><div class="form-subtitle" style="font-family:'Bebas Neue',sans-serif;font-size:1.25rem;letter-spacing:.14em;color:var(--gold2);margin-top:.15rem">Can't Make It</div></div>
@@ -98,62 +110,96 @@ auth.onAuthStateChanged(async user=>{
   }catch(e){say('<div class="empty">Could not load your account. Please refresh.</div>');}
 });
 
-const myNames=me=>[me.name,me.displayName,me.fullName].map(norm).filter(Boolean);
+
+const MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
+const pad=n=>String(n).padStart(2,'0');
+const keyOf=(y,m,d)=>y+'-'+pad(m+1)+'-'+pad(d);
 async function start(user,me){
-  const names=myNames(me), isAdmin=me.role==='admin';
-  let all=[],open={},showAll=false,qDate='',qText='';
+  const isAdmin=me.role==='admin';
   const today=todayKey();
-  try{
-    const g=await fs.collection('gig_schedule').where('date','>=',today).get();
-    g.forEach(d=>{const x=d.data();x.id=d.id;if(x.status!=='cancelled')all.push(x);});
-    const o=await fs.collection('shiftCallouts').where('originalHostUid','==',user.uid).where('status','==','open').get();
-    o.forEach(d=>{open[d.data().gigId]=d.id;});
-  }catch(e){say('<div class="empty">Could not load your shifts. '+esc(errText(e))+'</div>');return;}
-  all.sort((a,b)=>(a.date+(a.time||'')).localeCompare(b.date+(b.time||'')));
-  const mine=g=>(isAdmin&&showAll)||names.includes(norm(g.host));
-  const card1=g=>'<div class="gig"><div class="gig-t">'+esc(g.venue||'Venue')+'</div><div class="gig-s">'+esc(pDate(g.date))+(g.time?' · '+esc(g.time):'')+(g.kind?' · '+esc(g.kind):'')+(isAdmin&&showAll&&g.host?' · '+esc(g.host):'')+'</div>'+
-    (open[g.id]?'<span class="gig-tag">Open — hosts texted</span><button class="submit-btn" data-cancel="'+open[g.id]+'">Cancel — I can make it</button>':
-    '<button class="submit-btn warn-btn" data-gig="'+g.id+'">I can\'t make this one</button>')+'</div>';
-  function draw(){
-    const my=all.filter(mine);
-    const todays=my.filter(g=>g.date===today);
-    let res=null;
-    if(qDate||qText){
-      res=my.filter(g=>(!qDate||g.date===qDate)&&(!qText||norm(g.venue+' '+g.kind).includes(norm(qText))));
-    }
-    const keep=document.activeElement&&document.activeElement.id;
-    say('<div class="detail" style="margin-bottom:.4rem">Find the shift you can\'t make. Every opted-in host in your area gets a text, and the first one to claim it takes the shift.</div>'+
-      '<div class="sec">Today</div>'+(todays.length?todays.map(card1).join(''):'<div class="empty" style="padding:.3rem 0">No shifts today.</div>')+
-      '<div class="sec">Find a shift</div>'+
-      '<div class="field"><label class="field-label" for="qd">Date</label><input type="date" class="field-input" id="qd" min="'+today+'" value="'+esc(qDate)+'"></div>'+
-      '<div class="field"><label class="field-label" for="qt">Venue or night</label><input type="text" class="field-input" id="qt" placeholder="e.g. Brews" value="'+esc(qText)+'"></div>'+
-      (isAdmin?'<label style="font-size:.7rem;color:var(--text3);display:block;margin-bottom:1rem"><input type="checkbox" id="qa"'+(showAll?' checked':'')+'> Show all hosts\' shifts (admin)</label>':'')+
-      (res===null?'<div class="empty">Pick a date or type a venue to see shifts.</div>':
-        (res.length?res.slice(0,30).map(card1).join('')+(res.length>30?'<div class="empty">Showing the first 30 — narrow it down.</div>':''):'<div class="empty">No shifts match that.</div>'))+
-      '<div class="msg" id="msg"></div>');
-    const qd=document.getElementById('qd'),qt=document.getElementById('qt'),qa=document.getElementById('qa');
-    qd.onchange=()=>{qDate=qd.value;draw();};
-    qt.oninput=()=>{qText=qt.value;draw();const n=document.getElementById('qt');n.focus();n.setSelectionRange(n.value.length,n.value.length);};
-    if(qa)qa.onchange=()=>{showAll=qa.checked;draw();};
-    wire();
+  let shifts=[],showAll=false,selDate='',qText='',calOpen=false,calMonth=new Date(+today.slice(0,4),+today.slice(5,7)-1,1),suggIdx=-1;
+  async function load(){
+    const r=(await fns.httpsCallable('listMyShifts')({all:showAll})).data;
+    shifts=r.shifts||[];
   }
-  const msg=(t,ok)=>{const m=document.getElementById('msg');m.className='msg '+(ok?'msg-success':'msg-error');m.textContent=t;m.style.display='block';};
-  function wire(){
-    card.querySelectorAll('[data-gig]').forEach(b=>b.onclick=async()=>{
+  try{await load();}catch(e){say('<div class="empty">Could not load your shifts. '+esc(errText(e))+'</div>');return;}
+  say('<div class="detail" style="margin-bottom:.4rem">Find the shift you can\'t make. Every opted-in host in your area gets a text, and the first one to claim it takes the shift.</div>'+
+    '<div class="sec">Today</div><div id="today"></div>'+
+    '<div class="sec">Find a shift</div>'+
+    '<div class="field"><label class="field-label">Date</label><button type="button" class="field-input datebtn" id="datebtn"><span id="datelabel">Any date</span><span>▾</span></button><div id="cal"></div></div>'+
+    '<div class="field sugg"><label class="field-label" for="qt">Venue or night</label><input type="text" class="field-input" id="qt" placeholder="Start typing a venue…" autocomplete="off"><div id="sugg"></div></div>'+
+    (isAdmin?'<label style="font-size:.7rem;color:var(--text3);display:block;margin-bottom:1rem"><input type="checkbox" id="qa"> Show all hosts\' shifts (admin)</label>':'')+
+    '<div id="results"></div><div class="msg" id="msg"></div>');
+  const $=id=>document.getElementById(id);
+  const msg=(t,ok)=>{const m=$('msg');m.className='msg '+(ok?'msg-success':'msg-error');m.textContent=t;m.style.display='block';m.scrollIntoView({block:'nearest'});};
+  const card1=g=>'<div class="gig"><div class="gig-t">'+esc(g.venue||'Venue')+'</div><div class="gig-s">'+esc(pDate(g.date))+(g.time?' · '+esc(fmtT(g.time)):'')+(g.kind?' · '+esc(g.kind):'')+(showAll&&g.host?' · '+esc(g.host):'')+'</div>'+
+    (g.openCalloutId?'<span class="gig-tag">Open — hosts texted</span><button class="submit-btn" data-cancel="'+g.openCalloutId+'">Cancel — I can make it</button>':
+    '<button class="submit-btn warn-btn" data-gig="'+esc(g.key)+'">I can\'t make this one</button>')+'</div>';
+  function fmtT(t){const m=/^(\d{1,2}):(\d{2})/.exec(t||'');if(!m)return t;let h=+m[1];const ap=h>=12?'PM':'AM';h=h%12||12;return h+(m[2]==='00'?'':':'+m[2])+' '+ap;}
+  function renderToday(){const t=shifts.filter(g=>g.date===today);$('today').innerHTML=t.length?t.map(card1).join(''):'<div class="empty" style="padding:.3rem 0">No shifts today.</div>';}
+  function renderResults(){
+    let res=null;
+    if(selDate||qText){res=shifts.filter(g=>(!selDate||g.date===selDate)&&(!qText||norm(g.venue+' '+g.kind).includes(norm(qText))));}
+    $('results').innerHTML=res===null?'<div class="empty">Pick a date or type a venue to see shifts.</div>':
+      (res.length?res.slice(0,30).map(card1).join('')+(res.length>30?'<div class="empty">Showing the first 30 — narrow it down.</div>':''):'<div class="empty">No shifts match that.</div>');
+  }
+  function renderCal(){
+    if(!calOpen){$('cal').innerHTML='';return;}
+    const y=calMonth.getFullYear(),m=calMonth.getMonth();
+    const has={};shifts.forEach(g=>{if((!qText||norm(g.venue+' '+g.kind).includes(norm(qText))))has[g.date]=1;});
+    const first=new Date(y,m,1).getDay(),dim=new Date(y,m+1,0).getDate();
+    let cells='';['S','M','T','W','T','F','S'].forEach(d=>cells+='<div class="cal-dow">'+d+'</div>');
+    for(let i=0;i<first;i++)cells+='<div></div>';
+    for(let d=1;d<=dim;d++){const k=keyOf(y,m,d);cells+='<button type="button" class="cal-day'+(has[k]?' has':'')+(k===today?' today':'')+(k===selDate?' sel':'')+'" '+(has[k]?'data-d="'+k+'"':'disabled')+'>'+d+'</button>';}
+    $('cal').innerHTML='<div class="cal"><div class="cal-head"><button type="button" class="cal-nav" data-nav="-1">‹</button><div class="cal-title">'+MONTHS[m]+' '+y+'</div><button type="button" class="cal-nav" data-nav="1">›</button></div><div class="cal-grid">'+cells+'</div><div class="cal-foot"><span>● = you have a shift</span><button type="button" id="calclear">Clear date</button></div></div>';
+  }
+  function setDate(k){selDate=k;$('datelabel').textContent=k?pDate(k):'Any date';calOpen=false;renderCal();renderResults();}
+  function renderSugg(){
+    const q=norm(qText),seen={},list=[];
+    shifts.forEach(g=>{const n=g.venue;if(!n||seen[n])return;seen[n]=1;if(!q||norm(n+' '+g.kind).includes(q))list.push(g);});
+    const box=$('sugg');
+    if(!list.length||document.activeElement!==$('qt')||(list.length===1&&norm(list[0].venue)===q)){box.innerHTML='';return;}
+    suggIdx=Math.min(suggIdx,list.length-1);
+    box.innerHTML='<div class="sugg-list">'+list.slice(0,6).map((g,i)=>'<div class="sugg-item'+(i===suggIdx?' act':'')+'" data-v="'+esc(g.venue)+'">'+esc(g.venue)+'<small>'+esc(g.kind||'')+'</small></div>').join('')+'</div>';
+  }
+  $('datebtn').onclick=()=>{calOpen=!calOpen;if(calOpen&&selDate)calMonth=new Date(+selDate.slice(0,4),+selDate.slice(5,7)-1,1);renderCal();};
+  $('cal').addEventListener('click',e=>{
+    const t=e.target.closest('button');if(!t)return;
+    if(t.dataset.nav){calMonth=new Date(calMonth.getFullYear(),calMonth.getMonth()+(+t.dataset.nav),1);renderCal();}
+    else if(t.dataset.d){setDate(t.dataset.d);}
+    else if(t.id==='calclear'){setDate('');}
+  });
+  const qt=$('qt');
+  qt.addEventListener('input',()=>{qText=qt.value;suggIdx=-1;renderSugg();renderResults();if(calOpen)renderCal();});
+  qt.addEventListener('focus',()=>{suggIdx=-1;renderSugg();});
+  qt.addEventListener('keydown',e=>{
+    const items=[...document.querySelectorAll('.sugg-item')];
+    if(e.key==='ArrowDown'&&items.length){e.preventDefault();suggIdx=(suggIdx+1)%items.length;renderSugg();}
+    else if(e.key==='ArrowUp'&&items.length){e.preventDefault();suggIdx=(suggIdx-1+items.length)%items.length;renderSugg();}
+    else if(e.key==='Enter'&&suggIdx>=0&&items[suggIdx]){e.preventDefault();pick(items[suggIdx].dataset.v);}
+    else if(e.key==='Escape'){$('sugg').innerHTML='';}
+  });
+  function pick(v){qText=v;qt.value=v;suggIdx=-1;$('sugg').innerHTML='';renderResults();if(calOpen)renderCal();qt.blur();}
+  $('sugg').addEventListener('mousedown',e=>{const it=e.target.closest('.sugg-item');if(it){e.preventDefault();pick(it.dataset.v);}});
+  qt.addEventListener('blur',()=>setTimeout(()=>{$('sugg').innerHTML='';},120));
+  if($('qa'))$('qa').onchange=async()=>{showAll=$('qa').checked;try{await load();}catch(e){msg(errText(e),false);return;}renderToday();renderResults();renderCal();};
+  card.addEventListener('click',async e=>{
+    const b=e.target.closest('button');if(!b)return;
+    if(b.dataset.gig){
       if(!confirm('Open this shift up and text the other hosts?'))return;
       b.disabled=true;b.textContent='Sending…';
-      try{const r=(await fns.httpsCallable('requestCoverage')({gigId:b.dataset.gig})).data;
-        open[b.dataset.gig]=r.calloutId;
-        draw();msg('Done — '+r.sent+' host'+(r.sent===1?'':'s')+' texted'+(r.notTexted?' ('+r.notTexted+' not reachable by text)':'')+'. You\'ll get a text when someone claims it. Until then, the shift is still yours.',true);
-      }catch(e){b.disabled=false;b.textContent='I can\'t make this one';msg(errText(e),false);}
-    });
-    card.querySelectorAll('[data-cancel]').forEach(b=>b.onclick=async()=>{
+      try{const r=(await fns.httpsCallable('requestCoverage')({shiftKey:b.dataset.gig})).data;
+        const g=shifts.find(x=>x.key===b.dataset.gig);if(g)g.openCalloutId=r.calloutId;
+        renderToday();renderResults();
+        msg('Done — '+r.sent+' host'+(r.sent===1?'':'s')+' texted'+(r.notTexted?' ('+r.notTexted+' not reachable by text)':'')+'. You\'ll get a text when someone claims it. Until then, the shift is still yours.',true);
+      }catch(err){b.disabled=false;b.textContent='I can\'t make this one';msg(errText(err),false);}
+    }else if(b.dataset.cancel){
       b.disabled=true;
       try{await fns.httpsCallable('cancelCoverage')({calloutId:b.dataset.cancel});
-        Object.keys(open).forEach(k=>{if(open[k]===b.dataset.cancel)delete open[k];});draw();}
-      catch(e){b.disabled=false;msg(errText(e),false);}
-    });
-  }
-  draw();
+        shifts.forEach(g=>{if(g.openCalloutId===b.dataset.cancel)g.openCalloutId=null;});renderToday();renderResults();}
+      catch(err){b.disabled=false;msg(errText(err),false);}
+    }
+  });
+  renderToday();renderResults();
 }
 </script></body></html>
