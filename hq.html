@@ -2192,7 +2192,7 @@ function fetchBingoGigsForDate(dk,dow){
     const venue=(bingoVenuesMap&&bingoVenuesMap[e.venueId])?bingoVenuesMap[e.venueId].name:'Unknown Venue';
     const roundNames=(e.rounds||e.categoryIds||[]).map(cid=>(bingoCategoriesMap&&bingoCategoriesMap[cid])?bingoCategoriesMap[cid].title:null).filter(Boolean);
     const bv=(bingoVenuesMap&&bingoVenuesMap[e.venueId])||{};
-    return {venue,host:e.host||bv.host||'Unassigned',regularHost:bv.host||'',time:bv.time||'',dk,kindKey:'Bingo',pVenueId:e.venueId,pEntryId:e.id||null,kind:'Bingo',cancelled:false,source:'Bingo App',notes:(roundNames.length?'Rounds: '+roundNames.join(', '):'')+(e.notes?(roundNames.length?' — ':'')+e.notes:'')};
+    return {venue,host:e.host||bv.host||'Unassigned',regularHost:bv.host||'',time:e.time||bv.time||'',dk,kindKey:'Bingo',pVenueId:e.venueId,pEntryId:e.id||null,kind:'Bingo',cancelled:false,source:'Bingo App',notes:(roundNames.length?'Rounds: '+roundNames.join(', '):'')+(e.notes?(roundNames.length?' — ':'')+e.notes:'')};
   });
 }
 function startOfWeekMonday(d){const x=new Date(d);x.setHours(0,0,0,0);x.setDate(x.getDate()-((x.getDay()+6)%7));return x;}
@@ -2588,15 +2588,25 @@ function nightLabel(n){return n.name+' — '+n.kind+(n.day?' · '+n.day:'')+(n.t
 function renderVenueNightHosts(venueName){
   const wrap=document.getElementById('vmNightHostsWrap'),box=document.getElementById('vmNightHosts');
   if(!wrap||!box)return;
-  const nights=allPlannerNights().filter(n=>normVenueName(n.name)===normVenueName(venueName));
+  const all=allPlannerNights().filter(n=>normVenueName(n.name)===normVenueName(venueName));
+  // The Bingo app can hold more than one record for the same venue — show ONE Bingo row and change them together.
+  const nights=[];
+  all.forEach(n=>{
+    if(n.kind!=='Bingo'){nights.push(n);return;}
+    const ex=nights.find(x=>x.kind==='Bingo');
+    if(!ex){nights.push(Object.assign({dups:[]},n));return;}
+    ex.dups.push(n.id);
+    if(!ex.day&&n.day){ex.day=n.day;ex.time=n.time||ex.time;}
+    if(!ex.host&&n.host)ex.host=n.host;
+  });
   if(!venueName||!nights.length){wrap.style.display='none';return;}
   wrap.style.display='';
   box.innerHTML=nights.map(n=>`<div class="night-host-row"><span style="min-width:150px">${esc(n.kind)}${n.day?' · '+esc(n.day):''}${n.time?' '+esc(n.time):''}</span>
-    <select class="form-input" onchange="changeRegularHost('${n.kind}','${n.id}',this)">${hostOptionsHtml(n.host)}</select></div>`).join('');
+    <select class="form-input" onchange="changeRegularHost('${n.kind}','${n.id}',this,'${(n.dups||[]).join(',')}')">${hostOptionsHtml(n.host)}</select></div>`).join('');
 }
-async function changeRegularHost(kind,id,sel){
+async function changeRegularHost(kind,id,sel,dups){
   const hostVal=sel.value==='Unassigned'?null:sel.value;
-  try{await setPlannerRegularHost(kind,id,hostVal);}catch(e){alert('Could not save: '+e.message);}
+  try{await setPlannerRegularHost(kind,id,hostVal);for(const d of (dups||'').split(',').filter(Boolean))await setPlannerRegularHost(kind,d,hostVal);}catch(e){alert('Could not save: '+e.message);}
 }
 function renderHostRegularGigs(host){
   const wrap=document.getElementById('rmRegularWrap');if(!wrap)return;
@@ -2700,7 +2710,7 @@ function pushGigToExternalPlanner(entry,isDelete){
       const base=existing||_carryRec[entry.id]||{};
       delete _carryRec[entry.id];
       const id=existing?existing.id:rtdb.ref(paths.g).push().key;
-      rtdb.ref(paths.g+'/'+id).set(Object.assign({},base,{id,date:entry.date,venueId,notes:entry.notes||base.notes||'',host:hostForPush!=null?hostForPush:(base.host||null)})).catch(()=>{});
+      rtdb.ref(paths.g+'/'+id).set(Object.assign({},base,{id,date:entry.date,venueId,notes:entry.notes||base.notes||'',time:(/^\d{1,2}:\d{2}$/.test(entry.time||'')?entry.time:(base.time||null)),host:hostForPush!=null?hostForPush:(base.host||null)})).catch(()=>{});
     }
   }
 }
@@ -4803,6 +4813,25 @@ function readVenueAmounts(){
   VENUE_AMOUNT_KINDS.forEach(k=>{amounts[k]=document.getElementById('vmAmount'+k).value.trim();});
   return amounts;
 }
+// A gig slot saved without a time shows the real one instead of an empty box: the latest HQ gig of that
+// kind on that weekday, else the Planner / Bingo venue's own time.
+function fillSlotTimes(slots,venueName){
+  const dayIdx={sunday:0,monday:1,tuesday:2,wednesday:3,thursday:4,friday:5,saturday:6};
+  return (slots||[]).map(sl=>{
+    if(sl.time)return sl;
+    const dow=dayIdx[(sl.day||'').toLowerCase()];
+    const vn=normVenueName(venueName);let t='';
+    try{
+      const gs=(gigSchedule||[]).filter(g=>g.time&&normVenueName(g.venue)===vn&&(g.kind||'').toLowerCase()===(sl.kind||'').toLowerCase()&&new Date(g.date+'T12:00:00').getDay()===dow).sort((a,b)=>b.date.localeCompare(a.date));
+      if(gs.length)t=time24(gs[0].time);
+      if(!t&&plannerKindKey(sl.kind)==='Bingo'){
+        const bv=Object.values(bingoVenuesMap||{}).find(v=>normVenueName(v.name)===vn&&v.time);
+        if(bv)t=time24(bv.time);
+      }else if(!t){const pv=findPlannerVenue(sl.kind,venueName,dow);if(pv&&pv.v.time)t=time24(pv.v.time);}
+    }catch(e){}
+    return t?Object.assign({},sl,{time:t}):sl;
+  });
+}
 function openVenueModal(id=null){
   editVenueId=id;const venue=id?venues.find(v=>v.id===id):null;
   document.getElementById('venueModalTitle').textContent=id?'Edit Venue':'Add Venue';
@@ -4819,7 +4848,7 @@ function openVenueModal(id=null){
   document.getElementById('vmPayMethod').value=venue?venue.payMethod||'':'';
   document.getElementById('vmStartDate').value=venue?venue.startDate||'':'';
   document.getElementById('vmHistoryBtn').style.display=id?'':'none';
-  renderVenueGigSlotRows(venue?venue.gigSlots||[]:[]);
+  renderVenueGigSlotRows(venue?fillSlotTimes(venue.gigSlots||[],venue.name):[]);
   const locSel=document.getElementById('vmLocation');
   locSel.innerHTML=locations.map(l=>`<option value="${l.code}">${l.label}</option>`).join('');
   locSel.value=(venue&&venue.locationId)?venue.locationId:(currentLocationScope!=='ALL'?currentLocationScope:((locations[0]&&locations[0].code)||''));
