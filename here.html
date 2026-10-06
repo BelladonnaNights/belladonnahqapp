@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tonight — Belladonna</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Josefin+Sans:wght@200;300;400;600&display=swap');
+  *{margin:0;padding:0;box-sizing:border-box;}
+  :root{--bg:#000;--surface:#0d0d0d;--surface2:#141414;--border:rgba(201,169,110,0.2);--border2:rgba(201,169,110,0.4);--gold:#c9a96e;--text:#f0ece0;--text2:#b0a890;--text3:#8a8272;}
+  body{background:var(--bg);color:var(--text);font-family:'Josefin Sans',sans-serif;font-weight:300;min-height:100vh;letter-spacing:0.04em;}
+  .page{max-width:520px;margin:0 auto;padding:2.4rem 1.3rem 3rem;}
+  .hub-brand{font-family:'Playfair Display',serif;font-size:1.7rem;font-weight:700;color:var(--gold);letter-spacing:0.18em;text-transform:uppercase;text-align:center;}
+  .hub-sub{font-size:0.68rem;letter-spacing:0.45em;text-transform:uppercase;color:var(--text3);margin-top:0.2rem;text-align:center;}
+  .hub-ornament{color:#3a3428;font-family:'Cormorant Garamond',serif;font-size:1.05rem;letter-spacing:0.4em;margin:0.7rem 0 1.5rem;text-align:center;}
+  .venue{font-family:'Playfair Display',serif;font-size:1.7rem;color:var(--text);text-align:center;margin-bottom:0.2rem;}
+  .date{font-size:0.68rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--text3);text-align:center;margin-bottom:1.6rem;}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1.1rem 1.1rem 1rem;margin-bottom:1rem;}
+  .card.cancelled{opacity:.55}
+  .k-head{display:flex;align-items:baseline;justify-content:space-between;gap:.6rem;margin-bottom:.2rem}
+  .k-name{font-family:'Playfair Display',serif;font-size:1.25rem;color:var(--gold);letter-spacing:.06em}
+  .k-time{font-size:.78rem;color:var(--text2);letter-spacing:.1em;text-transform:uppercase}
+  .k-theme{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:1.05rem;color:var(--text2);margin-bottom:.8rem}
+  .btn{display:block;text-decoration:none;text-align:center;background:transparent;color:var(--gold);border:1px solid var(--border2);border-radius:10px;padding:.85rem 1rem;margin-top:.6rem;font-family:'Josefin Sans',sans-serif;font-size:.8rem;letter-spacing:.18em;text-transform:uppercase;font-weight:600;transition:background .2s}
+  .btn:hover,.btn:active{background:rgba(201,169,110,.12)}
+  .btn small{display:block;font-size:.62rem;letter-spacing:.14em;color:var(--text3);font-weight:300;margin-bottom:.2rem}
+  .note{font-size:.8rem;color:var(--text3);line-height:1.6;margin-top:.6rem}
+  .msg{text-align:center;color:var(--text2);line-height:1.7;font-size:.9rem;margin:2rem 0}
+  .up{display:flex;justify-content:space-between;border-bottom:1px solid var(--border);padding:.6rem 0;font-size:.85rem;color:var(--text2)}
+  .up b{color:var(--text);font-weight:400}
+  .foot{margin-top:2rem;text-align:center;font-size:.6rem;letter-spacing:.2em;text-transform:uppercase;color:var(--text3)}
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="hub-brand">Belladonna</div>
+  <div class="hub-sub">Audio Alchemies</div>
+  <div class="hub-ornament">&#10022; &#10022; &#10022;</div>
+  <div id="main"><div class="msg">Finding out what's on tonight&hellip;</div></div>
+  <div class="foot">belladonnanights.com</div>
+</div>
+<script>
+  // Where things open. here.html lives next to karaoke-list.html, so that link is relative.
+  var API = 'https://us-central1-belladonna-hq.cloudfunctions.net/venueTonight';
+  var BINGO_APP = 'https://belladonnanights.github.io/bingo/app.html?id=';
+  var KARAOKE_LIST = 'karaoke-list.html?id=';
+
+  function esc(s){ var d=document.createElement('div'); d.textContent=s==null?'':String(s); return d.innerHTML; }
+  function niceDate(k){ var p=k.split('-'); return new Date(+p[0],+p[1]-1,+p[2]).toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'}); }
+  function shortDate(k){ var p=k.split('-'); return new Date(+p[0],+p[1]-1,+p[2]).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'}); }
+
+  function cardFor(n, links){
+    var title = n.kind==='Bingo' ? 'Music Bingo' : (n.label || n.kind);
+    var h = '<div class="card'+(n.cancelled?' cancelled':'')+'"><div class="k-head"><div class="k-name">'+esc(title)+'</div><div class="k-time">'+esc(n.time||'')+'</div></div>';
+    if(n.cancelled){ return h + '<div class="note">Tonight\'s '+esc(title)+' has been cancelled.</div></div>'; }
+    if(n.theme && n.kind!=='Bingo') h += '<div class="k-theme">'+esc(n.theme)+'</div>';
+    if(n.kind==='Bingo'){
+      var rounds = (n.bingo && n.bingo.rounds) || [];
+      if(rounds.length){
+        rounds.forEach(function(r,i){ var u=BINGO_APP+encodeURIComponent(r.id); links.push(u); h += '<a class="btn" href="'+u+'"><small>Round '+(i+1)+'</small>'+esc(r.title)+'</a>'; });
+        h += '<div class="note">Tap a round to open your bingo card and play on your phone.</div>';
+      } else h += '<div class="note">Tonight\'s categories aren\'t posted yet &mdash; ask your host and they\'ll get you set up.</div>';
+    } else if(n.kind==='Karaoke'){
+      if(n.karaoke){ var u=KARAOKE_LIST+encodeURIComponent(n.karaoke.id); links.push(u); h += '<a class="btn" href="'+u+'"><small>Tonight\'s list</small>Browse the song list</a>'; }
+      else h += '<div class="note">Karaoke tonight! Ask your host to add your song to the line-up.</div>';
+    } else if(n.kind==='Trivia'){
+      h += '<div class="note">Trivia tonight! Scan the QR code on the TV screen to join the game, then pick your team name.</div>';
+    }
+    return h + '</div>';
+  }
+
+  function render(d){
+    var main = document.getElementById('main');
+    if(!d.found){ main.innerHTML = '<div class="msg">We couldn\'t find that venue.<br>Ask your host for help.</div>'; return; }
+    var live = (d.nights||[]);
+    var h = '<div class="venue">'+esc(d.venue)+'</div><div class="date">'+esc(niceDate(d.date))+'</div>';
+    if(!live.length){
+      h += '<div class="msg">Nothing is scheduled here tonight.</div>';
+      if((d.upcoming||[]).length){ h += '<div class="card"><div class="k-name" style="font-size:1rem;margin-bottom:.4rem">Coming up</div>'+d.upcoming.map(function(u){ return '<div class="up"><span>'+esc(shortDate(u.date))+'</span><b>'+esc(u.kind)+(u.time?' &middot; '+esc(u.time):'')+'</b></div>'; }).join('')+'</div>'; }
+      main.innerHTML = h; return;
+    }
+    var links = [];
+    h += live.map(function(n){ return cardFor(n, links); }).join('');
+    // Exactly one place to go and nothing else to read? Just take them there.
+    if(links.length===1 && live.filter(function(n){return !n.cancelled;}).length===1){ location.replace(links[0]); return; }
+    main.innerHTML = h;
+  }
+
+  var slug = new URLSearchParams(location.search).get('v');
+  if(!slug){ document.getElementById('main').innerHTML = '<div class="msg">This link is missing its venue.<br>Scan the QR code at your table again.</div>'; }
+  else fetch(API+'?v='+encodeURIComponent(slug)).then(function(r){ if(!r.ok) throw new Error(r.status); return r.json(); }).then(render)
+    .catch(function(){ document.getElementById('main').innerHTML = '<div class="msg">Couldn\'t load tonight\'s info.<br>Check your connection and scan again.</div>'; });
+</script>
+</body>
+</html>
