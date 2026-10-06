@@ -2264,6 +2264,7 @@ function getExternalGigsForDate(dk,dow){
   out.push(...fetchBingoGigsForDate(dk,dow).filter(it=>!hqVenuesForDate.has(normVenueName(it.venue))));
   return out;
 }
+function dashNote(it){return it.notes||((it.kind||'').toLowerCase()==='karaoke'&&!it.cancelled?'Regular karaoke':'');}
 function getDashboardGigsForDate(dk,dow){
   const out=[];
   gigSchedule.filter(g=>g.date===dk).forEach(g=>{
@@ -2273,6 +2274,9 @@ function getDashboardGigsForDate(dk,dow){
     out.push({venue:g.venue,host:(rec&&rec.host)||g.host||'Unassigned',regularHost:regularHostForGig(g),time:gigTimeFor(g),dk,hqGigId:g.id,kind:g.kind||'Gig',cancelled:g.status==='cancelled'||(rec&&rec.status==='cancelled')||gigCheckoutCancelled(g),source:'HQ Schedule',notes:(rec&&rec.themeName)||g.notes||''});
   });
   out.push(...getExternalGigsForDate(dk,dow));
+  // the same venue + kind listed twice on one date (duplicate venue records) shows once
+  {const best={};out.forEach(it=>{const k=normVenueName(it.venue)+'|'+(plannerKindKey(it.kind)||it.kind);const sc=(it.hqGigId?4:0)+(it.notes?2:0)+((it.host&&it.host!=='Unassigned')?1:0);if(!best[k]||sc>best[k].sc)best[k]={it,sc};});
+   const keep=new Set(Object.values(best).map(x=>x.it));for(let i=out.length-1;i>=0;i--)if(!keep.has(out[i]))out.splice(i,1);}
   if(dashboardKindFilter!=='all'&&dashboardKindFilter!=='hosts')return out.filter(it=>(it.kind||'').toLowerCase()===dashboardKindFilter);
   return out;
 }
@@ -2347,7 +2351,7 @@ function renderDashboardWeek(){
         const fill=isFillIn(it);
         return `<div class="daybox-item${it.cancelled?' cancelled':''}" onclick="showDashGigDetail(${idx})">
           <span class="daybox-kind-tag">${esc(it.kind)}</span>${it.time?` <span style="font-size:9px;color:var(--text3)">${esc(fmtGigTime(it.time))}</span>`:''}${it.cancelled?' <span style="font-size:9px">· CANCELLED</span>':''}<br>${esc(it.venue)}
-          ${it.notes?`<div class="dash-theme">${esc(it.notes)}</div>`:''}
+          ${dashNote(it)?`<div class="dash-theme">${esc(dashNote(it))}</div>`:''}
           ${fill?`<div class="dash-host-line" style="text-decoration:line-through;color:var(--text3)">${esc(it.regularHost)}</div><div class="dash-host-line fill" style="margin-left:12px">${esc(it.host)}</div>`:`<div class="dash-host-line">${esc(it.host&&it.host!=='Unassigned'?it.host:'Unassigned')}</div>`}
         </div>`;
       }).join('');
@@ -2365,7 +2369,7 @@ function showDashGigDetail(idx,fromSchedule){
     <div style="font-size:0.8rem;color:var(--text2);line-height:1.9;">
       <div><b style="color:var(--text3)">Type:</b> ${esc(it.kind)}</div>
       ${it.dk?`<div><b style="color:var(--text3)">Date:</b> ${esc(it.dk)}${it.time?' · '+esc(fmtGigTime(it.time)):''}</div>`:''}
-      ${it.notes?`<div><b style="color:var(--text3)">Theme:</b> ${esc(it.notes)}</div>`:''}
+      ${dashNote(it)?`<div><b style="color:var(--text3)">Theme:</b> ${esc(dashNote(it))}</div>`:''}
       <div><b style="color:var(--text3)">Host:</b>
         <select class="dash-host-sel${fill?' fill':''}" style="width:auto;min-width:160px;margin-top:0;" onchange="onDashHostChange(${idx},this,${fromSchedule?'true':'false'})">${hostOptionsHtml(it.host)}</select>
       </div>
@@ -2854,7 +2858,8 @@ function venueEditorSlots(v){
 // the master's usual start time for a venue's night of this kind and weekday
 function vmxMasterTime(kind,venueName,dow){
   const all=window.__vmxMaster||{};const k=vmxKey(venueName);
-  const m=Object.values(all).find(x=>x&&x.name&&vmxKey(x.name)===k);if(!m||!m.slots)return '';
+  const hv=(venues||[]).find(x=>x&&vmxKey(x.name)===k&&x.venueId&&all[x.venueId]);
+  const m=hv?all[hv.venueId]:Object.values(all).find(x=>x&&x.name&&vmxKey(x.name)===k);if(!m||!m.slots)return '';
   const want=plannerKindKey(kind)||kind;const day=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][dow];
   const sl=Object.values(m.slots).find(x=>x&&x.time&&x.day===day&&(plannerKindKey(x.kind)||x.kind)===want&&vmxLive(x.status));
   return sl?sl.time:'';
@@ -2897,9 +2902,53 @@ async function vmxSaveHQSlots(v,rows){
     upd['venues/'+m.id+'/active']=!v.inactive;
     await rtdb.ref().update(upd);
     window.__vmxMaster=Object.assign({},window.__vmxMaster||{},{[m.id]:Object.assign({},m.rec,{slots})});
-    try{renderVenueManage();}catch(e){}
-    hqToast('✓ Venue nights saved everywhere');
+    let msg='';
+    try{
+      const back=(await rtdb.ref('venues/'+m.id+'/slots').once('value')).val()||{};
+      const bad=[];const okl=[];
+      rows.forEach(r=>{
+        if(!r.kind||!r.day||r.status==='finished')return;
+        const hit=Object.values(back).find(b=>b&&b.kind===r.kind&&b.day===(VMX_DAY_FULL[vmxAbbr(r.day)]||r.day)&&(b.cadence||'weekly')===(r.cadence||'weekly'));
+        const want=vmxT24(r.time);
+        if(!hit||(want&&hit.time!==want))bad.push(r.kind+' '+r.day);else okl.push(r.kind+' '+vmxAbbr(r.day)+(want?' '+fmtGigTime(want):''));
+      });
+      if(bad.length)hqToast('These did NOT save to the master record: '+bad.join(', ')+' — screenshot this and send it to me.',true);
+      else msg='✓ Saved: '+okl.join(' · ');
+    }catch(e){}
+    let n=0;try{n=await vmxPushTimesToGigs(v,rows);}catch(e){console.warn('pushTimes',e);}
+    try{renderVenueManage();renderDashboardWeek();}catch(e){}
+    if(msg)hqToast(msg+(n?' · '+n+' upcoming gig time'+(n>1?'s':'')+' updated':''));
   }catch(e){console.warn('vmxSaveHQSlots',e);hqToast('Venue nights did NOT save to the master record: '+((e&&(e.code||e.message))||e),true);}
+}
+// A gig carries its own saved copy of the time, and that copy beats the venue's usual time everywhere.
+// So when a night's time is set on the venue, every upcoming gig of that regular night is moved to it too
+// (HQ gigs, Planner per-date records, Bingo schedule entries). One-off gigs (not part of a series) are left alone.
+async function vmxPushTimesToGigs(v,rows){
+  if(!rtdb||!v)return 0;
+  const today=dateToKey(new Date());const vn=normVenueName(v.name);let count=0;const upd={};
+  for(const r of rows){
+    const t=vmxT24(r.time);if(!t||!r.kind||!r.day||r.status==='finished'||r.status==='paused'||(r.cadence||'weekly')==='single')continue;
+    const dow=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'].indexOf(VMX_DAY_FULL[vmxAbbr(r.day)]||r.day);
+    const key=plannerKindKey(r.kind);if(!key||dow<0)continue;
+    gigSchedule.filter(g=>g.date>=today&&g.status!=='cancelled'&&g.seriesId&&normVenueName(g.venue)===vn&&plannerKindKey(g.kind)===key&&new Date(g.date+'T12:00:00').getDay()===dow&&time24(g.time||'')!==t)
+      .forEach(g=>{g.time=t;persistGig(g,false);count++;});
+    if(key==='Bingo'){
+      const ids=Object.entries(bingoVenuesMap||{}).filter(([id,b])=>b&&normVenueName(b.name)===vn).map(x=>x[0]);
+      (bingoScheduleList||[]).filter(e=>e&&e.id&&ids.includes(e.venueId)&&e.date>=today&&new Date(e.date+'T12:00:00').getDay()===dow&&e.time&&time24(e.time)!==t)
+        .forEach(e=>{upd['bingo/landing/schedule/'+e.id+'/time']=t;count++;});
+    }else{
+      const vmap={Trivia:plannerVenues,Karaoke:plannerKaraokeVenues,Events:plannerEventVenues}[key]||{};
+      const gmap={Trivia:plannerGigs,Karaoke:plannerKaraokeGigs,Events:plannerEventGigs}[key]||{};
+      const base=PLANNER_KIND_PATHS[key].g;
+      Object.entries(vmap).filter(([id,pv])=>pv&&normVenueName(pv.name)===vn&&PLANNER_DAY_MAP[pv.day]===dow).forEach(([id])=>{
+        Object.entries(gmap[id]||{}).forEach(([date,rec])=>{
+          if(date>=today&&rec&&rec.time&&rec.status!=='cancelled'&&time24(rec.time)!==t){upd[base+'/'+id+'/'+date+'/time']=t;count++;}
+        });
+      });
+    }
+  }
+  if(Object.keys(upd).length)await rtdb.ref().update(upd);
+  return count;
 }
 let _vmxStarted=false;
 function vmxStartOnce(){if(_vmxStarted||!rtdb)return;_vmxStarted=true;vmxListen(()=>{try{renderVenueManage();renderDashboardWeek();}catch(e){}},()=>{ensureVenueIds();try{renderVenueManage();}catch(e){}});}
