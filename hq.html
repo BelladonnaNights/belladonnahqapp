@@ -471,6 +471,16 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
   </div>
 </div>
 
+<!-- VENUE MASTER RECORD -->
+<div class="modal-bg" id="venueMasterModal">
+  <div class="modal" style="max-width:760px;">
+    <div class="modal-title">Venue Master Records</div>
+    <div style="font-size:0.72rem;color:var(--text3);line-height:1.6;margin-bottom:0.8rem;">Every venue gets ONE master record, found by its Venue ID. HQ, the Planner, Bingo and the venue QR page will all read their times, days, hosts and frequency from it. This step only <b>creates</b> the records and stamps the Venue ID onto each app's existing venue &mdash; nothing is deleted or changed in the meantime.</div>
+    <div id="vmasterBody" style="max-height:58vh;overflow:auto;"></div>
+    <div class="modal-actions"><button class="modal-cancel" onclick="document.getElementById('venueMasterModal').classList.remove('open')">Close</button><button class="modal-save" id="vmasterApply" onclick="applyVenueMaster()">Create / update master records</button></div>
+  </div>
+</div>
+
 <!-- DASHBOARD GIG DETAIL MODAL -->
 <div class="modal-bg" id="dashGigDetailModal">
   <div class="modal" style="max-width:380px;">
@@ -758,6 +768,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
   <div class="subpanel active" id="sub-venues-manage">
     <div class="section-header">
       <div class="section-title">Venues <span class="save-dot" id="venuesSave">Saved ✓</span></div>
+      <button class="btn-sm" onclick="openVenueMaster()" title="One master record per venue (by Venue ID) that every app reads from">Venue Master Records</button>
       <button class="btn-sm" onclick="openVenueQrModal()" title="One permanent QR code per venue — shows whatever is on there tonight">Venue QR Codes</button>
       <button class="btn-sm btn-gold" onclick="openVenueModal()">+ Add Venue</button>
     </div>
@@ -2175,6 +2186,7 @@ const _autoPushed=new Set();
 // (once per gig per session) — no button needed.
 function autoSyncMissingToPlanner(){
   if(!plannerReady()||!gigSchedule.length)return;
+  healVenueTimesFromGigs();
   const today=dateToKey(new Date());
   gigSchedule.filter(g=>g.date>=today&&g.status!=='cancelled'&&!_autoPushed.has(g.id)&&!plannerSyncProblem(g)).forEach(g=>{
     const dow=new Date(g.date+'T12:00:00').getDay();
@@ -2675,6 +2687,114 @@ function persistGig(entry,isDelete){
 // create a venue for them, only fill in a date on one that's already set up).
 // If there's no match, this silently does nothing — the gig still lives fine
 // in HQ, it just won't appear in that other app.
+// ── ONE TIME EVERYWHERE ── a venue's usual start time lives on its Planner / Bingo venue record.
+// Whenever HQ knows the real time (a repeating gig, or a gig slot on the venue) it writes it there, so
+// the dashboard, Planner and the venue QR page can never fall back to an old default like "6:00".
+// ── VENUE MASTER RECORD (step 1) ── one record per venue at RTDB venues/<venueId>
+const MASTER_DAYS={Sun:'Sunday',Mon:'Monday',Tue:'Tuesday',Wed:'Wednesday',Thu:'Thursday',Fri:'Friday',Sat:'Saturday'};
+function masterKey(n){return String(n||'').toLowerCase().replace(/^the\s+/,'').replace(/[^a-z0-9]/g,'');}
+function masterSlug(n){return String(n||'').toLowerCase().replace(/&/g,'and').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');}
+function masterDay(d){d=String(d||'').trim();return MASTER_DAYS[d.slice(0,3)]||(Object.values(MASTER_DAYS).includes(d)?d:'');}
+function buildMasterGroups(){
+  const groups={};
+  const g=(name)=>{const k=masterKey(name);if(!k)return null;return groups[k]=groups[k]||{key:k,names:{},hq:[],legacy:[],slots:[],ids:{}};};
+  (venues||[]).forEach(v=>{const gr=g(v.name);if(!gr)return;gr.names[v.name]=1;gr.hq.push(v);if(v.venueId)gr.ids[v.venueId]=1;
+    (v.gigSlots||[]).forEach(sl=>gr.slots.push({kind:sl.kind,day:masterDay(sl.day),time:time24(sl.time||''),endTime:time24(sl.endTime||''),cadence:sl.cadence||'weekly',anchor:sl.anchor||'',price:sl.price||'',from:'HQ slot'}));});
+  [['Trivia',plannerVenues],['Karaoke',plannerKaraokeVenues],['Events',plannerEventVenues],['Bingo',bingoVenuesMap]].forEach(([kind,map])=>{
+    Object.entries(map||{}).forEach(([id,v])=>{if(!v||!v.name)return;const gr=g(v.name);if(!gr)return;gr.names[v.name]=1;
+      gr.legacy.push({kind,id,v});if(v.venueId)gr.ids[v.venueId]=1;
+      if(v.day||v.time)gr.slots.push({kind,day:masterDay(v.day),time:time24(v.time||''),endTime:'',cadence:v.cadence||'weekly',anchor:v.cadenceAnchor||'',price:'',host:v.host||'',status:v.status||'',from:kind+' venue'});});
+  });
+  // collapse slots that are the same night (kind+day+cadence) — keep the one that actually has a time
+  Object.values(groups).forEach(gr=>{
+    const by={};gr.conflicts=[];
+    gr.slots.forEach(sl=>{const k=[sl.kind,sl.day,sl.cadence].join('|');const ex=by[k];
+      if(!ex){by[k]=Object.assign({},sl);return;}
+      if(ex.time&&sl.time&&ex.time!==sl.time)gr.conflicts.push(sl.kind+' '+sl.day+': '+ex.time+' ('+ex.from+') vs '+sl.time+' ('+sl.from+')');
+      ['time','endTime','price','host','anchor'].forEach(f=>{if(!ex[f]&&sl[f])ex[f]=sl[f];});});
+    gr.slotList=Object.values(by);
+  });
+  return Object.values(groups).sort((a,b)=>Object.keys(a.names)[0].localeCompare(Object.keys(b.names)[0]));
+}
+function masterIdFor(gr){
+  const ids=Object.keys(gr.ids);if(ids.length)return ids[0];
+  return masterSlug(Object.keys(gr.names)[0]);
+}
+let _masterGroups=[];
+function openVenueMaster(){
+  if(!plannerReady()){alert('Still loading the Planner and Bingo data — wait a few seconds and try again.');return;}
+  _masterGroups=buildMasterGroups();
+  const body=document.getElementById('vmasterBody');
+  body.innerHTML=_masterGroups.map(gr=>{
+    const name=Object.keys(gr.names)[0],id=masterIdFor(gr);
+    const links=[gr.hq.length?'HQ':'',...['Trivia','Karaoke','Events','Bingo'].map(k=>{const n=gr.legacy.filter(l=>l.kind===k).length;return n?k+(n>1?' ×'+n:''):'';})].filter(Boolean).join(' · ');
+    const slots=gr.slotList.map(sl=>esc(sl.kind+' '+(sl.day||'?')+' '+(sl.time?fmtGigTime(sl.time):'(no time)')+(sl.cadence!=='weekly'?' · '+sl.cadence:''))).join('<br>')||'<span style="color:var(--text3)">no nights on record</span>';
+    const warn=(gr.conflicts.length?'<div style="color:#e0a050;font-size:0.66rem;margin-top:0.3rem;">⚠ Times disagree — HQ slot wins, otherwise Planner: '+esc(gr.conflicts.join('; '))+'</div>':'')+(Object.keys(gr.names).length>1?'<div style="color:var(--text3);font-size:0.66rem;margin-top:0.2rem;">Also spelled: '+esc(Object.keys(gr.names).slice(1).join(', '))+'</div>':'');
+    return `<div style="padding:0.7rem 0;border-bottom:1px solid var(--border);"><div style="display:flex;justify-content:space-between;gap:1rem;"><b style="color:var(--gold)">${esc(name)}</b><span style="font-size:0.62rem;color:var(--text3)">ID: ${esc(id)}</span></div><div style="font-size:0.66rem;color:var(--text3);margin:0.15rem 0">Found in: ${esc(links)}</div><div style="font-size:0.74rem;color:var(--text2);line-height:1.5">${slots}</div>${warn}</div>`;
+  }).join('')||'<div class="msg">No venues found.</div>';
+  document.getElementById('vmasterApply').textContent='Create / update '+_masterGroups.length+' master records';
+  document.getElementById('venueMasterModal').classList.add('open');
+}
+async function applyVenueMaster(){
+  if(!rtdb){alert('Not connected to the database.');return;}
+  const btn=document.getElementById('vmasterApply');btn.disabled=true;btn.textContent='Working…';
+  let made=0,stamped=0;
+  try{
+    for(const gr of _masterGroups){
+      const id=masterIdFor(gr),name=Object.keys(gr.names)[0];
+      const hq=gr.hq[0]||{};
+      const slots={};gr.slotList.forEach((sl,i)=>{const sid=masterSlug([sl.kind,sl.day,sl.cadence].join('-'));slots[sid]=Object.fromEntries(Object.entries(sl).filter(([k,v])=>v!==''&&v!=null&&k!=='from'));});
+      const links={hq:hq.id||null};['Trivia','Karaoke','Events'].forEach(k=>{const l=gr.legacy.find(x=>x.kind===k);if(l)links[k.toLowerCase()]=l.id;});
+      const bl=gr.legacy.filter(x=>x.kind==='Bingo').map(x=>x.id);if(bl.length)links.bingo=bl;
+      const ref=rtdb.ref('venues/'+id);
+      const cur=(await ref.once('value')).val()||{};
+      const rec={id,name:cur.name||name,locationId:cur.locationId||hq.locationId||((gr.legacy[0]||{}).v||{}).locationId||null,active:cur.active!=null?cur.active:!hq.inactive,
+        host:cur.host||hq.host||((gr.legacy.find(l=>l.v.host)||{}).v||{}).host||'',
+        slots:Object.assign({},slots,cur.slots||{}),   // anything already edited on the master wins
+        links,migratedAt:cur.migratedAt||Date.now(),updatedAt:Date.now()};
+      await ref.set(rec);made++;
+      for(const l of gr.legacy){await rtdb.ref(PLANNER_KIND_PATHS[l.kind].v+'/'+l.id+'/venueId').set(id);stamped++;}
+      if(hq.id&&hq.venueId!==id&&!hq.venueId){hq.venueId=id;}
+    }
+    persist('venues-list',venues);
+    hqToast('✓ '+made+' master records written, '+stamped+' Planner/Bingo venues linked');
+    document.getElementById('venueMasterModal').classList.remove('open');
+  }catch(e){
+    alert('Could not write the master records: '+(e&&e.message||e)+'\n\nIf it says permission denied, the Realtime Database rules need the new "venues" block (I sent it in chat). Screenshot this and send it to me.');
+  }
+  btn.disabled=false;btn.textContent='Create / update master records';
+}
+function setVenueUsualTime(kind,venueName,dow,time24v){
+  try{
+    if(!rtdb||!plannerReady()||!time24v||!/^\d{1,2}:\d{2}$/.test(time24v))return;
+    const key=plannerKindKey(kind);if(!key)return;
+    const paths=PLANNER_KIND_PATHS[key];
+    if(key==='Bingo'){
+      const t=time24v.padStart(5,'0');
+      Object.entries(bingoVenuesMap||{}).filter(([id,v])=>v&&normVenueName(v.name)===normVenueName(venueName)).forEach(([id,v])=>{
+        if(time24(v.time||'')!==t)rtdb.ref(paths.v+'/'+id+'/time').set(t).catch(()=>{});
+      });
+      return;
+    }
+    const m=findPlannerVenue(kind,venueName,dow);if(!m)return;
+    const want=fmtGigTime(time24v);
+    if(time24(m.v.time||'')!==time24v.padStart(5,'0'))rtdb.ref(paths.v+'/'+m.id+'/time').set(want).catch(()=>{});
+  }catch(e){}
+}
+function syncSlotTimesToPlanner(venueName,slots){
+  const idx={sunday:0,monday:1,tuesday:2,wednesday:3,thursday:4,friday:5,saturday:6};
+  (slots||[]).forEach(sl=>{if(sl.time&&sl.kind&&(sl.cadence||'weekly')!=='single')setVenueUsualTime(sl.kind,venueName,idx[(sl.day||'').toLowerCase()],sl.time);});
+}
+let _timeHealDone=false;
+function healVenueTimesFromGigs(){
+  if(_timeHealDone||!plannerReady()||!gigSchedule.length)return;_timeHealDone=true;
+  const today=dateToKey(new Date()),seen={};
+  gigSchedule.filter(g=>g.date>=today&&g.seriesId&&g.status!=='cancelled'&&g.time).sort((a,b)=>a.date.localeCompare(b.date)).forEach(g=>{
+    const dow=new Date(g.date+'T12:00:00').getDay(),k=normVenueName(g.venue)+'|'+plannerKindKey(g.kind)+'|'+dow;
+    if(seen[k])return;seen[k]=1;
+    setVenueUsualTime(g.kind,g.venue,dow,time24(g.time));
+  });
+}
 function pushGigToExternalPlanner(entry,isDelete){
   if(!rtdb||!entry||!entry.kind||!entry.venue)return;
   const kind=plannerKindKey(entry.kind);
@@ -2687,6 +2807,7 @@ function pushGigToExternalPlanner(entry,isDelete){
   const dow=new Date(entry.date+'T12:00:00').getDay();
   const paths=PLANNER_KIND_PATHS[kind];
   const evExtra=kind==='Events'?{eventKind:entry.kind}:{};
+  if(!isDelete&&!cancelled&&entry.seriesId&&entry.time)setVenueUsualTime(entry.kind,entry.venue,dow,time24(entry.time));
   if(kind==='Trivia'||kind==='Karaoke'||kind==='Events'){
     const writeGig=(venueId,venueRec)=>{
       const path=paths.g+'/'+venueId+'/'+entry.date;
@@ -4954,6 +5075,7 @@ function saveVenue(){
   const payMethod=document.getElementById('vmPayMethod').value;
   const startDate=document.getElementById('vmStartDate').value;
   const gigSlots=readVenueGigSlotRows();
+  syncSlotTimesToPlanner(name,gigSlots);
   const host=document.getElementById('vmHost').value||null;
   const today=new Date().toISOString().slice(0,10);
   if(editVenueId){
