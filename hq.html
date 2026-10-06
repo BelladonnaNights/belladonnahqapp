@@ -1295,7 +1295,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
   <div class="modal">
     <div class="modal-title" id="venueModalTitle">Add Venue</div>
     <div class="form-group"><label class="form-label">Venue Name</label><input type="text" class="form-input" id="vmName" placeholder="Venue name"></div>
-    <div class="form-group"><label class="form-label">Venue ID <span style="font-size:0.6rem;color:var(--text4);text-transform:none;letter-spacing:0;">(matched against the Venue ID set on their Gateway account in Accounts — takes priority over the email below if both are set)</span></label><input type="text" class="form-input" id="vmVenueId" placeholder="not set"></div>
+    <div class="form-group"><label class="form-label">Venue ID <span style="font-size:0.6rem;color:var(--text4);text-transform:none;letter-spacing:0;">(matched against the Venue ID set on their Gateway account in Accounts — takes priority over the email below if both are set)</span></label><div style="display:flex;gap:0.4rem;align-items:center;"><input type="text" class="form-input" id="vmVenueId" placeholder="assigned automatically" readonly style="color:var(--text3);" onblur="lockVmVenueId()"><button type="button" class="hq-btn-ghost" style="padding:0.45rem 0.8rem;" onclick="unlockVmVenueId()">Edit</button></div><div style="font-size:0.62rem;color:var(--text4);margin-top:0.25rem;">Every app finds this venue by this ID. Stored in Firebase → Realtime Database → <b>venues</b> (each entry there is a Venue ID). Changing it here moves the record and re-links every app.</div></div>
     <div class="form-group"><label class="form-label">Gateway Account Email <span style="font-size:0.6rem;color:var(--text4);text-transform:none;letter-spacing:0;">(fallback link to their Belladonna account if no Venue ID is set on either side)</span></label><input type="text" class="form-input" id="vmGatewayEmail" placeholder="the email they signed up with"></div>
     <div class="form-group" id="vmGatewayStatusWrap" style="display:none;">
       <label class="form-label">Gateway Account</label>
@@ -1342,7 +1342,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
     </div>
     <div class="form-group"><label class="form-label">Perks <span style="font-size:0.6rem;color:var(--text4);text-transform:none;letter-spacing:0;">(discounts, free drinks, etc. hosts get while working here — shown to hosts on Venue Perks)</span></label><textarea class="form-textarea" id="vmPerks" placeholder="e.g. Free non-alcoholic drinks all shift, 20% off food" style="min-height:60px;"></textarea></div>
     <div class="form-group"><label class="form-label">Notes (optional)</label><textarea class="form-textarea" id="vmNotes" placeholder="Any notes about this venue..." style="min-height:60px;"></textarea></div>
-    <div class="form-group"><label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;font-size:0.8rem;color:var(--text2);"><input type="checkbox" id="vmInactive" style="width:16px;height:16px;"> Not currently active <span style="color:var(--text4);font-size:0.7rem;">(paused, ended, or no longer working with us)</span></label></div>
+    <div class="form-group"><label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;font-size:0.8rem;color:var(--text2);"><input type="checkbox" id="vmInactive" style="display:none"></label><label class="form-label">Venue Status</label><select class="form-input" id="vmStatus"><option value="active">Active — has a recurring gig</option><option value="norecurring">No recurring gig (one-offs / occasional events only)</option><option value="inactive">No longer active (paused, ended, or no longer working with us)</option></select></div>
     <div class="admin-section" style="margin-top:0.4rem;">
       <div class="admin-section-title">Backend Admin <span style="font-size:0.55rem;color:var(--text3)">(just for you / whoever runs the back end)</span></div>
       <div id="onboardChecklist-venueModal"></div>
@@ -2221,7 +2221,7 @@ function fetchBingoGigsForDate(dk,dow){
     const venue=(bingoVenuesMap&&bingoVenuesMap[e.venueId])?bingoVenuesMap[e.venueId].name:'Unknown Venue';
     const roundNames=(e.rounds||e.categoryIds||[]).map(cid=>(bingoCategoriesMap&&bingoCategoriesMap[cid])?bingoCategoriesMap[cid].title:null).filter(Boolean);
     const bv=(bingoVenuesMap&&bingoVenuesMap[e.venueId])||{};
-    return {venue,host:e.host||bv.host||'Unassigned',regularHost:bv.host||'',time:e.time||bv.time||'',dk,kindKey:'Bingo',pVenueId:e.venueId,pEntryId:e.id||null,kind:'Bingo',cancelled:false,source:'Bingo App',notes:(roundNames.length?'Rounds: '+roundNames.join(', '):'')+(e.notes?(roundNames.length?' — ':'')+e.notes:'')};
+    return {venue,host:e.host||bv.host||'Unassigned',regularHost:bv.host||'',time:e.time||vmxMasterTime('Bingo',venue,dow)||bv.time||'',dk,kindKey:'Bingo',pVenueId:e.venueId,pEntryId:e.id||null,kind:'Bingo',cancelled:false,source:'Bingo App',notes:(roundNames.length?'Rounds: '+roundNames.join(', '):'')+(e.notes?(roundNames.length?' — ':'')+e.notes:'')};
   });
 }
 function startOfWeekMonday(d){const x=new Date(d);x.setHours(0,0,0,0);x.setDate(x.getDate()-((x.getDay()+6)%7));return x;}
@@ -2258,7 +2258,7 @@ function getExternalGigsForDate(dk,dow){
       if(!hasExplicitRecord&&!recurs)return;
       const cancelled=!!(override&&override.status==='cancelled');
       const kind=kindKey==='Events'?((override&&override.eventKind)||v.eventKind||'Events'):kindKey;
-      out.push({venue:v.name,host:(override&&override.host)||v.host||'Unassigned',regularHost:v.host||'',time:(override&&override.time)||v.time||'',dk,kindKey,pVenueId:id,kind,cancelled,source:src,notes:override&&override.themeName?override.themeName:(override&&override.note?override.note:'')});
+      out.push({venue:v.name,host:(override&&override.host)||v.host||'Unassigned',regularHost:v.host||'',time:(override&&override.time)||vmxMasterTime(kindKey,v.name,dow)||v.time||'',dk,kindKey,pVenueId:id,kind,cancelled,source:src,notes:override&&override.themeName?override.themeName:(override&&override.note?override.note:'')});
     });
   });
   out.push(...fetchBingoGigsForDate(dk,dow).filter(it=>!hqVenuesForDate.has(normVenueName(it.venue))));
@@ -2452,6 +2452,7 @@ function findPlannerVenue(kind,name,dow){
 function gigTimeFor(g){
   if(g.time)return g.time;
   const dow=new Date(g.date+'T12:00:00').getDay();
+  const mt=vmxMasterTime(g.kind,g.venue,dow);if(mt)return mt;
   const pv=findPlannerVenue(g.kind,g.venue,dow);
   if(pv&&pv.v.time)return pv.v.time;
   const vo=venues.find(x=>normVenueName(x.name)===normVenueName(g.venue));
@@ -2719,6 +2720,7 @@ function vmxFmt(kind,t24){
   let h=+t24.slice(0,2);const mm=t24.slice(3);const ap=h>=12?'pm':'am';h=h%12||12;return h+(mm==='00'?'':':'+mm)+ap;
 }
 function vmxLive(st){return !st||st==='active'||st==='seasonal'||st==='one-time';}
+function vmxNotify(msg,bad){try{if(typeof hqToast==='function')hqToast(msg,bad);else if(typeof toast==='function')toast(msg,bad);}catch(e){}}
 async function vmxReadAll(){
   const db_=VMX_RTDB();const out=[];
   for(const [kind,path] of Object.entries(VMX_KIND_PATH)){
@@ -2755,7 +2757,7 @@ async function vmxPushLegacy(kind,legacyId,v){
     upd[VMX_KIND_PATH[kind]+'/'+legacyId+'/venueId']=m.id;
     await db_.ref().update(upd);
     return m.id;
-  }catch(e){console.warn('vmxPushLegacy',e);}
+  }catch(e){console.warn('vmxPushLegacy',e);vmxNotify('Saved here, but the venue master record did NOT update: '+((e&&(e.code||e.message))||e),true);}
 }
 async function vmxRemoveLegacy(kind,legacyId,v){
   try{
@@ -2802,10 +2804,11 @@ async function vmxApplyToLegacy(masterId,master,legacyAll){
 let _vmxT=null;
 // Sync is OFF until HQ's Venue Master Records window turns it on (venues/_sync/on), so a master that
 // still needs a once-over can't overwrite anything.
-function vmxListen(onChange){
+function vmxListen(onChange,onLoad){
   const db_=VMX_RTDB();if(!db_)return;
   db_.ref('venues').on('value',sn=>{
     const all=sn.val()||{};window.__vmxMaster=all;window.__vmxSyncOn=!!(all._sync&&all._sync.on);
+    if(onLoad)try{onLoad(all);}catch(e){}
     clearTimeout(_vmxT);
     if(!window.__vmxSyncOn)return;
     _vmxT=setTimeout(async()=>{
@@ -2816,51 +2819,104 @@ function vmxListen(onChange){
   },()=>{});
 }
 
+// change a venue's ID: move its master record, restamp every app's venue record
+async function vmxRenameId(oldId,newId){
+  const db_=VMX_RTDB();newId=String(newId||'').trim().replace(/[.$#\[\]\/\s]+/g,'-');
+  if(!oldId||!newId||oldId===newId)return newId;
+  const ex=(await db_.ref('venues/'+newId).once('value')).val();
+  if(ex)throw new Error('The Venue ID "'+newId+'" is already used by '+(ex.name||'another venue'));
+  const m=(await db_.ref('venues/'+oldId).once('value')).val();
+  const upd={};
+  if(m){m.id=newId;upd['venues/'+newId]=m;upd['venues/'+oldId]=null;}
+  (await vmxReadAll()).filter(l=>l.v.venueId===oldId).forEach(l=>{upd[VMX_KIND_PATH[l.kind]+'/'+l.id+'/venueId']=newId;});
+  await db_.ref().update(upd);
+  return newId;
+}
+
 function VMX_RTDB(){return rtdb;}
-// HQ Edit Venue → master slots
-async function vmxPushHQVenue(v){
+// ── HQ Edit Venue works DIRECTLY on the master record's nights ──
+function vmxMasterFor(v){
+  const all=window.__vmxMaster||{};
+  return (v.venueId&&all[v.venueId])||Object.values(all).find(x=>x&&x.name&&vmxKey(x.name)===vmxKey(v.name))||null;
+}
+function venueEditorSlots(v){
+  const m=vmxMasterFor(v);
+  let list;
+  if(m&&m.slots&&Object.keys(m.slots).length){
+    list=Object.entries(m.slots).filter(([k,sl])=>sl&&sl.kind&&sl.day&&sl.status!=='finished').map(([sid,sl])=>({id:sid,kind:sl.kind,day:sl.day,cadence:sl.cadence||'weekly',anchor:sl.anchor||'',time:sl.time||'',endTime:sl.endTime||'',price:sl.price||'',status:sl.status||'active'}));
+  }else list=(v.gigSlots||[]).map(x=>Object.assign({status:'active'},x));
+  // the same night listed twice (kind + weekday + frequency) shows once — keep the most complete one
+  const best={};
+  list.forEach(x=>{const k=[(plannerKindKey(x.kind)||x.kind),x.day,x.cadence,x.cadence==='weekly'?'':x.anchor].join('|');const sc=(x.time?2:0)+(x.endTime?1:0)+(x.price?1:0);if(!best[k]||sc>best[k].sc)best[k]={x,sc};});
+  const D=VENUE_GIG_SLOT_DAYS;
+  return Object.values(best).map(b=>b.x).sort((a,b)=>D.indexOf(a.day)-D.indexOf(b.day));
+}
+// the master's usual start time for a venue's night of this kind and weekday
+function vmxMasterTime(kind,venueName,dow){
+  const all=window.__vmxMaster||{};const k=vmxKey(venueName);
+  const m=Object.values(all).find(x=>x&&x.name&&vmxKey(x.name)===k);if(!m||!m.slots)return '';
+  const want=plannerKindKey(kind)||kind;const day=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][dow];
+  const sl=Object.values(m.slots).find(x=>x&&x.time&&x.day===day&&(plannerKindKey(x.kind)||x.kind)===want&&vmxLive(x.status));
+  return sl?sl.time:'';
+}
+async function vmxSaveHQSlots(v,rows){
   try{
     if(!rtdb||!v||!v.name)return;
     const m=await vmxFindOrCreate(v.name,v.venueId,v.locationId);
     if(!v.venueId){v.venueId=m.id;persist('venues-list',venues);}
-    const slots=Object.assign({},m.rec.slots||{});const seen=new Set();
-    (v.gigSlots||[]).forEach(sl=>{
-      if(!sl.kind||!sl.day)return;
-      let sid=Object.keys(slots).find(k=>slots[k].hqId===sl.id);
-      if(!sid)sid=Object.keys(slots).find(k=>!slots[k].hqId&&slots[k].kind===sl.kind&&vmxAbbr(slots[k].day)===vmxAbbr(sl.day)&&(slots[k].cadence||'weekly')===(sl.cadence||'weekly'));
-      if(!sid)sid='hq-'+sl.id;
-      seen.add(sid);
-      const n=Object.assign({},slots[sid]||{},{kind:sl.kind,day:VMX_DAY_FULL[vmxAbbr(sl.day)]||sl.day,cadence:sl.cadence||'weekly',hqId:sl.id});
-      const t=vmxT24(sl.time);if(t)n.time=t;
-      const e=vmxT24(sl.endTime);if(e)n.endTime=e;else delete n.endTime;
-      if(sl.anchor)n.anchor=sl.anchor;else delete n.anchor;
-      if(sl.price)n.price=sl.price;else delete n.price;
-      slots[sid]=n;
+    const old=m.rec.slots||{};const slots={};const seen=new Set();const upd={};
+    const legacy=await vmxReadAll();
+    for(const r of rows){
+      if(!r.kind||!r.day)continue;
+      let sid=r.id&&old[r.id]?r.id:('hq-'+(r.id||Date.now().toString(36)+Math.random().toString(36).slice(2,5)));
+      const o=old[sid]||{};
+      const n=Object.assign({},o,{kind:r.kind,day:VMX_DAY_FULL[vmxAbbr(r.day)]||r.day,cadence:r.cadence||'weekly',status:r.status||'active'});
+      const t=vmxT24(r.time);if(t)n.time=t;else delete n.time;
+      const e=vmxT24(r.endTime);if(e)n.endTime=e;else delete n.endTime;
+      if(r.anchor)n.anchor=r.anchor;else delete n.anchor;
+      if(r.price)n.price=r.price;else delete n.price;
+      const key=VMX_KIND_PATH[n.kind==='Private Events'?'Events':n.kind];
+      if(n.ref){
+        const base=VMX_KIND_PATH[n.ref.kind]+'/'+n.ref.id+'/';
+        upd[base+'day']=vmxAbbr(n.day);upd[base+'time']=n.time?vmxFmt(n.ref.kind,n.time):'';upd[base+'cadence']=n.cadence;upd[base+'cadenceAnchor']=n.anchor||'';upd[base+'status']=n.status;
+      }else if(key&&n.kind!=='Private Events'){
+        // a night added in HQ gets its own Planner / Bingo venue record, so it shows up there too
+        const lk=n.kind;const nid=rtdb.ref(VMX_KIND_PATH[lk]).push().key;
+        upd[VMX_KIND_PATH[lk]+'/'+nid]={name:v.name,groupName:v.name,day:vmxAbbr(n.day),time:n.time?vmxFmt(lk,n.time):'',cadence:n.cadence,cadenceAnchor:n.anchor||'',status:n.status,source:'hq',pay:{amount:null,method:''},notes:'Created from HQ',host:'',locationId:v.locationId||null,venueId:m.id,createdAt:Date.now()};
+        n.ref={kind:lk,id:nid};
+      }
+      slots[sid]=n;seen.add(sid);
+    }
+    Object.entries(old).forEach(([sid,o])=>{
+      if(seen.has(sid)||!o||!o.kind||!o.day)return;
+      if(o.ref){slots[sid]=Object.assign({},o,{status:'finished'});upd[VMX_KIND_PATH[o.ref.kind]+'/'+o.ref.id+'/status']='finished';}  // removed → that night stops running
     });
-    Object.keys(slots).forEach(k=>{if(slots[k].hqId&&!seen.has(k)){if(slots[k].ref)delete slots[k].hqId;else delete slots[k];}});
-    await rtdb.ref('venues/'+m.id).update({slots,updatedAt:Date.now()});
-  }catch(e){console.warn('vmxPushHQVenue',e);}
-}
-// master → HQ venues' gig slots (HQ must be open to receive it)
-function vmxApplyToHQ(all){
-  let changed=false;
-  (venues||[]).forEach(v=>{
-    const m=all[v.venueId]||Object.values(all).find(x=>x&&x.name&&vmxKey(x.name)===vmxKey(v.name));if(!m||!m.slots)return;
-    v.gigSlots=v.gigSlots||[];
-    Object.entries(m.slots).forEach(([sid,sl])=>{
-      if(!sl.kind||!sl.day||!vmxLive(sl.status))return;
-      let g=v.gigSlots.find(x=>sl.hqId&&x.id===sl.hqId)||v.gigSlots.find(x=>x.kind===sl.kind&&vmxAbbr(x.day)===vmxAbbr(sl.day)&&(x.cadence||'weekly')===(sl.cadence||'weekly')&&!(Object.values(m.slots).some(o=>o!==sl&&o.hqId===x.id)));
-      if(!g){g={id:'m_'+sid,kind:sl.kind,day:sl.day,cadence:sl.cadence||'weekly',anchor:sl.anchor||'',time:sl.time||'',endTime:sl.endTime||'',price:sl.price||''};v.gigSlots.push(g);changed=true;
-        rtdb.ref('venues/'+m.id+'/slots/'+sid+'/hqId').set(g.id).catch(()=>{});return;}
-      if(!sl.hqId)rtdb.ref('venues/'+m.id+'/slots/'+sid+'/hqId').set(g.id).catch(()=>{});
-      const want={day:VMX_DAY_FULL[vmxAbbr(sl.day)]||sl.day,time:sl.time||g.time||'',cadence:sl.cadence||'weekly',anchor:sl.anchor||'',endTime:sl.endTime||g.endTime||''};
-      Object.entries(want).forEach(([f,val])=>{if((g[f]||'')!==(val||'')){g[f]=val;changed=true;}});
-    });
-  });
-  if(changed){persist('venues-list',venues);try{renderVenueManage();}catch(e){}}
+    upd['venues/'+m.id+'/slots']=Object.keys(slots).length?slots:null;
+    upd['venues/'+m.id+'/updatedAt']=Date.now();
+    upd['venues/'+m.id+'/noRecurring']=!!v.noRecurring;
+    upd['venues/'+m.id+'/active']=!v.inactive;
+    await rtdb.ref().update(upd);
+    window.__vmxMaster=Object.assign({},window.__vmxMaster||{},{[m.id]:Object.assign({},m.rec,{slots})});
+    try{renderVenueManage();}catch(e){}
+    hqToast('✓ Venue nights saved everywhere');
+  }catch(e){console.warn('vmxSaveHQSlots',e);hqToast('Venue nights did NOT save to the master record: '+((e&&(e.code||e.message))||e),true);}
 }
 let _vmxStarted=false;
-function vmxStartOnce(){if(_vmxStarted||!rtdb)return;_vmxStarted=true;vmxListen(vmxApplyToHQ);}
+function vmxStartOnce(){if(_vmxStarted||!rtdb)return;_vmxStarted=true;vmxListen(()=>{try{renderVenueManage();renderDashboardWeek();}catch(e){}},()=>{ensureVenueIds();try{renderVenueManage();}catch(e){}});}
+// every venue gets a Venue ID (and a master record) automatically
+let _idsEnsured=false;
+async function ensureVenueIds(){
+  if(_idsEnsured||!rtdb||!venues||!venues.length||!window.__vmxMaster||!venuesLoadedFromServer)return;_idsEnsured=true;
+  const used=new Set(venues.map(v=>v.venueId).filter(Boolean));let changed=false;
+  for(const v of venues){
+    if(v.venueId)continue;
+    const m=vmxMasterFor(v);let id=m?m.id:vmxSlug(v.name)||('venue-'+Date.now().toString(36));
+    if(!m){let n=2,base=id;while(used.has(id)||(window.__vmxMaster||{})[id])id=base+'-'+(n++);}
+    used.add(id);v.venueId=id;changed=true;
+    try{await vmxFindOrCreate(v.name,id,v.locationId);}catch(e){}
+  }
+  if(changed)persist('venues-list',venues);
+}
 async function vmxSetSync(on){
   try{await rtdb.ref('venues/_sync').set({on:!!on,at:Date.now()});vmxRenderSyncBar();hqToast(on?'✓ Two-way venue sync is ON':'Venue sync is OFF');}
   catch(e){alert('Could not change sync: '+(e&&e.message||e));}
@@ -3265,7 +3321,7 @@ function openGigModal(id,presetHost){
   const g=id?gigSchedule.find(x=>x.id===id):null;
   document.getElementById('gigModalTitle').textContent=id?'Edit Gig':'Schedule Gig';
   document.getElementById('gigDate').value=g?g.date:(pendingGigDate||'');
-  document.getElementById('gigTime').value=g?g.time||'':'';
+  document.getElementById('gigTime').value=g?time24(g.time||gigTimeFor(g)||''):'';
   document.getElementById('gigEndTime').value=g?g.endTime||'':'';
   document.getElementById('gigNotes').value=g?g.notes||'':'';
   populateGigKindChips(g?g.kind:null);
@@ -4859,6 +4915,8 @@ function hostDrop(e,el){
   hostOrder=ids;saveHostOrder();renderRoster();
 }
 function hostDragEnd(){document.querySelectorAll('.roster-card').forEach(el=>{el.classList.remove('dragging','drag-over-host');});}
+function unlockVmVenueId(){const i=document.getElementById('vmVenueId');i.readOnly=false;i.style.color='';i.focus();i.select();}
+function lockVmVenueId(){setTimeout(()=>{const i=document.getElementById('vmVenueId');if(i){i.readOnly=true;i.style.color='var(--text3)';}},150);}
 function unlockRmHostId(){const i=document.getElementById('rmHostId');i.readOnly=false;i.style.color='';i.focus();i.select();}
 function lockRmHostId(){setTimeout(()=>{const i=document.getElementById('rmHostId');if(i){i.readOnly=true;i.style.color='var(--text3)';}},150);}
 function openRosterModal(id=null){
@@ -5081,7 +5139,7 @@ function renderVenueManage(){
       if(startTo&&(!v.startDate||v.startDate>startTo))return false;
       return true;
     })
-    .sort((a,b)=>(a.inactive?1:0)-(b.inactive?1:0)); // inactive venues sink to the bottom, active order otherwise unchanged
+    .sort((a,b)=>((a.inactive?2:a.noRecurring?1:0)-(b.inactive?2:b.noRecurring?1:0))); // active → no recurring gig → inactive
   if(!scoped.length){el.innerHTML='<div class="empty-state">No venues match these filters.</div>';return;}
   function gigClass(g){const m={'Karaoke':'gig-karaoke','Bingo':'gig-bingo','Trivia':'gig-trivia','Events':'gig-events','Private Events':'gig-private'};return m[g]||'';}
   el.innerHTML=scoped.map(v=>{
@@ -5089,13 +5147,13 @@ function renderVenueManage(){
     const amountParts=VENUE_AMOUNT_KINDS.filter(k=>amounts[k]).map(k=>(k==='Events'?'Event':k)+' '+amounts[k]);
     const hasPay=amountParts.length||v.payMethod||v.startDate;
     const payLine=hasPay?`<div style="font-size:0.68rem;color:var(--text3);margin-top:0.4rem;">${amountParts.join(', ')}${amountParts.length&&v.payMethod?' via ':(v.payMethod?'Pays via ':'')}${v.payMethod||''}${(amountParts.length||v.payMethod)&&v.startDate?' · ':''}${v.startDate?'Started '+formatDateShort(v.startDate):''}</div>`:'';
-    const slots=v.gigSlots||[];
-    const slotsLine=slots.length?`<div style="font-size:0.66rem;color:var(--text3);margin-top:0.3rem;display:flex;flex-direction:column;gap:0.15rem;">${slots.map(s=>`<div>${s.kind||''} · ${({biweekly:'Every other ',monthly:'Monthly · ',single:'Single · '})[s.cadence]||''}${s.cadence==='single'&&s.anchor?formatDateShort(s.anchor):(s.day||'')}${s.time?' '+formatTimeShort(s.time):''}${s.endTime?'–'+formatTimeShort(s.endTime):''}${s.price?' · '+s.price:''}</div>`).join('')}</div>`:'';
+    const slots=venueEditorSlots(v);
+    const slotsLine=slots.length?`<div style="font-size:0.66rem;color:var(--text3);margin-top:0.3rem;display:flex;flex-direction:column;gap:0.15rem;">${slots.map(s=>`<div>${s.kind||''} · ${({weekly:'Every ',biweekly:'Every other ',monthly:'Monthly · ',single:'One time · '})[s.cadence||'weekly']||''}${s.cadence==='single'&&s.anchor?formatDateShort(s.anchor):(s.day||'')}${s.time?' '+formatTimeShort(s.time):''}${s.endTime?'–'+formatTimeShort(s.endTime):''}${s.price?' · '+s.price:''}</div>`).join('')}</div>`:'';
     // The Planner's nights for this venue are the source of truth for who hosts — shown live here,
     // each with a dropdown that changes the PERMANENT host (a one-off fill-in is done from the
     // This Week dashboard or the Planner). Venues with no Planner night keep the old default host.
     const hostLine=v.host?`<div style="font-size:0.68rem;color:var(--gold);margin-top:0.4rem;">Default host: ${esc(v.host)}</div>`:'';
-    return `<div class="venue-manage-card"${v.inactive?' style="opacity:0.55;"':''}><div class="venue-manage-header"><div class="venue-manage-name">${v.name}${v.inactive?' <span style="font-size:0.62rem;color:var(--text4);font-weight:400;text-transform:uppercase;letter-spacing:0.08em;">· Inactive</span>':''}${v.locationId?` <span style="font-size:0.65rem;color:var(--text3);font-weight:400;">· ${locationLabel(v.locationId)}</span>`:''}</div><div style="display:flex;gap:0.4rem;align-items:center;"><button class="btn-sm modal-history-btn" style="padding:0.3rem 0.6rem;font-size:0.6rem;" onclick="openVenueHistoryModal('${v.id}')">History</button><button class="action-btn edit" onclick="openVenueModal('${v.id}')">✎</button><button class="action-btn delete" onclick="deleteVenue('${v.id}')">✕</button></div></div><div class="venue-gig-tags">${(v.gigs||[]).map(g=>`<span class="venue-gig-tag ${gigClass(g)}">${g}</span>`).join('')}</div>${payLine}${slotsLine}${hostLine}${v.notes?`<div style="font-size:0.81rem;color:var(--text3);margin-top:0.5rem;">${v.notes}</div>`:''}</div>`;
+    return `<div class="venue-manage-card"${v.inactive?' style="opacity:0.55;"':(v.noRecurring?' style="opacity:0.8;"':'')}><div class="venue-manage-header"><div class="venue-manage-name">${v.name}${v.inactive?' <span style="font-size:0.62rem;color:var(--text4);font-weight:400;text-transform:uppercase;letter-spacing:0.08em;">· Inactive</span>':(v.noRecurring?' <span style="font-size:0.62rem;color:var(--text3);font-weight:400;text-transform:uppercase;letter-spacing:0.08em;">· No recurring gig</span>':'')}${v.locationId?` <span style="font-size:0.65rem;color:var(--text3);font-weight:400;">· ${locationLabel(v.locationId)}</span>`:''}</div><div style="display:flex;gap:0.4rem;align-items:center;"><button class="btn-sm modal-history-btn" style="padding:0.3rem 0.6rem;font-size:0.6rem;" onclick="openVenueHistoryModal('${v.id}')">History</button><button class="action-btn edit" onclick="openVenueModal('${v.id}')">✎</button><button class="action-btn delete" onclick="deleteVenue('${v.id}')">✕</button></div></div><div class="venue-gig-tags">${(v.gigs||[]).map(g=>`<span class="venue-gig-tag ${gigClass(g)}">${g}</span>`).join('')}</div>${v.venueId?`<div style="font-size:0.6rem;color:var(--text4);margin-top:0.3rem;">Venue ID: ${esc(v.venueId)}</div>`:''}${payLine}${slotsLine}${hostLine}${v.notes?`<div style="font-size:0.81rem;color:var(--text3);margin-top:0.5rem;">${v.notes}</div>`:''}</div>`;
   }).join('');
 }
 const VENUE_GIG_SLOT_DAYS=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
@@ -5111,29 +5169,31 @@ function formatTimeShort(t){
 function renderVenueGigSlotRows(slots){
   const el=document.getElementById('vmGigSlotRows');
   if(!el)return;
+  const lab=t=>`<div style="font-size:0.55rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--text4);margin:0.15rem 0 0.1rem;">${t}</div>`;
   el.innerHTML=(slots||[]).map(s=>`
-    <div class="tip-pay-row" data-slotid="${s.id}">
-      <div class="tp-top">
-        <select class="form-input vm-slot-kind">${['Karaoke','Bingo','Trivia','Events','Private Events'].map(k=>`<option value="${k}"${s.kind===k?' selected':''}>${k}</option>`).join('')}</select>
-        <select class="form-input vm-slot-day">${VENUE_GIG_SLOT_DAYS.map(d=>`<option value="${d}"${s.day===d?' selected':''}>${d}</option>`).join('')}</select>
+    <div class="tip-pay-row" data-slotid="${s.id}" style="flex-direction:column;align-items:stretch;gap:0.2rem;">
+      <div class="tp-top" style="gap:0.5rem;">
+        <div style="flex:1">${lab('Gig type')}<select class="form-input vm-slot-kind">${['Karaoke','Bingo','Trivia','Events','Private Events'].map(k=>`<option value="${k}"${s.kind===k?' selected':''}>${k}</option>`).join('')}</select></div>
+        <div style="flex:1">${lab('Night')}<select class="form-input vm-slot-day">${VENUE_GIG_SLOT_DAYS.map(d=>`<option value="${d}"${s.day===d?' selected':''}>${d}</option>`).join('')}</select></div>
       </div>
-      <div class="tp-top">
-        <select class="form-input vm-slot-cadence" onchange="this.closest('.tip-pay-row').querySelector('.vm-slot-anchor').style.display=this.value==='weekly'?'none':''">${[['weekly','Weekly'],['biweekly','Bi-weekly'],['monthly','Monthly'],['single','Single']].map(([k,l])=>`<option value="${k}"${(s.cadence||'weekly')===k?' selected':''}>${l}</option>`).join('')}</select>
-        <input type="date" class="form-input vm-slot-anchor" value="${s.anchor||''}" title="A date it runs (single = the date; bi-weekly/monthly = one date it falls on)" style="${(s.cadence||'weekly')==='weekly'?'display:none':''}">
+      <div class="tp-top" style="gap:0.5rem;">
+        <div style="flex:1">${lab('Frequency')}<select class="form-input vm-slot-cadence" onchange="this.closest('.tip-pay-row').querySelector('.vm-slot-anchor-wrap').style.display=this.value==='weekly'?'none':''">${[['weekly','Every week'],['biweekly','Every other week'],['monthly','Once a month'],['single','One time only']].map(([k,l])=>`<option value="${k}"${(s.cadence||'weekly')===k?' selected':''}>${l}</option>`).join('')}</select></div>
+        <div style="flex:1">${lab('Status')}<select class="form-input vm-slot-status">${[['active','Running'],['paused','Paused'],['finished','Finished (remove)']].map(([k,l])=>`<option value="${k}"${(s.status||'active')===k?' selected':''}>${l}</option>`).join('')}</select></div>
       </div>
-      <div class="tp-top">
-        <input type="time" class="form-input vm-slot-time" value="${s.time||''}" title="Start time">
-        <input type="time" class="form-input vm-slot-endtime" value="${s.endTime||''}" title="End time">
+      <div class="vm-slot-anchor-wrap" style="${(s.cadence||'weekly')==='weekly'?'display:none':''}">${lab('A date it runs (the date for one-time; one example date for every-other-week / monthly)')}<input type="date" class="form-input vm-slot-anchor" value="${s.anchor||''}"></div>
+      <div class="tp-top" style="gap:0.5rem;">
+        <div style="flex:1">${lab('Start time')}<input type="time" class="form-input vm-slot-time" value="${s.time||''}"></div>
+        <div style="flex:1">${lab('End time')}<input type="time" class="form-input vm-slot-endtime" value="${s.endTime||''}"></div>
       </div>
-      <div class="tp-top">
-        <input type="text" class="form-input vm-slot-price" placeholder="e.g. $150 flat" value="${(s.price||'').toString().replace(/"/g,'&quot;')}">
-        <button class="tp-del" type="button" onclick="this.closest('.tip-pay-row').remove()">✕</button>
+      <div class="tp-top" style="gap:0.5rem;align-items:flex-end;">
+        <div style="flex:1">${lab('Pay for this night')}<input type="text" class="form-input vm-slot-price" placeholder="e.g. $150 flat" value="${(s.price||'').toString().replace(/"/g,'&quot;')}"></div>
+        <button class="tp-del" type="button" title="Remove this night" onclick="this.closest('.tip-pay-row').remove()">✕</button>
       </div>
     </div>`).join('');
 }
 function addVenueGigSlotRow(){
   const rows=readVenueGigSlotRows();
-  rows.push({id:Date.now().toString()+'_'+Math.random().toString(36).slice(2,5),kind:'Karaoke',day:'Monday',cadence:'weekly',anchor:'',time:'',endTime:'',price:''});
+  rows.push({id:'new'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),kind:'Karaoke',day:'Monday',cadence:'weekly',anchor:'',time:'',endTime:'',price:'',status:'active'});
   renderVenueGigSlotRows(rows);
 }
 function readVenueGigSlotRows(){
@@ -5145,7 +5205,8 @@ function readVenueGigSlotRows(){
     anchor:row.querySelector('.vm-slot-cadence').value==='weekly'?'':row.querySelector('.vm-slot-anchor').value,
     time:row.querySelector('.vm-slot-time').value,
     endTime:row.querySelector('.vm-slot-endtime').value,
-    price:row.querySelector('.vm-slot-price').value.trim()
+    price:row.querySelector('.vm-slot-price').value.trim(),
+    status:row.querySelector('.vm-slot-status').value
   }));
 }
 function readVenueAmounts(){
@@ -5176,19 +5237,19 @@ function openVenueModal(id=null){
   editVenueId=id;const venue=id?venues.find(v=>v.id===id):null;
   document.getElementById('venueModalTitle').textContent=id?'Edit Venue':'Add Venue';
   document.getElementById('vmName').value=venue?venue.name:'';
-  document.getElementById('vmVenueId').value=venue?venue.venueId||'':'';
+  document.getElementById('vmVenueId').value=venue?venue.venueId||'':'';lockVmVenueId();window._vmOrigVenueId=venue?venue.venueId||'':'';
   document.getElementById('vmGatewayEmail').value=venue?venue.gatewayEmail||'':'';
   renderVenueGatewayStatus(venue);
   renderVenueCategoryQueueStatus(venue);
   document.getElementById('vmNotes').value=venue?venue.notes||'':'';
   document.getElementById('vmPerks').value=venue?venue.perks||'':'';
-  document.getElementById('vmInactive').checked=!!(venue&&venue.inactive);
+  document.getElementById('vmInactive').checked=!!(venue&&venue.inactive);document.getElementById('vmStatus').value=venue?(venue.inactive?'inactive':(venue.noRecurring?'norecurring':'active')):'active';
   const amounts=(venue&&venue.payAmounts)||{};
   VENUE_AMOUNT_KINDS.forEach(k=>{document.getElementById('vmAmount'+k).value=amounts[k]||'';});
   document.getElementById('vmPayMethod').value=venue?venue.payMethod||'':'';
   document.getElementById('vmStartDate').value=venue?venue.startDate||'':'';
   document.getElementById('vmHistoryBtn').style.display=id?'':'none';
-  renderVenueGigSlotRows(venue?fillSlotTimes(venue.gigSlots||[],venue.name):[]);
+  renderVenueGigSlotRows(venue?fillSlotTimes(venueEditorSlots(venue),venue.name):[]);
   const locSel=document.getElementById('vmLocation');
   locSel.innerHTML=locations.map(l=>`<option value="${l.code}">${l.label}</option>`).join('');
   locSel.value=(venue&&venue.locationId)?venue.locationId:(currentLocationScope!=='ALL'?currentLocationScope:((locations[0]&&locations[0].code)||''));
@@ -5272,7 +5333,7 @@ function saveVenue(){
   const notes=document.getElementById('vmNotes').value.trim();
   const perks=document.getElementById('vmPerks').value.trim();
   const locationId=document.getElementById('vmLocation').value;
-  const inactive=document.getElementById('vmInactive').checked;
+  const stat=document.getElementById('vmStatus').value;const inactive=stat==='inactive';const noRecurring=stat==='norecurring';
   const payAmounts=readVenueAmounts();
   const payMethod=document.getElementById('vmPayMethod').value;
   const startDate=document.getElementById('vmStartDate').value;
@@ -5283,13 +5344,13 @@ function saveVenue(){
     const v=venues.find(x=>x.id===editVenueId);
     if(v){
       const prev={payAmounts:Object.assign({},v.payAmounts||{}),payMethod:v.payMethod||'',startDate:v.startDate||''};
-      v.name=name;v.gigs=gigs;v.notes=notes;v.perks=perks;v.locationId=locationId;v.inactive=inactive;
-      v.payAmounts=payAmounts;v.payMethod=payMethod;v.startDate=startDate;v.gigSlots=gigSlots;
+      v.name=name;v.gigs=gigs;v.notes=notes;v.perks=perks;v.locationId=locationId;v.inactive=inactive;v.noRecurring=noRecurring;
+      v.payAmounts=payAmounts;v.payMethod=payMethod;v.startDate=startDate;v.gigSlots=gigSlots.filter(x=>x.status!=='finished');
       v.venueId=venueId;v.gatewayEmail=gatewayEmail;v.host=host;
       logVenueHistoryDiff(v,prev,{payAmounts,payMethod,startDate},today);
     }
   }else{
-    const v={id:Date.now().toString(),name,gigs,notes,perks,locationId,inactive,payAmounts,payMethod,startDate,gigSlots,venueId,gatewayEmail,host,history:[]};
+    const v={id:Date.now().toString(),name,gigs,notes,perks,locationId,inactive,noRecurring,payAmounts,payMethod,startDate,gigSlots:gigSlots.filter(x=>x.status!=='finished'),venueId,gatewayEmail,host,history:[]};
     const anyAmount=VENUE_AMOUNT_KINDS.some(k=>payAmounts[k]);
     if(startDate||anyAmount||payMethod){
       const amtText=VENUE_AMOUNT_KINDS.filter(k=>payAmounts[k]).map(k=>(k==='Events'?'Event':k)+' '+payAmounts[k]).join(', ');
@@ -5298,7 +5359,20 @@ function saveVenue(){
     venues.push(v);
   }
   persist('venues-list',venues,'venuesSave');
-  vmxPushHQVenue(editVenueId?venues.find(x=>x.id===editVenueId):venues[venues.length-1]);
+  const sv=editVenueId?venues.find(x=>x.id===editVenueId):venues[venues.length-1];
+  const oldVid=window._vmOrigVenueId||'';
+  (async()=>{
+    try{
+      if(sv&&oldVid&&sv.venueId&&sv.venueId!==oldVid){
+        const nid=await vmxRenameId(oldVid,sv.venueId);sv.venueId=nid;
+        (accounts||[]).filter(a=>(a.venueId||'')===oldVid).forEach(a=>{a.venueId=nid;db.collection('users').doc(a.uid).set({venueId:nid},{merge:true}).catch(()=>{});});
+        persist('venues-list',venues,'venuesSave');
+        const mm=Object.assign({},window.__vmxMaster||{});if(mm[oldVid]){mm[nid]=Object.assign({},mm[oldVid],{id:nid});delete mm[oldVid];window.__vmxMaster=mm;}
+        hqToast('✓ Venue ID changed to '+nid);
+      }
+    }catch(e){if(sv)sv.venueId=oldVid;persist('venues-list',venues,'venuesSave');alert('Venue ID not changed: '+(e&&e.message||e));}
+    if(sv)await vmxSaveHQSlots(sv,gigSlots);
+  })();
   renderVenueManage();populateRosterFilters();closeVenueModal();
 }
 function deleteVenue(id){if(!confirm('Remove this venue?'))return;venues=venues.filter(v=>v.id!==id);persist('venues-list',venues,'venuesSave');renderVenueManage();populateRosterFilters();}
