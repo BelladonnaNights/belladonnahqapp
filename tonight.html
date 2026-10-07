@@ -556,7 +556,7 @@
     const active=!seg.cancelled;
     let btn;
     if(active){
-      const protoUrl=`belladonna-bingo://open?venueId=${encodeURIComponent(seg.bingoVenueId||'')}&entryId=${encodeURIComponent(seg.bingoEntryId||'')}&date=${encodeURIComponent(dateToKey(currentDate))}`;
+      const protoUrl=`belladonnabingo://open?venue=${encodeURIComponent(seg.bingoVenueId||'')}&entryId=${encodeURIComponent(seg.bingoEntryId||'')}&date=${encodeURIComponent(dateToKey(currentDate))}`;
       btn=`<a href="#" class="seg-btn" onclick="openBingo(event,'${protoUrl}')">Open Bingo</a>
         <div class="seg-note" id="bingoFallbackNote" style="display:none;">Bingo app didn't open — make sure it's installed on this computer, then try again.</div>`;
     }else{
@@ -714,7 +714,7 @@
         return;
       }
       if(note)note.style.display='block';
-    },1500);
+    },3500); // cold start of the desktop app can take a couple of seconds before it grabs focus
   }
 </script>
 </body>
