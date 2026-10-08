@@ -2368,9 +2368,9 @@ function renderDashboardWeek(){
     const d=new Date(start);d.setDate(d.getDate()+i);
     const dk=dateToKey(d);
     let items=getDashboardGigsForDate(dk,d.getDay());
-    if(hostsMode)items=items.slice().sort((a,b)=>timeSortKey(a.time).localeCompare(timeSortKey(b.time)));
+    if(hostsMode)items=items.filter(it=>it.host&&it.host!=='Unassigned').sort((a,b)=>timeSortKey(a.time).localeCompare(timeSortKey(b.time)));
     html+=`<div class="daybox${dk===today?' is-today':''}"><h4>${dayNames[i]} ${d.getDate()}</h4>`;
-    if(!items.length){html+='<div class="daybox-item" style="color:var(--text3);cursor:default;">Nothing scheduled</div>';}
+    if(!items.length){html+=`<div class="daybox-item" style="color:var(--text3);cursor:default;">${hostsMode?'No hosts assigned':'Nothing scheduled'}</div>`;}
     else if(hostsMode){
       html+=items.map(it=>{
         const idx=dashboardItemsFlat.length;dashboardItemsFlat.push(it);
