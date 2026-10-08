@@ -1077,7 +1077,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
   <div class="section-header">
     <div class="section-title">Trivia Feedback</div>
     <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
-      <a class="btn-sm btn-gold" href="https://belladonnanights.github.io/belladonnatrivia/questions.html" target="_blank" rel="noopener" style="text-decoration:none;">Open Question Vault ↗</a>
+      <a class="btn-sm btn-gold" href="https://belladonnanights.github.io/belladonnatrivia/vault.html" target="_blank" rel="noopener" style="text-decoration:none;">Open The Vault ↗</a>
       <button class="btn-sm" onclick="loadTriviaFeedback()">Refresh</button>
     </div>
   </div>
@@ -4159,7 +4159,7 @@ function renderTriviaFeedback(){
         <div style="flex:1;font-size:0.78rem;color:var(--text2);">${(n.text||'').replace(/</g,'&lt;')}<div style="font-size:0.6rem;color:var(--text3);margin-top:0.15rem;">${n.ts?new Date(n.ts).toLocaleString():''}</div></div>
         <button class="btn-sm" style="flex-shrink:0;height:fit-content;" onclick="deleteFeedbackNote('${r.key}','${n.id}')">Clear</button>
       </div>`).join('');
-    const vaultLink=r.vaultCatId?`<a href="https://belladonnanights.github.io/belladonnatrivia/questions.html" target="_blank" rel="noopener" style="color:var(--gold);">Question Vault</a>`:'';
+    const vaultLink=r.vaultCatId?`<a href="https://belladonnanights.github.io/belladonnatrivia/vault.html" target="_blank" rel="noopener" style="color:var(--gold);">The Vault</a>`:'';
     const sheetLink=vaultLink?vaultLink:r.sheetUrl?`<a href="${r.sheetUrl}" target="_blank" style="color:var(--gold);">Open Sheet${r.tabName?' — '+r.tabName:''}${r.rowIndex?' (row '+r.rowIndex+')':''}</a>`:(r.tabName||'');
     return `<div class="roster-card" style="margin-bottom:0.7rem;">
       <div style="display:flex;justify-content:space-between;gap:0.6rem;align-items:flex-start;">
