@@ -691,15 +691,29 @@
   // The browser Bingo page. Set this to the full address of your web Bingo app
   // (leave '' if there isn't one — Tonight then just shows the "not installed" note).
   const BINGO_WEB_URL='https://belladonnanights.github.io/bingo/index.html';
-  function openBingo(ev,protoUrl){
+  // One-time sign-in code so the Bingo app opens already signed in (no second login).
+  const HANDOFF_BASE='https://us-central1-belladonna-hq.cloudfunctions.net/';
+  async function mintHandoff(){
+    try{
+      const user=auth.currentUser;
+      if(!user) return null;
+      const idToken=await user.getIdToken();
+      const r=await fetch(HANDOFF_BASE+'createHandoff',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+idToken},body:JSON.stringify({data:{}})});
+      const j=await r.json();
+      return (j&&j.result&&j.result.code)||null;
+    }catch(e){console.warn('[handoff] could not create a sign-in code:',e);return null;}
+  }
+  async function openBingo(ev,protoUrl){
     ev.preventDefault();
+    const handoff=await mintHandoff(); // null is fine — the Bingo app then asks for the normal sign-in
+    const launchUrl=handoff?protoUrl+'&handoff='+encodeURIComponent(handoff):protoUrl;
     const note=document.getElementById('bingoFallbackNote');
     let left=false;
     const onBlur=()=>{left=true;};
     const onHide=()=>{ if(document.hidden) left=true; };
     window.addEventListener('blur',onBlur);
     document.addEventListener('visibilitychange',onHide);
-    window.location.href=protoUrl;
+    window.location.href=launchUrl;
     setTimeout(()=>{
       window.removeEventListener('blur',onBlur);
       document.removeEventListener('visibilitychange',onHide);
