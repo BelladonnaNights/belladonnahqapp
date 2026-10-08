@@ -409,6 +409,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
         </div>
       </div>
     </div>
+    <button class="hq-btn-ghost" onclick="showLinksPage()">Links</button>
   </div>
 </div>
 <div class="hq-gold-line"></div>
@@ -447,7 +448,9 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
     <button class="dash-filter-pill" onclick="setDashboardKindFilter('trivia',this)">Trivia</button>
     <button class="dash-filter-pill" onclick="setDashboardKindFilter('bingo',this)">Bingo</button>
     <button class="dash-filter-pill" onclick="setDashboardKindFilter('karaoke',this)">Karaoke</button>
+    <button class="dash-filter-pill" onclick="setDashboardKindFilter('events',this)">Events</button>
     <button class="dash-filter-pill" onclick="setDashboardKindFilter('hosts',this)">Hosts</button>
+    <button class="dash-filter-pill" style="margin-left:auto;background:var(--gold-dim);border-color:var(--border-gold);color:var(--gold);" onclick="pendingGigDate=null;openGigModal()">+ Add gig / event</button>
   </div>
   <div class="dash-nav">
     <button class="hq-cal-nav-btn" onclick="shiftDashboardWeek(-1)">‹ Prev</button>
@@ -1014,6 +1017,34 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
     <div class="sched-legend-item"><div class="sched-legend-dot" style="background:var(--rose);"></div>No Sign-In (Past Due)</div>
     <div class="sched-legend-item"><div class="sched-legend-dot" style="background:var(--text3);"></div>Cancelled</div>
     <div class="sched-legend-item"><div class="sched-legend-dot" style="background:var(--teal);"></div>From Trivia Planner / Bingo (view only)</div>
+  </div>
+</div>
+
+<!-- LINKS -->
+<div class="panel" id="panel-links">
+  <div class="section-header">
+    <div class="section-title">Links</div>
+  </div>
+  <div class="rte-toolbar" id="rteToolbar-links" style="display:none;">
+    <button type="button" onclick="rteCmd('links','bold')"><b>B</b></button>
+    <button type="button" onclick="rteCmd('links','italic')"><i>I</i></button>
+    <button type="button" onclick="rteCmd('links','underline')"><u>U</u></button>
+    <span class="rte-sep"></span>
+    <button type="button" onclick="rteCmd('links','formatBlock','h2')">Heading</button>
+    <button type="button" onclick="rteCmd('links','formatBlock','h3')">Subheading</button>
+    <button type="button" onclick="rteCmd('links','formatBlock','p')">Paragraph</button>
+    <span class="rte-sep"></span>
+    <button type="button" onclick="rteCmd('links','insertUnorderedList')">• List</button>
+    <button type="button" onclick="rteCmd('links','insertOrderedList')">1. List</button>
+    <button type="button" onclick="rteCmd('links','indent')">Indent →</button>
+    <button type="button" onclick="rteCmd('links','outdent')">← Outdent</button>
+    <span class="rte-sep"></span>
+    <button type="button" onclick="rteLink('links')">Link</button>
+    <button type="button" onclick="rteCmd('links','unlink')">Unlink</button>
+  </div>
+  <div class="rte-body" id="rteBody-links" contenteditable="false"></div>
+  <div style="text-align:right;margin-top:0.6rem;">
+    <button class="btn-sm btn-gold" id="rteToggleBtn-links" onclick="rteToggle('links')">Edit</button>
   </div>
 </div>
 
@@ -1640,6 +1671,12 @@ function showTab(id,el){
   if(id==='schedule'){populateSchedFilters();loadShiftsData().then(renderScheduleAll);}
   if(id==='accounts'){loadAccounts();loadAccessRequests();}
   if(id==='feedback')loadTriviaFeedback();
+}
+function showLinksPage(){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('panel-links').classList.add('active');
+  window.scrollTo(0,0);
 }
 function showSub(tab,id,el){
   document.querySelectorAll(`#panel-${tab} .subpanel`).forEach(p=>p.classList.remove('active'));
@@ -2277,7 +2314,7 @@ function getDashboardGigsForDate(dk,dow){
   // the same venue + kind listed twice on one date (duplicate venue records) shows once
   {const best={};out.forEach(it=>{const k=normVenueName(it.venue)+'|'+(plannerKindKey(it.kind)||it.kind);const sc=(it.hqGigId?4:0)+(it.notes?2:0)+((it.host&&it.host!=='Unassigned')?1:0);if(!best[k]||sc>best[k].sc)best[k]={it,sc};});
    const keep=new Set(Object.values(best).map(x=>x.it));for(let i=out.length-1;i>=0;i--)if(!keep.has(out[i]))out.splice(i,1);}
-  if(dashboardKindFilter!=='all'&&dashboardKindFilter!=='hosts')return out.filter(it=>(it.kind||'').toLowerCase()===dashboardKindFilter);
+  if(dashboardKindFilter!=='all'&&dashboardKindFilter!=='hosts')return out.filter(it=>dashboardKindFilter==='events'?(it.kindKey==='Events'||plannerKindKey(it.kind)==='Events'):(it.kind||'').toLowerCase()===dashboardKindFilter);
   return out;
 }
 function setDashboardKindFilter(kind,el){
@@ -2679,7 +2716,7 @@ function persistGig(entry,isDelete){
   const oldLoc=_gigLastLoc[entry.id];
   saveGigScheduleLocal();
   scheduleTipScheduleSync();
-  if(db){try{if(isDelete)db.collection('gig_schedule').doc(entry.id).delete();else db.collection('gig_schedule').doc(entry.id).set({date:entry.date,time:entry.time||'',endTime:entry.endTime||'',kind:entry.kind||'',venue:entry.venue,host:entry.host||'Unassigned',status:entry.status||'scheduled',notes:entry.notes||'',seriesId:entry.seriesId||null,cadence:entry.cadence||null,cadenceAnchor:entry.cadenceAnchor||null,locationId:entry.locationId||(currentLocationScope!=='ALL'?currentLocationScope:(locations[0]&&locations[0].code)||null)}).catch(cloudSaveFailed);}catch(e){cloudSaveFailed(e);}}
+  if(db){try{if(isDelete)db.collection('gig_schedule').doc(entry.id).delete();else db.collection('gig_schedule').doc(entry.id).set({date:entry.date,time:entry.time||'',endTime:entry.endTime||'',kind:entry.kind||'',venue:entry.venue,host:entry.host||'Unassigned',status:entry.status||'scheduled',notes:entry.notes||'',seriesId:entry.seriesId||null,timeLocked:!!entry.timeLocked,cadence:entry.cadence||null,cadenceAnchor:entry.cadenceAnchor||null,locationId:entry.locationId||(currentLocationScope!=='ALL'?currentLocationScope:(locations[0]&&locations[0].code)||null)}).catch(cloudSaveFailed);}catch(e){cloudSaveFailed(e);}}
   // mirror to the Sheet so the Apps Script triggers (no-show + auto sign-out) can read it
   try{fetch(SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({form_type:'schedule',action:isDelete?'delete':'upsert',id:entry.id,date:entry.date,time:entry.time||'',endTime:entry.endTime||'',venue:entry.venue,host:entry.host||'Unassigned',status:entry.status||'scheduled',notes:entry.notes||''})});}catch(e){}
   if(!isDelete)setTimeout(()=>verifyGigSaved(entry),1500);
@@ -2915,40 +2952,74 @@ async function vmxSaveHQSlots(v,rows){
       if(bad.length)hqToast('These did NOT save to the master record: '+bad.join(', ')+' — screenshot this and send it to me.',true);
       else msg='✓ Saved: '+okl.join(' · ');
     }catch(e){}
-    let n=0;try{n=await vmxPushTimesToGigs(v,rows);}catch(e){console.warn('pushTimes',e);}
+    let pr={n:0,moved:0,removed:0};try{pr=await vmxPushTimesToGigs(v,rows,old);}catch(e){console.warn('pushTimes',e);}
     try{renderVenueManage();renderDashboardWeek();}catch(e){}
-    if(msg)hqToast(msg+(n?' · '+n+' upcoming gig time'+(n>1?'s':'')+' updated':''));
+    if(msg)hqToast(msg+(pr.n?' · '+pr.n+' upcoming gig time'+(pr.n>1?'s':'')+' updated':'')+(pr.moved?' · '+pr.moved+' moved to the new day':'')+(pr.removed?' · '+pr.removed+' upcoming gig'+(pr.removed>1?'s':'')+' removed':''));
   }catch(e){console.warn('vmxSaveHQSlots',e);hqToast('Venue nights did NOT save to the master record: '+((e&&(e.code||e.message))||e),true);}
 }
-// A gig carries its own saved copy of the time, and that copy beats the venue's usual time everywhere.
-// So when a night's time is set on the venue, every upcoming gig of that regular night is moved to it too
-// (HQ gigs, Planner per-date records, Bingo schedule entries). One-off gigs (not part of a series) are left alone.
-async function vmxPushTimesToGigs(v,rows){
-  if(!rtdb||!v)return 0;
-  const today=dateToKey(new Date());const vn=normVenueName(v.name);let count=0;const upd={};
+// ── A venue's regular night drives its dated gigs ──
+// A dated gig (dashboard / Edit Gig) is linked to its venue night by venue + gig type + weekday.
+// Saving the night in Edit Venue updates every UPCOMING gig of that night: time, end time, day, and
+// removing/finishing a night removes its upcoming gigs. A gig whose time was set by hand to something
+// different from the venue's usual time is "locked" (timeLocked) and is left alone.
+function vmxUsualTime(kind,venueName,dow){
+  const t=vmxMasterTime(kind,venueName,dow);if(t)return t;
+  try{const key=plannerKindKey(kind);
+    if(key==='Bingo'){const bv=Object.values(bingoVenuesMap||{}).find(x=>x&&normVenueName(x.name)===normVenueName(venueName)&&x.time);return bv?time24(bv.time):'';}
+    const pv=findPlannerVenue(kind,venueName,dow);return pv&&pv.v.time?time24(pv.v.time):'';}catch(e){return '';}
+}
+async function vmxPushTimesToGigs(v,rows,oldSlots){
+  if(!rtdb||!v)return {n:0,moved:0,removed:0};
+  oldSlots=oldSlots||{};
+  const today=dateToKey(new Date());const vn=normVenueName(v.name);const upd={};let n=0,moved=0,removed=0;
+  const DN=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const dowOf=d=>DN.indexOf(VMX_DAY_FULL[vmxAbbr(d)]||d);
+  const mine=(g,key,dow)=>g.date>=today&&g.status!=='cancelled'&&normVenueName(g.venue)===vn&&plannerKindKey(g.kind)===key&&new Date(g.date+'T12:00:00').getDay()===dow;
+  const liveKeys=new Set(rows.filter(r=>r.kind&&r.day&&r.status!=='finished'&&r.status!=='paused').map(r=>(plannerKindKey(r.kind)||r.kind)+'|'+dowOf(r.day)));
+  const lockedDates=new Set(gigSchedule.filter(g=>g.timeLocked&&normVenueName(g.venue)===vn).map(g=>(plannerKindKey(g.kind)||g.kind)+'|'+g.date));
   for(const r of rows){
-    const t=vmxT24(r.time);if(!t||!r.kind||!r.day||r.status==='finished'||r.status==='paused'||(r.cadence||'weekly')==='single')continue;
-    const dow=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'].indexOf(VMX_DAY_FULL[vmxAbbr(r.day)]||r.day);
-    const key=plannerKindKey(r.kind);if(!key||dow<0)continue;
-    gigSchedule.filter(g=>g.date>=today&&g.status!=='cancelled'&&g.seriesId&&normVenueName(g.venue)===vn&&plannerKindKey(g.kind)===key&&new Date(g.date+'T12:00:00').getDay()===dow&&time24(g.time||'')!==t)
-      .forEach(g=>{g.time=t;persistGig(g,false);count++;});
+    if(!r.kind||!r.day||r.status==='finished'||r.status==='paused'||(r.cadence||'weekly')==='single')continue;
+    const key=plannerKindKey(r.kind);const dow=dowOf(r.day);if(!key||dow<0)continue;
+    const t=vmxT24(r.time),et=vmxT24(r.endTime);
+    const o=oldSlots[r.id];const oldDow=o&&o.day?dowOf(o.day):dow;
+    // 1) HQ dated gigs of this night
+    gigSchedule.filter(g=>mine(g,key,oldDow)).forEach(g=>{
+      let ch=false;
+      if(!g.timeLocked){if(t&&time24(g.time||'')!==t){g.time=t;ch=true;n++;}
+      if(et&&time24(g.endTime||'')!==et){g.endTime=et;ch=true;}}
+      if(oldDow!==dow){
+        const d=new Date(g.date+'T12:00:00');d.setDate(d.getDate()+(dow-oldDow));const nd=dateToKey(d);
+        if(nd>=today&&!gigSchedule.some(x=>x!==g&&x.date===nd&&normVenueName(x.venue)===vn&&plannerKindKey(x.kind)===key)){g.date=nd;ch=true;moved++;}
+      }
+      if(ch)persistGig(g,false);
+    });
+    if(!t)continue;
+    // 2) Planner / Bingo dated records (ones HQ doesn't already own)
     if(key==='Bingo'){
       const ids=Object.entries(bingoVenuesMap||{}).filter(([id,b])=>b&&normVenueName(b.name)===vn).map(x=>x[0]);
-      (bingoScheduleList||[]).filter(e=>e&&e.id&&ids.includes(e.venueId)&&e.date>=today&&new Date(e.date+'T12:00:00').getDay()===dow&&e.time&&time24(e.time)!==t)
-        .forEach(e=>{upd['bingo/landing/schedule/'+e.id+'/time']=t;count++;});
+      (bingoScheduleList||[]).filter(e=>e&&e.id&&ids.includes(e.venueId)&&e.date>=today&&new Date(e.date+'T12:00:00').getDay()===dow&&e.time&&time24(e.time)!==t&&!lockedDates.has('Bingo|'+e.date))
+        .forEach(e=>{upd['bingo/landing/schedule/'+e.id+'/time']=t;n++;});
     }else{
       const vmap={Trivia:plannerVenues,Karaoke:plannerKaraokeVenues,Events:plannerEventVenues}[key]||{};
       const gmap={Trivia:plannerGigs,Karaoke:plannerKaraokeGigs,Events:plannerEventGigs}[key]||{};
       const base=PLANNER_KIND_PATHS[key].g;
       Object.entries(vmap).filter(([id,pv])=>pv&&normVenueName(pv.name)===vn&&PLANNER_DAY_MAP[pv.day]===dow).forEach(([id])=>{
         Object.entries(gmap[id]||{}).forEach(([date,rec])=>{
-          if(date>=today&&rec&&rec.time&&rec.status!=='cancelled'&&time24(rec.time)!==t){upd[base+'/'+id+'/'+date+'/time']=t;count++;}
+          if(date>=today&&rec&&rec.time&&rec.status!=='cancelled'&&time24(rec.time)!==t&&!lockedDates.has(key+'|'+date)){upd[base+'/'+id+'/'+date+'/time']=t;n++;}
         });
       });
     }
   }
+  // 3) a night removed or finished → its upcoming gigs go too (unless another live night covers the same type + weekday)
+  Object.entries(oldSlots).forEach(([sid,o])=>{
+    if(!o||!o.kind||!o.day||o.status==='finished')return;
+    const stillThere=rows.some(r=>r.id===sid&&r.status!=='finished'&&r.status!=='paused');
+    if(stillThere)return;
+    const key=plannerKindKey(o.kind);const dow=dowOf(o.day);if(!key||dow<0||liveKeys.has(key+'|'+dow))return;
+    gigSchedule.filter(g=>mine(g,key,dow)&&!g.timeLocked).forEach(g=>{gigSchedule=gigSchedule.filter(x=>x!==g);persistGig(g,true);removed++;});
+  });
   if(Object.keys(upd).length)await rtdb.ref().update(upd);
-  return count;
+  return {n,moved,removed};
 }
 let _vmxStarted=false;
 function vmxStartOnce(){if(_vmxStarted||!rtdb)return;_vmxStarted=true;vmxListen(()=>{try{renderVenueManage();renderDashboardWeek();}catch(e){}},()=>{ensureVenueIds();try{renderVenueManage();}catch(e){}});}
@@ -3201,7 +3272,7 @@ function createGigEntry(base,repeatMode,count,existing){
     if(isMonthly)d.setMonth(d.getMonth()+w);
     else d.setDate(d.getDate()+w*(isBiweekly?14:7));
     const dateStr=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
-    const entry={id:Date.now().toString()+'_'+w+'_'+Math.random().toString(36).slice(2,6),date:dateStr,time:base.time||'',endTime:base.endTime||'',kind:base.kind||'',venue:base.venue,host:base.host||'Unassigned',status:'scheduled',notes:base.notes||'',seriesId,cadence,cadenceAnchor:cadence?base.date:''};
+    const entry={id:Date.now().toString()+'_'+w+'_'+Math.random().toString(36).slice(2,6),date:dateStr,timeLocked:!!base.timeLocked,time:base.time||'',endTime:base.endTime||'',kind:base.kind||'',venue:base.venue,host:base.host||'Unassigned',status:'scheduled',notes:base.notes||'',seriesId,cadence,cadenceAnchor:cadence?base.date:''};
     gigSchedule.push(entry);
     persistGig(entry,false);
   }
@@ -3407,10 +3478,13 @@ function saveGig(){
   const notes=document.getElementById('gigNotes').value.trim();
   const cancelled=document.getElementById('gigCancelCheckbox').checked;
   if(!date||!selectedGigVenue){alert('Please set a date and venue.');return;}
+  // a time typed in by hand that differs from the venue's usual time = a one-night change: keep it locked
+  const _usual=vmxUsualTime(selectedGigKind,selectedGigVenue,new Date(date+'T12:00:00').getDay());
+  const timeLocked=!!(time&&_usual&&time24(time)!==time24(_usual));
   if(editingGigId){
     const g=gigSchedule.find(x=>x.id===editingGigId);
     if(!g)return;
-    const changes={date,time,endTime,kind:selectedGigKind,venue:selectedGigVenue,host:selectedGigHost,notes,status:cancelled?'cancelled':'scheduled'};
+    const changes={date,time,endTime,timeLocked,kind:selectedGigKind,venue:selectedGigVenue,host:selectedGigHost,notes,status:cancelled?'cancelled':'scheduled'};
     const seriesMates=g.seriesId?gigSchedule.filter(x=>x.seriesId===g.seriesId):[];
     if(g.seriesId&&seriesMates.length>1){
       pendingGigScopeAction={type:'edit',gig:g,changes,origDate:g.date};
@@ -3428,7 +3502,7 @@ function saveGig(){
   }else{
     const repeatMode=document.getElementById('gigRepeatMode').value;
     const count=parseInt(document.getElementById('gigRepeatCount').value)||12;
-    createGigEntry({date,time,endTime,kind:selectedGigKind,venue:selectedGigVenue,host:selectedGigHost,notes},repeatMode,count);
+    createGigEntry({date,time,endTime,timeLocked,kind:selectedGigKind,venue:selectedGigVenue,host:selectedGigHost,notes},repeatMode,count);
     renderScheduleAll();closeGigModal();
   }
 }
@@ -3654,7 +3728,7 @@ function refreshAllLocationScopedData(){
 // plain page text again, nothing editable showing. Seeded once from
 // whatever was in the old structured step list, so nothing already
 // entered gets lost — freely reformat from there.
-let onbContent={host:'',venue:''};
+let onbContent={host:'',venue:'',links:''};
 function rteEnsureNewTabLinks(html){
   // execCommand('createLink') has no way to set target itself, so every
   // link gets forced open-in-new-tab here instead, on both load and save —
@@ -3679,6 +3753,12 @@ function loadOnbContent(kind){
 }
 function seedOnbContent(kind){
   // One-time migration from the old structured step list, if any exists.
+  if(kind==='links'){
+    const html='<h2>Links</h2><p>Click Edit to start writing.</p>';
+    onbContent[kind]=html;
+    document.getElementById('rteBody-links').innerHTML=html;
+    return;
+  }
   const docId=kind==='host'?'onbSteps_host':'onbSteps_venue';
   db.collection('hq_data').doc(docId).get().then(snap=>{
     const steps=(snap.exists&&Array.isArray(snap.data().steps))?snap.data().steps:[];
@@ -5997,6 +6077,7 @@ function init(){
   loadOnbContent('host');
   loadVenuesList();
   loadOnbContent('venue');
+  loadOnbContent('links');
   loadHostSetupSchema();
   renderRoster();
   renderVenueManage();
