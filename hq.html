@@ -2268,6 +2268,7 @@ function dateToKey(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart
 // Same frequency rules the Planner uses (weekly / biweekly / monthly / single).
 function plannerVenueRunsOn(v,dk){
   if(!v)return false;
+  if(v.endsOn&&dk>=v.endsOn)return false;   // series ended by a "this & future" delete
   const cad=v.cadence||'weekly',st=v.status||'active';
   const d=new Date(dk+'T12:00:00');
   if(cad==='single')return !!v.cadenceAnchor&&v.cadenceAnchor===dk&&(st==='active'||st==='seasonal'||st==='one-time');
@@ -2289,6 +2290,7 @@ function getExternalGigsForDate(dk,dow){
     Object.entries(pv).forEach(([id,v])=>{
       if(hqVenuesForDate.has(normVenueName(v.name)))return;
       const override=(pg&&pg[id])?pg[id][dk]:null;
+      if(override&&override.deletedByHQ)return;   // deleted from HQ — hide it
       // A real per-date record always shows; otherwise fall back to the venue's usual weekday.
       const hasExplicitRecord=!!override;
       const recurs=plannerVenueRunsOn(v,dk);
@@ -3520,22 +3522,38 @@ function saveGig(){
 // Delete a gig that exists only in the Planner / Bingo app (it has no HQ record of its own).
 function deleteExternalGig(it){
   if(!it||!it.kind||!it.venue||!it.dk)return;
-  if(!confirm('Delete '+it.kind+' at '+it.venue+' on '+it.dk+'?'))return;
   const kind=plannerKindKey(it.kind);
   const dow=new Date(it.dk+'T12:00:00').getDay();
   const match=(kind&&kind!=='Bingo')?findPlannerVenue(it.kind,it.venue,dow):null;
   const recurring=!!(match&&match.v&&plannerVenueRunsOn(match.v,it.dk)&&kind!=='Events');
-  // A regular weekly night can't simply vanish (the venue would just re-fill it) — offer to remove the venue too.
-  if(recurring&&confirm('"'+it.venue+'" is a regular weekly '+it.kind+' night in the Planner.\n\nOK = remove the venue from the Planner entirely (every night, never shows again).\nCancel = just cancel this one night.')){
-    const paths=PLANNER_KIND_PATHS[kind];
-    const ups={};ups[paths.v+'/'+match.id]=null;ups[paths.g+'/'+match.id]=null;
-    rtdb.ref().update(ups).then(()=>toast('Venue removed from the Planner.')).catch(e=>alert('Could not remove: '+e.message));
-  }else{
-    pushGigToExternalPlanner({id:'ext_'+Date.now(),kind:it.kind,venue:it.venue,date:it.dk,host:it.host,time:it.time||'',notes:'',status:'scheduled',locationId:null},true);
+  if(recurring){
+    // Same "this one / this & future" choice as an HQ repeating gig.
+    pendingGigScopeAction={type:'delete-ext',it,match,kind};
+    closeGigModal();document.getElementById('dashGigDetailModal').classList.remove('open');
+    openGigScopeModal('Delete Repeating Gig');
+    return;
   }
+  if(!confirm('Delete '+it.kind+' at '+it.venue+' on '+it.dk+'?'))return;
+  pushGigToExternalPlanner({id:'ext_'+Date.now(),kind:it.kind,venue:it.venue,date:it.dk,host:it.host,time:it.time||'',notes:'',status:'scheduled',locationId:null},true);
   editingExternalGig=null;closeGigModal();
   document.getElementById('dashGigDetailModal').classList.remove('open');
   setTimeout(()=>{try{renderScheduleAll();renderDashboardWeek();}catch(e){}},400);
+}
+// Applies the chosen scope to a Planner-only repeating night.
+function resolveExternalDelete(scope,a){
+  const paths=PLANNER_KIND_PATHS[a.kind],it=a.it,vid=a.match.id,ups={};
+  const mark={themeId:null,themeName:null,round3ThemeId:null,round3Name:null,status:'cancelled',note:'(deleted from HQ)',host:null,cancelledByHQ:true,deletedByHQ:true,locationId:a.match.v.locationId||null};
+  if(scope==='one'){
+    ups[paths.g+'/'+vid+'/'+it.dk]=mark;
+  }else{
+    // End the series on this date: no more generated nights from here on, and drop any planned nights after it.
+    ups[paths.v+'/'+vid+'/endsOn']=it.dk;
+    const existing=(a.kind==='Trivia'?plannerGigs:a.kind==='Karaoke'?plannerKaraokeGigs:plannerEventGigs)||{};
+    Object.keys(existing[vid]||{}).forEach(dk=>{if(dk>=it.dk)ups[paths.g+'/'+vid+'/'+dk]=null;});
+  }
+  rtdb.ref().update(ups).then(()=>toast(scope==='one'?'Gig deleted.':'This and all future gigs deleted.')).catch(e=>alert('Could not delete: '+e.message));
+  editingExternalGig=null;
+  setTimeout(()=>{try{renderScheduleAll();renderDashboardWeek();}catch(e){}},500);
 }
 function quickDeleteGig(id){editingGigId=id;deleteGig();}
 function deleteGig(){
@@ -3567,6 +3585,7 @@ function closeGigScopeModal(){document.getElementById('gigScopeModal').classList
 function resolveGigScope(scope){
   const action=pendingGigScopeAction;
   if(!action){closeGigScopeModal();return;}
+  if(action.type==='delete-ext'){resolveExternalDelete(scope,action);closeGigScopeModal();return;}
   const g=action.gig;
   if(action.type==='edit'){
     if(scope==='one'){
