@@ -2412,7 +2412,7 @@ function showDashGigDetail(idx,fromSchedule){
       </div>
       ${fill?`<div style="color:#c9a0dc;font-size:0.72rem;">Fill-in for regular host ${esc(it.regularHost)}</div>`:(it.regularHost?`<div style="font-size:0.72rem;color:var(--text3)">Regular host: ${esc(it.regularHost)}</div>`:'')}
       ${it.cancelled?'<div style="color:var(--rose)"><b>Cancelled</b></div>':''}
-      <div style="margin-top:0.5rem;"><button class="btn-sm" onclick="editFullGigFromDash(${idx},${fromSchedule?'true':'false'})">Edit full gig…</button></div>
+      <div style="margin-top:0.5rem;"><button class="btn-sm" onclick="editFullGigFromDash(${idx},${fromSchedule?'true':'false'})">Edit full gig…</button> <button class="btn-sm" style="color:var(--rose);border-color:var(--rose);" onclick="deleteGigFromDash(${idx},${fromSchedule?'true':'false'})">Delete</button></div>
     </div>`;
   document.getElementById('dashGigDetailModal').classList.add('open');
 }
@@ -2447,6 +2447,12 @@ function time24(t){
 }
 // Gigs that come from the Planner / Bingo schedule (not created in HQ) have no HQ record yet —
 // open the same Edit Gig popup pre-filled from them; saving it creates the HQ gig.
+function deleteGigFromDash(idx,fromSchedule){
+  const it=fromSchedule?scheduleExternalItemsFlat[idx]:dashboardItemsFlat[idx];
+  if(!it)return;
+  if(it.hqGigId&&gigSchedule.some(g=>g.id===it.hqGigId)){document.getElementById('dashGigDetailModal').classList.remove('open');quickDeleteGig(it.hqGigId);return;}
+  deleteExternalGig(it);
+}
 function editFullGigFromDash(idx,fromSchedule){
   const it=fromSchedule?scheduleExternalItemsFlat[idx]:dashboardItemsFlat[idx];
   document.getElementById('dashGigDetailModal').classList.remove('open');
@@ -2461,6 +2467,9 @@ function editFullGigFromDash(idx,fromSchedule){
   populateGigVenueChips(it.venue||null);
   document.getElementById('gigCancelRow').style.display='block';
   document.getElementById('gigCancelCheckbox').checked=!!it.cancelled;
+  // This gig lives in the Planner, not in HQ's own schedule — it can still be deleted from here.
+  editingExternalGig=it;
+  document.getElementById('gigDeleteBtn').style.display='inline-block';
 }
 
 // ── HOST ASSIGNMENT ──
@@ -2705,6 +2714,7 @@ async function removeRegularNight(kind,id){
 
 // ── GIG SCHEDULE ──
 const MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
+let editingExternalGig=null;
 let gigSchedule=[],editingGigId=null,pendingGigDate=null,selectedGigVenue='',selectedGigHost='Unassigned',selectedGigKind='';
 function loadGigSchedule(){
   try{const g=LS.get('gig-schedule');if(g){gigSchedule=JSON.parse(g);gigSchedule.forEach(noteGigLoc);}}catch(e){}
@@ -3344,6 +3354,7 @@ function renderScheduleSpreadsheet(){
         <td><span class="sched-status-label" style="color:${st.color};border:1px solid ${st.color};background:${st.color}22">${st.label}</span></td>
         <td style="white-space:nowrap;">
           <button class="action-btn edit" onclick="openGigModal('${g.id}')">✎</button>
+          <button class="action-btn" title="Delete gig" style="color:var(--rose);" onclick="quickDeleteGig('${g.id}')">🗑</button>
           ${st.key==='signedin'?`<button class="btn-sm" style="color:var(--rose);margin-left:0.3rem;" onclick="unsignInGig('${g.venue.replace(/'/g,"\\'")}','${g.date}')">Un-Sign-In</button>`:''}
         </td>
       </tr>`;
@@ -3437,7 +3448,7 @@ function populateGigKindChips(sel){
 }
 function selectGigKind(el,k){selectedGigKind=k;document.querySelectorAll('#gigKindChips .chip').forEach(c=>c.classList.remove('selected-skill'));el.classList.add('selected-skill');}
 function openGigModal(id,presetHost){
-  editingGigId=id||null;
+  editingGigId=id||null;editingExternalGig=null;
   const g=id?gigSchedule.find(x=>x.id===id):null;
   document.getElementById('gigModalTitle').textContent=id?'Edit Gig':'Schedule Gig';
   document.getElementById('gigDate').value=g?g.date:(pendingGigDate||'');
@@ -3506,7 +3517,29 @@ function saveGig(){
     renderScheduleAll();closeGigModal();
   }
 }
+// Delete a gig that exists only in the Planner / Bingo app (it has no HQ record of its own).
+function deleteExternalGig(it){
+  if(!it||!it.kind||!it.venue||!it.dk)return;
+  if(!confirm('Delete '+it.kind+' at '+it.venue+' on '+it.dk+'?'))return;
+  const kind=plannerKindKey(it.kind);
+  const dow=new Date(it.dk+'T12:00:00').getDay();
+  const match=(kind&&kind!=='Bingo')?findPlannerVenue(it.kind,it.venue,dow):null;
+  const recurring=!!(match&&match.v&&plannerVenueRunsOn(match.v,it.dk)&&kind!=='Events');
+  // A regular weekly night can't simply vanish (the venue would just re-fill it) — offer to remove the venue too.
+  if(recurring&&confirm('"'+it.venue+'" is a regular weekly '+it.kind+' night in the Planner.\n\nOK = remove the venue from the Planner entirely (every night, never shows again).\nCancel = just cancel this one night.')){
+    const paths=PLANNER_KIND_PATHS[kind];
+    const ups={};ups[paths.v+'/'+match.id]=null;ups[paths.g+'/'+match.id]=null;
+    rtdb.ref().update(ups).then(()=>toast('Venue removed from the Planner.')).catch(e=>alert('Could not remove: '+e.message));
+  }else{
+    pushGigToExternalPlanner({id:'ext_'+Date.now(),kind:it.kind,venue:it.venue,date:it.dk,host:it.host,time:it.time||'',notes:'',status:'scheduled',locationId:null},true);
+  }
+  editingExternalGig=null;closeGigModal();
+  document.getElementById('dashGigDetailModal').classList.remove('open');
+  setTimeout(()=>{try{renderScheduleAll();renderDashboardWeek();}catch(e){}},400);
+}
+function quickDeleteGig(id){editingGigId=id;deleteGig();}
 function deleteGig(){
+  if(!editingGigId&&editingExternalGig){deleteExternalGig(editingExternalGig);return;}
   if(!editingGigId)return;
   const g=gigSchedule.find(x=>x.id===editingGigId);
   if(!g)return;
