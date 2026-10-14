@@ -5552,7 +5552,7 @@ function saveVenue(){
         hqToast('✓ Venue ID changed to '+nid);
       }
     }catch(e){if(sv)sv.venueId=oldVid;persist('venues-list',venues,'venuesSave');alert('Venue ID not changed: '+(e&&e.message||e));}
-    if(sv)await vmxSaveHQSlots(sv,gigSlots);
+    if(sv){linkVenueAccountById(sv);await vmxSaveHQSlots(sv,gigSlots);}
   })();
   renderVenueManage();populateRosterFilters();closeVenueModal();
 }
@@ -5817,7 +5817,7 @@ function renderAccounts(){
         ${a.accountType==='venue' ? `
         <div style="flex:1;">
           <div style="font-size:0.6rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--text3);margin-bottom:0.3rem;">Venue ID <span style="opacity:0.7;">— links to Our Venues</span></div>
-          <input type="text" value="${(a.venueId||'').replace(/"/g,'&quot;')}" placeholder="not set" onchange="setAcctVenueId('${a.uid}',this.value)" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:0.3rem 0.5rem;font-size:0.72rem;">
+          <div style="display:flex;gap:0.4rem;align-items:center;"><input type="text" value="${(a.venueId||'').replace(/"/g,'&quot;')}" placeholder="not set" onchange="setAcctVenueId('${a.uid}',this.value)" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:0.3rem 0.5rem;font-size:0.72rem;">${a.venueId?'':`<button type="button" style="background:none;border:1px solid var(--border);color:var(--text3);border-radius:6px;padding:0.28rem 0.6rem;font-size:0.6rem;letter-spacing:0.12em;text-transform:uppercase;cursor:pointer;white-space:nowrap;" onclick="assignAcctVenueId('${a.uid}',this)">Assign next</button>`}</div>
         </div>` : a.accountType==='host' ? `
         <div style="flex:1;">
           <div style="font-size:0.6rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--text3);margin-bottom:0.3rem;">Host ID <span style="opacity:0.7;">— links to Host Roster</span></div>
@@ -6053,6 +6053,30 @@ function setAcctHostId(uid,val){
     acct.hostId=prev;renderAccounts();
     alert('Failed to update Host ID: '+e.message);
   });
+}
+async function assignAcctVenueId(uid,btn){
+  btn.disabled=true;btn.textContent='…';
+  try{
+    const acct=accounts.find(x=>x.uid===uid);if(!acct)throw new Error('Account not found');
+    // Same rule as the signup function: one more than the highest BV-### already in use.
+    let max=0;(accounts||[]).forEach(a=>{const m=/^BV-(\d+)$/i.exec((a.venueId||'').trim());if(m)max=Math.max(max,parseInt(m[1],10));});
+    (venues||[]).forEach(v=>{const m=/^BV-(\d+)$/i.exec((v.venueId||'').trim());if(m)max=Math.max(max,parseInt(m[1],10));});
+    const id='BV-'+String(max+1).padStart(3,'0');
+    await db.collection('users').doc(uid).set({venueId:id},{merge:true});
+    if(acct.email)db.collection('loginLookup').doc(id.toLowerCase()).set({email:acct.email}).catch(()=>{});
+    acct.venueId=id;renderAccounts();
+  }catch(e){btn.disabled=false;btn.textContent='Assign next';alert('Could not assign a Venue ID: '+(e&&e.message||e));}
+}
+// When a venue in Our Venues has a Gateway email, make the matching account carry that venue's ID.
+function linkVenueAccountById(v){
+  try{
+    if(!v||!v.venueId||!v.gatewayEmail||!db)return;
+    const a=(accounts||[]).find(x=>(x.email||'').toLowerCase()===v.gatewayEmail.trim().toLowerCase());
+    if(!a||a.venueId===v.venueId)return;
+    a.venueId=v.venueId;
+    db.collection('users').doc(a.uid).set({venueId:v.venueId},{merge:true}).then(()=>{try{renderAccounts();}catch(_){}}).catch(()=>{});
+    if(a.email)db.collection('loginLookup').doc(v.venueId.toLowerCase()).set({email:a.email}).catch(()=>{});
+  }catch(_){}
 }
 function setAcctVenueId(uid,val){
   const acct=accounts.find(a=>a.uid===uid);if(!acct)return;
