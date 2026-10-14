@@ -64,6 +64,9 @@
   .seg-btn:hover{background:rgba(201,169,110,0.08);}
   .seg-btn[disabled]{opacity:0.35;cursor:default;pointer-events:none;}
   .seg-note{font-size:0.62rem;color:var(--text3);margin-top:0.5rem;text-align:center;}
+  .venue-note{border:1px solid var(--gold);background:rgba(201,169,110,0.1);border-radius:12px;padding:0.9rem 1.1rem;margin-bottom:1.1rem;}
+  .vn-label{font-size:0.62rem;letter-spacing:0.28em;text-transform:uppercase;color:var(--gold);margin-bottom:0.4rem;}
+  .vn-text{font-size:0.98rem;color:var(--text);line-height:1.45;}
   .loading,.msg-empty{text-align:center;color:var(--text3);font-size:0.75rem;letter-spacing:0.1em;padding:2rem 0;}
   :root{--gold2:#e0bc7e;--border-gold:rgba(201,169,110,0.4);--text4:#4a4638;--gold-dim:rgba(201,169,110,0.12);}
   /* additions */
@@ -414,10 +417,12 @@
               host:entry.host||'Unassigned',
               bingoEntryId:entry.id,
               bingoVenueId:venueId,
-              categoryIds:catIds
+              categoryIds:catIds,
+              venueNote:entry.venueNote||''
             });
           }else{
             hqBingoItems.forEach(it=>{
+              it.venueNote=entry.venueNote||it.venueNote||'';
               it.bingoEntryId=entry.id;
               it.bingoVenueId=venueId;
               it.categoryIds=catIds;
@@ -485,6 +490,13 @@
     const dateLabel=currentDate.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
     let html=`<div class="venue-title"><div class="vname">${venue.name}</div><div class="vdate">${dateLabel}</div></div>`;
 
+    // Notes the venue left for the host (from their My Queue) — shown first so they're seen before anything else.
+    const noteOf=it=>String(it.venueNote||(it.plannerGig&&it.plannerGig.venueNote)||'').trim();
+    const notes=items.filter(it=>noteOf(it)&&!it.cancelled);
+    if(notes.length){
+      const esc3=t=>String(t).replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
+      html+=`<div class="venue-note"><div class="vn-label">★ Note from the venue</div>${notes.map(it=>`<div class="vn-text">${notes.length>1?`<b>${esc3(it.kind)}:</b> `:''}${esc3(noteOf(it))}</div>`).join('')}</div>`;
+    }
     if(!items.length){
       html+='<div class="msg-empty">Unscheduled</div>';
     }else{
@@ -691,29 +703,15 @@
   // The browser Bingo page. Set this to the full address of your web Bingo app
   // (leave '' if there isn't one — Tonight then just shows the "not installed" note).
   const BINGO_WEB_URL='https://belladonnanights.github.io/bingo/index.html';
-  // One-time sign-in code so the Bingo app opens already signed in (no second login).
-  const HANDOFF_BASE='https://us-central1-belladonna-hq.cloudfunctions.net/';
-  async function mintHandoff(){
-    try{
-      const user=auth.currentUser;
-      if(!user) return null;
-      const idToken=await user.getIdToken();
-      const r=await fetch(HANDOFF_BASE+'createHandoff',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+idToken},body:JSON.stringify({data:{}})});
-      const j=await r.json();
-      return (j&&j.result&&j.result.code)||null;
-    }catch(e){console.warn('[handoff] could not create a sign-in code:',e);return null;}
-  }
-  async function openBingo(ev,protoUrl){
+  function openBingo(ev,protoUrl){
     ev.preventDefault();
-    const handoff=await mintHandoff(); // null is fine — the Bingo app then asks for the normal sign-in
-    const launchUrl=handoff?protoUrl+'&handoff='+encodeURIComponent(handoff):protoUrl;
     const note=document.getElementById('bingoFallbackNote');
     let left=false;
     const onBlur=()=>{left=true;};
     const onHide=()=>{ if(document.hidden) left=true; };
     window.addEventListener('blur',onBlur);
     document.addEventListener('visibilitychange',onHide);
-    window.location.href=launchUrl;
+    window.location.href=protoUrl;
     setTimeout(()=>{
       window.removeEventListener('blur',onBlur);
       document.removeEventListener('visibilitychange',onHide);
