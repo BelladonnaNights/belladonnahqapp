@@ -2284,11 +2284,12 @@ function getExternalGigsForDate(dk,dow){
   // Anything HQ already pushed into Planner/Bingo (pushGigToExternalPlanner) has
   // an entry right here in gigSchedule too — skip it as "external" so it doesn't
   // render twice on the calendar.
-  const hqVenuesForDate=new Set(gigSchedule.filter(g=>g.date===dk).map(g=>normVenueName(g.venue)));
+  // venue + kind, so an HQ Trivia night at a bar doesn't hide that same bar's Bingo night
+  const hqVenuesForDate=new Set(gigSchedule.filter(g=>g.date===dk).map(g=>normVenueName(g.venue)+'|'+(plannerKindKey(g.kind)||g.kind)));
   [['Trivia',plannerVenues,plannerGigs,'Trivia Planner'],['Karaoke',plannerKaraokeVenues,plannerKaraokeGigs,'Karaoke Planner'],['Events',plannerEventVenues,plannerEventGigs,'Events Planner']].forEach(([kindKey,pv,pg,src])=>{
     if(!pv)return;
     Object.entries(pv).forEach(([id,v])=>{
-      if(hqVenuesForDate.has(normVenueName(v.name)))return;
+      if(hqVenuesForDate.has(normVenueName(v.name)+'|'+(plannerKindKey(kindKey)||kindKey)))return;
       const override=(pg&&pg[id])?pg[id][dk]:null;
       if(override&&override.deletedByHQ)return;   // deleted from HQ — hide it
       // A real per-date record always shows; otherwise fall back to the venue's usual weekday.
@@ -2300,7 +2301,7 @@ function getExternalGigsForDate(dk,dow){
       out.push({venue:v.name,host:(override&&override.host)||v.host||'Unassigned',regularHost:v.host||'',time:(override&&override.time)||vmxMasterTime(kindKey,v.name,dow)||v.time||'',dk,kindKey,pVenueId:id,kind,cancelled,source:src,notes:override&&override.themeName?override.themeName:(override&&override.note?override.note:'')});
     });
   });
-  out.push(...fetchBingoGigsForDate(dk,dow).filter(it=>!hqVenuesForDate.has(normVenueName(it.venue))));
+  out.push(...fetchBingoGigsForDate(dk,dow).filter(it=>!hqVenuesForDate.has(normVenueName(it.venue)+'|Bingo')));
   return out;
 }
 function dashNote(it){return it.notes||((it.kind||'').toLowerCase()==='karaoke'&&!it.cancelled?'Regular karaoke':'');}
