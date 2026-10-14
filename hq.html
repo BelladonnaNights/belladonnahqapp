@@ -2935,7 +2935,18 @@ async function vmxSaveHQSlots(v,rows){
         upd[base+'day']=vmxAbbr(n.day);upd[base+'time']=n.time?vmxFmt(n.ref.kind,n.time):'';upd[base+'cadence']=n.cadence;upd[base+'cadenceAnchor']=n.anchor||'';upd[base+'status']=n.status;
       }else if(key&&n.kind!=='Private Events'){
         // a night added in HQ gets its own Planner / Bingo venue record, so it shows up there too
-        const lk=n.kind;const nid=rtdb.ref(VMX_KIND_PATH[lk]).push().key;
+        const lk=n.kind;
+        const usedRefs=new Set();Object.values(slots).concat(Object.values(old)).forEach(x=>{if(x&&x.ref)usedRefs.add(x.ref.kind+'/'+x.ref.id);});
+        const dupe=(legacy||[]).find(l=>l.kind===lk&&vmxKey(l.v.name)===vmxKey(v.name)&&vmxAbbr(l.v.day)===vmxAbbr(n.day)&&!usedRefs.has(l.kind+'/'+l.id));
+        if(dupe){
+          // the Planner already has this exact night — link to it rather than making a second copy
+          n.ref={kind:lk,id:dupe.id};
+          const base=VMX_KIND_PATH[lk]+'/'+dupe.id+'/';
+          upd[base+'venueId']=m.id;
+          slots[sid]=n;seen.add(sid);
+          continue;
+        }
+        const nid=rtdb.ref(VMX_KIND_PATH[lk]).push().key;
         upd[VMX_KIND_PATH[lk]+'/'+nid]={name:v.name,groupName:v.name,day:vmxAbbr(n.day),time:n.time?vmxFmt(lk,n.time):'',cadence:n.cadence,cadenceAnchor:n.anchor||'',status:n.status,source:'hq',pay:{amount:null,method:''},notes:'Created from HQ',host:'',locationId:v.locationId||null,venueId:m.id,createdAt:Date.now()};
         n.ref={kind:lk,id:nid};
       }
@@ -5817,7 +5828,7 @@ function renderAccounts(){
         ${a.accountType==='venue' ? `
         <div style="flex:1;">
           <div style="font-size:0.6rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--text3);margin-bottom:0.3rem;">Venue ID <span style="opacity:0.7;">— links to Our Venues</span></div>
-          <div style="display:flex;gap:0.4rem;align-items:center;"><input type="text" value="${(a.venueId||'').replace(/"/g,'&quot;')}" placeholder="not set" onchange="setAcctVenueId('${a.uid}',this.value)" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:0.3rem 0.5rem;font-size:0.72rem;">${a.venueId?'':`<button type="button" style="background:none;border:1px solid var(--border);color:var(--text3);border-radius:6px;padding:0.28rem 0.6rem;font-size:0.6rem;letter-spacing:0.12em;text-transform:uppercase;cursor:pointer;white-space:nowrap;" onclick="assignAcctVenueId('${a.uid}',this)">Assign next</button>`}</div>
+          <div style="display:flex;gap:0.4rem;align-items:center;"><input type="text" value="${(a.venueId||'').replace(/"/g,'&quot;')}" placeholder="not set" onchange="setAcctVenueId('${a.uid}',this.value)" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:0.3rem 0.5rem;font-size:0.72rem;">${a.venueId?'':`<button type="button" style="background:none;border:1px solid var(--border);color:var(--text3);border-radius:6px;padding:0.28rem 0.6rem;font-size:0.6rem;letter-spacing:0.12em;text-transform:uppercase;cursor:pointer;white-space:nowrap;" onclick="assignAcctVenueId('${a.uid}',this)">Assign from name</button>`}</div>
         </div>` : a.accountType==='host' ? `
         <div style="flex:1;">
           <div style="font-size:0.6rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--text3);margin-bottom:0.3rem;">Host ID <span style="opacity:0.7;">— links to Host Roster</span></div>
@@ -6055,16 +6066,23 @@ function setAcctHostId(uid,val){
   });
 }
 async function assignAcctVenueId(uid,btn){
+  const acct=accounts.find(x=>x.uid===uid);if(!acct)return;
+  // The Venue ID is the venue's name as a slug ("Belladonna Bar" -> belladonna-bar).
+  const nm=prompt("What is this venue called? Its name becomes the Venue ID.",acct.venueName||acct.name||'');
+  if(nm===null||!nm.trim())return;
   btn.disabled=true;btn.textContent='…';
   try{
-    const acct=accounts.find(x=>x.uid===uid);if(!acct)throw new Error('Account not found');
-    // Same rule as the signup function: one more than the highest BV-### already in use.
-    let max=0;(accounts||[]).forEach(a=>{const m=/^BV-(\d+)$/i.exec((a.venueId||'').trim());if(m)max=Math.max(max,parseInt(m[1],10));});
-    (venues||[]).forEach(v=>{const m=/^BV-(\d+)$/i.exec((v.venueId||'').trim());if(m)max=Math.max(max,parseInt(m[1],10));});
-    const id='BV-'+String(max+1).padStart(3,'0');
-    await db.collection('users').doc(uid).set({venueId:id},{merge:true});
+    const email=(acct.email||'').trim().toLowerCase();
+    const hit=(venues||[]).find(v=>v.venueId&&((v.gatewayEmail||'').trim().toLowerCase()===email&&email||vmxKey(v.name)===vmxKey(nm)));
+    let id=hit&&hit.venueId;
+    if(!id){
+      const base=vmxSlug(nm)||'venue';
+      const taken=new Set([...(accounts||[]).filter(a=>a.uid!==uid).map(a=>(a.venueId||'').toLowerCase()),...(venues||[]).map(v=>(v.venueId||'').toLowerCase())].filter(Boolean));
+      id=base;let n=2;while(taken.has(id))id=base+'-'+(n++);
+    }
+    await db.collection('users').doc(uid).set({venueId:id,venueName:nm.trim()},{merge:true});
     if(acct.email)db.collection('loginLookup').doc(id.toLowerCase()).set({email:acct.email}).catch(()=>{});
-    acct.venueId=id;renderAccounts();
+    acct.venueId=id;acct.venueName=nm.trim();renderAccounts();
   }catch(e){btn.disabled=false;btn.textContent='Assign next';alert('Could not assign a Venue ID: '+(e&&e.message||e));}
 }
 // When a venue in Our Venues has a Gateway email, make the matching account carry that venue's ID.
