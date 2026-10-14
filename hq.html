@@ -2258,7 +2258,7 @@ function fetchBingoGigsForDate(dk,dow){
     const venue=(bingoVenuesMap&&bingoVenuesMap[e.venueId])?bingoVenuesMap[e.venueId].name:'Unknown Venue';
     const roundNames=(e.rounds||e.categoryIds||[]).map(cid=>(bingoCategoriesMap&&bingoCategoriesMap[cid])?bingoCategoriesMap[cid].title:null).filter(Boolean);
     const bv=(bingoVenuesMap&&bingoVenuesMap[e.venueId])||{};
-    return {venue,host:e.host||bv.host||'Unassigned',regularHost:bv.host||'',time:e.time||vmxMasterTime('Bingo',venue,dow)||bv.time||'',dk,kindKey:'Bingo',pVenueId:e.venueId,pEntryId:e.id||null,kind:'Bingo',cancelled:false,source:'Bingo App',notes:(roundNames.length?'Rounds: '+roundNames.join(', '):'')+(e.notes?(roundNames.length?' — ':'')+e.notes:'')};
+    return {venue,host:e.host||bv.host||'Unassigned',regularHost:bv.host||'',time:e.time||vmxMasterTime('Bingo',venue,dow)||bv.time||'',dk,kindKey:'Bingo',pVenueId:e.venueId,pEntryId:e.id||null,kind:'Bingo',cancelled:false,source:'Bingo App',venueNote:e.venueNote||'',notes:(roundNames.length?'Rounds: '+roundNames.join(', '):'')+(e.notes?(roundNames.length?' — ':'')+e.notes:'')};
   });
 }
 function startOfWeekMonday(d){const x=new Date(d);x.setHours(0,0,0,0);x.setDate(x.getDate()-((x.getDay()+6)%7));return x;}
@@ -2298,7 +2298,7 @@ function getExternalGigsForDate(dk,dow){
       if(!hasExplicitRecord&&!recurs)return;
       const cancelled=!!(override&&override.status==='cancelled');
       const kind=kindKey==='Events'?((override&&override.eventKind)||v.eventKind||'Events'):kindKey;
-      out.push({venue:v.name,host:(override&&override.host)||v.host||'Unassigned',regularHost:v.host||'',time:(override&&override.time)||vmxMasterTime(kindKey,v.name,dow)||v.time||'',dk,kindKey,pVenueId:id,kind,cancelled,source:src,notes:override&&override.themeName?override.themeName:(override&&override.note?override.note:'')});
+      out.push({venue:v.name,host:(override&&override.host)||v.host||'Unassigned',regularHost:v.host||'',time:(override&&override.time)||vmxMasterTime(kindKey,v.name,dow)||v.time||'',dk,kindKey,pVenueId:id,kind,cancelled,source:src,venueNote:(override&&override.venueNote)||'',notes:override&&override.themeName?override.themeName:(override&&override.note?override.note:'')});
     });
   });
   out.push(...fetchBingoGigsForDate(dk,dow).filter(it=>!hqVenuesForDate.has(normVenueName(it.venue)+'|Bingo')));
@@ -2311,7 +2311,7 @@ function getDashboardGigsForDate(dk,dow){
     // The Planner's record for this night is part of the same gig — its theme, host and
     // cancel state show here too, so the two never disagree on screen.
     const rec=plannerRecordForGig(g);
-    out.push({venue:g.venue,host:(rec&&rec.host)||g.host||'Unassigned',regularHost:regularHostForGig(g),time:gigTimeFor(g),dk,hqGigId:g.id,kind:g.kind||'Gig',cancelled:g.status==='cancelled'||(rec&&rec.status==='cancelled')||gigCheckoutCancelled(g),source:'HQ Schedule',notes:(rec&&rec.themeName)||g.notes||''});
+    out.push({venue:g.venue,host:(rec&&rec.host)||g.host||'Unassigned',regularHost:regularHostForGig(g),time:gigTimeFor(g),dk,hqGigId:g.id,kind:g.kind||'Gig',cancelled:g.status==='cancelled'||(rec&&rec.status==='cancelled')||gigCheckoutCancelled(g),source:'HQ Schedule',venueNote:(rec&&rec.venueNote)||'',notes:(rec&&rec.themeName)||g.notes||''});
   });
   out.push(...getExternalGigsForDate(dk,dow));
   // the same venue + kind listed twice on one date (duplicate venue records) shows once
@@ -2390,7 +2390,7 @@ function renderDashboardWeek(){
         const idx=dashboardItemsFlat.length;dashboardItemsFlat.push(it);
         const fill=isFillIn(it);
         return `<div class="daybox-item${it.cancelled?' cancelled':''}" onclick="showDashGigDetail(${idx})">
-          <span class="daybox-kind-tag">${esc(it.kind)}</span>${it.time?` <span style="font-size:9px;color:var(--text3)">${esc(fmtGigTime(it.time))}</span>`:''}${it.cancelled?' <span style="font-size:9px">· CANCELLED</span>':''}<br>${esc(it.venue)}
+          <span class="daybox-kind-tag">${esc(it.kind)}</span>${it.venueNote?' <span style="color:var(--gold)" title="Venue left a note">★</span>':''}${it.time?` <span style="font-size:9px;color:var(--text3)">${esc(fmtGigTime(it.time))}</span>`:''}${it.cancelled?' <span style="font-size:9px">· CANCELLED</span>':''}<br>${esc(it.venue)}
           ${dashNote(it)?`<div class="dash-theme">${esc(dashNote(it))}</div>`:''}
           ${fill?`<div class="dash-host-line" style="text-decoration:line-through;color:var(--text3)">${esc(it.regularHost)}</div><div class="dash-host-line fill" style="margin-left:12px">${esc(it.host)}</div>`:`<div class="dash-host-line">${esc(it.host&&it.host!=='Unassigned'?it.host:'Unassigned')}</div>`}
         </div>`;
@@ -2410,6 +2410,7 @@ function showDashGigDetail(idx,fromSchedule){
       <div><b style="color:var(--text3)">Type:</b> ${esc(it.kind)}</div>
       ${it.dk?`<div><b style="color:var(--text3)">Date:</b> ${esc(it.dk)}${it.time?' · '+esc(fmtGigTime(it.time)):''}</div>`:''}
       ${dashNote(it)?`<div><b style="color:var(--text3)">Theme:</b> ${esc(dashNote(it))}</div>`:''}
+      ${it.venueNote?`<div style="color:var(--gold)"><b>★ Note from the venue:</b> ${esc(it.venueNote)}</div>`:''}
       <div><b style="color:var(--text3)">Host:</b>
         <select class="dash-host-sel${fill?' fill':''}" style="width:auto;min-width:160px;margin-top:0;" onchange="onDashHostChange(${idx},this,${fromSchedule?'true':'false'})">${hostOptionsHtml(it.host)}</select>
       </div>
@@ -3420,14 +3421,14 @@ function renderGigCalendar(){
       dayGigs.forEach(g=>{
         const isCancelled=g.status==='cancelled'||gigCheckoutCancelled(g);
         const c=calGigColor(g.kind,isCancelled);
-        entriesHtml+=`<div class="gig-event" style="background:${c}22;border:1px solid ${c};color:${c}" onclick="event.stopPropagation();openGigModal('${g.id}')">${g.kind?g.kind+': ':''}${g.venue}</div>`;
+        entriesHtml+=`<div class="gig-event" style="background:${c}22;border:1px solid ${c};color:${c}" onclick="event.stopPropagation();openGigModal('${g.id}')">${(plannerRecordForGig(g)||{}).venueNote?'★ ':''}${g.kind?g.kind+': ':''}${g.venue}</div>`;
       });
       getExternalGigsForDate(dateStr,new Date(dateStr+'T12:00:00').getDay())
         .filter(it=>(!calVenue||it.venue===calVenue)&&(!calType||it.kind===calType))
         .forEach(it=>{
         const c=calGigColor(it.kind,it.cancelled);
         const idx=scheduleExternalItemsFlat.length;scheduleExternalItemsFlat.push(it);
-        entriesHtml+=`<div class="gig-event" style="background:${c}22;border:1px solid ${c};color:${c}" onclick="event.stopPropagation();showDashGigDetail(${idx},true)">${it.kind}: ${it.venue}</div>`;
+        entriesHtml+=`<div class="gig-event" style="background:${c}22;border:1px solid ${c};color:${c}" onclick="event.stopPropagation();showDashGigDetail(${idx},true)">${it.venueNote?'★ ':''}${it.kind}: ${it.venue}</div>`;
       });
       html+=`<div class="cal-cell${otherMonth?' other-month':''}${isToday?' today':''}" onclick="openGigModalOnDate('${dateStr}')"><div class="cal-date-num">${day}</div><div class="cal-entries">${entriesHtml}</div></div>`;
     }
