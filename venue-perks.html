@@ -30,7 +30,7 @@
     padding:0.7rem 0.9rem;font-size:0.85rem;font-family:'Josefin Sans',sans-serif;letter-spacing:0.03em;
   }
   input[type="text"]:focus,select:focus{outline:none;border-color:var(--border-gold,var(--gold));}
-  select{margin-top:0.6rem;appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--gold) 50%),linear-gradient(135deg,var(--gold) 50%,transparent 50%);background-position:calc(100% - 18px) center,calc(100% - 13px) center;background-size:5px 5px,5px 5px;background-repeat:no-repeat;}
+  .combo{appearance:none;-webkit-appearance:none;padding-right:2.2rem;background-image:linear-gradient(45deg,transparent 50%,var(--gold) 50%),linear-gradient(135deg,var(--gold) 50%,transparent 50%);background-position:calc(100% - 18px) center,calc(100% - 13px) center;background-size:5px 5px,5px 5px;background-repeat:no-repeat;}
   #selectedPerkCard{margin-bottom:1.8rem;}
   .perk-card{background:var(--surface);border:1px solid rgba(201,169,110,0.22);border-radius:11px;padding:1rem 1.2rem;position:relative;overflow:hidden;margin-bottom:0.7rem;}
   .perk-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);}
@@ -63,10 +63,8 @@
 
   <div class="picker-block">
     <div class="section-label">Which venue are you at?</div>
-    <input type="text" id="venueSearch" placeholder="Start typing a venue name..." autocomplete="off">
-    <select id="venueSelect">
-      <option value="">— or choose from the list —</option>
-    </select>
+    <input type="text" id="venueSearch" class="combo" list="venueOptions" placeholder="Type or choose a venue…" autocomplete="off">
+    <datalist id="venueOptions"></datalist>
   </div>
 
   <div id="selectedPerkCard"></div>
@@ -104,9 +102,7 @@
   }
 
   function populateVenueSelect(){
-    const sel=document.getElementById('venueSelect');
-    sel.innerHTML='<option value="">— or choose from the list —</option>'
-      +venues.map(v=>`<option value="${v.id}">${v.name}</option>`).join('');
+    document.getElementById('venueOptions').innerHTML=venues.map(v=>`<option value="${escapeHtml(v.name||'').replace(/"/g,'&quot;')}"></option>`).join('');
   }
 
   function renderVenueFullList(){
@@ -122,8 +118,8 @@
   function selectVenue(id){
     const v=venues.find(x=>x.id===id);
     if(!v)return;
-    document.getElementById('venueSelect').value=id;
     document.getElementById('venueSearch').value=v.name;
+    document.getElementById('venueSearch').dataset.prev=v.name;
     renderSelectedPerkCard(v);
     try{localStorage.setItem('venue-perks-last',id);}catch(e){}
     document.getElementById('selectedPerkCard').scrollIntoView({behavior:'smooth',block:'start'});
@@ -148,18 +144,19 @@
     if(lastId&&venues.some(v=>v.id===lastId))selectVenue(lastId);
   }
 
-  document.getElementById('venueSelect').addEventListener('change',function(){
-    if(this.value)selectVenue(this.value);
-  });
-
-  document.getElementById('venueSearch').addEventListener('input',function(){
+  const venueInput=document.getElementById('venueSearch');
+  // One box: type to search, or open the list and pick. Clicking in clears it so the whole list shows again.
+  venueInput.addEventListener('focus',function(){ this.dataset.prev=this.value; this.value=''; });
+  venueInput.addEventListener('blur',function(){ if(!this.value&&this.dataset.prev) this.value=this.dataset.prev; });
+  venueInput.addEventListener('input',function(){
     const q=this.value.trim().toLowerCase();
-    if(!q){document.getElementById('venueSelect').value='';return;}
+    if(!q){ renderSelectedPerkCard(null); return; }
     const match=venues.find(v=>(v.name||'').toLowerCase()===q)
       ||venues.find(v=>(v.name||'').toLowerCase().startsWith(q));
     if(match){
-      document.getElementById('venueSelect').value=match.id;
       renderSelectedPerkCard(match);
+      try{localStorage.setItem('venue-perks-last',match.id);}catch(e){}
+      if((match.name||'').toLowerCase()===q) this.dataset.prev=match.name;
     }
   });
 
