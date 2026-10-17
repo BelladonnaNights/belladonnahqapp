@@ -40,6 +40,18 @@
   .ev{padding:.45rem 0;border-top:1px solid var(--border)}.day-h+.ev{border-top:none}
   .ev-n{font-family:'Playfair Display',serif;color:var(--gold);font-size:1.05rem}.ev-n span{font-family:'Josefin Sans',sans-serif;font-size:.72rem;color:var(--text2);letter-spacing:.1em;margin-left:.4rem}
   .ev-d{font-size:.82rem;color:var(--text2);line-height:1.55;margin-top:.1rem}
+  .srch{width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:.8rem 1rem;color:var(--text);font-family:inherit;font-size:.9rem;letter-spacing:.04em;margin-bottom:.9rem;outline:none}
+  .srch:focus{border-color:var(--gold)}
+  .vrow{display:flex;justify-content:space-between;align-items:center;width:100%;text-align:left;cursor:pointer;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:.9rem 1rem;margin-bottom:.55rem;color:var(--text);font-family:'Playfair Display',serif;font-size:1.05rem;letter-spacing:.04em}
+  .vrow:active,.vrow:hover{background:rgba(201,169,110,.10)}
+  .vrow.cur{border-color:var(--gold);color:var(--gold)}
+  .vrow span{font-family:'Josefin Sans',sans-serif;font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;color:var(--text3)}
+  .pills{display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:.9rem}
+  .pill{background:transparent;border:1px solid var(--border2);color:var(--text2);border-radius:99px;padding:.35rem .8rem;font-family:inherit;font-size:.66rem;letter-spacing:.14em;text-transform:uppercase;cursor:pointer}
+  .pill.on{background:rgba(201,169,110,.16);color:var(--gold);border-color:var(--gold)}
+  .ev-v{display:inline-block;margin-top:.2rem;font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--text3);cursor:pointer;border-bottom:1px dotted var(--text3);background:none;border-top:none;border-left:none;border-right:none;font-family:inherit;padding:0}
+  .more{margin-top:1.4rem;padding-top:1rem;border-top:1px solid var(--border)}
+  .more-h{font-size:.62rem;letter-spacing:.2em;text-transform:uppercase;color:var(--text3);text-align:center;margin-bottom:.7rem}
 </style>
 </head>
 <body>
@@ -92,7 +104,7 @@
 
   var D = null;
   function kindName(n){ return n.kind==='Bingo' ? 'Music Bingo' : (n.label || n.kind); }
-  function viewName(){ var h=(location.hash||'').replace('#',''); return (h==='play'||h==='upcoming') ? h : 'home'; }
+  function viewName(){ var h=(location.hash||'').replace('#',''); return (h==='play'||h==='upcoming'||h==='venues'||h==='all') ? h : 'home'; }
   function go(v){ location.hash = v==='home' ? '' : v; }   // hashchange re-renders; the phone's back button works
 
   function head(d){ return '<div class="venue">'+esc(d.venue)+'</div><div class="date">'+esc(niceDate(d.date))+'</div>'; }
@@ -109,13 +121,13 @@
     }
     var more = (d.ahead||[]).length;
     h += '<button class="choice" onclick="go(\'upcoming\')"><div class="c-t">Upcoming events <span>&rarr;</span></div><div class="c-s">'+(more ? 'See what\'s coming up at '+esc(d.venue)+' &mdash; nights, themes and bingo categories.' : 'Nothing else is posted yet &mdash; check back soon.')+'</div></button>';
-    return h;
+    return h + moreBlock();
   }
 
   function upcomingView(d){
     var h = '<button class="back" onclick="go(\'home\')">&larr; Back</button>' + head(d).replace(/<div class="date">.*<\/div>/,'<div class="date">Coming up</div>');
     var ahead = d.ahead || [];
-    if(!ahead.length) return h + '<div class="msg">Nothing else is posted yet.<br>Check back soon.</div>';
+    if(!ahead.length) return h + '<div class="msg">Nothing else is posted yet.<br>Check back soon.</div>' + moreBlock();
     ahead.forEach(function(day){
       h += '<div class="day"><div class="day-h">'+esc(niceDate(day.date))+'</div>';
       day.nights.forEach(function(n){
@@ -130,7 +142,96 @@
       });
       h += '</div>';
     });
+    return h + moreBlock();
+  }
+
+  // ── Another venue / everything everywhere ──
+  var RTDB = 'https://belladonna-hq-default-rtdb.firebaseio.com/';
+  function slugOf(name){ return String(name||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,''); }
+  function pickVenue(slug){ location.href = location.pathname + '?v=' + encodeURIComponent(slug); }
+  function moreBlock(){
+    return '<div class="more"><div class="more-h">Looking for somewhere else?</div>'
+      + '<button class="choice" onclick="go(\'venues\')"><div class="c-t">See another venue <span>&rarr;</span></div><div class="c-s">Pick any Belladonna venue to see what\'s on there.</div></button>'
+      + '<button class="choice" onclick="go(\'all\')"><div class="c-t">All upcoming events <span>&rarr;</span></div><div class="c-s">Everything coming up at every Belladonna venue, in one list.</div></button></div>';
+  }
+  var VENUES = null;   // [{name, slug}]
+  function loadVenues(cb){
+    if(VENUES) return cb(VENUES);
+    try{ var c = sessionStorage.getItem('bn_venues'); if(c){ VENUES = JSON.parse(c); return cb(VENUES); } }catch(e){}
+    var paths = ['trivia/planner/venues','bingo/landing/venues','trivia/planner/karaokeVenues'];
+    var seen = {}, list = [], left = paths.length;
+    function done(){ if(--left) return; list.sort(function(a,b){ return a.name.localeCompare(b.name); }); VENUES = list; try{ sessionStorage.setItem('bn_venues', JSON.stringify(list)); }catch(e){} cb(list); }
+    paths.forEach(function(path){
+      fetch(RTDB+path+'.json').then(function(r){ if(!r.ok) throw 0; return r.json(); }).then(function(o){
+        Object.keys(o||{}).forEach(function(k){ var v=o[k]; if(!v||!v.name||v.inactive) return; var sl=slugOf(v.name); if(sl && !seen[sl]){ seen[sl]=1; list.push({name:String(v.name).trim(), slug:sl}); } });
+      }).catch(function(){}).then(done);
+    });
+  }
+  function venuesView(d){
+    var h = '<button class="back" onclick="go(\'home\')">&larr; Back</button><div class="venue">Choose a venue</div><div class="date">Belladonna venues</div>'
+      + '<input class="srch" id="vsearch" type="search" autocomplete="off" placeholder="Search venues&hellip;" oninput="filterVenues()"><div id="vlist"><div class="msg">Loading venues&hellip;</div></div>';
+    setTimeout(function(){ loadVenues(function(){ filterVenues(); }); },0);
     return h;
+  }
+  function filterVenues(){
+    var box = document.getElementById('vlist'); if(!box||!VENUES) return;
+    var q = ((document.getElementById('vsearch')||{}).value||'').toLowerCase().trim();
+    var cur = D ? slugOf(D.venue) : '';
+    var l = VENUES.filter(function(v){ return !q || v.name.toLowerCase().indexOf(q)>=0; });
+    box.innerHTML = l.length ? l.map(function(v){ return '<button class="vrow'+(v.slug===cur?' cur':'')+'" onclick="pickVenue(\''+v.slug.replace(/'/g,"\\'")+'\')">'+esc(v.name)+(v.slug===cur?'<span>You are here</span>':'<span>View &rarr;</span>')+'</button>'; }).join('') : '<div class="msg">No venues match.</div>';
+  }
+  function showVenuePicker(){ var m=document.getElementById('main'); m.innerHTML = venuesView(null).replace(/<button class="back".*?<\/button>/,''); }
+  var ALL = null, ALL_KIND = 'All';
+  function allView(d){
+    var h = '<button class="back" onclick="go(\'home\')">&larr; Back</button><div class="venue">All upcoming events</div><div class="date">Every Belladonna venue</div>'
+      + '<div id="allbox"><div class="msg">Gathering events from every venue&hellip;</div></div>';
+    setTimeout(loadAll,0);
+    return h;
+  }
+  function loadAll(){
+    if(ALL) return paintAll();
+    try{ var c = JSON.parse(sessionStorage.getItem('bn_all')||'null'); if(c && Date.now()-c.t < 300000){ ALL = c.data; return paintAll(); } }catch(e){}
+    loadVenues(function(vs){
+      var items = [], idx = 0, active = 0, finished = 0, total = vs.length;
+      if(!total){ ALL = []; return paintAll(); }
+      function prog(){ var b=document.getElementById('allbox'); if(b && viewName()==='all' && !ALL) b.innerHTML = '<div class="msg">Gathering events&hellip; '+finished+' of '+total+' venues</div>'; }
+      function next(){
+        while(active < 6 && idx < total){
+          (function(v){ active++;
+            fetch(API+'?v='+encodeURIComponent(v.slug)).then(function(r){ if(!r.ok) throw 0; return r.json(); }).then(function(d){
+              if(!d || !d.found) return;
+              var days = [{date:d.date, nights:d.nights||[]}].concat(d.ahead||[]);
+              days.forEach(function(day){ (day.nights||[]).forEach(function(n){ if(!n.cancelled) items.push({date:day.date, venue:d.venue||v.name, slug:v.slug, n:n}); }); });
+            }).catch(function(){}).then(function(){ active--; finished++; prog(); if(finished>=total){ finish(); } else next(); });
+          })(vs[idx++]);
+        }
+      }
+      function finish(){
+        items.sort(function(a,b){ return a.date<b.date?-1:a.date>b.date?1:(a.venue.localeCompare(b.venue)); });
+        ALL = items; try{ sessionStorage.setItem('bn_all', JSON.stringify({t:Date.now(), data:items})); }catch(e){}
+        paintAll();
+      }
+      next();
+    });
+  }
+  function setKind(k){ ALL_KIND = k; paintAll(); }
+  function paintAll(){
+    var box = document.getElementById('allbox'); if(!box || viewName()!=='all' || !ALL) return;
+    var kinds = ['All','Bingo','Karaoke','Trivia'];
+    var h = '<div class="pills">'+kinds.map(function(k){ return '<button class="pill'+(k===ALL_KIND?' on':'')+'" onclick="setKind(\''+k+'\')">'+(k==='Bingo'?'Music Bingo':k)+'</button>'; }).join('')+'</div>';
+    var list = ALL.filter(function(x){ return ALL_KIND==='All' || x.n.kind===ALL_KIND; });
+    if(!list.length){ box.innerHTML = h+'<div class="msg">Nothing posted yet.<br>Check back soon.</div>'; return; }
+    var lastDate = '';
+    list.forEach(function(x){
+      if(x.date!==lastDate){ if(lastDate) h += '</div>'; h += '<div class="day"><div class="day-h">'+esc(niceDate(x.date))+'</div>'; lastDate = x.date; }
+      var n = x.n, det = [];
+      if(n.theme && n.kind!=='Bingo') det.push(esc(n.theme));
+      if(n.kind==='Bingo' && n.bingo && n.bingo.rounds && n.bingo.rounds.length) det.push(n.bingo.rounds.map(function(r,i){ return 'Round '+(i+1)+': '+esc(r.title); }).join('<br>'));
+      h += '<div class="ev"><div class="ev-n">'+esc(kindName(n))+(n.time?'<span>'+esc(n.time)+'</span>':'')+'</div>'
+        + '<button class="ev-v" onclick="pickVenue(\''+x.slug.replace(/'/g,"\\'")+'\')">'+esc(x.venue)+'</button>'
+        + (det.length?'<div class="ev-d">'+det.join('<br>')+'</div>':'') + '</div>';
+    });
+    box.innerHTML = h+'</div>';
   }
 
   function playView(d){
@@ -144,7 +245,7 @@
 
   function render(d){
     var main = document.getElementById('main');
-    if(!d.found){ main.innerHTML = '<div class="msg">We couldn\'t find that venue.<br>Ask your host for help.</div>'; return; }
+    if(!d.found){ main.innerHTML = '<div class="msg">We couldn\'t find that venue.</div><button class="choice primary" onclick="showVenuePicker()"><div class="c-t">Choose a venue <span>&rarr;</span></div></button>'; return; }
     D = d; CUR.venue=d.venue; CUR.date=d.date;
     paint();
   }
@@ -152,7 +253,7 @@
     if(!D) return;
     var v = viewName(), main = document.getElementById('main');
     pendingTrivia = false;
-    main.innerHTML = v==='play' ? playView(D) : v==='upcoming' ? upcomingView(D) : homeView(D);
+    main.innerHTML = v==='play' ? playView(D) : v==='upcoming' ? upcomingView(D) : v==='venues' ? venuesView(D) : v==='all' ? allView(D) : homeView(D);
     window.scrollTo(0,0);
     // only the Play screen needs to keep refreshing (trivia flips to "Join Trivia" by itself)
     if(v==='play' && pendingTrivia) setTimeout(function(){ if(viewName()==='play') load(true); }, 10000);
@@ -160,7 +261,7 @@
   window.addEventListener('hashchange', paint);
 
   var slug = new URLSearchParams(location.search).get('v');
-  if(!slug){ document.getElementById('main').innerHTML = '<div class="msg">This link is missing its venue.<br>Scan the QR code at your table again.</div>'; }
+  if(!slug){ document.getElementById('main').innerHTML = '<div class="msg">This link is missing its venue.<br>Scan the QR code at your table again, or pick a venue below.</div><button class="choice primary" onclick="showVenuePicker()"><div class="c-t">Choose a venue <span>&rarr;</span></div></button>'; }
   else load();
   function load(quiet){
     fetch(API+'?v='+encodeURIComponent(slug)).then(function(r){ if(!r.ok) throw new Error(r.status); return r.json(); }).then(render)
