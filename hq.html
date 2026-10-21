@@ -140,6 +140,24 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
 .acct-type-badge.host{background:var(--gold-dim);color:var(--gold);border-color:var(--border-gold);}
 .acct-status-badge{font-size:0.58rem;letter-spacing:0.1em;text-transform:uppercase;padding:0.2rem 0.55rem;border-radius:6px;background:var(--live-dim);color:var(--live);border:1px solid rgba(58,154,90,0.3);}
 .acct-status-badge.banned{background:rgba(160,56,88,0.1);color:var(--rose);border-color:rgba(160,56,88,0.3);}
+.acct-row{padding:0;}
+#accountsGrid.roster-grid{grid-template-columns:1fr;gap:0.4rem;}
+.acct-row-head{display:flex;align-items:center;gap:1rem;padding:0.7rem 1rem;cursor:pointer;}
+.acct-row-head:hover{background:rgba(201,168,76,0.04);}
+.acct-row-main{flex:0 1 330px;min-width:0;}
+.acct-row-main .acct-name{font-size:1.15rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.acct-row-main .acct-meta{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.acct-row-id{color:var(--text3);font-family:'DM Sans',sans-serif;font-size:0.7rem;letter-spacing:0.06em;}
+.acct-row-summary{flex:1 1 auto;min-width:0;font-size:0.7rem;color:var(--text3);letter-spacing:0.04em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.acct-row-arrow{color:var(--text3);font-size:0.9rem;width:1rem;text-align:center;}
+.acct-row.open{border-color:var(--border-gold);}
+.acct-detail{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1rem 2rem;padding:0.4rem 1.2rem 1.1rem;border-top:1px solid var(--border);}
+.acct-sec-wide{grid-column:1/-1;}
+.acct-lab{font-size:0.6rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--text3);margin-bottom:0.2rem;margin-top:0.6rem;}
+.acct-lab span{opacity:0.7;}
+.acct-detail .acct-entitlements{margin:0.3rem 0 0;}
+.acct-detail .acct-actions{margin-top:0.2rem;}
+@media(max-width:760px){.acct-row-head{flex-wrap:wrap;gap:0.4rem 0.8rem;}.acct-row-main{flex:1 1 100%;}.acct-row-summary{flex:1 1 100%;white-space:normal;}}
 .acct-entitlements{display:flex;flex-wrap:wrap;gap:0.5rem;margin:0.7rem 0;}
 .acct-ent-chip{display:flex;align-items:center;gap:0.4rem;font-size:0.65rem;letter-spacing:0.06em;text-transform:uppercase;padding:0.3rem 0.6rem;border-radius:6px;border:1px solid var(--border);color:var(--text3);cursor:pointer;user-select:none;background:none;font-family:'DM Sans',sans-serif;}
 .acct-ent-chip.on{border-color:var(--gold);color:var(--gold);background:var(--gold-dim);}
@@ -5827,6 +5845,8 @@ function renderStatsGrid(){
 
 // ── ACCOUNTS ──
 let accounts=[];
+const acctOpen=new Set();
+function toggleAcctOpen(uid){ if(acctOpen.has(uid)) acctOpen.delete(uid); else acctOpen.add(uid); renderAccounts(); }
 const ENT_APPS=[{key:'bingo',label:'Bingo'},{key:'trivia',label:'Trivia'},{key:'mediaPlayer',label:'Media Player'},{key:'training',label:'Training'},{key:'venueMenu',label:'Venue Menu'}];
 const ADMIN_APPS=[{key:'hq',label:'HQ'},{key:'trivia',label:'Trivia'},{key:'bingo',label:'Bingo'},{key:'mediaPlayer',label:'Media Player'},{key:'training',label:'Training'},{key:'venueMenu',label:'Venue Menu'},{key:'clio',label:'Clio'}];
 // Schedule access is a middle tier, between regular use and full admin — right
@@ -5899,19 +5919,28 @@ function renderAccounts(){
       return `<button class="acct-ent-chip ${on?'on':''}" style="${on?'border-color:var(--teal2);color:var(--teal2);':''}" onclick="toggleScheduleAccess('${a.uid}','${app.key}')">${on?'✓ ':''}${app.label}</button>`;
     }).join('');
 
-    return `<div class="acct-card">
-      <div class="acct-header">
-        <div class="acct-name-group">
-          <div class="acct-name">${a.name||'(no name)'} ${a.hostId?`<span style="color:var(--text3);font-size:0.9rem;">· ${a.hostId}</span>`:''}${a.venueId?`<span style="color:var(--text3);font-size:0.9rem;">· ${a.venueId}</span>`:''}</div>
-          <div class="acct-meta">${a.email||''}${a.username?' · @'+a.username:''}</div>
+    const isOpen=acctOpen.has(a.uid);
+    const useNames=ENT_APPS.filter(app=>a.entitlements&&a.entitlements[app.key]).map(app=>app.label);
+    const admNames=ADMIN_APPS.filter(app=>a.adminAccess&&a.adminAccess[app.key]).map(app=>app.label);
+    const summary=[useNames.length?'Uses: '+useNames.join(', '):'', admNames.length?'Admin: '+admNames.join(', '):'', a.leadsAccess?'Leads':''].filter(Boolean).join('  ·  ')||'No app access yet';
+    const idText=[a.adminId,a.hostId,a.venueId].filter(Boolean).join(' · ');
+    return `<div class="acct-card acct-row${isOpen?' open':''}">
+      <div class="acct-row-head" onclick="toggleAcctOpen('${a.uid}')">
+        <div class="acct-row-main">
+          <div class="acct-name">${esc(a.name||'(no name)')}${idText?` <span class="acct-row-id">${esc(idText)}</span>`:''}</div>
+          <div class="acct-meta">${esc(a.email||'')}${a.username?' · @'+esc(a.username):''}</div>
         </div>
+        <div class="acct-row-summary">${esc(summary)}</div>
         <div class="acct-badges">
           <span class="acct-type-badge ${a.accountType==='host'?'host':''}">${(a.accountType||'subscriber').replace('_',' ')}</span>
           <span class="acct-status-badge ${isBanned?'banned':''}">${isBanned?'Banned':'Active'}</span>
           ${anyAdmin?'<span class="acct-status-badge" style="background:var(--gold-dim);color:var(--gold);border-color:var(--border-gold);">Admin</span>':''}
         </div>
+        <div class="acct-row-arrow">${isOpen?'▾':'▸'}</div>
       </div>
-      <div style="display:flex;gap:0.5rem;margin-bottom:0.7rem;">
+      ${isOpen?`<div class="acct-detail">
+        <div class="acct-sec acct-sec-wide">
+      <div style="display:flex;gap:0.5rem;">
         ${a.accountType==='venue' ? `
         <div style="flex:1;">
           <div style="font-size:0.6rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--text3);margin-bottom:0.3rem;">Venue ID <span style="opacity:0.7;">— links to Our Venues</span></div>
@@ -5930,37 +5959,37 @@ function renderAccounts(){
           <input type="text" value="${(a.venueId||'').replace(/"/g,'&quot;')}" placeholder="not set" onchange="setAcctVenueId('${a.uid}',this.value)" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:0.3rem 0.5rem;font-size:0.72rem;">
         </div>`}
       </div>
-      <div style="font-size:0.6rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--text3);margin-bottom:0.3rem;">Can Use</div>
-      <div class="acct-entitlements">${entChips}</div>
-      <div style="font-size:0.6rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--text3);margin:0.6rem 0 0.3rem;">Schedule Access <span style="opacity:0.7;">— can edit the schedule, not full admin</span></div>
-      <div class="acct-entitlements">${schedChips}</div>
-      <div style="font-size:0.6rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--text3);margin:0.6rem 0 0.3rem;">Admin Access</div>
-      <div class="acct-entitlements">${adminChips}</div>
-      <div style="font-size:0.6rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--text3);margin:0.6rem 0 0.3rem;">Venue Leads <span style="opacity:0.7;">— can see and edit the Leads tab</span></div>
-      <div class="acct-entitlements">
-        <button class="acct-ent-chip ${a.leadsAccess?'on':''}" style="${a.leadsAccess?'border-color:var(--gold);':''}" onclick="toggleLeadsAccess('${a.uid}')">${a.leadsAccess?'✓ ':''}Leads Access</button>
-      </div>
-      <div style="font-size:0.6rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--text3);margin:0.6rem 0 0.3rem;">Location</div>
-      <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;">
-        <select onchange="setAcctLocation('${a.uid}',this.value)" ${a.allLocations?'disabled':''} style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:0.3rem 0.5rem;font-size:0.72rem;">
-          ${locations.map(l=>`<option value="${l.code}" ${a.locationId===l.code?'selected':''}>${l.label}</option>`).join('')}
-        </select>
-        <button class="acct-ent-chip ${a.allLocations?'on':''}" style="${a.allLocations?'border-color:var(--gold);':''}" onclick="toggleAllLocations('${a.uid}')">${a.allLocations?'✓ ':''}Sees All Locations</button>
-      </div>
-      <div class="acct-actions">
-        <button class="btn-sm" onclick="sendReset('${a.email}',this)">Send Password Reset</button>
-        ${isBanned
-          ? `<button class="btn-sm" onclick="clearBan('${a.uid}')">Unban</button>`
-          : `<div class="acct-ban-row">
-              <select id="banMode-${a.uid}">
-                <option value="7">Ban 7 days</option>
-                <option value="30">Ban 30 days</option>
-                <option value="permanent">Ban permanently</option>
-              </select>
-              <button class="btn-sm" onclick="applyBan('${a.uid}')">Apply</button>
-            </div>`
-        }
-      </div>
+        </div>
+        <div class="acct-sec"><div class="acct-lab">Can Use</div>
+          <div class="acct-entitlements">${entChips}</div></div>
+        <div class="acct-sec"><div class="acct-lab">Schedule Access <span>— can edit the schedule, not full admin</span></div>
+          <div class="acct-entitlements">${schedChips}</div></div>
+        <div class="acct-sec"><div class="acct-lab">Admin Access</div>
+          <div class="acct-entitlements">${adminChips}</div></div>
+        <div class="acct-sec"><div class="acct-lab">Venue Leads <span>— can see and edit the Leads tab</span></div>
+          <div class="acct-entitlements"><button class="acct-ent-chip ${a.leadsAccess?'on':''}" style="${a.leadsAccess?'border-color:var(--gold);':''}" onclick="toggleLeadsAccess('${a.uid}')">${a.leadsAccess?'✓ ':''}Leads Access</button></div></div>
+        <div class="acct-sec"><div class="acct-lab">Location</div>
+          <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;">
+            <select onchange="setAcctLocation('${a.uid}',this.value)" ${a.allLocations?'disabled':''} style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:0.3rem 0.5rem;font-size:0.72rem;">
+              ${locations.map(l=>`<option value="${l.code}" ${a.locationId===l.code?'selected':''}>${l.label}</option>`).join('')}
+            </select>
+            <button class="acct-ent-chip ${a.allLocations?'on':''}" style="${a.allLocations?'border-color:var(--gold);':''}" onclick="toggleAllLocations('${a.uid}')">${a.allLocations?'✓ ':''}Sees All Locations</button>
+          </div></div>
+        <div class="acct-actions acct-sec-wide">
+          <button class="btn-sm" onclick="sendReset('${a.email}',this)">Send Password Reset</button>
+          ${isBanned
+            ? `<button class="btn-sm" onclick="clearBan('${a.uid}')">Unban</button>`
+            : `<div class="acct-ban-row">
+                <select id="banMode-${a.uid}">
+                  <option value="7">Ban 7 days</option>
+                  <option value="30">Ban 30 days</option>
+                  <option value="permanent">Ban permanently</option>
+                </select>
+                <button class="btn-sm" onclick="applyBan('${a.uid}')">Apply</button>
+              </div>`
+          }
+        </div>
+      </div>`:''}
     </div>`;
   }).join('');
 }
