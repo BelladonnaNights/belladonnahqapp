@@ -368,6 +368,47 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
 .tip-toggle-btn:hover{border-color:var(--gold);color:var(--gold);}
 .tip-toggle-btn.on{border-color:var(--gold);color:var(--gold);background:var(--gold-dim);}
 .tip-warn{font-size:0.62rem;color:var(--text3);font-style:italic;}
+#staffTools{--red:#e74c3c;--green:#2ecc71;--radius:8px;--cinzel:'Cinzel',serif;--font:'DM Sans',sans-serif;--gold-shine:linear-gradient(135deg,#c9a96e 0%,#f5df90 45%,#c9a96e 70%,#e2b84a 100%);}
+#staffTools button{font:inherit;cursor:pointer}
+#staffTools .hidden{display:none!important}
+#staffTools .row2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:640px){#staffTools .row2{grid-template-columns:1fr}}
+#staffTools body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14px;line-height:1.45}
+#staffTools .hidden{display:none!important}
+#staffTools .btn{background:transparent;border:1px solid var(--gold);color:var(--gold2);padding:8px 16px;border-radius:var(--radius);font-family:var(--cinzel);letter-spacing:.08em;text-transform:uppercase;font-size:12px}
+#staffTools .btn:hover{background:rgba(201,168,76,.12)}
+#staffTools .btn.primary{background:var(--gold-shine);color:#14110a;border-color:transparent;font-weight:700}
+#staffTools .btn.ghost{border-color:var(--border2);color:var(--text2)}
+#staffTools .btn:disabled{opacity:.45;cursor:default}
+#staffTools .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:22px}
+#staffTools .card h2{font-family:var(--cinzel);font-size:15px;letter-spacing:.1em;text-transform:uppercase;color:var(--gold2);margin-bottom:4px}
+#staffTools .card .sub{color:var(--text2);font-size:13px;margin-bottom:16px}
+#staffTools label.f{display:block;margin-bottom:12px;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--text3)}
+#staffTools label.f input,#staffTools label.f select,#staffTools label.f textarea{display:block;width:100%;margin-top:5px;padding:9px 11px;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius);color:var(--text);font:inherit;font-size:14px;letter-spacing:0;text-transform:none}
+#staffTools label.f input:focus,#staffTools label.f select:focus,#staffTools label.f textarea:focus{outline:none;border-color:var(--gold)}
+#staffTools .row2x{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+#staffTools .row2x{grid-template-columns:1fr}
+#staffTools .seg{display:inline-flex;background:var(--surface2);border:1px solid var(--border);border-radius:999px;padding:3px;gap:3px;margin:4px 0 14px}
+#staffTools .seg button{background:none;border:0;padding:7px 16px;border-radius:999px;color:var(--text2);font-size:13px}
+#staffTools .seg button.on{background:var(--gold-shine);color:#14110a;font-weight:700}
+#staffTools .chk{display:flex;align-items:flex-start;gap:9px;margin:7px 0;font-size:14px;color:var(--text)}
+#staffTools .chk input{margin-top:3px;accent-color:var(--gold)}
+#staffTools .chk small{display:block;color:var(--text3);font-size:12px}
+#staffTools .sect{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin:16px 0 6px}
+#staffTools table.acc{width:100%;border-collapse:collapse;font-size:14px}
+#staffTools table.acc th{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);font-weight:400;text-align:center;padding:4px 8px}
+#staffTools table.acc th:first-child,#staffTools table.acc td:first-child{text-align:left}
+#staffTools table.acc td{padding:6px 8px;border-top:1px solid var(--border);text-align:center}
+#staffTools table.acc input{accent-color:var(--gold);width:16px;height:16px}
+#staffTools .limits{margin-top:6px;padding:10px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius)}
+#staffTools .msg{margin-top:12px;font-size:13px}
+#staffTools .msg.err{color:var(--red)}
+#staffTools .msg.ok{color:var(--green)}
+#staffTools .result{margin-top:16px;padding:14px;background:var(--surface2);border:1px solid var(--gold);border-radius:var(--radius)}
+#staffTools .result b{color:var(--gold2)}
+#staffTools .result code{display:block;margin-top:8px;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;word-break:break-all;font-size:12px;color:var(--text2)}
+#staffTools .pill{display:inline-block;padding:2px 10px;border:1px solid var(--border2);border-radius:999px;font-size:12px;color:var(--text2);margin-right:6px}
+#staffTools .pill.gold{border-color:var(--gold);color:var(--gold2)}
 </style>
 </head>
 <body>
@@ -1153,6 +1194,50 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
 
 <!-- ACCOUNTS -->
 <div class="panel" id="panel-accounts">
+<details class="st-wrap" id="staffTools" style="margin-bottom:1.5rem;border:1px solid var(--border);border-radius:8px;background:var(--surface);">
+  <summary style="cursor:pointer;padding:0.85rem 1.1rem;font-family:'Cinzel',serif;font-size:0.72rem;letter-spacing:0.16em;text-transform:uppercase;color:var(--gold2);">＋ Create an account by hand · Admin / Staff IDs · Limited access</summary>
+  <div style="padding:0 1.1rem 1.1rem;">
+
+  <section class="card" id="stCreateCard">
+    <h2>Create an account</h2>
+    <p class="sub">Makes the sign-in, gives them their ID(s), saves what they can do, and emails them a link to choose their own password. Nothing here appears on the public sign-up page.</p>
+    <div class="row2">
+      <label class="f">Name<input type="text" id="stCName" autocomplete="off"></label>
+      <label class="f">Email<input type="email" id="stCEmail" autocomplete="off"></label>
+    </div>
+    <div class="sect">Account type</div>
+    <div class="seg" id="stCType"><button data-t="staff" class="on">Staff / admin</button><button data-t="host">Host</button><button data-t="venue">Venue</button></div>
+    <label class="f hidden" id="stCVenueWrap">Venue name<input type="text" id="stCVenue" autocomplete="off"></label>
+    <div class="sect">IDs</div>
+    <label class="chk"><input type="checkbox" id="stCAdminId" checked> <span>Give an <b>Admin ID</b> <small>AD-001, AD-002 … kept private in Firebase, never shown on a sign-in page.</small></span></label>
+    <label class="chk"><input type="checkbox" id="stCHostId"> <span>Also give a <b>Host ID</b> <small>BD-### — for someone who is also hosting. You can add either ID later from “Existing account”.</small></span></label>
+    <div class="sect">Start from a preset</div>
+    <label class="f" style="max-width:380px"><select id="stCPreset"></select></label>
+    <div id="stCAccess"></div>
+    <label class="f" style="margin-top:14px">Private note (only you see this)<textarea id="stCNote" rows="2"></textarea></label>
+    <label class="chk"><input type="checkbox" id="stCEmailIt" checked> <span>Email them their sign-in info now <small>Their login email, their ID(s), what they can use, and a one-time “choose your password” button.</small></span></label>
+    <div style="margin-top:14px"><button class="btn primary" id="stCGo">Create account</button></div>
+    <div class="msg" id="stCMsg"></div>
+    <div class="result hidden" id="stCResult"></div>
+  </section>
+
+  <section class="card" id="stExCard">
+    <h2>Existing account</h2>
+    <p class="sub">Look someone up by email to give them an Admin ID or a Host ID, change what they can do, or send a fresh login email.</p>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">
+      <label class="f" style="flex:1;min-width:240px;margin-bottom:0">Email<input type="email" id="stEEmail" autocomplete="off"></label>
+      <button class="btn" id="stEFind">Look up</button>
+    </div>
+    <div class="msg" id="stEMsg"></div>
+    <div id="stEBody" class="hidden">
+      <div style="margin:16px 0 4px" id="stEHead"></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 4px" id="stEBtns"></div>
+      <div id="stEAccess"></div>
+      <div style="margin-top:14px"><button class="btn primary" id="stESave">Save access</button></div>
+    </div>
+  </section>
+</div>
+</details>
   <div class="section-header">
     <div class="section-title">Access Requests</div>
     <button class="btn-sm" onclick="loadAccessRequests()">↻ Refresh</button>
@@ -6185,5 +6270,156 @@ function init(){
 }
 init();
 </script>
+<script>
+(function(){
+const $ = (s, r = document) => r.querySelector(s);
+const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+const call = name => { const f = firebase.functions().httpsCallable(name); return f; };
+const GATEWAY = 'https://belladonnanights.github.io/belladonna-gateway/accounts.html';
+/* ── what can be switched on ── */
+const APPS = [
+  { key: 'hq', label: 'HQ', use: false },
+  { key: 'trivia', label: 'Trivia & the Vault', use: true },
+  { key: 'bingo', label: 'Bingo', use: true },
+  { key: 'mediaPlayer', label: 'Media Player', use: true },
+  { key: 'training', label: 'Training', use: true },
+  { key: 'venueMenu', label: 'Venue Menu', use: true }
+];
+// Limits the Vault enforces for limited accounts. Anything not ticked is OFF.
+const VAULT_LIMITS = [
+  ['deleteOwnQuestions', 'Delete a question they added themselves', 'Only within 24 hours of adding it — so a typo can be cleaned up but nothing old can be wiped.'],
+  ['deleteAnyQuestion', 'Delete ANY question, any time', 'Leave off for most people. (Archiving a question is always allowed and you can restore it.)'],
+  ['createCategories', 'Create new categories', ''],
+  ['deleteCategories', 'Delete categories (and all their questions)', ''],
+  ['archiveCategories', 'Archive / restore categories', ''],
+  ['importCsv', 'Import CSV files', ''],
+  ['bingoMode', 'Open the Bingo song-lists side of the Vault', '']
+];
+const PRESETS = {
+  custom: { label: 'Custom — nothing switched on', ent: {}, adm: {}, vault: {} },
+  writer: { label: 'Question writer (Vault)', ent: { trivia: true }, adm: { trivia: true }, vault: { deleteOwnQuestions: true } }
+};
+
+/* ── the access panel (used for a new account and for an existing one) ── */
+function mountAccess(host, state){
+  const draw = () => {
+    const trivAdmin = !!state.adm.trivia;
+    host.innerHTML =
+      '<div class="sect">App access</div><table class="acc"><tr><th>App</th><th>Can use</th><th>Admin tools</th></tr>' +
+      APPS.map(a => '<tr><td>' + esc(a.label) + '</td><td>' + (a.use ? '<input type="checkbox" data-e="' + a.key + '"' + (state.ent[a.key] ? ' checked' : '') + '>' : '—') + '</td><td><input type="checkbox" data-a="' + a.key + '"' + (state.adm[a.key] ? ' checked' : '') + '></td></tr>').join('') + '</table>' +
+      (trivAdmin ? '<div class="sect">Limits inside the Vault</div><div class="limits">' +
+        VAULT_LIMITS.map(l => '<label class="chk"><input type="checkbox" data-v="' + l[0] + '"' + (state.vault[l[0]] ? ' checked' : '') + '> <span>' + esc(l[1]) + (l[2] ? '<small>' + esc(l[2]) + '</small>' : '') + '</span></label>').join('') + '</div>' : '');
+  };
+  host.addEventListener('change', e => {
+    const t = e.target; if (t.tagName !== 'INPUT') return;
+    if (t.dataset.e) state.ent[t.dataset.e] = t.checked;
+    if (t.dataset.a){ state.adm[t.dataset.a] = t.checked; if (t.dataset.a === 'trivia') draw(); }
+    if (t.dataset.v) state.vault[t.dataset.v] = t.checked;
+  });
+  draw();
+  return draw;
+}
+const perms = st => (st.adm.trivia ? { vault: Object.assign({}, st.vault) } : {});   // limits only matter where Vault admin is on
+
+/* ── create ── */
+const cState = { ent: {}, adm: {}, vault: {} };
+let cType = 'staff';
+const cDraw = mountAccess($('#stCAccess'), cState);
+$('#stCPreset').innerHTML = Object.keys(PRESETS).map(k => '<option value="' + k + '">' + esc(PRESETS[k].label) + '</option>').join('');
+function applyPreset(k){
+  const p = PRESETS[k]; cState.ent = Object.assign({}, p.ent); cState.adm = Object.assign({}, p.adm); cState.vault = Object.assign({}, p.vault); cDraw();
+}
+$('#stCPreset').addEventListener('change', e => applyPreset(e.target.value));
+$('#stCPreset').value = 'writer'; applyPreset('writer');
+$('#stCType').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  cType = b.dataset.t;
+  [...$('#stCType').children].forEach(x => x.classList.toggle('on', x === b));
+  $('#stCVenueWrap').classList.toggle('hidden', cType !== 'venue');
+  if (cType === 'staff'){ $('#stCAdminId').checked = true; $('#stCAdminId').disabled = true; }
+  else { $('#stCAdminId').disabled = false; $('#stCAdminId').checked = false; }
+  if (cType === 'host') $('#stCHostId').checked = true; else if (cType === 'staff') $('#stCHostId').checked = false;
+});
+$('#stCAdminId').disabled = true;
+const cmsg = (t, c) => { const m = $('#stCMsg'); m.textContent = t; m.className = 'msg ' + (c || ''); };
+$('#stCGo').addEventListener('click', async () => {
+  const name = $('#stCName').value.trim(), email = $('#stCEmail').value.trim();
+  if (!name) return cmsg('Enter their name.', 'err');
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return cmsg('Enter a valid email.', 'err');
+  const btn = $('#stCGo'); btn.disabled = true; cmsg('Creating…'); $('#stCResult').classList.add('hidden');
+  try {
+    const r = (await call('createManualAccount')({
+      name, email, accountType: cType, venueName: $('#stCVenue').value.trim(),
+      ids: { admin: $('#stCAdminId').checked, host: $('#stCHostId').checked },
+      entitlements: cState.ent, adminAccess: cState.adm, staffPermissions: perms(cState),
+      note: $('#stCNote').value.trim(), sendEmail: $('#stCEmailIt').checked,
+      loginUrl: GATEWAY
+    })).data;
+    cmsg('');
+    const res = $('#stCResult'); res.classList.remove('hidden');
+    res.innerHTML = '<b>Account created for ' + esc(name) + '.</b><br>' +
+      (r.adminId ? '<span class="pill gold">Admin ID ' + esc(r.adminId) + '</span>' : '') + (r.hostId ? '<span class="pill gold">Host ID ' + esc(r.hostId) + '</span>' : '') +
+      '<p style="margin-top:8px">' + (r.emailQueued ? 'Their sign-in email is queued to ' + esc(email) + '.' : 'No email was sent.') + ' If it doesn’t arrive, or you’d rather send it yourself, this is their one-time “choose your password” link:</p><code>' + esc(r.setPasswordLink) + '</code>';
+    $('#stCName').value = ''; $('#stCEmail').value = ''; $('#stCNote').value = '';
+  } catch (e) { cmsg(e.message || String(e), 'err'); }
+  btn.disabled = false;
+});
+
+/* ── existing account ── */
+const eState = { ent: {}, adm: {}, vault: {} };
+const eDraw = mountAccess($('#stEAccess'), eState);
+let eAcct = null;
+const emsg = (t, c) => { const m = $('#stEMsg'); m.textContent = t; m.className = 'msg ' + (c || ''); };
+function showExisting(){
+  const a = eAcct; if (!a) return;
+  $('#stEBody').classList.remove('hidden');
+  $('#stEHead').innerHTML = '<b style="font-size:16px">' + esc(a.name || a.email) + '</b> <span class="pill">' + esc(a.accountType || 'account') + '</span><br>' +
+    '<span class="pill ' + (a.adminId ? 'gold' : '') + '">Admin ID: ' + esc(a.adminId || 'none') + '</span><span class="pill ' + (a.hostId ? 'gold' : '') + '">Host ID: ' + esc(a.hostId || 'none') + '</span>' +
+    (a.staffPermissions ? '<span class="pill">limited account</span>' : '');
+  $('#stEBtns').innerHTML = (a.adminId ? '' : '<button class="btn" data-id="admin">Add an Admin ID</button>') + (a.hostId ? '' : '<button class="btn" data-id="host">Add a Host ID</button>') + '<button class="btn ghost" data-resend="1">Send login email</button>';
+  eState.ent = Object.assign({}, a.entitlements || {}); eState.adm = Object.assign({}, a.adminAccess || {});
+  eState.vault = Object.assign({}, (a.staffPermissions && a.staffPermissions.vault) || {});
+  eDraw();
+}
+$('#stEFind').addEventListener('click', async () => {
+  const email = $('#stEEmail').value.trim().toLowerCase(); if (!email) return emsg('Enter an email.', 'err');
+  emsg('Looking…'); $('#stEBody').classList.add('hidden');
+  try {
+    const snap = await db.collection('users').where('email', '==', email).limit(1).get();
+    if (snap.empty) return emsg('No account with that email.', 'err');
+    eAcct = Object.assign({ uid: snap.docs[0].id }, snap.docs[0].data()); emsg(''); showExisting();
+  } catch (e) { emsg(e.message || String(e), 'err'); }
+});
+$('#stEBtns').addEventListener('click', async e => {
+  const b = e.target.closest('button'); if (!b || !eAcct) return;
+  b.disabled = true; emsg('Working…');
+  try {
+    if (b.dataset.id){
+      const r = (await call('addAccountId')({ uid: eAcct.uid, kind: b.dataset.id })).data;
+      if (r.adminId) eAcct.adminId = r.adminId; if (r.hostId) eAcct.hostId = r.hostId;
+      emsg('Added ' + (r.adminId || r.hostId) + '.', 'ok'); showExisting();
+    } else if (b.dataset.resend){
+      const r = (await call('resendAccountLogin')({ uid: eAcct.uid, loginUrl: GATEWAY })).data;
+      emsg('Login email queued. One-time link: ' + r.setPasswordLink, 'ok');
+    }
+  } catch (err) { emsg(err.message || String(err), 'err'); b.disabled = false; }
+});
+$('#stESave').addEventListener('click', async () => {
+  if (!eAcct) return; const btn = $('#stESave'); btn.disabled = true; emsg('Saving…');
+  try {
+    const payload = { uid: eAcct.uid, entitlements: eState.ent, adminAccess: eState.adm };
+    // only touch limits if this account already has them or you've ticked some
+    if (eAcct.staffPermissions || Object.values(eState.vault).some(Boolean)) payload.staffPermissions = perms(eState);
+    await call('updateAccountAccess')(payload);
+    eAcct.entitlements = Object.assign({}, eState.ent); eAcct.adminAccess = Object.assign({}, eState.adm);
+    if (payload.staffPermissions) eAcct.staffPermissions = payload.staffPermissions;
+    emsg('Saved.', 'ok'); showExisting();
+  } catch (e) { emsg(e.message || String(e), 'err'); }
+  btn.disabled = false;
+});
+
+})();
+</script>
+
 </body>
 </html>
