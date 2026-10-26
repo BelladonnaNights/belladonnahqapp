@@ -428,6 +428,86 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
 #staffTools .pill{display:inline-block;padding:2px 10px;border:1px solid var(--border2);border-radius:999px;font-size:12px;color:var(--text2);margin-right:6px}
 #staffTools .pill.gold{border-color:var(--gold);color:var(--gold2)}
 </style>
+<style>
+/* ── MY TEAM (agent cast) ── */
+#panel-team .tm-head{display:flex;align-items:flex-end;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-bottom:1.1rem;}
+#panel-team .tm-need{display:inline-flex;align-items:center;gap:.55rem;border:1px solid var(--border-gold);background:var(--gold-dim);border-radius:999px;padding:.4rem 1rem;font-family:'Cinzel',serif;font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);}
+#panel-team .tm-need b{font-family:'Cormorant Garamond',serif;font-size:1.6rem;font-weight:400;letter-spacing:0;line-height:1;}
+#panel-team .tm-need.zero{color:var(--text3);border-color:var(--border);background:transparent;}
+#panel-team .tm-tools{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;}
+#panel-team .tm-banner{border:1px solid rgba(176,80,90,.5);background:rgba(176,80,90,.1);color:#e6b3b8;border-radius:10px;padding:.8rem 1rem;font-size:.8rem;line-height:1.5;margin-bottom:1rem;letter-spacing:.02em;}
+#panel-team .tm-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:1rem;}
+#panel-team .tm-card{--ac:#c9a96e;position:relative;display:flex;flex-direction:column;gap:.9rem;background:var(--surface);border:1px solid var(--border);border-top:2px solid var(--ac);border-radius:14px;padding:1.1rem;cursor:pointer;transition:border-color .2s,transform .2s,background .2s;}
+#panel-team .tm-card:hover{border-color:var(--ac);background:var(--surface2);transform:translateY(-2px);}
+#panel-team .tm-top{display:flex;gap:1rem;align-items:center;}
+#panel-team .tm-av{width:84px;height:84px;flex-shrink:0;border-radius:22px;overflow:hidden;box-shadow:0 0 0 1px var(--ac),0 8px 24px rgba(0,0,0,.5);}
+#panel-team .tm-av img{width:100%;height:100%;display:block;}
+#panel-team .tm-name{font-family:'Bebas Neue',sans-serif;font-size:1.7rem;letter-spacing:.06em;line-height:1;color:var(--text);}
+#panel-team .tm-role{font-family:'Cinzel',serif;font-size:.58rem;letter-spacing:.14em;text-transform:uppercase;color:var(--ac);margin-top:.25rem;font-weight:600;}
+#panel-team .tm-status{display:flex;align-items:center;gap:.55rem;font-family:'EB Garamond',serif;font-size:1.02rem;color:var(--text2);min-height:1.5rem;}
+#panel-team .tm-dot{width:8px;height:8px;border-radius:50%;background:var(--text4);flex-shrink:0;}
+#panel-team .tm-dot.attn{background:var(--ac);box-shadow:0 0 10px var(--ac);animation:pulse 2s infinite;}
+#panel-team .tm-go{margin-top:auto;font-family:'Cinzel',serif;font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;font-weight:600;background:transparent;color:var(--ac);border:1px solid var(--ac);border-radius:8px;padding:.6rem 1rem;cursor:pointer;transition:background .2s;}
+#panel-team .tm-go:hover{background:rgba(255,255,255,.06);}
+#panel-team .tm-badge{position:absolute;top:.8rem;right:.8rem;min-width:1.5rem;height:1.5rem;padding:0 .45rem;border-radius:999px;background:var(--ac);color:#0a0a0a;font-size:.72rem;font-weight:700;display:flex;align-items:center;justify-content:center;letter-spacing:0;}
+#panel-team .tm-foot{margin-top:1.4rem;}
+#panel-team .tm-hint{font-size:.78rem;color:var(--text3);line-height:1.55;letter-spacing:.02em;}
+#panel-team pre.tm-code{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:.8rem;font-size:.72rem;color:var(--text2);overflow-x:auto;line-height:1.5;margin:.6rem 0;white-space:pre-wrap;word-break:break-word;font-family:ui-monospace,Menlo,Consolas,monospace;letter-spacing:0;}
+
+/* drawer */
+.tm-ov{position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:900;opacity:0;pointer-events:none;transition:opacity .2s;}
+.tm-ov.open{opacity:1;pointer-events:auto;}
+.tm-dr{--ac:#c9a96e;position:fixed;top:0;right:0;bottom:0;width:min(600px,100%);background:var(--bg);border-left:2px solid var(--ac);z-index:901;display:flex;flex-direction:column;transform:translateX(102%);transition:transform .25s ease;}
+.tm-dr.open{transform:none;}
+.tm-dr-h{display:flex;align-items:center;gap:.9rem;padding:1rem 1.2rem;border-bottom:1px solid var(--border);background:var(--surface);}
+.tm-dr-h .tm-av{width:52px;height:52px;border-radius:14px;overflow:hidden;box-shadow:0 0 0 1px var(--ac);flex-shrink:0;}
+.tm-dr-h .tm-av img{width:100%;height:100%;display:block;}
+.tm-dr-h .tm-name{font-family:'Bebas Neue',sans-serif;font-size:1.5rem;letter-spacing:.06em;line-height:1;}
+.tm-dr-h .tm-role{font-family:'Cinzel',serif;font-size:.56rem;letter-spacing:.14em;text-transform:uppercase;color:var(--ac);margin-top:.2rem;font-weight:600;}
+.tm-x{margin-left:auto;background:none;border:1px solid var(--border2);color:var(--text2);width:2.2rem;height:2.2rem;border-radius:50%;cursor:pointer;font-size:1.1rem;line-height:1;}
+.tm-x:hover{color:var(--gold);border-color:var(--gold);}
+.tm-dr-b{flex:1;overflow-y:auto;padding:1.1rem 1.2rem 3rem;-webkit-overflow-scrolling:touch;}
+.tm-sec{font-family:'Cinzel',serif;font-size:.64rem;letter-spacing:.16em;text-transform:uppercase;color:var(--ac);font-weight:600;margin:1.4rem 0 .6rem;}
+.tm-sec:first-child{margin-top:.2rem;}
+.tm-item{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:.85rem .9rem;margin-bottom:.7rem;}
+.tm-item .t1{font-size:.9rem;color:var(--text);letter-spacing:.02em;line-height:1.45;font-weight:400;}
+.tm-item .t2{font-size:.76rem;color:var(--text3);margin-top:.25rem;line-height:1.5;letter-spacing:.02em;}
+.tm-item .t2 a,.tm-hint a{color:var(--gold);}
+.tm-row{display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;margin-top:.65rem;}
+.tm-b{font-family:'DM Sans',sans-serif;font-size:.64rem;letter-spacing:.12em;text-transform:uppercase;font-weight:600;background:transparent;color:var(--gold);border:1px solid var(--border-gold);border-radius:999px;padding:.45rem .95rem;cursor:pointer;transition:background .15s;}
+.tm-b:hover{background:var(--gold-dim);}
+.tm-b.pri{background:var(--ac);border-color:var(--ac);color:#0a0a0a;}
+.tm-b.pri:hover{filter:brightness(1.1);background:var(--ac);}
+.tm-b.dim{color:var(--text3);border-color:var(--border2);}
+.tm-b.red{color:#d98a92;border-color:rgba(176,80,90,.5);}
+.tm-in,.tm-ta,.tm-sel{width:100%;background:var(--surface2);border:1px solid var(--border2);color:var(--text);border-radius:8px;padding:.55rem .7rem;font-family:'DM Sans',sans-serif;font-size:.85rem;letter-spacing:.02em;font-weight:400;}
+.tm-ta{min-height:110px;resize:vertical;line-height:1.5;}
+.tm-in:focus,.tm-ta:focus,.tm-sel:focus{outline:none;border-color:var(--gold);}
+.tm-in.s{width:9.5rem;}
+.tm-fg{display:grid;grid-template-columns:1fr 1fr;gap:.55rem;margin:.6rem 0;}
+.tm-fg .full{grid-column:1/-1;}
+.tm-lbl{display:block;font-size:.58rem;letter-spacing:.16em;text-transform:uppercase;color:var(--text3);margin-bottom:.25rem;}
+.tm-det{border:1px solid var(--border);border-radius:10px;background:var(--surface);margin-bottom:.8rem;}
+.tm-det>summary{cursor:pointer;padding:.7rem .9rem;font-size:.82rem;color:var(--text2);letter-spacing:.04em;list-style:none;font-weight:500;}
+.tm-det>summary::-webkit-details-marker{display:none;}
+.tm-det>summary::before{content:'＋';color:var(--ac);margin-right:.5rem;}
+.tm-det[open]>summary::before{content:'－';}
+.tm-det>.in{padding:0 .9rem .9rem;}
+.tm-tag{display:inline-block;font-size:.58rem;letter-spacing:.12em;text-transform:uppercase;border-radius:6px;padding:.12rem .5rem;margin-right:.35rem;border:1px solid var(--border2);color:var(--text3);vertical-align:middle;}
+.tm-tag.new{color:#b9a3ff;border-color:rgba(139,92,246,.5);}
+.tm-tag.quoted{color:var(--gold2);border-color:var(--border-gold);}
+.tm-tag.booked{color:var(--live);border-color:rgba(58,154,90,.4);}
+.tm-tag.lost{color:#d98a92;border-color:rgba(176,80,90,.5);}
+.tm-tag.warn{color:#e8b86a;border-color:rgba(232,184,106,.5);}
+.tm-tbl{width:100%;border-collapse:collapse;font-size:.78rem;}
+.tm-tbl th{font-size:.56rem;letter-spacing:.14em;text-transform:uppercase;color:var(--text3);text-align:left;padding:.4rem .4rem;border-bottom:1px solid var(--border2);font-weight:600;}
+.tm-tbl td{padding:.5rem .4rem;border-bottom:1px solid var(--border);color:var(--text2);}
+.tm-tbl td.n,.tm-tbl th.n{text-align:right;}
+.tm-empty{color:var(--text3);font-family:'EB Garamond',serif;font-style:italic;font-size:1rem;padding:.4rem 0 .8rem;}
+.tm-toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#111;border:1px solid var(--border-gold);color:var(--text);padding:.7rem 1.2rem;border-radius:999px;font-size:.8rem;z-index:1000;max-width:90vw;text-align:center;letter-spacing:.02em;}
+.tm-toast.err{border-color:rgba(176,80,90,.7);color:#e6b3b8;}
+@media(max-width:560px){.tm-fg{grid-template-columns:1fr;}#panel-team .tm-grid{grid-template-columns:1fr;}}
+</style>
 </head>
 <body>
 
@@ -480,6 +560,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
 <div class="header">
   <div class="tabs">
     <button class="tab active" onclick="showTab('dashboard',this)">Dashboard</button>
+    <button class="tab" onclick="showTab('team',this)">My Team</button>
     <button class="tab" onclick="showTab('hosts',this)">Hosts</button>
     <button class="tab" onclick="showTab('venues',this)">Venues</button>
     <button class="tab" onclick="showTab('schedule',this)">Schedule</button>
@@ -1081,6 +1162,52 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
 </div>
 
 <!-- LINKS -->
+<!-- MY TEAM -->
+<div class="panel" id="panel-team">
+  <div class="tm-head">
+    <div>
+      <div class="dash-title">My Team</div>
+      <div class="dash-sub">Six agents, one job each. Nothing goes out without your tap.</div>
+    </div>
+    <div class="tm-tools">
+      <div class="tm-need zero" id="tmNeed"><b>0</b> need you</div>
+      <button class="hq-btn-ghost" data-act="open" data-agent="setup">Setup</button>
+    </div>
+  </div>
+  <div id="tmBanner"></div>
+  <div class="tm-grid" id="tmGrid"></div>
+  <div class="tm-foot">
+    <details class="tm-det" style="--ac:#c9a96e">
+      <summary>How the agents plug in (for whoever builds the backend)</summary>
+      <div class="in">
+        <div class="tm-hint">The cards read these Firestore collections live. Anything that writes to them (a Cloud Function, a scheduled task, your other Claude account) lights up the matching card. Everything also works by hand from inside each card.</div>
+        <pre class="tm-code">agent_leads   {site, client, contact, eventType, eventDate (YYYY-MM-DD), location,
+               headcount, budget, message, link, stage: new|quoted|booked|lost,
+               receivedAt (ms), quotedAt, quotedPrice, bookedPrice, lostReason,
+               nudges: {n1, n2}, repliedAt, source}
+agent_drafts  {leadId, agent: quill|vesper|mirror, kind: reply|n1|n2|review,
+               body, label, status: pending|approved|skipped, createdAt (ms)}
+agent_sites   {name, feesPaid, profileRefreshed (ms), active}
+agent_config  docs: pricing {text} · voice {text} · sable {digest, decisions, loadedAt}</pre>
+        <div class="tm-hint">Firestore rules: add these four collections next to your other HQ rules, for example</div>
+        <pre class="tm-code">match /agent_leads/{id}   { allow read, write: if request.auth != null; }
+match /agent_drafts/{id}  { allow read, write: if request.auth != null; }
+match /agent_sites/{id}   { allow read, write: if request.auth != null; }
+match /agent_config/{id}  { allow read, write: if request.auth != null; }</pre>
+      </div>
+    </details>
+  </div>
+  <div class="tm-ov" id="tmOv"></div>
+  <aside class="tm-dr" id="tmDr">
+    <div class="tm-dr-h">
+      <div class="tm-av" id="tmDrAv"></div>
+      <div><div class="tm-name" id="tmDrName"></div><div class="tm-role" id="tmDrRole"></div></div>
+      <button class="tm-x" data-act="close" aria-label="Close">✕</button>
+    </div>
+    <div class="tm-dr-b" id="tmDrB"></div>
+  </aside>
+</div>
+
 <div class="panel" id="panel-links">
   <div class="section-header">
     <div class="section-title">Links</div>
@@ -1895,6 +2022,7 @@ function showTab(id,el){
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   document.getElementById('panel-'+id).classList.add('active');el.classList.add('active');
   if(id==='dashboard')renderDashboardWeek();
+  if(id==='team'&&window.teamOpen)window.teamOpen();
   if(id==='schedule'){populateSchedFilters();loadShiftsData().then(renderScheduleAll);}
   if(id==='accounts'){loadAccounts();loadAccessRequests();}
   if(id==='screens')scrOpen();
@@ -6577,5 +6705,501 @@ $('#stESave').addEventListener('click', async () => {
 })();
 </script>
 
+<script>
+/* ── MY TEAM (agent cast) ── */
+(function(){
+'use strict';
+const AV={"raven": "<svg viewBox=\"0 0 256 256\" xmlns=\"http://www.w3.org/2000/svg\">\n<rect width=\"256\" height=\"256\" rx=\"40\" fill=\"#14101f\" stroke=\"#8b5cf6\" stroke-width=\"4\"/>\n<path d=\"M62 70 Q60 20 128 18 Q196 20 194 70 L200 230 L56 230 Z\" fill=\"#07060b\"/>\n<path d=\"M36 256 Q40 192 128 186 Q216 192 220 256 Z\" fill=\"#0b0a12\"/>\n<path d=\"M92 196 L128 226 L164 196 L150 190 L128 206 L106 190 Z\" fill=\"#8b5cf6\"/>\n<rect x=\"114\" y=\"160\" width=\"28\" height=\"34\" fill=\"#d9c7bf\"/>\n<ellipse cx=\"128\" cy=\"116\" rx=\"46\" ry=\"56\" fill=\"#e8d9cf\"/>\n<path d=\"M80 108 Q84 52 128 50 Q176 52 178 108 Q150 82 128 70 Q100 86 80 108 Z\" fill=\"#07060b\"/>\n<path d=\"M104 118 Q114 112 122 118\" stroke=\"#07060b\" stroke-width=\"4\" fill=\"none\" stroke-linecap=\"round\"/>\n<path d=\"M134 118 Q142 112 152 118\" stroke=\"#07060b\" stroke-width=\"4\" fill=\"none\" stroke-linecap=\"round\"/>\n<ellipse cx=\"113\" cy=\"124\" rx=\"6\" ry=\"5\" fill=\"#8b5cf6\"/>\n<ellipse cx=\"143\" cy=\"124\" rx=\"6\" ry=\"5\" fill=\"#8b5cf6\"/>\n<path d=\"M120 150 Q128 156 136 150 Q128 162 120 150 Z\" fill=\"#4a1d3d\"/>\n<path d=\"M176 60 Q214 40 226 14 Q206 60 184 84 Z\" fill=\"#8b5cf6\"/>\n<path d=\"M184 84 L216 30\" stroke=\"#14101f\" stroke-width=\"2\"/>\n<\/svg>", "quill": "<svg viewBox=\"0 0 256 256\" xmlns=\"http://www.w3.org/2000/svg\">\n<rect width=\"256\" height=\"256\" rx=\"40\" fill=\"#17120a\" stroke=\"#d4a537\" stroke-width=\"4\"/>\n<path d=\"M70 84 Q66 30 128 28 Q190 30 186 84 Q196 150 176 214 L80 214 Q60 150 70 84 Z\" fill=\"#2b1a10\"/>\n<path d=\"M36 256 Q40 192 128 186 Q216 192 220 256 Z\" fill=\"#0d0b08\"/>\n<path d=\"M96 192 L128 214 L160 192\" stroke=\"#d4a537\" stroke-width=\"5\" fill=\"none\"/>\n<rect x=\"114\" y=\"160\" width=\"28\" height=\"34\" fill=\"#c9a98f\"/>\n<ellipse cx=\"128\" cy=\"116\" rx=\"46\" ry=\"56\" fill=\"#dcc0a6\"/>\n<path d=\"M82 112 Q84 56 128 54 Q172 56 176 112 Q156 78 128 74 Q96 78 82 112 Z\" fill=\"#2b1a10\"/>\n<rect x=\"98\" y=\"108\" width=\"24\" height=\"18\" rx=\"6\" fill=\"none\" stroke=\"#d4a537\" stroke-width=\"3\"/>\n<rect x=\"134\" y=\"108\" width=\"24\" height=\"18\" rx=\"6\" fill=\"none\" stroke=\"#d4a537\" stroke-width=\"3\"/>\n<path d=\"M122 116 L134 116\" stroke=\"#d4a537\" stroke-width=\"3\"/>\n<circle cx=\"110\" cy=\"117\" r=\"4\" fill=\"#2b1a10\"/>\n<circle cx=\"146\" cy=\"117\" r=\"4\" fill=\"#2b1a10\"/>\n<path d=\"M118 150 Q128 158 138 150\" stroke=\"#7a2d2d\" stroke-width=\"5\" fill=\"none\" stroke-linecap=\"round\"/>\n<path d=\"M206 20 Q232 70 176 168 Q196 90 206 20 Z\" fill=\"#d4a537\"/>\n<path d=\"M206 20 Q190 100 178 166\" stroke=\"#17120a\" stroke-width=\"2\" fill=\"none\"/>\n<\/svg>", "vesper": "<svg viewBox=\"0 0 256 256\" xmlns=\"http://www.w3.org/2000/svg\">\n<rect width=\"256\" height=\"256\" rx=\"40\" fill=\"#120d24\" stroke=\"#a78bfa\" stroke-width=\"4\"/>\n<circle cx=\"200\" cy=\"52\" r=\"26\" fill=\"#e9e3ff\"/>\n<circle cx=\"212\" cy=\"46\" r=\"24\" fill=\"#120d24\"/>\n<circle cx=\"40\" cy=\"40\" r=\"2\" fill=\"#e9e3ff\"/><circle cx=\"64\" cy=\"22\" r=\"1.5\" fill=\"#e9e3ff\"/><circle cx=\"30\" cy=\"90\" r=\"1.5\" fill=\"#e9e3ff\"/>\n<path d=\"M66 100 Q56 30 128 26 Q200 30 190 100 Q204 170 190 236 L66 236 Q52 170 66 100 Z\" fill=\"#3b1f6b\"/>\n<path d=\"M36 256 Q40 192 128 186 Q216 192 220 256 Z\" fill=\"#0b0818\"/>\n<path d=\"M100 190 Q128 206 156 190\" stroke=\"#a78bfa\" stroke-width=\"5\" fill=\"none\"/>\n<rect x=\"114\" y=\"160\" width=\"28\" height=\"34\" fill=\"#cdbbd3\"/>\n<ellipse cx=\"128\" cy=\"116\" rx=\"46\" ry=\"56\" fill=\"#e0d0e4\"/>\n<path d=\"M82 112 Q88 56 128 54 Q168 56 174 112 Q150 90 128 70 Q104 90 82 112 Z\" fill=\"#3b1f6b\"/>\n<path d=\"M102 120 Q113 128 124 120\" stroke=\"#120d24\" stroke-width=\"4\" fill=\"none\" stroke-linecap=\"round\"/>\n<path d=\"M132 120 Q143 128 154 120\" stroke=\"#120d24\" stroke-width=\"4\" fill=\"none\" stroke-linecap=\"round\"/>\n<path d=\"M100 112 L94 106 M156 112 L162 106\" stroke=\"#120d24\" stroke-width=\"3\" stroke-linecap=\"round\"/>\n<circle cx=\"128\" cy=\"76\" r=\"4\" fill=\"#a78bfa\"/>\n<path d=\"M118 150 Q128 156 138 150\" stroke=\"#6b2a5c\" stroke-width=\"5\" fill=\"none\" stroke-linecap=\"round\"/>\n<\/svg>", "ledger": "<svg viewBox=\"0 0 256 256\" xmlns=\"http://www.w3.org/2000/svg\">\n<rect width=\"256\" height=\"256\" rx=\"40\" fill=\"#1a0c10\" stroke=\"#c0334d\" stroke-width=\"4\"/>\n<path d=\"M74 92 Q72 34 128 32 Q184 34 182 92 Q184 130 176 150 L80 150 Q72 130 74 92 Z\" fill=\"#0a0709\"/>\n<path d=\"M36 256 Q40 192 128 186 Q216 192 220 256 Z\" fill=\"#0c0709\"/>\n<path d=\"M92 192 L128 190 L164 192 L128 232 Z\" fill=\"#c0334d\"/>\n<rect x=\"114\" y=\"160\" width=\"28\" height=\"34\" fill=\"#d3b5a8\"/>\n<ellipse cx=\"128\" cy=\"116\" rx=\"46\" ry=\"56\" fill=\"#e4cdc1\"/>\n<path d=\"M82 116 Q82 54 128 50 Q174 54 174 116 L168 92 Q128 70 88 92 Z\" fill=\"#0a0709\"/>\n<path d=\"M98 114 L120 112\" stroke=\"#0a0709\" stroke-width=\"5\" stroke-linecap=\"round\"/>\n<path d=\"M136 112 L158 114\" stroke=\"#0a0709\" stroke-width=\"5\" stroke-linecap=\"round\"/>\n<circle cx=\"110\" cy=\"122\" r=\"5\" fill=\"#c0334d\"/>\n<circle cx=\"146\" cy=\"122\" r=\"5\" fill=\"#c0334d\"/>\n<path d=\"M116 150 Q128 154 140 150\" stroke=\"#8a1f35\" stroke-width=\"5\" fill=\"none\" stroke-linecap=\"round\"/>\n<path d=\"M82 146 Q60 150 56 190\" stroke=\"#c0334d\" stroke-width=\"2\" fill=\"none\"/>\n<circle cx=\"56\" cy=\"196\" r=\"6\" fill=\"#d4a537\"/>\n<rect x=\"190\" y=\"206\" width=\"40\" height=\"30\" rx=\"3\" fill=\"#2a1218\" stroke=\"#c0334d\" stroke-width=\"2\"/>\n<path d=\"M196 216 H224 M196 224 H218\" stroke=\"#d4a537\" stroke-width=\"2\"/>\n<\/svg>", "sable": "<svg viewBox=\"0 0 256 256\" xmlns=\"http://www.w3.org/2000/svg\">\n<rect width=\"256\" height=\"256\" rx=\"40\" fill=\"#0a1614\" stroke=\"#2dd4bf\" stroke-width=\"4\"/>\n<path d=\"M66 100 Q56 30 128 26 Q200 30 190 100 Q198 170 176 236 L80 236 Q58 170 66 100 Z\" fill=\"#05090a\"/>\n<path d=\"M36 256 Q40 192 128 186 Q216 192 220 256 Z\" fill=\"#070d0d\"/>\n<path d=\"M92 192 L128 188 L164 192 L128 226 Z\" fill=\"#2dd4bf\"/>\n<rect x=\"114\" y=\"160\" width=\"28\" height=\"34\" fill=\"#d2bfb5\"/>\n<ellipse cx=\"128\" cy=\"116\" rx=\"46\" ry=\"56\" fill=\"#e6d4c9\"/>\n<path d=\"M82 112 Q84 54 128 52 Q172 54 176 112 Q168 84 138 76 Q108 84 82 112 Z\" fill=\"#05090a\"/>\n<path d=\"M176 76 Q214 100 206 168 Q198 196 192 214\" stroke=\"#05090a\" stroke-width=\"14\" fill=\"none\" stroke-linecap=\"round\"/>\n<path d=\"M192 214 Q196 224 204 228\" stroke=\"#2dd4bf\" stroke-width=\"5\" fill=\"none\" stroke-linecap=\"round\"/>\n<path d=\"M100 114 L122 112\" stroke=\"#05090a\" stroke-width=\"4.5\" stroke-linecap=\"round\"/>\n<path d=\"M134 112 L156 114\" stroke=\"#05090a\" stroke-width=\"4.5\" stroke-linecap=\"round\"/>\n<ellipse cx=\"111\" cy=\"122\" rx=\"5.5\" ry=\"5\" fill=\"#2dd4bf\"/>\n<ellipse cx=\"145\" cy=\"122\" rx=\"5.5\" ry=\"5\" fill=\"#2dd4bf\"/>\n<path d=\"M118 150 Q128 156 138 150\" stroke=\"#5c2a3e\" stroke-width=\"5\" fill=\"none\" stroke-linecap=\"round\"/>\n<circle cx=\"52\" cy=\"204\" r=\"22\" fill=\"none\" stroke=\"#2dd4bf\" stroke-width=\"3\"/>\n<path d=\"M52 188 L58 204 L52 220 L46 204 Z\" fill=\"#2dd4bf\"/>\n<circle cx=\"52\" cy=\"204\" r=\"3\" fill=\"#0a1614\"/>\n<\/svg>", "mirror": "<svg viewBox=\"0 0 256 256\" xmlns=\"http://www.w3.org/2000/svg\">\n<rect width=\"256\" height=\"256\" rx=\"40\" fill=\"#0f1417\" stroke=\"#9fb4c2\" stroke-width=\"4\"/>\n<ellipse cx=\"128\" cy=\"120\" rx=\"92\" ry=\"104\" fill=\"none\" stroke=\"#9fb4c2\" stroke-width=\"4\"/>\n<ellipse cx=\"128\" cy=\"120\" rx=\"84\" ry=\"96\" fill=\"#161d22\"/>\n<path d=\"M76 100 Q70 40 128 36 Q186 40 180 100 Q186 150 176 190 L80 190 Q70 150 76 100 Z\" fill=\"#c9d3da\"/>\n<path d=\"M40 256 Q46 200 128 192 Q210 200 216 256 Z\" fill=\"#0b0f12\"/>\n<rect x=\"114\" y=\"166\" width=\"28\" height=\"30\" fill=\"#cbb8b0\"/>\n<ellipse cx=\"128\" cy=\"120\" rx=\"42\" ry=\"52\" fill=\"#e6d6cd\"/>\n<path d=\"M88 112 Q92 64 128 62 Q164 64 168 112 Q146 90 128 80 Q108 92 88 112 Z\" fill=\"#c9d3da\"/>\n<path d=\"M104 118 Q113 113 122 118\" stroke=\"#0f1417\" stroke-width=\"3.5\" fill=\"none\" stroke-linecap=\"round\"/>\n<path d=\"M134 118 Q143 113 152 118\" stroke=\"#0f1417\" stroke-width=\"3.5\" fill=\"none\" stroke-linecap=\"round\"/>\n<ellipse cx=\"113\" cy=\"123\" rx=\"5\" ry=\"4\" fill=\"#5f8aa3\"/>\n<ellipse cx=\"143\" cy=\"123\" rx=\"5\" ry=\"4\" fill=\"#5f8aa3\"/>\n<path d=\"M119 148 Q128 154 137 148\" stroke=\"#7a3a4e\" stroke-width=\"4.5\" fill=\"none\" stroke-linecap=\"round\"/>\n<path d=\"M60 70 L68 60 M66 82 L76 76\" stroke=\"#e9f2f8\" stroke-width=\"3\" stroke-linecap=\"round\"/>\n<\/svg>"};
+const AGENTS=[
+  {id:'raven', name:'Raven', role:'Lead Watcher',          color:'#8b5cf6', btn:'View leads'},
+  {id:'quill', name:'Quill', role:'Reply & Quote Drafter', color:'#d4a537', btn:'Review drafts'},
+  {id:'vesper',name:'Vesper',role:'Follow-Up',             color:'#a78bfa', btn:'See nudges'},
+  {id:'ledger',name:'Ledger',role:'Tracker',               color:'#c0334d', btn:'Open ledger'},
+  {id:'sable', name:'Sable', role:'Event Scout',           color:'#2dd4bf', btn:'Open digest'},
+  {id:'mirror',name:'Mirror',role:'Profile Upkeep',        color:'#9fb4c2', btn:'Check profiles'}
+];
+const SETUP={id:'setup',name:'Setup',role:'Prices, voice, sites',color:'#c9a96e'};
+const DAY=864e5, STALE=90*DAY;
+const DEFAULT_SITES=['GigSalad','Thumbtack','The Bash','Eventective','GigMasters'];
+const S={leads:[],drafts:[],sites:[],cfg:{},err:null,cur:null,started:false,pend:false,open:{}};
+const AVU={};
+const $=(s,r)=>(r||document).querySelector(s);
+const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const safeUrl=u=>/^https?:\/\//i.test(String(u||'').trim())?String(u).trim():'';
+const fdb=()=>(typeof db!=='undefined'&&db)?db:null;
+const col=n=>{const d=fdb();if(!d)throw new Error('Firestore is not available');return d.collection(n);};
+const avUrl=id=>AVU[id]||(AVU[id]='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(AV[id]||''));
+const avImg=id=>'<img alt="" src="'+avUrl(id)+'">';
+const money=v=>{const n=parseFloat(String(v==null?'':v).replace(/[^0-9.]/g,''));return isNaN(n)?0:n;};
+const fmtMoney=n=>'$'+Math.round(n).toLocaleString('en-US');
+const fmtDay=ms=>ms?new Date(ms).toLocaleDateString('en-US',{month:'short',day:'numeric'}):'';
+const fmtEv=s=>{if(!s)return '';const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(String(s));if(!m)return String(s);return new Date(+m[1],+m[2]-1,+m[3]).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});};
+const plural=(n,a,b)=>n+' '+(n===1?a:b);
+const agent=id=>AGENTS.find(a=>a.id===id)||SETUP;
+
+/* ── derived state ── */
+function leadsById(){const m={};S.leads.forEach(l=>m[l.id]=l);return m;}
+function vesperDue(){
+  const now=Date.now(),live=new Set(S.drafts.filter(d=>d.agent==='vesper'&&d.status==='pending').map(d=>d.leadId));
+  const out=[];
+  S.leads.filter(l=>l.stage==='quoted'&&!l.repliedAt&&!live.has(l.id)).forEach(l=>{
+    const t=l.quotedAt||l.receivedAt||now,age=now-t,n=l.nudges||{};
+    let step=null;
+    if(age>=7*DAY)step='cold';
+    else if(age>=3*DAY&&!n.n2)step=n.n1?'n2':'n1';
+    else if(age>=DAY&&!n.n1)step='n1';
+    if(step)out.push({lead:l,step:step,age:age});
+  });
+  return out;
+}
+function D(){
+  const L=S.leads,dr=S.drafts;
+  const liveQ=new Set(dr.filter(d=>d.agent==='quill'&&d.kind!=='event'&&(d.status==='pending'||d.status==='approved')).map(d=>d.leadId));
+  const newLeads=L.filter(l=>l.stage==='new').sort((a,b)=>(b.receivedAt||0)-(a.receivedAt||0));
+  const sites=S.sites.filter(s=>s.active!==false);
+  const dg=S.cfg.sable&&S.cfg.sable.digest,dec=(S.cfg.sable&&S.cfg.sable.decisions)||{};
+  const top5=(dg&&Array.isArray(dg.top5))?dg.top5:[];
+  return {
+    newLeads:newLeads,
+    needDraft:newLeads.filter(l=>!liveQ.has(l.id)),
+    missing:newLeads.filter(l=>!l.eventDate||!l.location),
+    qPending:dr.filter(d=>d.agent==='quill'&&d.kind!=='event'&&d.status==='pending'),
+    vPending:dr.filter(d=>d.agent==='vesper'&&d.status==='pending'),
+    mPending:dr.filter(d=>d.agent==='mirror'&&d.status==='pending'),
+    vDue:vesperDue(),
+    waiting:L.filter(l=>l.stage==='quoted'&&!l.repliedAt).length,
+    sites:sites,
+    stale:sites.filter(s=>!s.profileRefreshed||Date.now()-s.profileRefreshed>STALE),
+    digest:dg||null,top5:top5,dec:dec,
+    undecided:top5.filter((_,i)=>!dec['t'+i]).length
+  };
+}
+function cardInfo(id,d){
+  const L=S.leads;
+  if(id==='raven'){
+    const n=d.newLeads.length,m=d.missing.length;
+    return {need:m,line:n?plural(n,'new lead','new leads')+(m?' · '+m+' missing info':''):'All quiet'};
+  }
+  if(id==='quill'){
+    const q=d.qPending.length,n=d.needDraft.length;
+    return {need:q+n,line:q?plural(q,'draft','drafts')+' waiting'+(n?' · '+n+' to write':''):(n?plural(n,'lead needs','leads need')+' a draft':'Nothing to draft')};
+  }
+  if(id==='vesper'){
+    const p=d.vPending.length,u=d.vDue.length;
+    return {need:p+u,line:(p||u)?[p?plural(p,'nudge','nudges')+' to approve':'',u?u+' due':''].filter(Boolean).join(' · '):(d.waiting?plural(d.waiting,'quote','quotes')+' waiting, none due':'No quotes out')};
+  }
+  if(id==='ledger'){
+    const b=L.filter(l=>l.stage==='booked').length;
+    return {need:0,line:L.length?plural(L.length,'lead','leads')+' · '+b+' booked ('+Math.round(100*b/L.length)+'%)':'No leads tracked yet'};
+  }
+  if(id==='sable'){
+    if(!d.digest)return {need:0,line:'No digest loaded yet'};
+    return {need:d.undecided,line:(d.digest.runDate?fmtEv(d.digest.runDate)+': ':'')+(d.undecided?d.undecided+' to review':'all reviewed')};
+  }
+  if(id==='mirror'){
+    const s=d.stale.length,p=d.mPending.length;
+    if(!d.sites.length)return {need:0,line:'Add your sites in Setup'};
+    return {need:s+p,line:(s||p)?[s?plural(s,'profile','profiles')+' stale':'',p?plural(p,'reply','replies')+' waiting':''].filter(Boolean).join(' · '):'All profiles fresh'};
+  }
+  return {need:0,line:''};
+}
+
+/* ── helpers ── */
+let toastT=null;
+function toast(msg,err){
+  let t=$('#tmToast');
+  if(!t){t=document.createElement('div');t.id='tmToast';document.body.appendChild(t);}
+  t.className='tm-toast'+(err?' err':'');t.textContent=msg;t.style.display='block';
+  clearTimeout(toastT);toastT=setTimeout(()=>{t.style.display='none';},err?6000:3200);
+}
+async function copy(text){
+  try{await navigator.clipboard.writeText(text);return true;}catch(e){}
+  try{
+    const t=document.createElement('textarea');t.value=text;t.style.cssText='position:fixed;opacity:0;top:0;left:0';
+    document.body.appendChild(t);t.select();const ok=document.execCommand('copy');t.remove();return ok;
+  }catch(e){return false;}
+}
+async function run(fn){try{await fn();}catch(e){toast('Failed: '+((e&&(e.code||e.message))||e),true);}}
+function det(key,title,inner,dflt){
+  const o=S.open[key]!==undefined?S.open[key]:!!dflt;
+  return '<details class="tm-det" data-k="'+key+'"'+(o?' open':'')+'><summary>'+title+'</summary><div class="in">'+inner+'</div></details>';
+}
+function leadLine(l){
+  const bits=[l.client,l.eventType,fmtEv(l.eventDate),l.location,l.headcount?l.headcount+' guests':'',l.budget?'budget '+l.budget:''].filter(Boolean);
+  return '<span class="tm-tag '+esc(l.stage||'new')+'">'+esc(l.stage||'new')+'</span><b>'+esc(l.site||'Unknown site')+'</b> · '+esc(bits.join(' · ')||'no details yet');
+}
+function leadBlock(l){
+  return ['Site: '+(l.site||'?'),'Client: '+(l.client||'?'),l.contact?'Contact: '+l.contact:'','Event type: '+(l.eventType||'?'),'Date: '+(l.eventDate||'?'),'Location: '+(l.location||'?'),'Guests: '+(l.headcount||'?'),'Budget: '+(l.budget||'?'),l.link?'Link: '+l.link:'','Message: '+(l.message||'(none)')].filter(Boolean).join('\n');
+}
+const BRAND='Belladonna Audio Alchemies, a live entertainment company (karaoke, music bingo, trivia, themed nights) serving bars, venues and private events in the Seattle-Tacoma area, based in Auburn, WA';
+function pricing(){return (S.cfg.pricing&&S.cfg.pricing.text)||'';}
+function voice(){return (S.cfg.voice&&S.cfg.voice.text)||'gothic and regal but warm, confident, concise';}
+function quillPrompt(l){
+  return 'You are Quill, the reply and quote drafter for '+BRAND+'.\nVoice: '+voice()+'\n\nPRICE SHEET:\n'+(pricing()||'(not set: do not invent prices, tell me what is missing)')+'\n\nNEW LEAD:\n'+leadBlock(l)+'\n\nWrite a fast, warm reply with a quote built only from the price sheet. Pick the best package and give a one-line reason. If key info is missing or the date may conflict, say what to ask. Output only the reply, ready to paste, then one final line: PACKAGE: <name> | PRICE: <amount>';
+}
+function nudgePrompt(l,step){
+  const first=step!=='n2';
+  return 'You are Vesper, the follow-up writer for '+BRAND+'.\nVoice: '+voice()+'\n\nLEAD:\n'+leadBlock(l)+(l.quotedPrice?'\nQuoted: '+l.quotedPrice:'')+'\nQuoted on: '+fmtDay(l.quotedAt)+'\n\nWrite the '+(first?'first gentle nudge (24 hours after the quote)':'second and final nudge (72 hours after the quote, a little more direct, no pressure)')+'. Two to four sentences, one clear next step. Output only the message.';
+}
+function eventPrompt(t){
+  return 'You are Quill, writing for '+BRAND+'.\nVoice: '+voice()+'\n\nA new Belladonna event idea was approved:\nEvent: '+(t.event||'')+'\nDate: '+(t.date||'')+'\nWhy it matters: '+(t.why||'')+'\nIdea: '+(t.idea||'')+'\n\nWrite: (1) a short pitch message to a venue owner offering this night, (2) a social post announcing it, (3) a one-line note to hosts. Label each.';
+}
+function reviewPrompt(site,rating,text){
+  return 'You are Mirror, the profile manager for '+BRAND+'.\nVoice: '+voice()+'\n\nReply to this '+(rating?rating+'-star ':'')+'review on '+(site||'our listing')+':\n"'+text+'"\n\nBe gracious and specific, two to four sentences. If it is negative, own what is fair, stay professional, offer a way to make it right. Output only the reply.';
+}
+const SABLE_PROMPT='You are the event scout for Belladonna Audio Alchemies, a live entertainment company (karaoke, music bingo, trivia, themed nights) serving bars and venues in the Seattle-Tacoma area, based in Auburn, WA. Use the session\'s current date for all searches.\n\nTask: search the web for events in the NEXT 6 WEEKS within about 30 miles of Auburn, WA (Seattle, Tacoma, Kent, Federal Way, Renton, Puyallup, Bellevue, Everett-south) that Belladonna could plan its own events around. Cover four categories:\n1. Concerts and festivals (Climate Pledge Arena, Tacoma Dome, Showbox, Moore, Paramount, Chateau Ste. Michelle, ShoWare Center, Emerald Queen, etc.)\n2. Holidays, big sports/game days (Seahawks, Kraken, Mariners, Sounders, UW/WSU), and pop-culture or themed dates worth a themed night (movie/album/TV releases, conventions, local festivals)\n3. Competing karaoke, trivia and music-bingo nights run by other hosts in the area, noting venue, day, and host company if listed\n4. Anything unusual (new venue openings, bar crawls, community events) that affects bar traffic\n\nFor each concert or event, think about the tie-in: a tribute or themed night, a pre/post-show karaoke or bingo angle (setlist or genre-based music bingo), or a night to avoid because of a competing draw.\n\nOutput a tight digest, most actionable first:\n- Top 5 opportunities this week: date (use specific day names), event, why it matters, one suggested Belladonna event idea\n- Full list by date, one line each, with source links\n- Competitor watch: short list (include it only on the first Monday of the month; otherwise return an empty competitors array)\n- Dates to avoid or watch for traffic conflicts\n\nBe blunt and brief. No filler, no caveats. Run multiple distinct web searches per category and cite sources as links. If something couldn\'t be verified, leave it out.\n\nAfter the digest, output ONE JSON block (and nothing after it) in exactly this shape, using YYYY-MM-DD dates:\n{"runDate":"","top5":[{"date":"","event":"","why":"","idea":"","sourceUrl":""}],"all":[{"date":"","event":"","category":"","sourceUrl":""}],"competitors":[{"venue":"","day":"","type":"","host":"","sourceUrl":""}],"avoid":[{"date":"","reason":""}]}';
+
+/* ── listeners ── */
+function start(){
+  if(S.started)return;S.started=true;
+  const d=fdb();
+  if(!d){S.err='Firestore is not available in this window.';render();return;}
+  const onErr=e=>{S.err=(e&&(e.code||e.message))||String(e);render();};
+  const list=(name,key)=>d.collection(name).onSnapshot(s=>{S[key]=s.docs.map(x=>Object.assign({id:x.id},x.data()));S.err=null;render();},onErr);
+  list('agent_leads','leads');
+  list('agent_drafts','drafts');
+  list('agent_sites','sites');
+  d.collection('agent_config').onSnapshot(s=>{const c={};s.docs.forEach(x=>c[x.id]=x.data());S.cfg=c;render();},onErr);
+}
+window.teamOpen=function(){start();render();};
+
+/* ── render ── */
+function render(){
+  const grid=$('#tmGrid');if(!grid)return;
+  const d=D();let total=0;
+  grid.innerHTML=AGENTS.map(a=>{
+    const c=cardInfo(a.id,d);total+=c.need;
+    return '<div class="tm-card" style="--ac:'+a.color+'" data-act="open" data-agent="'+a.id+'">'+
+      (c.need?'<span class="tm-badge">'+c.need+'</span>':'')+
+      '<div class="tm-top"><div class="tm-av">'+avImg(a.id)+'</div><div><div class="tm-name">'+a.name+'</div><div class="tm-role">'+a.role+'</div></div></div>'+
+      '<div class="tm-status"><span class="tm-dot'+(c.need?' attn':'')+'"></span><span>'+esc(c.line)+'</span></div>'+
+      '<button class="tm-go" data-act="open" data-agent="'+a.id+'">'+a.btn+'</button></div>';
+  }).join('');
+  const n=$('#tmNeed');n.innerHTML='<b>'+total+'</b> need you';n.className='tm-need'+(total?'':' zero');
+  const b=$('#tmBanner');
+  b.innerHTML=S.err?'<div class="tm-banner">Could not read the agent data: '+esc(S.err)+'. If this says permission denied, add the four <b>agent_</b> collections to your Firestore rules (see "How the agents plug in" below).</div>':'';
+  renderDrawer(false);
+}
+function renderDrawer(force){
+  if(!S.cur)return;
+  const dr=$('#tmDr');
+  if(!force){
+    const a=document.activeElement;
+    if(a&&dr.contains(a)&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)){S.pend=true;return;}
+  }
+  S.pend=false;
+  const a=agent(S.cur),body=$('#tmDrB'),top=body.scrollTop;
+  dr.style.setProperty('--ac',a.color);
+  $('#tmDrAv').innerHTML=S.cur==='setup'?'<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:var(--surface3);font-size:1.4rem">⚙</div>':avImg(a.id);
+  $('#tmDrName').textContent=a.name;$('#tmDrRole').textContent=a.role;
+  body.innerHTML=({raven:vRaven,quill:vQuill,vesper:vVesper,ledger:vLedger,sable:vSable,mirror:vMirror,setup:vSetup})[S.cur]();
+  body.scrollTop=top;
+}
+function openAgent(id){
+  S.cur=id;renderDrawer(true);
+  $('#tmDr').classList.add('open');$('#tmOv').classList.add('open');
+  $('#tmDrB').scrollTop=0;
+}
+function closeDrawer(){S.cur=null;$('#tmDr').classList.remove('open');$('#tmOv').classList.remove('open');}
+
+/* ── shared card pieces ── */
+function draftCard(dr,withPrice){
+  const l=leadsById()[dr.leadId];
+  const head=l?leadLine(l):'<b>'+esc(dr.label||'Draft')+'</b>';
+  return '<div class="tm-item"><div class="t1">'+head+'</div>'+
+    '<div class="t2">'+esc(dr.kind==='n1'?'First nudge':dr.kind==='n2'?'Final nudge':dr.kind==='review'?'Review reply':'Reply and quote')+' · drafted '+fmtDay(dr.createdAt)+'</div>'+
+    '<textarea class="tm-ta" style="margin-top:.6rem" data-did="'+esc(dr.id)+'">'+esc(dr.body||'')+'</textarea>'+
+    '<div class="tm-row">'+(withPrice?'<input class="tm-in s" data-pid="'+esc(dr.id)+'" placeholder="Quoted $" value="'+esc(l&&l.quotedPrice||'')+'">':'')+
+    '<button class="tm-b pri" data-act="approve" data-id="'+esc(dr.id)+'">Approve &amp; copy</button>'+
+    '<button class="tm-b dim" data-act="skipdraft" data-id="'+esc(dr.id)+'">Skip</button></div></div>';
+}
+function pasteBox(kind,leadId,label){
+  return '<textarea class="tm-ta" style="min-height:80px;margin-top:.5rem" data-paste="'+esc(leadId||'')+'|'+kind+'" placeholder="Paste the draft here"></textarea>'+
+    '<div class="tm-row"><button class="tm-b" data-act="adddraft" data-lead="'+esc(leadId||'')+'" data-kind="'+kind+'" data-label="'+esc(label||'')+'">Add to queue</button></div>';
+}
+
+/* ── Raven ── */
+function leadForm(){
+  const names=Array.from(new Set(DEFAULT_SITES.concat(S.sites.map(s=>s.name).filter(Boolean))));
+  return '<datalist id="lfSites">'+names.map(n=>'<option value="'+esc(n)+'">').join('')+'</datalist>'+
+  '<div class="tm-fg">'+
+  '<div><label class="tm-lbl">Site</label><input class="tm-in" id="lf-site" list="lfSites" placeholder="GigSalad"></div>'+
+  '<div><label class="tm-lbl">Client</label><input class="tm-in" id="lf-client"></div>'+
+  '<div><label class="tm-lbl">Event type</label><input class="tm-in" id="lf-type" placeholder="Wedding, birthday, bar night"></div>'+
+  '<div><label class="tm-lbl">Event date</label><input class="tm-in" id="lf-date" type="date"></div>'+
+  '<div><label class="tm-lbl">Location</label><input class="tm-in" id="lf-loc"></div>'+
+  '<div><label class="tm-lbl">Guests</label><input class="tm-in" id="lf-heads" inputmode="numeric"></div>'+
+  '<div><label class="tm-lbl">Budget</label><input class="tm-in" id="lf-budget"></div>'+
+  '<div><label class="tm-lbl">Link</label><input class="tm-in" id="lf-link" placeholder="https://"></div>'+
+  '<div class="full"><label class="tm-lbl">Their message</label><textarea class="tm-ta" id="lf-msg" style="min-height:90px"></textarea></div></div>'+
+  '<div class="tm-row"><button class="tm-b pri" data-act="addlead">Add lead</button></div>';
+}
+function vRaven(){
+  const d=D();
+  let h=det('addlead','Add a lead by hand',leadForm(),!d.newLeads.length);
+  h+='<div class="tm-sec">New leads ('+d.newLeads.length+')</div>';
+  if(!d.newLeads.length)h+='<div class="tm-empty">All quiet. New inquiries land here.</div>';
+  d.newLeads.forEach(l=>{
+    const miss=[!l.eventDate?'date':'',!l.location?'location':''].filter(Boolean);
+    h+='<div class="tm-item"><div class="t1">'+leadLine(l)+'</div>'+
+      (miss.length?'<div class="t2"><span class="tm-tag warn">missing '+miss.join(' + ')+'</span> ask the client before quoting</div>':'')+
+      (l.message?'<div class="t2">'+esc(String(l.message).slice(0,280))+(String(l.message).length>280?'…':'')+'</div>':'')+
+      '<div class="t2">'+fmtDay(l.receivedAt)+(safeUrl(l.link)?' · <a href="'+esc(safeUrl(l.link))+'" target="_blank" rel="noopener">open on site</a>':'')+'</div>'+
+      '<div class="tm-row"><button class="tm-b dim red" data-act="dellead" data-id="'+esc(l.id)+'">Delete</button></div></div>';
+  });
+  return h;
+}
+
+/* ── Quill ── */
+function vQuill(){
+  const d=D();let h='<div class="tm-sec">Drafts waiting ('+d.qPending.length+')</div>';
+  if(!d.qPending.length)h+='<div class="tm-empty">No drafts waiting.</div>';
+  d.qPending.forEach(x=>h+=draftCard(x,true));
+  h+='<div class="tm-sec">Leads that need a draft ('+d.needDraft.length+')</div>';
+  if(!d.needDraft.length)h+='<div class="tm-empty">Every new lead has a draft.</div>';
+  d.needDraft.forEach(l=>{
+    h+='<div class="tm-item"><div class="t1">'+leadLine(l)+'</div>'+
+      '<div class="tm-row"><button class="tm-b" data-act="copyq" data-id="'+esc(l.id)+'">Copy Quill prompt</button></div>'+
+      pasteBox('reply',l.id,'')+'</div>';
+  });
+  if(!pricing())h+='<div class="tm-hint" style="margin-top:1rem">Quill quotes from your price sheet. Add it in Setup first, or the prompt will tell Claude not to invent prices.</div>';
+  return h;
+}
+
+/* ── Vesper ── */
+function vVesper(){
+  const d=D();let h='<div class="tm-sec">Due now ('+d.vDue.length+')</div>';
+  if(!d.vDue.length)h+='<div class="tm-empty">Nothing due. '+(d.waiting?plural(d.waiting,'quote is','quotes are')+' still inside the window.':'No quotes are out.')+'</div>';
+  d.vDue.forEach(x=>{
+    const l=x.lead,days=Math.floor(x.age/DAY);
+    const label=x.step==='cold'?'Cold, '+days+' days with no reply':x.step==='n1'?'First nudge due (24h)':'Final nudge due (72h)';
+    h+='<div class="tm-item"><div class="t1">'+leadLine(l)+'</div><div class="t2"><span class="tm-tag warn">'+label+'</span>quoted '+fmtDay(l.quotedAt)+(l.quotedPrice?' at '+esc(l.quotedPrice):'')+'</div>';
+    if(x.step==='cold'){
+      h+='<div class="tm-row"><button class="tm-b red" data-act="markcold" data-id="'+esc(l.id)+'">Mark lost</button><button class="tm-b dim" data-act="replied" data-id="'+esc(l.id)+'">They replied</button></div>';
+    }else{
+      h+='<div class="tm-row"><button class="tm-b" data-act="copyn" data-id="'+esc(l.id)+'" data-step="'+x.step+'">Copy nudge prompt</button><button class="tm-b dim" data-act="nudged" data-id="'+esc(l.id)+'" data-step="'+x.step+'">I sent one</button><button class="tm-b dim" data-act="replied" data-id="'+esc(l.id)+'">They replied</button></div>'+pasteBox(x.step,l.id,'');
+    }
+    h+='</div>';
+  });
+  h+='<div class="tm-sec">Nudges to approve ('+d.vPending.length+')</div>';
+  if(!d.vPending.length)h+='<div class="tm-empty">No nudges waiting.</div>';
+  d.vPending.forEach(x=>h+=draftCard(x,false));
+  return h;
+}
+
+/* ── Ledger ── */
+function vLedger(){
+  const L=S.leads,names=Array.from(new Set(L.map(l=>l.site||'Unknown').concat(S.sites.filter(s=>s.active!==false).map(s=>s.name))));
+  let h='<div class="tm-sec">By site</div>';
+  if(!names.length)h+='<div class="tm-empty">No leads yet.</div>';
+  else{
+    h+='<div class="tm-item" style="padding:.4rem .5rem;overflow-x:auto"><table class="tm-tbl"><tr><th>Site</th><th class="n">Leads</th><th class="n">Quoted</th><th class="n">Booked</th><th class="n">Rate</th><th class="n">Revenue</th><th class="n">Fees</th><th class="n">Net</th></tr>';
+    let T={n:0,q:0,b:0,r:0,f:0};
+    names.forEach(nm=>{
+      const ls=L.filter(l=>(l.site||'Unknown')===nm),site=S.sites.find(s=>s.name===nm);
+      const q=ls.filter(l=>l.stage==='quoted'||l.stage==='booked'||(l.stage==='lost'&&l.quotedAt)).length,b=ls.filter(l=>l.stage==='booked').length;
+      const rev=ls.filter(l=>l.stage==='booked').reduce((s,l)=>s+money(l.bookedPrice),0),fee=site?money(site.feesPaid):0;
+      T.n+=ls.length;T.q+=q;T.b+=b;T.r+=rev;T.f+=fee;
+      h+='<tr><td>'+esc(nm)+'</td><td class="n">'+ls.length+'</td><td class="n">'+q+'</td><td class="n">'+b+'</td><td class="n">'+(ls.length?Math.round(100*b/ls.length)+'%':'–')+'</td><td class="n">'+fmtMoney(rev)+'</td><td class="n">'+fmtMoney(fee)+'</td><td class="n">'+fmtMoney(rev-fee)+'</td></tr>';
+    });
+    h+='<tr><td><b>All</b></td><td class="n">'+T.n+'</td><td class="n">'+T.q+'</td><td class="n">'+T.b+'</td><td class="n">'+(T.n?Math.round(100*T.b/T.n)+'%':'–')+'</td><td class="n">'+fmtMoney(T.r)+'</td><td class="n">'+fmtMoney(T.f)+'</td><td class="n">'+fmtMoney(T.r-T.f)+'</td></tr></table></div>';
+    h+='<div class="tm-hint">Fees paid per site are set in Setup. A site earns its fee when Net is positive.</div>';
+  }
+  h+='<div class="tm-sec">All leads ('+L.length+')</div>';
+  const sorted=L.slice().sort((a,b)=>(b.receivedAt||0)-(a.receivedAt||0)).slice(0,100);
+  if(!sorted.length)h+='<div class="tm-empty">Nothing tracked yet.</div>';
+  sorted.forEach(l=>{
+    h+='<div class="tm-item"><div class="t1">'+leadLine(l)+'</div>';
+    const bits=[];
+    if(l.quotedPrice)bits.push('quoted '+esc(l.quotedPrice));
+    if(l.stage==='booked'&&l.bookedPrice)bits.push('booked at '+esc(l.bookedPrice));
+    if(l.stage==='lost'&&l.lostReason)bits.push('lost: '+esc(l.lostReason));
+    if(bits.length)h+='<div class="t2">'+bits.join(' · ')+'</div>';
+    if(l.stage==='new'||l.stage==='quoted'){
+      h+='<div class="tm-row"><input class="tm-in s" data-bk="'+esc(l.id)+'" placeholder="Booked $"><button class="tm-b pri" data-act="book" data-id="'+esc(l.id)+'">Booked</button>'+
+        '<input class="tm-in s" data-ls="'+esc(l.id)+'" placeholder="Lost because"><button class="tm-b red" data-act="lost" data-id="'+esc(l.id)+'">Lost</button></div>';
+    }else{
+      h+='<div class="tm-row"><button class="tm-b dim" data-act="reopen" data-id="'+esc(l.id)+'">Reopen</button></div>';
+    }
+    h+='</div>';
+  });
+  return h;
+}
+
+/* ── Sable ── */
+function vSable(){
+  const d=D(),dg=d.digest;let h='';
+  h+=det('sprompt','Run Sable (copy the scout prompt)','<div class="tm-hint">Run this as a scheduled task every Monday morning. When it finishes, paste its JSON block below.</div><div class="tm-row"><button class="tm-b" data-act="copysable">Copy Sable prompt</button></div>',!dg);
+  h+=det('sload','Load this week\'s digest','<textarea class="tm-ta" id="sableJson" placeholder="Paste Sable\'s output here. The JSON block is found automatically."></textarea><div class="tm-row"><button class="tm-b pri" data-act="loaddigest">Load digest</button></div>',!dg);
+  if(!dg)return h+'<div class="tm-empty">No digest loaded yet.</div>';
+  h+='<div class="tm-sec">Top opportunities'+(dg.runDate?' · '+esc(fmtEv(dg.runDate)):'')+'</div>';
+  if(!d.top5.length)h+='<div class="tm-empty">No top picks in this digest.</div>';
+  d.top5.forEach((t,i)=>{
+    const st=d.dec['t'+i],u=safeUrl(t.sourceUrl);
+    h+='<div class="tm-item"><div class="t1"><b>'+esc(t.event)+'</b> · '+esc(fmtEv(t.date))+(st?' <span class="tm-tag '+(st==='pursue'?'booked':'lost')+'">'+st+'</span>':'')+'</div>'+
+      '<div class="t2">'+esc(t.why)+'</div><div class="t2"><b>Idea:</b> '+esc(t.idea)+'</div>'+(u?'<div class="t2"><a href="'+esc(u)+'" target="_blank" rel="noopener">source</a></div>':'')+
+      '<div class="tm-row">'+(st==='pursue'?'<button class="tm-b pri" data-act="copyevent" data-i="'+i+'">Copy event brief for Quill</button>':'<button class="tm-b pri" data-act="decide" data-i="'+i+'" data-v="pursue">Pursue</button>')+
+      (st==='skip'?'':'<button class="tm-b dim" data-act="decide" data-i="'+i+'" data-v="skip">Skip</button>')+
+      (st?'<button class="tm-b dim" data-act="decide" data-i="'+i+'" data-v="">Undo</button>':'')+'</div></div>';
+  });
+  const all=Array.isArray(dg.all)?dg.all:[];
+  if(all.length){
+    h+='<div class="tm-sec">Everything by date ('+all.length+')</div><div class="tm-item">';
+    all.slice().sort((a,b)=>String(a.date).localeCompare(String(b.date))).forEach(e=>{
+      const u=safeUrl(e.sourceUrl);
+      h+='<div class="t2" style="margin:.35rem 0"><b style="color:var(--text)">'+esc(fmtEv(e.date))+'</b> · '+esc(e.event)+(e.category?' <span class="tm-tag">'+esc(e.category)+'</span>':'')+(u?' <a href="'+esc(u)+'" target="_blank" rel="noopener">link</a>':'')+'</div>';
+    });
+    h+='</div>';
+  }
+  const comp=Array.isArray(dg.competitors)?dg.competitors:[];
+  if(comp.length){
+    h+='<div class="tm-sec">Competitor watch</div><div class="tm-item">';
+    comp.forEach(c=>{const u=safeUrl(c.sourceUrl);h+='<div class="t2" style="margin:.35rem 0"><b style="color:var(--text)">'+esc(c.venue)+'</b> · '+esc(c.day)+' · '+esc(c.type)+(c.host?' · '+esc(c.host):'')+(u?' <a href="'+esc(u)+'" target="_blank" rel="noopener">link</a>':'')+'</div>';});
+    h+='</div>';
+  }
+  const av=Array.isArray(dg.avoid)?dg.avoid:[];
+  if(av.length){
+    h+='<div class="tm-sec">Dates to avoid</div><div class="tm-item">';
+    av.forEach(a=>h+='<div class="t2" style="margin:.35rem 0"><b style="color:var(--text)">'+esc(fmtEv(a.date))+'</b> · '+esc(a.reason)+'</div>');
+    h+='</div>';
+  }
+  return h;
+}
+
+/* ── Mirror ── */
+function vMirror(){
+  const d=D();let h='<div class="tm-sec">Profiles</div>';
+  if(!d.sites.length)h+='<div class="tm-empty">No sites yet. Add them in Setup.</div>';
+  d.sites.forEach(s=>{
+    const stale=!s.profileRefreshed||Date.now()-s.profileRefreshed>STALE;
+    h+='<div class="tm-item"><div class="t1"><b>'+esc(s.name)+'</b> '+(stale?'<span class="tm-tag warn">stale</span>':'<span class="tm-tag booked">fresh</span>')+'</div>'+
+      '<div class="t2">'+(s.profileRefreshed?'Refreshed '+fmtDay(s.profileRefreshed)+(stale?'. Check photos, video, packages, bio and availability.':''):'Never marked refreshed. Check photos, video, packages, bio and availability.')+'</div>'+
+      '<div class="tm-row"><button class="tm-b" data-act="refreshed" data-id="'+esc(s.id)+'">Refreshed today</button></div></div>';
+  });
+  const opts=d.sites.map(s=>'<option>'+esc(s.name)+'</option>').join('');
+  h+=det('rev','Draft a review reply','<div class="tm-fg"><div><label class="tm-lbl">Site</label><select class="tm-sel" id="rv-site">'+(opts||'<option>Listing</option>')+'</select></div><div><label class="tm-lbl">Stars</label><input class="tm-in" id="rv-stars" inputmode="numeric" placeholder="5"></div><div class="full"><label class="tm-lbl">Review text</label><textarea class="tm-ta" id="rv-text" style="min-height:80px"></textarea></div></div><div class="tm-row"><button class="tm-b" data-act="copyreview">Copy Mirror prompt</button></div>'+
+    '<textarea class="tm-ta" id="rv-draft" style="min-height:80px;margin-top:.6rem" placeholder="Paste the draft reply here"></textarea><div class="tm-row"><button class="tm-b pri" data-act="addreview">Add to queue</button></div>',false);
+  h+='<div class="tm-sec">Replies waiting ('+d.mPending.length+')</div>';
+  if(!d.mPending.length)h+='<div class="tm-empty">No replies waiting.</div>';
+  d.mPending.forEach(x=>h+=draftCard(x,false));
+  return h;
+}
+
+/* ── Setup ── */
+function vSetup(){
+  let h='<div class="tm-sec">Price sheet</div><div class="tm-hint">Quill quotes only from this. Packages, prices, add-ons, travel fees, service area, blackout dates.</div>'+
+    '<textarea class="tm-ta" id="su-price" style="min-height:170px;margin-top:.5rem">'+esc(pricing())+'</textarea>'+
+    '<div class="tm-sec">Voice notes</div><textarea class="tm-ta" id="su-voice" style="min-height:90px" placeholder="Gothic and regal but warm, confident, concise. Paste two or three real replies you have written.">'+esc((S.cfg.voice&&S.cfg.voice.text)||'')+'</textarea>'+
+    '<div class="tm-row"><button class="tm-b pri" data-act="savecfg">Save</button></div>'+
+    '<div class="tm-sec">Sites</div>';
+  const sites=S.sites.slice().sort((a,b)=>String(a.name).localeCompare(String(b.name)));
+  if(!sites.length)h+='<div class="tm-empty">No sites yet.</div>';
+  sites.forEach(s=>{
+    h+='<div class="tm-item"><div class="t1"><b>'+esc(s.name)+'</b>'+(s.active===false?' <span class="tm-tag">inactive</span>':'')+'</div>'+
+      '<div class="tm-row"><label class="tm-lbl" style="margin:0">Fees paid so far</label><input class="tm-in s" data-fee="'+esc(s.id)+'" value="'+esc(s.feesPaid||'')+'" placeholder="$0"><button class="tm-b" data-act="savefee" data-id="'+esc(s.id)+'">Save</button><button class="tm-b dim" data-act="togglesite" data-id="'+esc(s.id)+'">'+(s.active===false?'Reactivate':'Deactivate')+'</button><button class="tm-b dim red" data-act="delsite" data-id="'+esc(s.id)+'">Delete</button></div></div>';
+  });
+  const have=new Set(S.sites.map(s=>s.name));
+  const missing=DEFAULT_SITES.filter(n=>!have.has(n));
+  h+='<div class="tm-row">'+(missing.length?'<button class="tm-b" data-act="addcommon">Add the usual five</button>':'')+'<input class="tm-in s" id="su-newsite" placeholder="Another site"><button class="tm-b" data-act="addsite">Add</button></div>';
+  return h;
+}
+
+/* ── actions ── */
+const val=id=>{const e=$('#'+id);return e?e.value.trim():'';};
+const A={
+  open(t){openAgent(t.dataset.agent);},
+  close(){closeDrawer();},
+  async addlead(){
+    const l={site:val('lf-site'),client:val('lf-client'),eventType:val('lf-type'),eventDate:val('lf-date'),location:val('lf-loc'),headcount:val('lf-heads'),budget:val('lf-budget'),link:val('lf-link'),message:val('lf-msg'),stage:'new',source:'manual',receivedAt:Date.now()};
+    if(!l.client&&!l.message&&!l.site){toast('Add at least a site, client or message.',true);return;}
+    await col('agent_leads').add(l);toast('Lead added.');
+  },
+  async dellead(t){if(!confirm('Delete this lead?'))return;await col('agent_leads').doc(t.dataset.id).delete();toast('Deleted.');},
+  async copyq(t){const l=leadsById()[t.dataset.id];if(l)toast(await copy(quillPrompt(l))?'Prompt copied. Paste it into Claude, then paste the draft back here.':'Copy failed.',false);},
+  async copyn(t){const l=leadsById()[t.dataset.id];if(l)toast(await copy(nudgePrompt(l,t.dataset.step))?'Prompt copied. Paste it into Claude, then paste the draft back here.':'Copy failed.',false);},
+  async adddraft(t){
+    const ta=document.querySelector('[data-paste="'+t.dataset.lead+'|'+t.dataset.kind+'"]'),body=ta?ta.value.trim():'';
+    if(!body){toast('Paste the draft first.',true);return;}
+    await col('agent_drafts').add({leadId:t.dataset.lead||null,agent:t.dataset.kind==='reply'?'quill':'vesper',kind:t.dataset.kind,body:body,label:t.dataset.label||'',status:'pending',createdAt:Date.now()});
+    toast('Added to the queue.');
+  },
+  async approve(t){
+    const id=t.dataset.id,dr=S.drafts.find(x=>x.id===id);if(!dr)return;
+    const ta=document.querySelector('[data-did="'+id+'"]'),body=ta?ta.value.trim():(dr.body||'');
+    const pe=document.querySelector('[data-pid="'+id+'"]'),price=pe?pe.value.trim():'';
+    const b=fdb().batch();
+    b.update(col('agent_drafts').doc(id),{body:body,status:'approved',approvedAt:Date.now()});
+    const l=leadsById()[dr.leadId];
+    if(l){
+      if(dr.kind==='reply'||!dr.kind){const u={};if(l.stage==='new'){u.stage='quoted';u.quotedAt=Date.now();}if(price)u.quotedPrice=price;if(Object.keys(u).length)b.update(col('agent_leads').doc(l.id),u);}
+      else if(dr.kind==='n1'||dr.kind==='n2')b.update(col('agent_leads').doc(l.id),{['nudges.'+dr.kind]:Date.now()});
+    }
+    await b.commit();
+    toast(await copy(body)?'Approved and copied. Paste it into the site.':'Approved. Copy failed, select the text and copy it yourself.',false);
+  },
+  async skipdraft(t){await col('agent_drafts').doc(t.dataset.id).update({status:'skipped'});toast('Skipped.');},
+  async nudged(t){await col('agent_leads').doc(t.dataset.id).update({['nudges.'+t.dataset.step]:Date.now()});toast('Logged.');},
+  async replied(t){await col('agent_leads').doc(t.dataset.id).update({repliedAt:Date.now()});toast('Marked as replied. Vesper stops nudging.');},
+  async markcold(t){await col('agent_leads').doc(t.dataset.id).update({stage:'lost',lostReason:'Went cold',lostAt:Date.now()});toast('Marked lost.');},
+  async book(t){
+    const id=t.dataset.id,e=document.querySelector('[data-bk="'+id+'"]'),p=e?e.value.trim():'';
+    await col('agent_leads').doc(id).update({stage:'booked',bookedPrice:p,bookedAt:Date.now()});toast('Booked.');
+  },
+  async lost(t){
+    const id=t.dataset.id,e=document.querySelector('[data-ls="'+id+'"]');
+    await col('agent_leads').doc(id).update({stage:'lost',lostReason:e?e.value.trim():'',lostAt:Date.now()});toast('Marked lost.');
+  },
+  async reopen(t){const l=leadsById()[t.dataset.id];if(l)await col('agent_leads').doc(l.id).update({stage:l.quotedAt?'quoted':'new'});toast('Reopened.');},
+  async copysable(){toast(await copy(SABLE_PROMPT)?'Sable prompt copied.':'Copy failed.',false);},
+  async loaddigest(){
+    const raw=val('sableJson');if(!raw){toast('Paste Sable\'s output first.',true);return;}
+    const a=raw.indexOf('{'),b=raw.lastIndexOf('}');let o=null;
+    if(a>=0&&b>a){try{o=JSON.parse(raw.slice(a,b+1));}catch(e){}}
+    if(!o||!Array.isArray(o.top5)){toast('Could not find the JSON block with a top5 list.',true);return;}
+    await col('agent_config').doc('sable').set({digest:o,decisions:{},loadedAt:Date.now()});toast('Digest loaded.');
+  },
+  async decide(t){
+    const k='decisions.t'+t.dataset.i,v=t.dataset.v,ref=col('agent_config').doc('sable');
+    if(v)await ref.update({[k]:v});else await ref.update({[k]:firebase.firestore.FieldValue.delete()});
+  },
+  async copyevent(t){const d=D(),x=d.top5[+t.dataset.i];if(x)toast(await copy(eventPrompt(x))?'Brief copied. Paste it into Claude.':'Copy failed.',false);},
+  async refreshed(t){await col('agent_sites').doc(t.dataset.id).update({profileRefreshed:Date.now()});toast('Marked fresh.');},
+  async copyreview(){
+    const text=val('rv-text');if(!text){toast('Paste the review text first.',true);return;}
+    toast(await copy(reviewPrompt(val('rv-site'),val('rv-stars'),text))?'Prompt copied.':'Copy failed.',false);
+  },
+  async addreview(){
+    const body=val('rv-draft');if(!body){toast('Paste the draft first.',true);return;}
+    await col('agent_drafts').add({leadId:null,agent:'mirror',kind:'review',body:body,label:val('rv-site')+' review',status:'pending',createdAt:Date.now()});toast('Added to the queue.');
+  },
+  async savecfg(){
+    await col('agent_config').doc('pricing').set({text:val('su-price'),updatedAt:Date.now()});
+    await col('agent_config').doc('voice').set({text:val('su-voice'),updatedAt:Date.now()});toast('Saved.');
+  },
+  async savefee(t){const e=document.querySelector('[data-fee="'+t.dataset.id+'"]');await col('agent_sites').doc(t.dataset.id).update({feesPaid:e?e.value.trim():''});toast('Saved.');},
+  async togglesite(t){const s=S.sites.find(x=>x.id===t.dataset.id);if(s)await col('agent_sites').doc(s.id).update({active:s.active===false});},
+  async delsite(t){if(!confirm('Delete this site?'))return;await col('agent_sites').doc(t.dataset.id).delete();},
+  async addsite(){const n=val('su-newsite');if(!n)return;if(S.sites.some(s=>s.name.toLowerCase()===n.toLowerCase())){toast('Already added.',true);return;}await col('agent_sites').add({name:n,active:true,createdAt:Date.now()});},
+  async addcommon(){
+    const have=new Set(S.sites.map(s=>s.name));
+    const b=fdb().batch();DEFAULT_SITES.filter(n=>!have.has(n)).forEach(n=>b.set(col('agent_sites').doc(),{name:n,active:true,createdAt:Date.now()}));
+    await b.commit();toast('Sites added.');
+  }
+};
+function wire(){
+  const root=$('#panel-team');if(!root||root.dataset.wired)return;root.dataset.wired='1';
+  root.addEventListener('click',e=>{
+    const t=e.target.closest('[data-act]');if(!t||!root.contains(t))return;
+    if(t.classList.contains('tm-card')&&e.target.closest('button'))return;
+    const f=A[t.dataset.act];if(f){e.stopPropagation();run(()=>f(t));}
+  });
+  $('#tmOv').addEventListener('click',closeDrawer);
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&S.cur)closeDrawer();});
+  root.addEventListener('toggle',e=>{const k=e.target&&e.target.dataset&&e.target.dataset.k;if(k)S.open[k]=e.target.open;},true);
+  root.addEventListener('focusout',()=>{if(S.pend)setTimeout(()=>{if(S.pend)renderDrawer(false);},0);});
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>{wire();render();});else{wire();render();}
+})();
+</script>
 </body>
 </html>
