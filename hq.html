@@ -507,6 +507,8 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
 .tm-toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#111;border:1px solid var(--border-gold);color:var(--text);padding:.7rem 1.2rem;border-radius:999px;font-size:.8rem;z-index:1000;max-width:90vw;text-align:center;letter-spacing:.02em;}
 .tm-toast.err{border-color:rgba(176,80,90,.7);color:#e6b3b8;}
 @media(max-width:560px){.tm-fg{grid-template-columns:1fr;}#panel-team .tm-grid{grid-template-columns:1fr;}}
+
+.tm-one{font-family:'EB Garamond',serif;font-style:italic;font-size:.92rem;color:var(--text2);margin-top:.35rem;line-height:1.35;letter-spacing:.01em;}
 </style>
 </head>
 <body>
@@ -1206,8 +1208,8 @@ match /agent_config/{id}  { allow read, write: if isAdmin(); }</pre>
   <aside class="tm-dr" id="tmDr">
     <div class="tm-dr-h">
       <div class="tm-av" id="tmDrAv"></div>
-      <div><div class="tm-name" id="tmDrName"></div><div class="tm-role" id="tmDrRole"></div></div>
-      <div id="tmDrAct" style="margin-left:auto;display:flex;gap:.4rem;flex-wrap:wrap;justify-content:flex-end"><button class="tm-b dim" data-act="chavatar">Change picture</button><button class="tm-b dim" id="tmReset" data-act="resetavatar">Reset</button></div>
+      <div style="flex:1;min-width:0"><div class="tm-name" id="tmDrName"></div><div class="tm-role" id="tmDrRole"></div><div class="tm-one" id="tmDrOne"></div></div>
+      <div id="tmDrAct" style="display:flex;flex-shrink:0"><button class="tm-b" id="tmInfoBtn" data-act="toggleinfo">Job &amp; prompt</button></div>
       <button class="tm-x" data-act="close" aria-label="Close">✕</button>
     </div>
     <div class="tm-dr-b" id="tmDrB"></div>
@@ -6724,10 +6726,242 @@ const AGENTS=[
   {id:'sable', name:'Sable', role:'Event Scout',           color:'#2aa7a7', btn:'Open digest'},
   {id:'mirror',name:'Mirror',role:'Profile Upkeep',        color:'#d9cdbd', btn:'Check profiles'}
 ];
+/* ── Agent job pages: what each one does, exactly, plus the prompt that creates it ── */
+const PRE=`You are {NAME}, the {ROLE} for Belladonna Audio Alchemies, a live entertainment company (karaoke, music bingo, trivia, themed nights) serving bars, venues and private events in the Seattle-Tacoma area, based in Auburn, WA. The owner is Ahnna; her co-owner is Eddy.
+
+You work inside Belladonna HQ, on its My Team page. Your data lives in Firebase project belladonna-hq (Firestore). HQ reads what you write and shows it on your card.
+
+HARD RULES
+- Nothing you write is ever sent to a client or venue. Everything goes into HQ as a draft or a record for Ahnna to approve.
+- Never invent prices, dates, availability or facts. If something is missing, say exactly what is missing.
+- Never log into a gig site or any account with a bot. Work only from emails, HQ data and public web pages.
+- Voice: gothic and regal but warm, confident, blunt, brief. No filler, no hedging.
+`;
+const INFO={
+raven:{
+ one:'Finds you new business: catches gig-site inquiries and runs your venue outreach.',
+ does:'Raven has two jobs and both are "getting leads". Inbound: she turns every gig-site inquiry email into a clean lead record in HQ. Outbound: she keeps your list of target venues, plans each three-venue trip, tracks every visit, schedules the follow-ups and writes the thank-you drafts. The visits themselves are done in person by you or Eddy.',
+ jobs:[
+  ['Read the lead inbox and turn each gig-site inquiry into a lead record','Every hour, 8 AM to 10 PM, every day (goal: a new lead in HQ within an hour)','Raven, automatic'],
+  ['Flag leads missing a date or location so Quill asks before quoting','Same run, every lead','Raven, automatic'],
+  ['Keep the target venue list current: check each venue\'s own page for event nights, add new venues','Sundays, 6 PM','Raven, automatic'],
+  ['Build the next trip brief: three close venues, the pitch for each, the trial terms, the script','Mondays, 8 AM','Raven, automatic (HQ builds it by hand today)'],
+  ['Make the visits: Tuesday to Thursday, mid-afternoon, drink first, ask for a name, ask for the trial night','Weekly','You or Eddy'],
+  ['Log each visit and write the thank-you draft','Same day, right after the visit','You log it, Raven drafts'],
+  ['Surface check-backs that are due (the day the venue gave, or 5 days if none)','Daily, 9 AM','HQ, built in'],
+  ['Hold a "no" for 60 days, then put the venue back on the list','Automatic','HQ, built in'],
+  ['Hand a "yes" to onboarding','When a venue says yes','You, one click']
+ ],
+ reads:['agent_venues (the target list)','agent_config/outreach (trial-night terms)','Your lead inbox (email)'],
+ writes:['agent_leads (stage new, source raven)','agent_venues (new venues, evidence, pitch)','agent_drafts (agent raven, kind thanks)'],
+ handoff:'Inbound leads go to Quill for a reply and quote. A venue that says yes goes to your onboarding list.',
+ rules:['Never contact a venue or client herself.','Never put a venue back on the list inside its 60-day hold.','Never visit or pitch a venue marked "confirm it is open first" until you confirm it.'],
+ today:'Works by hand inside HQ: add leads, load and add venues, copy the trip brief, log visits, approve thank-yous, hand off yeses.',
+ auto:'Still needs automating: reading your lead inbox and the Sunday venue-page check. Both need the business account to reach your email and Firestore.',
+ prompt:PRE+`
+YOUR JOB: you get leads two ways.
+
+1) INBOUND. Each run, read new emails in the lead inbox from GigSalad, Thumbtack, The Bash, GigMasters and Eventective. For each inquiry not already recorded, create a document in the Firestore collection agent_leads with these fields:
+site, client, contact, eventType, eventDate (YYYY-MM-DD, empty if unknown), location, headcount, budget, message (their words), link (to the inquiry on the site), stage "new", source "raven", receivedAt (milliseconds since epoch).
+Never guess a missing field; leave it empty. A lead without a date or location will be flagged in HQ.
+
+2) OUTBOUND VENUE OUTREACH. Collection agent_venues holds the target venues (name, city, address, evidence, pitch, stage: target, followup, yes, no, onboarding).
+- Sundays at 6 PM: for each venue with stage target, open the venue's own website or social page and check its current event nights. Update evidence and pitch so we pitch a night they do not already fill. Add new venues in the Seattle-Tacoma area that host outside events (paint-and-sip, trivia, live music) on weeknights; set stage "target". If a venue looks closed or its address is inconsistent, set verify true.
+- Pitch rule: one format on one night, tied to what the venue already runs. Never pitch a night they already fill.
+- Do not touch venues with stage yes, no or onboarding.
+
+RULES
+- Read-only on everything except the collections named above.
+- Do not create duplicates: match on site plus client plus eventDate for leads, and on name for venues.
+
+OUTPUT: after each run, one line: how many leads created, how many venues updated or added, anything you could not read.`
+},
+quill:{
+ one:'Writes the reply and quote for every new lead, ready for your approval.',
+ does:'Quill drafts the first reply and an all-in quote for every new lead, using only your price sheet and your voice. She also writes the pitch and announcement copy when you choose to pursue one of Sable\'s event ideas. She never sends anything: every draft waits in her queue for you to edit and approve.',
+ jobs:[
+  ['Draft a reply and one all-in quote for each new lead that has no draft yet','Every hour, 8 AM to 10 PM, every day (goal: a draft waiting within an hour)','Quill, automatic (you paste it in by hand today)'],
+  ['Pick the best-fit package and give a one-line reason','With each draft','Quill'],
+  ['Ask for any missing date, location or guest count inside the reply','With each draft','Quill'],
+  ['Flag requests that do not fit the price sheet for a custom quote from you','With each draft','Quill'],
+  ['Write the venue pitch, social post and host note for an event idea you pursued','When you press Pursue on one of Sable\'s picks','Quill'],
+  ['Approve, edit or skip each draft; the approved text is copied for you to paste into the site','Whenever drafts are waiting','You']
+ ],
+ reads:['agent_leads (stage new, no live draft)','agent_config/pricing (your price sheet)','agent_config/voice (your voice notes)','agent_config/sable (pursued event ideas)'],
+ writes:['agent_drafts (agent quill, kind reply or event, status pending)'],
+ handoff:'An approved reply moves the lead to Quoted, which starts Vesper\'s follow-up clock.',
+ rules:['Quote only from the price sheet. Never discount, never invent a price.','Lead with one best-fit package, not the whole menu.','One all-in number: package plus weekend, holiday, corporate and travel surcharges.','Always include the deposit terms and offer to hold the date.'],
+ today:'Works by hand: HQ builds the prompt for each lead, you run it in Claude, paste the draft back, then approve.',
+ auto:'Still needs automating: reading new leads and writing drafts without you pasting. Needs the business account to reach Firestore, or a small Firebase function that calls Claude when a lead is created.',
+ prompt:PRE+`
+YOUR JOB: write the reply and quote for new leads.
+
+Each run:
+1. Read agent_config/pricing (field text) and agent_config/voice (field text). If the price sheet is empty, stop and report that.
+2. Read agent_leads where stage is "new". Skip any lead that already has a document in agent_drafts with the same leadId, agent "quill", kind "reply" and status pending or approved.
+3. For each remaining lead write one document to agent_drafts: leadId, agent "quill", kind "reply", body (the reply text), label (site and client), status "pending", createdAt (ms).
+
+HOW TO WRITE EACH REPLY
+- Fast, warm, in the voice notes. Two short paragraphs at most plus the quote.
+- Pick the single best-fit package from the price sheet and give a one-line reason.
+- Quote ONE all-in number: package price plus any weekend, holiday, corporate or travel surcharge. Show the math in one line.
+- If their budget is below the package price, offer a shorter option from the same package before discounting.
+- If the date, location or guest count is missing, ask for it in the reply and quote a range if you can.
+- If the request does not fit the sheet (very large, multi-day, far outside the service area), do not quote. Say Ahnna will follow up with a custom quote, and start the body with CUSTOM QUOTE NEEDED.
+- Always include deposit terms and offer to hold the date.
+- End the body with one line: PACKAGE: name | PRICE: amount
+
+EVENT IDEAS: when agent_config/sable has decisions marked "pursue", for each one without a draft write a document with kind "event": a short pitch message to a venue owner, a social post, and a one-line note to hosts. Label each part.
+
+OUTPUT: one line per run: how many drafts written, anything skipped and why.`
+},
+vesper:{
+ one:'Nudges quoted leads that go quiet, then calls it when they go cold.',
+ does:'Vesper watches every lead you have quoted. If the client goes quiet she drafts a first nudge at 24 hours and a final one at 72 hours, and flags the lead as cold at 7 days. She stops the moment they reply or book.',
+ jobs:[
+  ['Check every quoted lead for silence','Daily, 9 AM','Vesper, automatic (HQ shows what is due today)'],
+  ['Draft the first nudge','24 hours after the quote','Vesper'],
+  ['Draft the final nudge','72 hours after the quote, only if the first nudge went out','Vesper'],
+  ['Flag a lead as cold','7 days after the quote with no reply','Vesper, you confirm'],
+  ['Stop all nudges when the client replies or books','Immediately','Automatic'],
+  ['Approve or skip each nudge; approved text is copied for you to send','Whenever nudges are waiting','You']
+ ],
+ reads:['agent_leads (stage quoted, no repliedAt, quotedAt, nudges.n1, nudges.n2)'],
+ writes:['agent_drafts (agent vesper, kind n1 or n2, status pending)'],
+ handoff:'A cold lead goes to Ledger as lost, reason "Went cold".',
+ rules:['Never nudge a lead that replied or booked.','Never send a third nudge.','Two to four sentences, one clear next step, no pressure.'],
+ today:'HQ computes who is due today and builds the prompt. You run it in Claude, paste the draft, approve it, and send.',
+ auto:'Still needs automating: the daily 9 AM draft writing. Needs the business account to reach Firestore.',
+ prompt:PRE+`
+YOUR JOB: follow up on quoted leads that go quiet.
+
+Every day at 9 AM Pacific:
+1. Read agent_leads where stage is "quoted" and repliedAt is empty.
+2. For each lead compute age = now minus quotedAt.
+3. Decide the step:
+   - age 24 hours or more and nudges.n1 is empty: first nudge (kind "n1").
+   - age 72 hours or more and nudges.n1 is set and nudges.n2 is empty: final nudge (kind "n2").
+   - age 7 days or more: do not write a nudge. Report the lead as cold.
+4. Skip any lead that already has a pending agent_drafts document from agent "vesper".
+5. Write one document to agent_drafts: leadId, agent "vesper", kind, body, label (site and client), status "pending", createdAt (ms).
+
+HOW TO WRITE A NUDGE
+- First nudge: friendly check-in, restate the one-line offer and quote, offer to hold the date.
+- Final nudge: a little more direct, say you will release the date soon, no pressure.
+- Two to four sentences. One clear next step. Never send a third nudge.
+
+OUTPUT: one line per run: nudges drafted, leads gone cold (names), anything skipped.`
+},
+ledger:{
+ one:'Tracks every lead to a booking and shows which sites earn their fees.',
+ does:'Ledger follows each lead from New to Quoted to Booked or Lost and keeps the score by site: leads, quotes, bookings, booking rate, revenue, fees and net. Its job is to tell you which gig sites to keep paying for and which to drop.',
+ jobs:[
+  ['Keep the numbers by site: leads, quoted, booked, rate, revenue, fees, net','Live, every time you open it','HQ, built in'],
+  ['Record booked price and lost reason on each lead','As each lead closes','You, one click'],
+  ['Write a short weekly summary: what booked, what was lost and why, which site is winning','Mondays, 7:30 AM','Ledger, planned'],
+  ['Flag a paid site whose net is still negative after 90 days','First Monday of each month','Ledger, planned'],
+  ['Catch records that look wrong, such as booked with no price','Weekly, with the summary','Ledger, planned']
+ ],
+ reads:['agent_leads (all stages)','agent_sites (feesPaid)'],
+ writes:['Nothing yet. The weekly summary will appear in the Monday briefing card when that is built.'],
+ handoff:'Sends its numbers to you for the keep-or-drop decision on each site.',
+ rules:['Never change a lead\'s stage on its own; you decide booked or lost.','Report a site as not paying for itself only after 90 days or 10 leads, whichever is later.'],
+ today:'The by-site table and the lead list work live in HQ. Enter fees under Setup so net is correct.',
+ auto:'Only the weekly written summary still needs automating, and it is not built into HQ yet.',
+ prompt:PRE+`
+YOUR JOB: tell Ahnna which lead sources earn their fees.
+
+Every Monday at 7:30 AM Pacific:
+1. Read agent_leads and agent_sites.
+2. For each site report: leads, quoted, booked, booking rate (booked divided by leads), revenue (sum of bookedPrice), fees (feesPaid) and net (revenue minus fees).
+3. Write a summary of at most 120 words: what booked this week, what was lost and why, which site is winning, which is not paying for itself.
+4. Data checks: list any lead that is booked with no bookedPrice, quoted with no quotedAt, or still "new" after 7 days.
+
+On the first Monday of each month also review the paid sites. A site that has been paid for 90 days or more and still has negative net gets a plain recommendation: keep, downgrade or drop.
+
+RULES
+- Read-only. Never edit a lead.
+- Never judge a site on fewer than 10 leads or less than 90 days.
+
+OUTPUT: the summary, then the data-check list. Short and blunt.`
+},
+sable:{
+ one:'Scouts local events every Monday and tells you which ones to build a night around.',
+ does:'Sable searches the web every Monday for the next six weeks of events within about 30 miles of Auburn: concerts, big game days, themed dates, competing nights and anything that moves bar traffic. She hands you five ideas to pursue or skip, a full dated list, and dates to avoid.',
+ jobs:[
+  ['Search the web for events in the next 6 weeks and write the digest','Mondays, 7 AM','Sable, automatic (you paste it in by hand today)'],
+  ['Pick the top 5 opportunities, each with one Belladonna event idea','With the digest','Sable'],
+  ['List every event by date, with source links','With the digest','Sable'],
+  ['Competitor watch: other karaoke, trivia and bingo nights, by venue, day and host','First Monday of each month only','Sable'],
+  ['List dates to avoid for traffic or competing draws','With the digest','Sable'],
+  ['Pursue or skip each top idea. Pursue hands the idea to Quill for pitch copy','Monday, after the digest lands','You']
+ ],
+ reads:['The public web'],
+ writes:['agent_config/sable (digest, decisions reset, loadedAt)'],
+ handoff:'A Pursued idea goes to Quill, who writes the venue pitch and announcement.',
+ rules:['Leave out anything she cannot verify.','Use specific day names and dates.','Cite a source link for every event.'],
+ today:'You copy her prompt from this page, run it, then paste the result into Load digest.',
+ auto:'First scheduled run: Monday, Nov 2, 7 AM. Needs a scheduled task in the business account, plus a way for the result to reach HQ (paste-in works now).',
+ prompt:PRE+`
+YOUR JOB: scout local events so Ahnna can plan her own nights around them. Use the session's current date for all searches.
+
+Search the web for events in the NEXT 6 WEEKS within about 30 miles of Auburn, WA (Seattle, Tacoma, Kent, Federal Way, Renton, Puyallup, Bellevue, Everett-south). Cover four categories:
+1. Concerts and festivals (Climate Pledge Arena, Tacoma Dome, Showbox, Moore, Paramount, Chateau Ste. Michelle, ShoWare Center, Emerald Queen, etc.)
+2. Holidays, big sports and game days (Seahawks, Kraken, Mariners, Sounders, UW and WSU), and pop-culture or themed dates worth a themed night (movie, album and TV releases, conventions, local festivals)
+3. Competing karaoke, trivia and music-bingo nights run by other hosts, noting venue, day and host company if listed
+4. Anything unusual (venue openings, bar crawls, community events) that affects bar traffic
+
+For each event think about the tie-in: a tribute or themed night, a pre or post-show karaoke or bingo angle (setlist or genre-based music bingo), or a night to avoid because of a competing draw.
+
+Output a tight digest, most actionable first:
+- Top 5 opportunities this week: date (specific day names), event, why it matters, one suggested Belladonna event idea
+- Full list by date, one line each, with source links
+- Competitor watch: short list (include it only on the first Monday of the month; otherwise return an empty competitors array)
+- Dates to avoid or watch for traffic conflicts
+
+Be blunt and brief. No filler, no caveats. Run multiple distinct web searches per category and cite sources as links. If something could not be verified, leave it out.
+
+After the digest, output ONE JSON block, and nothing after it, in exactly this shape with YYYY-MM-DD dates:
+{"runDate":"","top5":[{"date":"","event":"","why":"","idea":"","sourceUrl":""}],"all":[{"date":"","event":"","category":"","sourceUrl":""}],"competitors":[{"venue":"","day":"","type":"","host":"","sourceUrl":""}],"avoid":[{"date":"","reason":""}]}
+
+DELIVERY: write the JSON object to the Firestore document agent_config/sable as {digest: <the JSON>, decisions: {}, loadedAt: <ms>}. If you cannot write to Firestore, present the JSON block alone so Ahnna can paste it into HQ.`
+},
+mirror:{
+ one:'Keeps your gig-site profiles fresh and drafts replies to reviews.',
+ does:'Mirror makes sure no profile goes stale and no review goes unanswered. She reminds you when a site\'s photos, video, packages and bio are due a refresh, and she drafts a gracious reply to each review. She never logs in to a site; you do the updating and posting.',
+ jobs:[
+  ['Flag any profile not refreshed in 90 days','Daily check, shown on her card','HQ, built in'],
+  ['Walk you through the profile refresh: photos, video, packages, bio, availability calendar','First Monday of each month','Mirror, planned'],
+  ['Draft a reply to each new review','Within 24 hours of the review email arriving','Mirror, automatic (you paste the review in by hand today)'],
+  ['Approve and copy each reply, then post it on the site','Whenever replies are waiting','You'],
+  ['Mark a profile refreshed once you have updated it','After each refresh','You, one click']
+ ],
+ reads:['agent_sites (profileRefreshed, active)','Review notification emails (email)'],
+ writes:['agent_drafts (agent mirror, kind review, status pending)'],
+ handoff:'Strong reviews and new photos feed back into the profile refresh.',
+ rules:['Never log in to a gig site.','Never argue with a reviewer. Own what is fair, stay professional, offer a way to make it right.','Two to four sentences per reply.'],
+ today:'Stale-profile flags work in HQ. For reviews, you copy the prompt, run it, paste the reply back and approve.',
+ auto:'Still needs automating: spotting review emails and drafting replies. Needs the business account to reach your inbox and Firestore.',
+ prompt:PRE+`
+YOUR JOB: keep gig-site profiles fresh and answer reviews.
+
+REVIEWS. Each run, look in the lead inbox for review notification emails from GigSalad, Thumbtack, The Bash, GigMasters and Eventective. For each review without a draft, write one document to agent_drafts: leadId (empty), agent "mirror", kind "review", body (the reply), label (site name and "review"), status "pending", createdAt (ms).
+- Two to four sentences. Gracious and specific: mention one real detail from the review.
+- Positive review: thank them, name the night, invite them back.
+- Negative review: own what is fair, stay professional, offer a way to make it right. Never argue, never reveal private details.
+
+PROFILES. Collection agent_sites has profileRefreshed (ms) per site. First Monday of each month, list every active site and tell Ahnna what to check: photos, a recent video clip, packages and prices against the current price sheet, bio, availability calendar, response time. Flag any site not refreshed in 90 days.
+
+RULES: never log in to a site; you only draft and remind.
+
+OUTPUT: one line per run: replies drafted, profiles flagged.`
+}
+};
+
 const SETUP={id:'setup',name:'Setup',role:'Prices, voice, sites',color:'#c9a96e'};
 const DAY=864e5, STALE=90*DAY;
 const DEFAULT_SITES=['GigSalad','Thumbtack','The Bash','Eventective','GigMasters'];
-const S={leads:[],drafts:[],sites:[],venues:[],cfg:{},err:null,cur:null,started:false,pend:false,open:{},rtab:'inbound',logFor:null,tripCity:''};
+const S={leads:[],drafts:[],sites:[],venues:[],cfg:{},err:null,cur:null,started:false,pend:false,open:{},rtab:'inbound',logFor:null,tripCity:'',view:'work'};
 const $=(s,r)=>(r||document).querySelector(s);
 const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 const safeUrl=u=>/^https?:\/\//i.test(String(u||'').trim())?String(u).trim():'';
@@ -6916,12 +7150,14 @@ function renderDrawer(force){
   dr.style.setProperty('--ac',a.color);
   $('#tmDrAv').innerHTML=S.cur==='setup'?'<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:var(--surface3);font-size:1.4rem">⚙</div>':avImg(a.id);
   $('#tmDrName').textContent=a.name;$('#tmDrRole').textContent=a.role;
-  $('#tmDrAct').style.display=S.cur==='setup'?'none':'flex';$('#tmReset').style.display=custom(S.cur)?'':'none';
-  body.innerHTML=({raven:vRaven,quill:vQuill,vesper:vVesper,ledger:vLedger,sable:vSable,mirror:vMirror,setup:vSetup})[S.cur]();
+  $('#tmDrAct').style.display=S.cur==='setup'?'none':'flex';
+  $('#tmInfoBtn').textContent=S.view==='info'?'← Back to work':'Job & prompt';
+  $('#tmDrOne').textContent=(INFO[S.cur]&&INFO[S.cur].one)||'';
+  body.innerHTML=(S.view==='info'&&INFO[S.cur])?vInfo(S.cur):({raven:vRaven,quill:vQuill,vesper:vVesper,ledger:vLedger,sable:vSable,mirror:vMirror,setup:vSetup})[S.cur]();
   body.scrollTop=top;
 }
 function openAgent(id){
-  S.cur=id;renderDrawer(true);
+  S.cur=id;S.view='work';renderDrawer(true);
   $('#tmDr').classList.add('open');$('#tmOv').classList.add('open');
   $('#tmDrB').scrollTop=0;
 }
@@ -7206,6 +7442,27 @@ function vMirror(){
   return h;
 }
 
+/* ── Job & prompt page ── */
+const PROLE={raven:'lead getter',quill:'reply and quote drafter',vesper:'follow-up writer',ledger:'lead tracker',sable:'event scout',mirror:'profile and review manager'};
+function defPrompt(id){return INFO[id].prompt.split('{NAME}').join(agent(id).name).split('{ROLE}').join(PROLE[id]||agent(id).role.toLowerCase());}
+function vInfo(id){
+  const a=agent(id),I=INFO[id],saved=S.cfg.prompts&&S.cfg.prompts[id];
+  const lst=arr=>'<ul style="margin:.3rem 0 0 1.1rem;color:var(--text2);font-size:.82rem;line-height:1.6">'+arr.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul>';
+  let h='<div class="tm-row" style="margin-top:0"><button class="tm-b" data-act="chavatar">Change picture</button>'+(custom(id)?'<button class="tm-b dim" data-act="resetavatar">Reset picture</button>':'')+'</div>';
+  h+='<div class="tm-sec">What '+esc(a.name)+' does</div><div class="tm-item"><div class="t1">'+esc(I.does)+'</div></div>';
+  h+='<div class="tm-sec">Exact jobs and when</div>';
+  I.jobs.forEach(j=>{h+='<div class="tm-item"><div class="t1">'+esc(j[0])+'</div><div class="t2"><b style="color:var(--ac)">When:</b> '+esc(j[1])+'</div><div class="t2"><b style="color:var(--ac)">Who:</b> '+esc(j[2])+'</div></div>';});
+  h+='<div class="tm-sec">Reads</div><div class="tm-item">'+lst(I.reads)+'</div>';
+  h+='<div class="tm-sec">Writes</div><div class="tm-item">'+lst(I.writes)+'</div>';
+  h+='<div class="tm-sec">Hands off to</div><div class="tm-item"><div class="t1">'+esc(I.handoff)+'</div></div>';
+  h+='<div class="tm-sec">Rules it never breaks</div><div class="tm-item">'+lst(I.rules)+'</div>';
+  h+='<div class="tm-sec">Where it runs</div><div class="tm-item"><div class="t1"><span class="tm-tag booked">today</span>'+esc(I.today)+'</div><div class="t2" style="margin-top:.6rem"><span class="tm-tag warn">automation</span>'+esc(I.auto)+'</div></div>';
+  h+='<div class="tm-sec">Setup prompt</div><div class="tm-hint">Paste this into the business account to create '+esc(a.name)+' as a scheduled task. Edit it here as you learn what works, and the saved version is the one to copy.'+(saved?' <span class="tm-tag warn">edited</span>':'')+'</div>';
+  h+='<textarea class="tm-ta" id="info-prompt" style="min-height:340px;margin-top:.6rem;font-size:.76rem;line-height:1.55">'+esc(saved||defPrompt(id))+'</textarea>';
+  h+='<div class="tm-row"><button class="tm-b pri" data-act="copyprompt">Copy prompt</button><button class="tm-b" data-act="saveprompt">Save changes</button>'+(saved?'<button class="tm-b dim" data-act="resetprompt">Reset to default</button>':'')+'</div>';
+  return h;
+}
+
 /* ── Setup ── */
 function vSetup(){
   let h='<div class="tm-sec">Price sheet</div><div class="tm-hint">Quill quotes only from this. Packages, prices, add-ons, travel fees, service area, blackout dates.</div>'+
@@ -7249,6 +7506,10 @@ const val=id=>{const e=$('#'+id);return e?e.value.trim():'';};
 const A={
   open(t){openAgent(t.dataset.agent);},
   chavatar(){$('#tmFile').click();},
+  toggleinfo(){S.view=S.view==='info'?'work':'info';renderDrawer(true);$('#tmDrB').scrollTop=0;},
+  async copyprompt(){const e=$('#info-prompt');toast(await copy(e?e.value:'')?'Prompt copied. Paste it into the business account.':'Copy failed.',false);},
+  async saveprompt(){const v=val('info-prompt');if(!v){toast('The prompt is empty.',true);return;}await col('agent_config').doc('prompts').set({[S.cur]:v},{merge:true});toast('Prompt saved.');},
+  async resetprompt(){await col('agent_config').doc('prompts').set({[S.cur]:firebase.firestore.FieldValue.delete()},{merge:true});toast('Back to the default prompt.');},
   async resetavatar(){await col('agent_config').doc('avatars').set({[S.cur]:firebase.firestore.FieldValue.delete()},{merge:true});toast('Back to the default picture.');},
   rtab(t){S.rtab=t.dataset.v;renderDrawer(true);},
   tripcity(t){S.tripCity=t.value;renderDrawer(true);},
