@@ -6961,7 +6961,7 @@ OUTPUT: one line per run: replies drafted, profiles flagged.`
 const SETUP={id:'setup',name:'Setup',role:'Prices, voice, sites',color:'#c9a96e'};
 const DAY=864e5, STALE=90*DAY;
 const DEFAULT_SITES=['GigSalad','Thumbtack','The Bash','Eventective','GigMasters'];
-const S={leads:[],drafts:[],sites:[],venues:[],cfg:{},err:null,cur:null,started:false,pend:false,open:{},rtab:'inbound',logFor:null,tripCity:'',view:'work'};
+const S={leads:[],drafts:[],sites:[],venues:[],cfg:{},err:null,cur:null,started:false,pend:false,open:{},rtab:'outreach',logFor:null,tripCity:'',view:'work'};
 const $=(s,r)=>(r||document).querySelector(s);
 const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 const safeUrl=u=>/^https?:\/\//i.test(String(u||'').trim())?String(u).trim():'';
@@ -7262,7 +7262,7 @@ function venueCard(v){
 }
 function vRaven(){
   const d=D(),o=d.venDue.length+d.venYes.length+d.rPending.length,i=d.missing.length;
-  return '<div class="tm-row" style="margin:0 0 1rem"><button class="tm-b'+(S.rtab==='inbound'?' pri':'')+'" data-act="rtab" data-v="inbound">Gig-site leads'+(i?' ('+i+')':'')+'</button><button class="tm-b'+(S.rtab==='outreach'?' pri':'')+'" data-act="rtab" data-v="outreach">Venue outreach'+(o?' ('+o+')':'')+'</button></div>'+(S.rtab==='outreach'?vOutreach():vInbound());
+  return '<div class="tm-row" style="margin:0 0 1rem"><button class="tm-b'+(S.rtab==='outreach'?' pri':'')+'" data-act="rtab" data-v="outreach">Venue outreach'+(o?' ('+o+')':'')+'</button><button class="tm-b'+(S.rtab==='inbound'?' pri':'')+'" data-act="rtab" data-v="inbound">Gig-site leads'+(i?' ('+i+')':'')+'</button></div>'+(S.rtab==='outreach'?vOutreach():vInbound());
 }
 function vOutreach(){
   const d=D();let h='';
