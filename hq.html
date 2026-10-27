@@ -7002,7 +7002,8 @@ mirror:{
   ['Audit belladonnanights.com: page titles, descriptions, headings, schema markup, mobile, speed, sitemap, location and service pages','First Monday of each month','Mirror, planned (you paste the results in by hand today)'],
   ['Check the Google Business Profile: categories, services, hours, photos, weekly post, questions and answers','First Monday of each month, weekly post reminder every Monday','Mirror, planned'],
   ['Check every other listing (Bing Places, Apple Business Connect, Yelp, Facebook, Instagram, Nextdoor and your gig sites) for identical name, address, phone, hours and links','Monthly','Mirror, planned'],
-  ['Flag any listing not refreshed in 90 days','Daily check, shown on her card','HQ, built in'],
+  ['Flag any listing not refreshed in 90 days, and tell you exactly what to do on that site (photos, video, packages, bio, calendar, reviews)','Daily check, shown on her card','HQ, built in: each listing has its own checklist'],
+  ['Skip any site you have silenced','Always','HQ, built in'],
   ['Draft the review-request message after each private event and each venue night that went well','Within 24 hours of the event','Mirror drafts, you send'],
   ['Draft a reply to each new review','Within 24 hours of the review arriving','Mirror, automatic (you paste the review in by hand today)'],
   ['Write the exact fixes as a short list (page, what is wrong, the new text)','With each audit','Mirror'],
@@ -7011,7 +7012,7 @@ mirror:{
  reads:['agent_sites (your listings, profileRefreshed, active)','Your public website and public listing pages','Review notification emails (email)'],
  writes:['agent_drafts (agent mirror, kind review, reviewask or seo, status pending)'],
  handoff:'Review requests go to you to send. Strong reviews and new photos feed the website and the next Herald posts.',
- rules:['Never log in to a site or listing.','Never buy, trade or write fake reviews, and never offer a reward for a review.','Never ask only happy customers for reviews. Ask everyone.','Never argue with a reviewer. Own what is fair, stay professional, offer a way to make it right.','Keep the name, address, phone number and hours identical everywhere. Never stuff keywords.','Only claim what is true: services, areas and prices you really offer.'],
+ rules:['Never log in to a site or listing.','Never buy, trade or write fake reviews, and never offer a reward for a review.','Never ask only happy customers for reviews. Ask everyone.','Never ask a customer for a Yelp review. Yelp does not allow it.','Skip any site whose active flag is false. That site is silenced and needs no reminders or fixes.','Never argue with a reviewer. Own what is fair, stay professional, offer a way to make it right.','Keep the name, address, phone number and hours identical everywhere. Never stuff keywords.','Only claim what is true: services, areas and prices you really offer.'],
  today:'Stale-listing flags work in HQ. For audits and review messages you copy her prompt, run it, paste the fixes and drafts back and approve.',
  auto:'Still needs automating: the monthly audit and spotting review emails. Needs the business account to reach the public web, your inbox and Firestore.',
  prompt:PRE+`
@@ -7021,7 +7022,7 @@ YOUR JOB: make sure Belladonna is found everywhere people look, set up completel
 
 2. GOOGLE BUSINESS PROFILE. Check: business categories, services list, service area, hours, phone, website link, booking or contact link, photos and a recent video, weekly post, questions and answers. Write what is missing or out of date and the exact text to put in. Every Monday remind Ahnna to make one new post.
 
-3. EVERYWHERE ELSE. For each active site in agent_sites (Bing Places, Apple Business Connect, Yelp, Facebook Page, Instagram, Nextdoor and each gig site) check that the name, address, phone, hours, website link and description are identical to the website and the Google profile. List every mismatch with the correct text.
+3. EVERYWHERE ELSE. For each site in agent_sites where active is not false (Bing Places, Apple Business Connect, Yelp, Facebook Page, Instagram, Nextdoor and each gig site) check that the name, address, phone, hours, website link and description are identical to the website and the Google profile. List every mismatch with the correct text.
 
 4. REVIEWS AND FEEDBACK.
 - Review requests: after each private event or good venue night, write one short, warm message asking for a review, with the link for the best site for that client (Google first). Ask everyone, not only happy customers. Never offer a reward. Write each as a document in agent_drafts: leadId (empty), agent "mirror", kind "reviewask", body, label (client or venue and "review request"), status "pending", createdAt (ms).
@@ -7105,7 +7106,7 @@ const SETUP={id:'setup',name:'Setup',role:'Prices, voice, sites',color:'#c9a96e'
 const DAY=864e5, STALE=90*DAY, CARE=90*DAY;
 const PRESENCE=['Website (belladonnanights.com)','Google Business Profile','Bing Places','Apple Business Connect','Yelp','Facebook Page','Instagram','Nextdoor'];
 const DEFAULT_SITES=['GigSalad','Thumbtack','The Bash','Eventective','GigMasters'];
-const S={bchk:{},hz:{range:'tonight',from:'',to:'',time:'15:00'},leads:[],drafts:[],sites:[],venues:[],cfg:{},err:null,cur:null,started:false,pend:false,open:{},rtab:'outreach',logFor:null,tripCity:'',view:'work'};
+const S={mchk:{},bchk:{},hz:{range:'tonight',from:'',to:'',time:'15:00'},leads:[],drafts:[],sites:[],venues:[],cfg:{},err:null,cur:null,started:false,pend:false,open:{},rtab:'outreach',logFor:null,tripCity:'',view:'work'};
 const $=(s,r)=>(r||document).querySelector(s);
 const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 const safeUrl=u=>/^https?:\/\//i.test(String(u||'').trim())?String(u).trim():'';
@@ -7165,6 +7166,7 @@ function D(){
     venDue:S.venues.filter(v=>v.stage==='followup'&&v.followUpOn&&v.followUpOn<=isoDay(Date.now())),
     venYes:S.venues.filter(v=>v.stage==='yes'),
     rPending:dr.filter(d=>d.agent==='raven'&&d.status==='pending'),
+    silenced:S.sites.filter(s=>s.active===false),
     care:S.venues.filter(v=>v.stage==='onboarding'),
     careDue:S.venues.filter(v=>v.stage==='onboarding'&&Date.now()-(v.lastCheckinAt||0)>=CARE),
     careRisk:S.venues.filter(v=>v.stage==='onboarding'&&v.health==='risk'),
@@ -7809,17 +7811,44 @@ function vSable(){
 }
 
 /* ── Mirror ── */
+
+const GIGSITE_TASKS=['Add 3 new photos from recent nights (a crowd shot, the host in action, your setup). Delete any older than a year.','Add or replace one 30 to 60 second video clip from a recent night.','Open your packages and prices and match them to your current price sheet. Check the travel fee and service area.','Rewrite the first two sentences of the bio so they say what you do and where: karaoke, music bingo, trivia and themed nights in the Seattle-Tacoma area. Add one recent detail.','Open the availability calendar. Block the dates already booked and open the next 3 months.','Reply to any review or message that has no answer. Ask your last 2 private-event clients for a review.','Check your response time. Answer every inquiry today.'];
+const SITE_SPECS=[
+  {m:/website|belladonnanights/i,url:'https://belladonnanights.com',tasks:['Check the schedule or events page shows this month\'s real nights and venues.','Check packages and prices match the current price sheet.','Test the contact form: send yourself a message and make sure it arrives.','Check every page has a unique title and a one-sentence description.','Add one fresh photo or testimonial to the home page.','Open the site on your phone and check nothing is cut off or slow.']},
+  {m:/google/i,url:'https://business.google.com',tasks:['Check the business name, phone, website and hours are exactly right.','Check the categories (primary: karaoke or entertainment) and the services list.','Update the description to include karaoke, music bingo, trivia and themed nights, Seattle-Tacoma area.','Add 3 new photos and one short video.','Publish one new post (an upcoming big night or this week\'s theme).','Answer any questions in Q&A and reply to every review.']},
+  {m:/bing/i,url:'https://www.bingplaces.com',tasks:['Check the name, address, phone and hours match Google exactly.','Check the categories and the website link.','Add 2 new photos.']},
+  {m:/apple/i,url:'https://businessconnect.apple.com',tasks:['Check the name, address, phone and hours match Google exactly.','Check the categories and the website link.','Add 2 new photos.']},
+  {m:/yelp/i,url:'https://biz.yelp.com',tasks:['Check the hours, phone and website are exactly right.','Add 2 new photos.','Reply to every review.'],note:'Yelp does not allow asking customers for reviews, so do not request one there.'},
+  {m:/facebook/i,url:'https://www.facebook.com',tasks:['Check the About section: hours, phone, website and service area.','Update the cover photo to something from this month.','Pin a post with this week\'s schedule or your next big night.','Reply to every message and review.','Check the Services and Reviews sections are on.']},
+  {m:/instagram/i,url:'https://www.instagram.com',tasks:['Check the bio says what you do and where, and the link goes to the website.','Update the Highlights (Schedule, Reviews, Book Us).','Pin your 3 best recent posts.','Check the Contact button shows your email or phone.']},
+  {m:/nextdoor/i,url:'https://business.nextdoor.com',tasks:['Check the description, services and neighborhoods served.','Thank anyone who recommended you and reply to each one.','Add 2 new photos.']},
+  {m:/gigsalad/i,url:'https://www.gigsalad.com',tasks:GIGSITE_TASKS},
+  {m:/thumbtack/i,url:'https://www.thumbtack.com',tasks:GIGSITE_TASKS},
+  {m:/the ?bash/i,url:'https://www.thebash.com',tasks:GIGSITE_TASKS},
+  {m:/gigmasters/i,url:'https://www.gigmasters.com',tasks:GIGSITE_TASKS},
+  {m:/eventective/i,url:'https://www.eventective.com',tasks:GIGSITE_TASKS}
+];
+function siteSpec(name){return SITE_SPECS.find(x=>x.m.test(String(name||'')))||{url:'',tasks:GIGSITE_TASKS.slice(0,5),note:'No specific list for this site yet, so this is the general checklist.'};}
+
 function vMirror(){
   const d=D();let h='<div class="tm-sec">Listings</div>';
   const have=new Set(S.sites.map(s=>s.name)),miss=PRESENCE.filter(n=>!have.has(n));
   if(miss.length)h+='<div class="tm-item"><div class="t1">'+(d.sites.length?'Listings not set up here yet':'Add the places you need to show up')+'</div><div class="t2">'+miss.map(esc).join(', ')+'</div><div class="tm-row"><button class="tm-b pri" data-act="addpresence">Add these listings</button></div></div>';
   if(!d.sites.length)h+='<div class="tm-empty">No listings yet.</div>';
   d.sites.forEach(s=>{
-    const stale=!s.profileRefreshed||Date.now()-s.profileRefreshed>STALE;
-    h+='<div class="tm-item"><div class="t1"><b>'+esc(s.name)+'</b> '+(stale?'<span class="tm-tag warn">stale</span>':'<span class="tm-tag booked">fresh</span>')+'</div>'+
-      '<div class="t2">'+(s.profileRefreshed?'Refreshed '+fmtDay(s.profileRefreshed)+(stale?'. Check photos, video, packages, bio and availability.':''):'Never marked refreshed. Check photos, video, packages, bio and availability.')+'</div>'+
-      '<div class="tm-row"><button class="tm-b" data-act="refreshed" data-id="'+esc(s.id)+'">Refreshed today</button></div></div>';
+    const stale=!s.profileRefreshed||Date.now()-s.profileRefreshed>STALE,sp=siteSpec(s.name),done=S.mchk[s.id]||{},nDone=sp.tasks.filter((_,k)=>done[k]).length;
+    const days=s.profileRefreshed?Math.floor((Date.now()-s.profileRefreshed)/DAY):null;
+    h+='<div class="tm-item"><div class="t1"><b>'+esc(s.name)+'</b> '+(stale?'<span class="tm-tag warn">stale</span>':'<span class="tm-tag booked">fresh</span>')+(sp.url?' <a href="'+esc(sp.url)+'" target="_blank" rel="noopener" style="font-size:.76rem">open the site</a>':'')+'</div>'+
+      '<div class="t2">'+(s.profileRefreshed?'Last refreshed '+days+' day'+(days===1?'':'s')+' ago ('+esc(fmtDay(s.profileRefreshed))+').':'Never marked refreshed.')+' Refresh it at least every 90 days.</div>'+
+      '<details class="tm-det" data-k="m_'+esc(s.id)+'"'+(S.open['m_'+s.id]===undefined?(stale?' open':''):(S.open['m_'+s.id]?' open':''))+' style="margin:.6rem 0 0"><summary>What to do on '+esc(s.name)+' ('+nDone+' of '+sp.tasks.length+' ticked)</summary><div class="in">'+
+      sp.tasks.map((t,k)=>'<label style="display:flex;gap:.55rem;align-items:flex-start;margin:.45rem 0;font-size:.84rem;color:var(--text2);line-height:1.45;cursor:pointer"><input type="checkbox" data-chg="mchk" data-id="'+esc(s.id)+'" data-k="'+k+'"'+(done[k]?' checked':'')+' style="margin-top:.2rem"><span>'+esc(t)+'</span></label>').join('')+
+      (sp.note?'<div class="tm-hint" style="margin-top:.5rem">'+esc(sp.note)+'</div>':'')+'</div></details>'+
+      '<div class="tm-row"><button class="tm-b pri" data-act="refreshed" data-id="'+esc(s.id)+'">Refreshed today</button><button class="tm-b dim" data-act="silencesite" data-id="'+esc(s.id)+'" title="Not working with this site right now. No reminders until you resume it.">Silence</button></div></div>';
   });
+  if(d.silenced.length){
+    h+='<div class="tm-sec">Silenced ('+d.silenced.length+')</div><div class="tm-hint">No reminders and no stale flags. Resume one when you start working with it.</div>';
+    d.silenced.forEach(s=>{h+='<div class="tm-item"><div class="t1"><b>'+esc(s.name)+'</b> <span class="tm-tag">silenced</span></div><div class="tm-row"><button class="tm-b" data-act="resumesite" data-id="'+esc(s.id)+'">Resume</button></div></div>';});
+  }
   const opts=d.sites.map(s=>'<option>'+esc(s.name)+'</option>').join('');
   h+=det('rev','Draft a review reply','<div class="tm-fg"><div><label class="tm-lbl">Site</label><select class="tm-sel" id="rv-site">'+(opts||'<option>Listing</option>')+'</select></div><div><label class="tm-lbl">Stars</label><input class="tm-in" id="rv-stars" inputmode="numeric" placeholder="5"></div><div class="full"><label class="tm-lbl">Review text</label><textarea class="tm-ta" id="rv-text" style="min-height:80px"></textarea></div></div><div class="tm-row"><button class="tm-b" data-act="copyreview">Copy Mirror prompt</button></div>'+
     '<textarea class="tm-ta" id="rv-draft" style="min-height:80px;margin-top:.6rem" placeholder="Paste the draft reply here"></textarea><div class="tm-row"><button class="tm-b pri" data-act="addreview">Add to queue</button></div>',false);
@@ -8134,7 +8163,10 @@ const A={
     if(v)await ref.update({[k]:v});else await ref.update({[k]:firebase.firestore.FieldValue.delete()});
   },
   async copyevent(t){const d=D(),x=d.top5[+t.dataset.i];if(x)toast(await copy(eventPrompt(x))?'Brief copied. Paste it into Claude.':'Copy failed.',false);},
-  async refreshed(t){await col('agent_sites').doc(t.dataset.id).update({profileRefreshed:Date.now()});toast('Marked fresh.');},
+  async mchk(t){const id=t.dataset.id;S.mchk[id]=S.mchk[id]||{};S.mchk[id][t.dataset.k]=t.checked;},
+  async silencesite(t){const s=S.sites.find(x=>x.id===t.dataset.id);if(!s||!confirm('Silence '+s.name+'? No reminders until you resume it.'))return;await col('agent_sites').doc(s.id).update({active:false,silencedAt:Date.now()});toast(s.name+' silenced.');},
+  async resumesite(t){await col('agent_sites').doc(t.dataset.id).update({active:true});toast('Resumed.');},
+  async refreshed(t){delete S.mchk[t.dataset.id];await col('agent_sites').doc(t.dataset.id).update({profileRefreshed:Date.now()});toast('Marked fresh.');},
   async copyreview(){
     const text=val('rv-text');if(!text){toast('Paste the review text first.',true);return;}
     toast(await copy(reviewPrompt(val('rv-site'),val('rv-stars'),text))?'Prompt copied.':'Copy failed.',false);
