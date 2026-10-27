@@ -3371,6 +3371,13 @@ async function vmxPushTimesToGigs(v,rows,oldSlots){
     const key=plannerKindKey(r.kind);const dow=dowOf(r.day);if(!key||dow<0)continue;
     const t=vmxT24(r.time),et=vmxT24(r.endTime);
     const o=oldSlots[r.id];const oldDow=o&&o.day?dowOf(o.day):dow;
+    // 0) bi-weekly / monthly night with an anchor → drop upcoming gigs that fall on off-weeks
+    const cad=r.cadence||'weekly';
+    if(cad!=='weekly'&&cad!=='single'&&r.anchor){
+      const fake={day:vmxAbbr(r.day),cadence:cad,cadenceAnchor:r.anchor,status:'active'};
+      gigSchedule.filter(g=>mine(g,key,oldDow)&&!g.timeLocked&&!plannerVenueRunsOn(fake,g.date))
+        .forEach(g=>{gigSchedule=gigSchedule.filter(x=>x!==g);persistGig(g,true);removed++;});
+    }
     // 1) HQ dated gigs of this night
     gigSchedule.filter(g=>mine(g,key,oldDow)).forEach(g=>{
       let ch=false;
@@ -5898,6 +5905,8 @@ function saveVenue(){
   const payMethod=document.getElementById('vmPayMethod').value;
   const startDate=document.getElementById('vmStartDate').value;
   const gigSlots=readVenueGigSlotRows();
+  const noAnchor=gigSlots.find(s=>(s.cadence==='biweekly'||s.cadence==='monthly')&&!s.anchor);
+  if(noAnchor){alert('Pick a date this '+noAnchor.kind+' night runs, or it will run every week.');return;}
   const host=document.getElementById('vmHost').value||null;
   const today=new Date().toISOString().slice(0,10);
   if(editVenueId){
