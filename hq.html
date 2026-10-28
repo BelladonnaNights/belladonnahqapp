@@ -1212,6 +1212,10 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
   <div id="tmBrief" style="margin-bottom:1.1rem"></div>
   <div class="tm-grid" id="tmGrid"></div>
   <div class="tm-foot">
+    <details class="tm-det" style="--ac:#c9a96e" id="tmTasksDet">
+      <summary>Scheduled tasks (for when the business account is back)</summary>
+      <div class="in" id="tmTasks"></div>
+    </details>
     <details class="tm-det" style="--ac:#c9a96e">
       <summary>How the agents plug in (for whoever builds the backend)</summary>
       <div class="in">
@@ -7368,6 +7372,69 @@ function renderBrief(){
   el.innerHTML=h;
 }
 
+
+/* ── Scheduled tasks ── */
+const TK_HEAD=`You are part of the Belladonna Audio Alchemies agent team. You never log in to any site, never send email or messages, never post, pay, sign, file or buy. You only read, research, and write drafts and notes into HQ.
+
+HQ door: POST JSON to {URL} with header  x-agent-key: {KEY}
+Ops:
+ {"op":"read","collection":"agent_venues|agent_leads|agent_drafts|agent_sites|agent_config|shifts","limit":300}
+ {"op":"addLead","lead":{site,client,eventType,eventDate,location,headcount,budget,link,message,score,scoreWhy}}
+ {"op":"addDraft","draft":{agent,kind,body,label,venueId?,leadId?}}
+ {"op":"addVenue","fields":{name,city,contactName,contact,notes}}
+ {"op":"updateVenue","id":"...","fields":{...}}
+ {"op":"updateSite","id":"...","fields":{...}}
+ {"op":"setConfig","doc":"sable|sigil|warden","data":{...}}
+
+First read agent_config (voice, pricing, outreach) and follow it exactly. Never invent prices, dates, or facts. Check agent_drafts first so you never write a draft that already exists. If nothing needs doing, write nothing. End every run with a one-line summary of what you wrote.`;
+const TASKS=[
+ {name:'Lead run',who:'Raven and Quill',when:'Weekdays, 7:00 am',plain:'Looks for people and venues asking for karaoke, trivia or bingo, scores them hot / warm / cold, drafts cold emails and day-5 follow-ups for venues you have not heard back from, and drafts replies to the good leads.',ids:['raven','quill'],
+  body:`TASK: Lead run.
+1. Search the public web for people and venues in Seattle-Tacoma asking for or likely to need karaoke, trivia, music bingo or themed nights. Score each Hot / Warm / Cold with a one-line reason. Skip anything older than 3 days.
+2. addLead for each (max 8 per run, skip duplicates by link). addVenue for any new bar or venue worth cold-emailing.
+3. Read agent_venues. For stage "target" with no emailedAt: addDraft kind "email" (agent raven, venueId set). For stage "followup" where emailedAt is 5 or more days ago and no emailed2At: addDraft kind "email2".
+4. For each new Hot or Warm lead, addDraft kind "reply" (agent quill, leadId set). Answer their question first, mention Belladonna second.
+Do not touch venues you did not just add except to draft.`},
+ {name:'Inbox sweep',who:'Ledger and Sigil',when:'Weekdays, 7:30 am and 3:00 pm',plain:'Reads the last day of your business email. Moves venues to yes or no when they answer, and logs renewals and paperwork that need doing. Needs Google Workspace connected.',ids:['ledger','sigil'],
+  body:`TASK: Inbox sweep. Read the last 24 hours of the business Gmail only.
+1. Venue replies: match the sender to agent_venues by contact. If they said yes, updateVenue stage "yes". If no, stage "no" and noUntil 90 days out. If they asked a question, addDraft kind "reply" (agent quill, venueId set).
+2. Paperwork and renewals (licenses, insurance, registrations, contracts to sign): read agent_config sigil. setConfig doc "sigil" adding new items under items{newId:{name,due,fromEmail}}. addDraft kind "paperwork" (agent sigil) saying what it is, what is needed, and the due date.
+3. Never open attachments that ask you to log in, never click links, never reply.`},
+ {name:'Checkout read',who:'Thorne',when:'Daily, 6:00 am',plain:'Reads host checkouts and their photos for bingo and trivia sheet requests, supplies, and real problems, then puts them on your Gazette.',ids:['warden'],
+  body:`TASK: Gig prep and supplies. Read "shifts" from the last 3 days and agent_config warden.
+1. Skip any shift id already in warden.handled.
+2. Read checkoutNotes. If there is a photoUrl, open the photo and read every label. Do not guess.
+3. Find requests for bingo sheets, trivia answer sheets, paper or supplies. setConfig doc "warden" with restocks{newId:{item,note,qty,host,venue,status:"requested",requestedAt}}. Use rough quantities (no inventory is kept).
+4. Real issues (equipment, venue problems, safety) go into tasks{newId:{title,type:"issue",date,venue,gigId,status:"open"}}.
+5. Add the shift id to handled{shiftId:true} when finished.`},
+ {name:'Venue care',who:'Vesper',when:'Weekdays, 8:00 am',plain:'Rates how each venue is doing from host checkouts, drafts the 3-month check-in, and drafts follow-ups that are due.',ids:['vesper'],
+  body:`TASK: Venue care. Read agent_venues and shifts from the last 14 days.
+1. Per venue with stage "yes" or "onboarding", read host checkout energyLevel, crowdSize, singers, tipScale, issues. Set healthSuggested (good / watch / risk) and healthWhy (one plain sentence). Never overwrite "health", only the suggested fields.
+2. If lastCheckinAt is 90 or more days ago (or missing): addDraft kind "checkin" (agent vesper, venueId set).
+3. If followUpOn is today or past: addDraft kind "n1" or "n2" as fits.`},
+ {name:'Presence check',who:'Mirror',when:'Mondays, 8:00 am',plain:'Checks your listings and website, flags profiles that have gone 90 days without a refresh with exact steps, and drafts review replies and review asks.',ids:['mirror'],
+  body:`TASK: Presence check. Read agent_sites. Skip sites where silencedAt is set or active is false.
+1. For each active site, check the public page. If profileRefreshed is 90 or more days old, set auditNotes to the exact steps to fix it, and addDraft kind "seo".
+2. Audit belladonnanights.com and the Google Business Profile for SEO issues. addDraft kind "seo" for each fix, one per draft.
+3. Draft replies to new public reviews (kind "review"). Draft review asks to give to happy venues (kind "reviewask"). Never ask for Yelp reviews, never buy or fake reviews.`},
+ {name:'Event scout',who:'Sable',when:'Mondays, 6:30 am',plain:'Finds local events in the next 30 days that fit Belladonna and fills Sable\'s digest.',ids:['sable'],
+  body:`TASK: Event scout. Find public Seattle-Tacoma events in the next 30 days that fit Belladonna (holidays, festivals, game days, venue anniversaries). setConfig doc "sable" with digest{...} and decisions{...} in the same shape as the existing sable doc. Read it first and keep the format.`}
+];
+function tkLS(k,v){try{if(v===undefined)return localStorage.getItem('tmtk_'+k)||'';localStorage.setItem('tmtk_'+k,v);}catch(e){return '';}}
+function tkText(i){
+  const t=TASKS[i],url=tkLS('url').trim()||'PASTE_FUNCTION_URL_HERE',key=tkLS('key').trim()||'PASTE_KEY_HERE';
+  const prompts=t.ids.map(id=>'---- '+agent(id).name.toUpperCase()+' ----\n'+((S.cfg.prompts&&S.cfg.prompts[id])||defPrompt(id))).join('\n\n');
+  return TK_HEAD.split('{URL}').join(url).split('{KEY}').join(key)+'\n\n'+t.body+'\n\n'+prompts;
+}
+function renderTasks(){
+  const el=$('#tmTasks');if(!el||S.tasksDone)return;S.tasksDone=true;
+  let h='<div class="tm-hint">Six scheduled tasks run your team once the business account is back. For each one: tap <b>Copy task</b>, make a new scheduled task there, paste, and set the time shown. You never have to read the technical part.</div>';
+  h+='<div class="tm-hint"><b>One-time setup.</b> These two boxes get filled in after the HQ door is deployed. They stay in this browser only, and the copied tasks fill them in for you.</div><div class="tm-fg"><div><label class="tm-lbl">HQ door address</label><input class="tm-in" id="tk-url" placeholder="Shown after the deploy" value="'+esc(tkLS('url'))+'"></div><div><label class="tm-lbl">Secret key</label><input class="tm-in" id="tk-key" type="password" placeholder="The key you set" value="'+esc(tkLS('key'))+'"></div></div>';
+  TASKS.forEach((t,i)=>{h+='<div class="tm-item"><div class="t1"><b>'+(i+1)+'. '+esc(t.name)+'</b> <span class="tm-tag">'+esc(t.who)+'</span></div><div class="t2"><b style="color:var(--ac)">When:</b> '+esc(t.when)+'</div><div class="t2">'+esc(t.plain)+'</div><div class="tm-row"><button class="tm-b pri" data-act="copytask" data-i="'+i+'">Copy task</button></div></div>';});
+  el.innerHTML=h;
+  el.addEventListener('input',e=>{if(e.target.id==='tk-url')tkLS('url',e.target.value);if(e.target.id==='tk-key')tkLS('key',e.target.value);});
+}
+
 /* ── render ── */
 function render(){
   const grid=$('#tmGrid');if(!grid)return;
@@ -7382,7 +7449,7 @@ function render(){
       '<div class="tm-status"><span class="tm-dot'+(c.need?' attn':'')+'"></span><span>'+esc(c.line)+'</span></div>'+
       '<button class="tm-go" data-act="open" data-agent="'+a.id+'">'+a.btn+'</button></div>';
   }).join('');
-  renderBrief();
+  renderBrief();renderTasks();
   const n=$('#tmNeed');n.innerHTML='<b>'+total+'</b> need you';n.className='tm-need'+(total?'':' zero');
   const b=$('#tmBanner');
   b.innerHTML=S.err?'<div class="tm-banner">Could not read the agent data: '+esc(S.err)+'. If this says permission denied, add the five <b>agent_</b> collections to your Firestore rules (see "How the agents plug in" below).</div>':'';
@@ -8017,6 +8084,7 @@ const A={
   async copybrief(){toast(await copy(briefText())?'Briefing copied.':'Copy failed.',false);},
   chavatar(){$('#tmFile').click();},
   toggleinfo(){S.view=S.view==='info'?'work':'info';renderDrawer(true);$('#tmDrB').scrollTop=0;},
+  async copytask(t){const i=+t.dataset.i;const miss=!tkLS('url').trim()||!tkLS('key').trim();toast(await copy(tkText(i))?(miss?'Copied. The address and key boxes are empty, fill them in before this goes live.':'Task copied. Paste it into a new scheduled task.'):'Copy failed.',false);},
   async copyprompt(){const e=$('#info-prompt');toast(await copy(e?e.value:'')?'Prompt copied. Paste it into the business account.':'Copy failed.',false);},
   async saveprompt(){const v=val('info-prompt');if(!v){toast('The prompt is empty.',true);return;}await col('agent_config').doc('prompts').set({[S.cur]:v},{merge:true});toast('Prompt saved.');},
   async resetprompt(){await col('agent_config').doc('prompts').set({[S.cur]:firebase.firestore.FieldValue.delete()},{merge:true});toast('Back to the default prompt.');},
