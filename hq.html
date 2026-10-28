@@ -539,6 +539,8 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
 #panel-team .np-paper .tm-b{color:#1a1612;border-color:#1a1612;background:transparent;}
 #panel-team .np-paper .tm-b.pri{background:#7a1f2b;border-color:#7a1f2b;color:#efe6d2;}
 @media(max-width:700px){#panel-team .np-cols{column-count:1;}}
+
+#panel-team .tm-card.standby{opacity:.55;filter:grayscale(.7);}#panel-team .tm-card.standby:hover{opacity:.85;}
 </style>
 </head>
 <body>
@@ -7370,9 +7372,11 @@ function renderBrief(){
 function render(){
   const grid=$('#tmGrid');if(!grid)return;
   const d=D();let total=0;
-  grid.innerHTML=AGENTS.map(a=>{
+  const SB={herald:1};
+  grid.innerHTML=AGENTS.slice().sort((x,y)=>(SB[x.id]?1:0)-(SB[y.id]?1:0)).map(a=>{
     const c=cardInfo(a.id,d);total+=c.need;
-    return '<div class="tm-card" style="--ac:'+a.color+'" data-act="open" data-agent="'+a.id+'">'+
+    if(SB[a.id]){c.line='On standby';c.need=0;}
+    return '<div class="tm-card'+(SB[a.id]?' standby':'')+'" style="--ac:'+a.color+'" data-act="open" data-agent="'+a.id+'">'+
       (c.need?'<span class="tm-badge">'+c.need+'</span>':'')+
       '<div class="tm-top"><div class="tm-av">'+avImg(a.id)+'</div><div><div class="tm-name">'+a.name+'</div><div class="tm-role">'+a.role+'</div></div></div>'+
       '<div class="tm-status"><span class="tm-dot'+(c.need?' attn':'')+'"></span><span>'+esc(c.line)+'</span></div>'+
