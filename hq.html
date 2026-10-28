@@ -6824,7 +6824,7 @@ const AGENTS=[
   {id:'ledger',name:'Ledger',role:'Tracker',               color:'#d03a46', btn:'Open ledger'},
   {id:'sable', name:'Sable', role:'Event Scout',           color:'#2aa7a7', btn:'Open digest'},
   {id:'mirror',name:'Mirror',role:'SEO & Presence',         color:'#d9cdbd', btn:'Check presence'},
-  {id:'herald',name:'Iris',role:'Social Posts',          color:'#e07a3a', btn:'Build story prompt'},
+  {id:'herald',name:'Iris',role:'Curator: Themed Nights & Ideas', color:'#e07a3a', btn:'See ideas'},
   {id:'coach', name:'Wren', role:'Host Recruiter & Coach', color:'#d0508a', btn:'Open host desk'},
   {id:'sigil', name:'Sigil', role:'Paperwork & Renewals',  color:'#4fae6a', btn:'Open paperwork'},
   {id:'warden',name:'Thorne',role:'Gig Prep & Supplies',   color:'#e2c230', btn:'Open prep list'}
@@ -7013,22 +7013,40 @@ RULES
 OUTPUT: the summary, then the data-check list. Short and blunt.`
 },
 herald:{
- one:"Builds your Tonight's Story prompts and posts, in your voice.",
- does:"Iris turns your schedule into ready-to-post Stories and captions. Pick the dates in her card and the prompt lists every gig, day and time for you to paste into ChatGPT. Later she can design in Canva and queue posts.",
+ one:"Dreams up themed nights, events and venue pitches from everything we already have.",
+ does:"Iris is the curator. She reads your venues and what each one offers (a patio, a stage, a big room), your catalog (the Venue Menu movies, bingo and trivia categories, games, props), Sable's event finds, your leads, and the public domain. Then she invents themed nights and events, writes pitches to convince venues to try them, combines things you already have that you never put together, and when only one small piece is missing she says so and suggests you build it.",
  jobs:[
-  ["Build the Tonight's Story prompt for the dates you pick","Whenever you open her card","You pick the dates; the prompt fills itself"],
-  ["Make the story images and captions","After you paste the prompt into ChatGPT","ChatGPT, you review"],
-  ["Write captions and hashtags in your voice","With each image","Iris or ChatGPT"],
-  ["Schedule approved posts","When you have a posting tool connected","You, until then"]
+  ["Match each venue's features (outdoor space, screen, stage, capacity) to ideas that use them","Every Monday, 9 AM","Iris, you fill in the venue details"],
+  ["Write new themed nights and events from your catalog","Every Monday, 9 AM","Iris"],
+  ["Combine things you already have that you never put together","Every Monday, 9 AM","Iris"],
+  ["Suggest the one missing piece (a category, a prop, a playlist) so an idea can work, and say it is worth building","With each idea","Iris, you decide"],
+  ["Write venue-ready pitches to help win a venue over","With each idea","Iris, Quill polishes it"],
+  ["Watch the public domain for films, music, books or art you could use that you missed","Every Monday","Iris, with a source link"],
+  ["Like, pursue or skip each idea. Pursue copies a pitch brief for Quill","When you review","You"]
  ],
- reads:['HQ gig schedule (Hosts, Planner and Bingo nights)'],
- writes:['Nothing yet. The prompt is built on screen.'],
- handoff:'Approved images and captions go to your posting tool.',
- rules:['Never post anything without your OK.','Skip cancelled gigs.','Use the exact day, time and venue from the schedule.'],
- today:"Open Iris, pick the dates, tap Copy prompt, paste into ChatGPT.",
- auto:"Not automated yet. A Canva design step and a scheduler can be added later.",
+ reads:['Our Venues (HQ Venues tab)','agent_config/curator (what each venue offers, your catalog, past ideas)','agent_config/sable (this week\'s events)','agent_leads and agent_venues','The public web (public domain)'],
+ writes:['agent_config/curator (ideas)'],
+ handoff:'A pursued idea goes to Quill for the pitch, and to Thorne for any prep it needs.',
+ rules:['Never contact a venue.','Never invent a venue feature or a catalog item. Use only what is ticked, noted or pasted.','Public domain claims need a source link. If it cannot be confirmed, leave it out.','Movie nights may need a public performance license unless the film is public domain. Flag it, never give legal advice.','Never repeat an idea already on the board, even a skipped one.'],
+ today:'Works by hand: tick what each venue offers, paste your catalog, add ideas yourself, like, pursue or skip.',
+ auto:'Needs the business account to write ideas on Mondays. The Venue Menu is a separate app, so for now you paste its movie list into the catalog box.',
  prompt:PRE+`
-YOUR JOB: turn the Belladonna gig schedule into Instagram Stories and captions. For each gig in the date range you are given, make a "Tonight's Story" (1080x1920, black base, gold accents, headline TONIGHT, venue, format, start time, theme) and write a caption in brand voice with 8 to 12 hashtags. Skip cancelled gigs. Do not post anything. Give the images and captions to Ahnna to review.`
+YOUR JOB: you are Belladonna's curator. You invent themed nights, events and venue pitches from what we already have, and you point out when only a small piece is missing so Ahnna can build it.
+
+Every Monday at 9 AM Pacific:
+1. Read Our Venues ({"op":"readVenues"}, skip inactive) and agent_config curator: profiles (what each venue offers: outdoor space, screen, stage, dance floor, big room, private room, kitchen, parking, capacity, notes), catalog.text (everything Belladonna can offer) and ideas (everything already suggested, any status).
+2. Read agent_config sable (this week's events and dates to avoid), agent_leads and agent_venues (who is interested in what).
+3. Search the web for public-domain films, music, books, art and holidays that could anchor a night and are not already in the catalog. Confirm public-domain status from a reliable source and keep the link. If you cannot confirm it, leave it out.
+4. Write 5 to 8 new ideas with setConfig doc "curator": ideas{newId:{title,kind ("Themed night","Event","Venue pitch" or "Build this"),pitch (2 to 4 sentences in the Belladonna voice),venues (only venues whose ticked features or notes really fit),uses (catalog items it uses, copied exactly),missing (the one thing still needed, empty if none),when,sourceUrl,status:"new",createdAt (ms)}}.
+5. Mix at least: one idea built only from existing catalog items put together in a new way, one idea tailored to a specific venue's feature, one that uses an upcoming Sable event, and one "Build this" where a small missing piece unlocks it.
+6. Skip any idea already in ideas, including skipped ones.
+
+RULES
+- Never contact a venue and never send anything.
+- Never invent a venue feature or a catalog item.
+- Movie nights may need a public performance license unless the film is public domain. Flag it. No legal advice.
+
+OUTPUT: one line per run: ideas written, any public-domain finds, any venue with no details filled in.`
 },
 sable:{
  one:'Scouts local events every Monday and tells you which ones to build a night around.',
@@ -7181,6 +7199,8 @@ warden:{
  one:'Tracks everything each gig needs: sheets, prizes, custom trivia, and problems from checkouts.',
  does:'Thorne looks after everything a gig or event needs. He keeps the list of everything that has to happen before a gig or event: bingo and trivia sheets when a host says they are running low, prizes to buy, custom trivia categories to write, props and decor. He also reads the host checkouts for real problems and for any mention of supplies, and puts them in front of you. There is no inventory count yet, so he works from what hosts tell you and what the checkouts say. He never buys anything.',
  jobs:[
+  ['Group every open sheet request into one print list by category, and a drop-off list by venue, so you print once and drive once','Live in HQ, with a printable page','HQ, built in'],
+  ['When a request does not say which categories, draft a question to the host. You send it, then type the answer into HQ','When a request has no category','Thorne drafts, you send'],
   ['Keep the restock list: bingo sheets, trivia answer sheets, paper','Whenever a host asks, and a check of the checkouts every morning','You log the request, Thorne finds the ones in checkout notes'],
   ['Read the previous night\'s checkouts for issues and for supply mentions (sheets, paper, prizes, out of, running low, broken)','Every morning, 9 AM','Thorne, planned (HQ shows the last 14 days on his card today)'],
   ['Relay a real problem to the right place: a venue problem to Vesper, a host problem to you, paperwork to Sigil','As they appear','Thorne'],
@@ -7191,7 +7211,7 @@ warden:{
  reads:['shifts (host checkouts: issues, checkoutNotes)','gig_schedule (the next 21 days, bigNight and bigName)','agent_config/warden (restock requests, prep tasks)'],
  writes:['agent_config/warden (restocks, tasks, handled)'],
  handoff:'A venue problem goes to Vesper for the venue health check. A paperwork problem goes to Sigil.',
- rules:['Never buy or order anything.','Never guess a quantity. If no number is known, ask the host.','Only call something an issue if the checkout says so.','Do not repeat an item already on the list.'],
+ rules:['Never buy, order or print anything.','Never guess a quantity or a category. If it is not stated, leave it empty so HQ asks the host.','Only call something an issue if the checkout says so.','Do not repeat an item already on the list.'],
  today:'Works by hand inside HQ: log restock requests, add prep tasks, handle checkout issues. The big nights from your schedule show up with an Add button.',
  auto:'Still needs automating: the morning checkout read and the prep list from the schedule. Needs the business account to reach Firestore. When you start an inventory count later, Thorne can do reorder math from it.',
  prompt:PRE+`
@@ -7363,7 +7383,7 @@ function cardInfo(id,d){
     const parts=[c.openCalls.length?plural(c.openCalls.length,'callout','callouts')+' nobody picked up':'',c.stuck.length?plural(c.stuck.length,'recruit','recruits')+' stuck':'',c.flags.length?plural(c.flags.length,'checkout flag','checkout flags'):''].filter(Boolean);
     return {need:n,line:parts.length?parts.join(' · '):(c.hosts.length?'All hosts on track':'No host data yet')};
   }
-  if(id==='herald')return {need:0,line:"Tonight's Story prompt builder"};
+  if(id==='herald'){const c=curatorState();return {need:c.fresh.length,line:c.fresh.length?plural(c.fresh.length,'new idea','new ideas'):(c.ideas.length?'No new ideas':'No ideas yet')};}
   if(id==='mirror'){
     const s=d.stale.length,p=d.mPending.length;
     if(!d.sites.length)return {need:0,line:'Add your listings'};
@@ -7464,7 +7484,9 @@ function briefData(){
   d.sg.dueSoon.forEach(x=>need.push({a:'sigil',text:x.name+(x.days<0?' is overdue':' is due in '+x.days+' days'),body:(x.due?'Due '+fmtEv(x.due)+'. ':'')+(x.fromEmail?'Pulled from email, so confirm the date. ':'')+'Sigil can draft the reminder.'}));
   add('sigil',d.sg.incomplete.length,plural(d.sg.incomplete.length,'person is','people are')+' missing paperwork',d.sg.incomplete.slice(0,5).map(p=>p.name+' needs '+p.miss.join(', ')).join('; ')+'.');
   add('sigil',d.sPending.length,plural(d.sPending.length,'paperwork reminder','paperwork reminders')+' to approve',d.sPending.map(x=>cut(x.label,60)).join('; ')+'.');
-  d.wd.openRestocks.forEach(r=>need.push({a:'warden',text:'Restock: '+r.item,body:[[r.qty?'Qty '+r.qty:'',r.venue?'for '+r.venue:'',r.host?'(host '+r.host+')':''].filter(Boolean).join(' ')+'.',r.status==='ordered'?'Already ordered, mark delivered when it lands.':'Requested '+ago(r.requestedAt)+', not ordered yet.',r.note?'Note: '+cut(r.note,140):''].filter(Boolean).join(' ')}));
+  {const pr=printRun();if(pr.unk.length)need.push({a:'warden',text:plural(pr.unk.length,'restock request needs','restock requests need')+' a category from the host',body:pr.unk.map(r=>(r.venue||'?')+(r.host?' ('+r.host+')':'')).join(', ')+'. Thorne can draft the question.'});if(pr.toPrint.length)need.push({a:'warden',text:'Print run ready: '+plural(pr.toPrint.length,'item','items'),body:pr.groups.map(g=>g.item+' '+g.cat).join('; ')+'.'});}
+  {const cu=curatorState();if(cu.fresh.length)add('herald',cu.fresh.length,plural(cu.fresh.length,'new idea','new ideas')+' from Iris',cu.fresh.slice(0,4).map(x=>x.title).join('; ')+'.');}
+  d.wd.openRestocks.filter(r=>!NEEDCAT(r)).forEach(r=>need.push({a:'warden',text:'Restock: '+r.item,body:[[r.qty?'Qty '+r.qty:'',r.venue?'for '+r.venue:'',r.host?'(host '+r.host+')':''].filter(Boolean).join(' ')+'.',r.status==='ordered'?'Already ordered, mark delivered when it lands.':'Requested '+ago(r.requestedAt)+', not ordered yet.',r.note?'Note: '+cut(r.note,140):''].filter(Boolean).join(' ')}));
   d.wd.soon.forEach(x=>need.push({a:'warden',text:x.title+(x.days<0?' is overdue':x.days===0?' is due today':' is due in '+x.days+' days'),body:[x.type,x.venue,x.date?fmtEv(x.date):''].filter(Boolean).join(' · ')}));
   d.wd.issues.forEach(x=>need.push({a:'warden',text:'Checkout issue'+(x.venue?' at '+x.venue:'')+(x.date?' ('+fmtEv(x.date)+')':''),body:(x.host?x.host+' wrote: ':'')+'\u201c'+cut(x.text,260)+'\u201d'+(x.photo?' A photo is attached.':'')}));
   d.cd.openCalls.forEach(x=>need.push({a:'coach',text:'Callout not covered: '+(x.host||'a host')+(x.venue?' at '+x.venue:'')+(x.date?' ('+fmtEv(x.date)+')':''),body:'Logged '+ago(x.loggedAt)+(x.reason?'. Reason: '+cut(x.reason,120):'')+'. Nobody has taken the shift yet.'}));
@@ -7801,7 +7823,7 @@ Do not touch venues you did not just add except to draft.`},
   body:`TASK: Gig prep and supplies. Read "shifts" from the last 3 days and agent_config warden.
 1. Skip any shift id already in warden.handled.
 2. Read checkoutNotes. If there is a photoUrl, open the photo and read every label. Do not guess.
-3. Find requests for bingo sheets, trivia answer sheets, paper or supplies. setConfig doc "warden" with restocks{newId:{item,note,qty,host,venue,status:"requested",requestedAt}}. Use rough quantities (no inventory is kept).
+3. Find requests for bingo sheets, trivia answer sheets, paper or supplies. setConfig doc "warden" with restocks{newId:{item,cat (the bingo categories or trivia themes the host named, for example "90s, Country". Leave it empty if none were named. Never guess),note,qty,host,venue,status:"requested",requestedAt}}. Use rough quantities (no inventory is kept).
 4. Real issues (equipment, venue problems, safety) go into tasks{newId:{title,type:"issue",date,venue,gigId,status:"open"}}.
 5. Add the shift id to handled{shiftId:true} when finished.`},
  {name:'Venue care',who:'Vesper',when:'Weekdays, 8:00 am',plain:'Reads Our Venues and your Leads tab, rates how each current venue is doing from host checkouts, drafts the 3-month check-in, and flags venue leads that need a follow-up.',ids:['vesper'],
@@ -7811,6 +7833,14 @@ Do not touch venues you did not just add except to draft.`},
 3. If lastCheckinAt for that venue id is 90 or more days ago (or missing): addDraft kind "checkin" (agent vesper, venueId "hq_<venue id>", label "Check-in: NAME").
 4. Read the Leads: {"op":"read","collection":"leads"}. For any lead whose stage is not signed, transferred or paused, with nextFollowUp today or past, or no update in 14 days: addDraft kind "n1" (agent vesper, label "Lead follow-up: NAME") with a short follow-up email. Never change the lead.
 5. 3-month agreements: read agent_config sigil agreements. For each active agreement with termMonths 3 where signedOn is 2 or more months ago and checkinAt is empty, addDraft kind "checkin" (agent vesper, label "Check-in (2 months): NAME") asking how the nights are going. If checkinOutcome is "good" and renewAfter has passed, addDraft kind "paperwork" (agent vesper, label "Renewal: NAME") saying it is renewal time and the agreement is now a full year. Not a question: stern, nice and a little fun. If checkinOutcome is "bad", write nothing and say so in your report. For termMonths 6 start 45 days before endsOn and for 12 start 60 days before, offering the same term. Never change an agreement.`},
+ {name:'Curator run',who:'Iris',when:'Mondays, 9:00 am',plain:'Builds new themed nights, events and venue pitches from your catalog, your venues, Sable\'s finds, your leads and the public domain, and files them under Iris\'s ideas.',ids:['herald'],
+  body:`TASK: Curator run. Read-only everywhere except agent_config curator.
+1. Read Our Venues: {"op":"readVenues"} (skip inactive). Read agent_config: curator (profiles, catalog.text, ideas) and sable (digest). Read agent_leads and agent_venues for who is interested in what.
+2. Public domain: search the web for public-domain films, music, books, art and holidays that could anchor a night and that are not already in the catalog. Cite a source URL for each. If you cannot confirm something is public domain from a reliable source, leave it out.
+3. Write 5 to 8 new ideas. setConfig doc "curator" with ideas{newId:{title,kind ("Themed night", "Event", "Venue pitch" or "Build this"),pitch (2 to 4 sentences, brand voice),venues (names from Our Venues that fit, using only features ticked or noted in profiles),uses (catalog items it uses, copied exactly),missing (the one thing still to make it work, empty if nothing),when (season or date window),sourceUrl,status:"new",createdAt (ms)}}.
+4. Combine things we already have that nobody put together. When only a small piece is missing (a category, a prop, a playlist), still write the idea and say what is missing so Ahnna can decide to build it.
+5. Venue pitches: write the idea so a venue owner would want it, based on that venue's real features. Never invent a venue feature. Never contact anyone.
+6. Skip any idea already in ideas with any status, including skipped.`},
  {name:'Agreement history',who:'Vesper',when:'One time, run it once after setup',plain:'Goes through your business email for every venue you work with and finds when each agreement was signed and how long it runs. You confirm each one in HQ.',ids:['vesper'],
   body:`TASK: Agreement history. ONE TIME. Read email only.
 1. Read Our Venues: {"op":"readVenues"}. Skip venues marked inactive.
@@ -7860,7 +7890,7 @@ function renderTasks(){
 function render(){
   const grid=$('#tmGrid');if(!grid)return;
   const d=D();let total=0;
-  const SB={herald:1};
+  const SB={};
   grid.innerHTML=AGENTS.slice().sort((x,y)=>(SB[x.id]?1:0)-(SB[y.id]?1:0)).map(a=>{
     const c=cardInfo(a.id,d);total+=c.need;
     if(SB[a.id]){c.line='On standby';c.need=0;}
@@ -8308,12 +8338,52 @@ function wardenState(){
   return {restocks:restocks,openRestocks:restocks.filter(r=>r.status!=='delivered'),tasks:tasks,openTasks:openTasks,soon:openTasks.filter(x=>x.days!=null&&x.days<=7),issues:issues,big:big};
 }
 const WD_TYPES=['Custom trivia category','Prizes to buy','Supplies','Decor or props','Equipment check','Other'];
+
+const NEEDCAT=r=>/bingo|trivia/i.test(r.item||'');
+const catOf=r=>String(r.cat||'').trim();
+function printRun(){
+  const o=wardenState().openRestocks,unk=o.filter(r=>NEEDCAT(r)&&!catOf(r)),known=o.filter(r=>!NEEDCAT(r)||catOf(r));
+  const toPrint=known.filter(r=>NEEDCAT(r)&&r.status==='requested');
+  const groups={};toPrint.forEach(r=>{const k=r.item+' | '+catOf(r);(groups[k]=groups[k]||{item:r.item,cat:catOf(r),rows:[]}).rows.push(r);});
+  const deliver=known.filter(r=>!(NEEDCAT(r)&&r.status==='requested'));
+  const byVenue={};known.forEach(r=>{const v=r.venue||'(no venue named)';(byVenue[v]=byVenue[v]||[]).push(r);});
+  return {unk:unk,toPrint:toPrint,groups:Object.values(groups),byVenue:byVenue,deliver:deliver};
+}
+function printRunHtml(){
+  const p=printRun();
+  let h='<div class="tm-sec">Print run ('+p.toPrint.length+' to print)</div><div class="tm-hint">Everything hosts have asked for, grouped by what you print. Print it once, cut it, then drive the route below.</div>';
+  if(!p.groups.length)h+='<div class="tm-empty">Nothing to print.</div>';
+  p.groups.forEach(g=>{h+='<div class="tm-item"><div class="t1"><b>'+esc(g.item)+'</b> &middot; '+esc(g.cat)+'</div><div class="t2">'+g.rows.map(r=>esc(r.venue||'?')+(r.qty?' ('+esc(r.qty)+')':'')+(r.host?' &middot; '+esc(r.host):'')).join('<br>')+'</div></div>';});
+  const ids=p.toPrint.map(r=>r.id).join(',');
+  h+='<div class="tm-row">'+(p.toPrint.length?'<button class="tm-b pri" data-act="wdprinted" data-ids="'+esc(ids)+'">Mark all printed</button>':'')+'<button class="tm-b" data-act="wdprintpage">Open printable page</button></div>';
+  const vs=Object.keys(p.byVenue).sort();
+  h+='<div class="tm-sec">Deliver by venue ('+vs.length+')</div>';
+  if(!vs.length)h+='<div class="tm-empty">No drop-offs.</div>';
+  vs.forEach(v=>{const rows=p.byVenue[v],ready=rows.filter(r=>!(NEEDCAT(r)&&r.status==='requested'));
+    h+='<div class="tm-item"><div class="t1"><b>'+esc(v)+'</b></div>'+rows.map(r=>{const st=NEEDCAT(r)&&r.status==='requested'?'<span class="tm-tag warn">to print</span>':r.status==='printed'?'<span class="tm-tag booked">printed</span>':r.status==='ordered'?'<span class="tm-tag quoted">ordered</span>':'<span class="tm-tag">needed</span>';return '<div class="t2">'+st+' '+esc(r.item)+(catOf(r)?' &middot; '+esc(catOf(r)):'')+(r.qty?' &middot; '+esc(r.qty):'')+'</div>';}).join('')+
+      (ready.length?'<div class="tm-row"><button class="tm-b pri" data-act="wddelivered" data-ids="'+esc(ready.map(r=>r.id).join(','))+'">Delivered</button></div>':'')+'</div>';});
+  h+='<div class="tm-sec">Ask the host ('+p.unk.length+')</div><div class="tm-hint">These requests do not say which categories. Draft a question to the host, then type the answer in here.</div>';
+  if(!p.unk.length)h+='<div class="tm-empty">Every request names its categories.</div>';
+  p.unk.forEach(r=>{h+='<div class="tm-item"><div class="t1"><span class="tm-tag warn">which ones?</span><b>'+esc(r.item)+'</b> &middot; '+esc(r.venue||'?')+(r.host?' &middot; '+esc(r.host):'')+(r.askedAt?' <span class="tm-tag">asked '+esc(fmtDay(r.askedAt))+'</span>':'')+'</div><div class="t2">'+esc(String(r.note||'').slice(0,140))+'</div><div class="tm-row"><input class="tm-in" style="flex:1;min-width:140px" id="wc-'+esc(r.id)+'" placeholder="Categories they told you, e.g. 90s, Country">'+'<button class="tm-b pri" data-act="wdcat" data-id="'+esc(r.id)+'">Save</button>'+(r.askedAt?'':'<button class="tm-b" data-act="wdask" data-id="'+esc(r.id)+'">Draft question to host</button>')+'</div></div>';});
+  const dr=S.drafts.filter(d=>d.agent==='warden'&&d.status==='pending');
+  if(dr.length){h+='<div class="tm-sec">Questions to approve ('+dr.length+')</div>';dr.forEach(x=>h+=draftCard(x,false));}
+  return h;
+}
+function wdPrintPage(){
+  const p=printRun(),w=window.open('','_blank');if(!w){toast('Allow pop-ups to open the printable page.',true);return;}
+  const rows=p.groups.map(g=>'<tr><td><b>'+esc(g.item)+'</b><br>'+esc(g.cat)+'</td><td>'+g.rows.map(r=>esc(r.venue||'?')+(r.qty?' ('+esc(r.qty)+')':'')).join('<br>')+'</td><td class="b">&#9744;</td></tr>').join('');
+  const vs=Object.keys(p.byVenue).sort().map(v=>'<tr><td><b>'+esc(v)+'</b></td><td>'+p.byVenue[v].map(r=>esc(r.item)+(catOf(r)?': '+esc(catOf(r)):'')+(r.qty?' ('+esc(r.qty)+')':'')).join('<br>')+'</td><td class="b">&#9744;</td></tr>').join('');
+  w.document.write('<!doctype html><title>Print run</title><style>body{font:14px Arial,sans-serif;color:#000;margin:24px}h1{font-size:20px;margin:0 0 4px}h2{font-size:15px;margin:22px 0 6px}table{width:100%;border-collapse:collapse}td{border:1px solid #000;padding:6px 8px;vertical-align:top}td.b{width:36px;text-align:center;font-size:20px}</style><h1>Print run &middot; '+esc(new Date().toLocaleDateString('en-US',{weekday:'long',month:'short',day:'numeric'}))+'</h1><h2>1. Print and cut</h2><table>'+(rows||'<tr><td>Nothing to print</td></tr>')+'</table><h2>2. Deliver</h2><table>'+(vs||'<tr><td>No drop-offs</td></tr>')+'</table><script>window.onload=function(){window.print()}<\/script>');
+  w.document.close();
+}
+
 function vThorne(){
+  const w0=D().wd;
   const w=D().wd;
-  let h='<div class="tm-sec">Restock requests ('+w.openRestocks.length+' open)</div><div class="tm-hint">When a host says they need bingo or trivia sheets, log it here. There is no inventory count yet, so this is the list.</div>';
+  let h=printRunHtml()+'<div class="tm-sec">All restock requests ('+w.openRestocks.length+' open)</div><div class="tm-hint">When a host says they need bingo or trivia sheets, log it here. There is no inventory count yet, so this is the list.</div>';
   if(!w.openRestocks.length)h+='<div class="tm-empty">Nothing waiting.</div>';
   w.openRestocks.forEach(r=>{
-    h+='<div class="tm-item"><div class="t1"><span class="tm-tag '+(r.status==='ordered'?'quoted':'new')+'">'+esc(r.status==='ordered'?'ordered':'requested')+'</span><b>'+esc(r.item)+'</b>'+(r.note?' · '+esc(r.note):'')+(r.qty?' · '+esc(r.qty):'')+'</div><div class="t2">'+[r.host?'Asked by '+esc(r.host):'',r.venue?esc(r.venue):'',r.requestedAt?'on '+esc(fmtDay(r.requestedAt)):''].filter(Boolean).join(' · ')+'</div>'+
+    h+='<div class="tm-item"><div class="t1"><span class="tm-tag '+(r.status==='ordered'?'quoted':r.status==='printed'?'booked':'new')+'">'+esc(r.status==='ordered'?'ordered':r.status==='printed'?'printed':'requested')+'</span><b>'+esc(r.item)+'</b>'+(r.note?' · '+esc(r.note):'')+(r.qty?' · '+esc(r.qty):'')+'</div><div class="t2">'+[r.host?'Asked by '+esc(r.host):'',r.venue?esc(r.venue):'',r.requestedAt?'on '+esc(fmtDay(r.requestedAt)):''].filter(Boolean).join(' · ')+'</div>'+
       '<div class="tm-row">'+(r.status!=='ordered'?'<button class="tm-b" data-act="wdrestock" data-id="'+esc(r.id)+'" data-s="ordered">Ordered</button>':'')+'<button class="tm-b pri" data-act="wdrestock" data-id="'+esc(r.id)+'" data-s="delivered">Delivered</button><button class="tm-b dim red" data-act="wdrestock" data-id="'+esc(r.id)+'" data-s="remove">Remove</button></div></div>';
   });
   h+=det('wdrs','Log a restock request','<div class="tm-fg"><div><label class="tm-lbl">What</label><select class="tm-sel" id="wr-item"><option>Bingo sheets</option><option>Trivia answer sheets</option><option>Gobbers (daubers)</option><option>Clips</option><option>Paper</option><option>Other</option></select></div><div class="full"><label class="tm-lbl">Which category or note (e.g. 2000s Bingo)</label><input class="tm-in" id="wr-note"></div><div><label class="tm-lbl">How many (optional)</label><input class="tm-in" id="wr-qty"></div><div><label class="tm-lbl">Host</label><input class="tm-in" id="wr-host"></div><div><label class="tm-lbl">Venue</label><input class="tm-in" id="wr-venue"></div></div><div class="tm-row"><button class="tm-b pri" data-act="wdaddrestock">Add</button></div>',false);
@@ -8548,7 +8618,7 @@ function vMirror(){
 }
 
 /* ── Job & prompt page ── */
-const PROLE={raven:'lead getter',quill:'reply and quote drafter',vesper:'follow-up and venue care writer',ledger:'lead tracker',sable:'event scout',mirror:'SEO and online presence manager',herald:'social media poster',coach:'host recruiter and coach',sigil:'paperwork and renewals manager',warden:'gig prep and supplies steward'};
+const PROLE={raven:'lead getter',quill:'reply and quote drafter',vesper:'follow-up and venue care writer',ledger:'lead tracker',sable:'event scout',mirror:'SEO and online presence manager',herald:'curator of themed nights and event ideas',coach:'host recruiter and coach',sigil:'paperwork and renewals manager',warden:'gig prep and supplies steward'};
 function defPrompt(id){return INFO[id].prompt.split('{NAME}').join(agent(id).name).split('{ROLE}').join(PROLE[id]||agent(id).role.toLowerCase());}
 function vInfo(id){
   const a=agent(id),I=INFO[id],saved=S.cfg.prompts&&S.cfg.prompts[id];
@@ -8623,15 +8693,45 @@ function hzBuild(){
   p+="Do not post anything. Give me the images and captions to review.";
   return {text:p,n,days:days.length};
 }
+
+/* ── Iris: curator ── */
+const CU_TAGS=[['outdoor','Outdoor space'],['screen','Screen or projector'],['stage','Stage'],['dance','Dance floor'],['big','Big room (100+)'],['private','Private room'],['kitchen','Full kitchen'],['parking','Good parking']];
+const CU_KIND=['Themed night','Event','Venue pitch','Build this'];
+function cuSave(patch){const ref=col('agent_config').doc('curator');return ref.update(patch).catch(()=>ref.set(expandPatch(patch),{merge:true}));}
+function curatorState(){
+  const c=S.cfg.curator||{};
+  const ideas=Object.entries(c.ideas||{}).filter(([k,v])=>v&&v.title).map(([k,v])=>Object.assign({id:k},v)).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+  return {ideas:ideas,fresh:ideas.filter(x=>!x.status||x.status==='new'),profiles:c.profiles||{},catalog:(c.catalog&&c.catalog.text)||''};
+}
+const pfKey=id=>'p'+String(id).replace(/[^a-zA-Z0-9]/g,'_');
+function ideaPrompt(x){return 'Write a short, persuasive pitch to a venue owner for this Belladonna idea, in our brand voice. Warm, confident, a little gothic and fun. Four to six sentences, one clear next step (a free trial night). Never promise a price.\n\nIDEA: '+x.title+(x.kind?' ('+x.kind+')':'')+'\nWHAT IT IS: '+(x.pitch||'')+(x.venues&&x.venues.length?'\nBEST AT: '+[].concat(x.venues).join(', '):'')+(x.uses&&x.uses.length?'\nWE ALREADY HAVE: '+[].concat(x.uses).join(', '):'')+(x.missing?'\nSTILL TO BUILD: '+x.missing:'')+'\n\nUse only what is stated above. Do not invent venue features.';}
+function ideaCard(x){
+  const st=x.status||'new',tg={new:'new',liked:'booked',pursuing:'quoted',made:'booked',skipped:'lost'}[st]||'new';
+  const b=(a,v,l,c)=>'<button class="tm-b'+(c?' '+c:'')+'" data-act="'+a+'" data-id="'+esc(x.id)+'"'+(v?' data-v="'+v+'"':'')+'>'+l+'</button>';
+  return '<div class="tm-item"><div class="t1"><span class="tm-tag '+tg+'">'+esc(st)+'</span><span class="tm-tag">'+esc(x.kind||'Idea')+'</span><b>'+esc(x.title)+'</b></div><div class="t2">'+esc(x.pitch||'')+'</div>'+
+    ([].concat(x.venues||[]).length?'<div class="t2"><b>Best at:</b> '+[].concat(x.venues).map(esc).join(', ')+'</div>':'')+
+    ([].concat(x.uses||[]).length?'<div class="t2"><b>Uses what we have:</b> '+[].concat(x.uses).map(esc).join(', ')+'</div>':'')+
+    (x.missing?'<div class="t2"><span class="tm-tag warn">only missing</span> '+esc(x.missing)+'</div>':'')+
+    (x.when?'<div class="t2"><b>When:</b> '+esc(x.when)+'</div>':'')+
+    (x.sourceUrl&&safeUrl(x.sourceUrl)?'<div class="t2"><a href="'+esc(safeUrl(x.sourceUrl))+'" target="_blank" rel="noopener">source</a></div>':'')+
+    '<div class="tm-row">'+(st==='new'?b('ideaset','liked','Like','pri')+b('ideaset','pursuing','Pursue'):'')+(st==='liked'?b('ideaset','pursuing','Pursue','pri'):'')+(st==='pursuing'?b('ideaset','made','Made it','pri'):'')+((st==='pursuing'||st==='liked')?b('ideacopy','','Copy pitch for Quill'):'')+(st==='skipped'||st==='made'?b('ideaset','new','Undo','dim'):b('ideaset','skipped','Skip','dim'))+b('ideadel','','Remove','dim red')+'</div></div>';
+}
 function vIris(){
-  const z=S.hz,r=hzBuild();
-  let h='<div class="tm-sec">Tonight\'s Story</div><div class="tm-hint">Pick the dates. The prompt below fills in the exact days, times and gigs from your schedule. Copy it into ChatGPT.</div>';
-  h+='<div class="tm-fg"><div class="full"><label class="tm-lbl">How far ahead</label><select class="tm-sel" data-chg="hzrange">'+HZ_RANGES.map(x=>'<option value="'+x[0]+'"'+(x[0]===z.range?' selected':'')+'>'+x[1]+'</option>').join('')+'</select></div>';
-  if(z.range==='custom')h+='<div><label class="tm-lbl">From</label><input type="date" class="tm-in" data-chg="hzfrom" value="'+esc(z.from)+'"></div><div><label class="tm-lbl">To</label><input type="date" class="tm-in" data-chg="hzto" value="'+esc(z.to)+'"></div>';
-  h+='<div><label class="tm-lbl">Post time</label><input type="time" class="tm-in" data-chg="hztime" value="'+esc(z.time)+'"></div></div>';
-  h+='<div class="tm-item"><div class="t1">'+(r.n?plural(r.n,'story','stories')+' across '+plural(r.days,'day','days'):'No gigs on the schedule for these dates')+'</div></div>';
-  h+='<textarea class="tm-ta" id="hz-prompt" readonly style="min-height:420px;font-size:.76rem;line-height:1.55">'+esc(r.text)+'</textarea>';
-  h+='<div class="tm-row"><button class="tm-b pri" data-act="hzcopy">Copy prompt</button></div>';
+  const c=curatorState();
+  let h='<div class="tm-sec">Ideas ('+c.fresh.length+' new, '+c.ideas.length+' total)</div><div class="tm-hint">Themed nights, events and pitches Iris built from what we have, the venues, Sable\'s finds and the public domain. Pursue one and copy the pitch brief for Quill.</div>';
+  if(!c.ideas.length)h+='<div class="tm-empty">No ideas yet. Fill in the venue details and catalog below, then run the Curator task.</div>';
+  c.ideas.filter(x=>(x.status||'new')!=='skipped').forEach(x=>h+=ideaCard(x));
+  const sk=c.ideas.filter(x=>x.status==='skipped');
+  if(sk.length)h+=det('ideask','Skipped ('+sk.length+')',sk.map(ideaCard).join(''),false);
+  h+=det('ideaadd','Add an idea by hand','<div class="tm-fg"><div class="full"><label class="tm-lbl">Title</label><input class="tm-in" id="id-title" placeholder="e.g. Summer movie night on the patio"></div><div><label class="tm-lbl">Kind</label><select class="tm-sel" id="id-kind">'+CU_KIND.map(k=>'<option>'+k+'</option>').join('')+'</select></div><div class="full"><label class="tm-lbl">The idea</label><textarea class="tm-ta" id="id-pitch"></textarea></div><div class="full"><label class="tm-lbl">Best at (venues)</label><input class="tm-in" id="id-venues"></div></div><div class="tm-row"><button class="tm-b pri" data-act="ideaadd">Add</button></div>',false);
+  const vl=(typeof venues!=='undefined'&&Array.isArray(venues)?venues:[]).filter(v=>v&&v.name&&!v.inactive).sort((a,b)=>String(a.name).localeCompare(String(b.name)));
+  h+='<div class="tm-sec">What each venue offers ('+vl.length+')</div><div class="tm-hint">Tick what each venue has and add a note. Iris matches ideas to venues from this. Click a name to open it.</div>';
+  if(!vl.length)h+='<div class="tm-empty">No venues in Our Venues yet.</div>';
+  vl.forEach(v=>{const k=pfKey(v.id),p=c.profiles[k]||{},tg=p.tags||[];
+    h+='<div class="tm-item'+(S.open['c_'+v.id]?'':' folded')+'"><div class="t1 fold" data-act="fold" data-id="'+esc(v.id)+'"><b>'+esc(v.name)+'</b>'+(tg.length||p.notes?' <span class="tm-tag booked">filled in</span>':' <span class="tm-tag">empty</span>')+'</div>'+
+      '<div class="t2" style="margin-top:.4rem">'+CU_TAGS.map(t=>'<label style="display:inline-flex;gap:.3rem;align-items:center;margin:0 .8rem .3rem 0;font-size:.8rem"><input type="checkbox" data-pt="'+esc(v.id)+'" value="'+t[0]+'"'+(tg.indexOf(t[0])>=0?' checked':'')+'>'+t[1]+'</label>').join('')+'</div>'+
+      '<div class="tm-row"><input class="tm-in s" id="iv-cap-'+esc(v.id)+'" placeholder="Capacity" value="'+esc(p.capacity||'')+'"><input class="tm-in" style="flex:1;min-width:200px" id="iv-note-'+esc(v.id)+'" placeholder="e.g. Big covered patio, great for summer movie nights" value="'+esc(p.notes||'')+'"><button class="tm-b pri" data-act="ivsave" data-id="'+esc(v.id)+'">Save</button></div></div>';});
+  h+='<div class="tm-sec">Our catalog</div><div class="tm-hint">Paste what we can offer: the movies in the Venue Menu, bingo categories, trivia categories, games, props, themed-night kits. One item per line. Iris never invents catalog items, she only uses these.</div><textarea class="tm-ta" id="cu-cat" style="min-height:160px" placeholder="Movies: ...\nBingo categories: ...\nTrivia categories: ...\nGames: ...">'+esc(c.catalog)+'</textarea><div class="tm-row"><button class="tm-b pri" data-act="cucat">Save catalog</button></div>';
   return h;
 }
 
@@ -8774,6 +8874,12 @@ const A={
   async agrnote(t){const x=agrState().active.find(a=>a.id===t.dataset.id);if(!x)return;await col('agent_drafts').add({leadId:null,agent:'vesper',kind:'paperwork',body:agrNote(x),label:'Renewal: '+x.venue,status:'pending',createdAt:Date.now()});toast('Draft is in Waiting to approve.');},
   async agrend(t){if(!confirm('Mark this venue as gone?'))return;await sgSave({['agreements.'+t.dataset.id+'.status']:'ended'});},
   async agrdel(t){if(!confirm('Remove this?'))return;await sgSave({['agreements.'+t.dataset.id]:null});},
+  async ideaset(t){const v=t.dataset.v;await cuSave({['ideas.'+t.dataset.id+'.status']:v,['ideas.'+t.dataset.id+'.updatedAt']:Date.now()});},
+  async ideadel(t){if(!confirm('Remove this idea?'))return;await cuSave({['ideas.'+t.dataset.id]:null});},
+  async ideacopy(t){const x=curatorState().ideas.find(i=>i.id===t.dataset.id);if(x)toast(await copy(ideaPrompt(x))?'Brief copied. Paste it into Claude.':'Copy failed.',false);},
+  async ideaadd(){const ti=val('id-title');if(!ti){toast('Give it a title.',true);return;}await cuSave({['ideas.i'+Date.now().toString(36)]:{title:ti,kind:$('#id-kind').value,pitch:val('id-pitch'),venues:val('id-venues').split(',').map(x=>x.trim()).filter(Boolean),status:'new',source:'hand',createdAt:Date.now()}});toast('Added.');},
+  async ivsave(t){const id=t.dataset.id,tags=[...document.querySelectorAll('input[data-pt="'+id+'"]:checked')].map(e=>e.value);const vn=(venues||[]).find(v=>v.id===id);await cuSave({['profiles.'+pfKey(id)]:{name:vn?vn.name:'',tags:tags,capacity:val('iv-cap-'+id),notes:val('iv-note-'+id)}});toast('Saved.');},
+  async cucat(){await cuSave({'catalog.text':($('#cu-cat')||{}).value||'','catalog.savedAt':Date.now()});toast('Catalog saved.');},
   async sgaddstd(){const p={};const have=new Set(sigilState().items.map(x=>x.name));SG_STD.filter(n=>!have.has(n)).forEach((n,k)=>{p['items.s'+Date.now().toString(36)+k]={name:n,due:''};});await sgSave(p);toast('List added. Set a date on each.');},
   async sgadditem(){const n=val('sg-name');if(!n){toast('Type what to track.',true);return;}await sgSave({['items.s'+Date.now().toString(36)]:{name:n,due:val('sg-due')}});toast('Added.');},
   async sgdue(t){await sgSave({['items.'+t.dataset.id+'.due']:t.value});},
@@ -8786,7 +8892,12 @@ const A={
     await col('agent_drafts').add({leadId:null,agent:'sigil',kind:'paperwork',body:paperText(p),label:'Paperwork: '+p.name,status:'pending',createdAt:Date.now()});
     toast('Draft is waiting below.');
   },
-  async wdaddrestock(){await wdSave({['restocks.r'+Date.now().toString(36)]:{item:$('#wr-item').value,note:val('wr-note'),qty:val('wr-qty'),host:val('wr-host'),venue:val('wr-venue'),status:'requested',requestedAt:Date.now()}});toast('Logged.');},
+  async wdprinted(t){const p={};String(t.dataset.ids).split(',').filter(Boolean).forEach(id=>{p['restocks.'+id+'.status']='printed';p['restocks.'+id+'.printedAt']=Date.now();});await wdSave(p);toast('Marked printed.');},
+  async wddelivered(t){const p={};String(t.dataset.ids).split(',').filter(Boolean).forEach(id=>{p['restocks.'+id+'.status']='delivered';p['restocks.'+id+'.deliveredAt']=Date.now();});await wdSave(p);toast('Marked delivered.');},
+  async wdcat(t){const v=val('wc-'+t.dataset.id);if(!v){toast('Type the categories first.',true);return;}await wdSave({['restocks.'+t.dataset.id+'.cat']:v});toast('Saved. It is on the print list now.');},
+  async wdask(t){const r=wardenState().restocks.find(x=>x.id===t.dataset.id);if(!r)return;const what=/trivia/i.test(r.item)?'trivia answer sheets':'bingo sheets';await col('agent_drafts').add({leadId:null,agent:'warden',kind:'askhost',body:'Hi '+(r.host||'there')+'! Thanks for the heads up that you are running low'+(r.venue?' at '+r.venue:'')+'. Which '+(/trivia/i.test(r.item)?'trivia categories':'bingo categories')+' are you low on, and about how many '+what+' of each? Send me the category names and a rough count and I will get them to you. - Ahnna',label:'Ask host: '+(r.host||'host')+(r.venue?' ('+r.venue+')':''),status:'pending',createdAt:Date.now()});await wdSave({['restocks.'+r.id+'.askedAt']:Date.now()});toast('Draft is in Questions to approve.');},
+  async wdprintpage(){wdPrintPage();},
+  async wdaddrestock(){await wdSave({['restocks.r'+Date.now().toString(36)]:{item:$('#wr-item').value,cat:val('wr-note'),note:val('wr-note'),qty:val('wr-qty'),host:val('wr-host'),venue:val('wr-venue'),status:'requested',requestedAt:Date.now()}});toast('Logged.');},
   async wdrestock(t){const k='restocks.'+t.dataset.id,s=t.dataset.s;if(s==='remove'){if(!confirm('Remove this request?'))return;await wdSave({[k]:null});}else await wdSave({[k+'.status']:s,[k+'.'+s+'At']:Date.now()});},
   async wdrestockfrom(t){
     const x=D().wd.issues.find(i=>i.id===t.dataset.id);if(!x)return;
@@ -8797,7 +8908,7 @@ const A={
     if(/bingo|sheet|card/i.test(tx)||!guess.length)guess.unshift('Bingo sheets');
     const cat=(tx.match(/\b(19\d0s|20\d0s|[a-z]+ bingo)\b/gi)||[]).join(', ');
     const q=(tx.match(/(\d+)\s*sheets/i)||[])[1];
-    const p={};guess.forEach((it,k)=>{p['restocks.r'+Date.now().toString(36)+k]={item:it,note:(it==='Bingo sheets'&&cat?cat+'. ':'')+'From checkout: '+tx.slice(0,160),qty:(it==='Bingo sheets'&&q)?q+' per category':'',host:x.host,venue:x.venue,status:'requested',requestedAt:Date.now()};});
+    const p={};guess.forEach((it,k)=>{p['restocks.r'+Date.now().toString(36)+k]={item:it,cat:(it==='Bingo sheets'?cat:''),note:(it==='Bingo sheets'&&cat?cat+'. ':'')+'From checkout: '+tx.slice(0,160),qty:(it==='Bingo sheets'&&q)?q+' per category':'',host:x.host,venue:x.venue,status:'requested',requestedAt:Date.now()};});
     await wdSave(p);toast('Logged '+guess.join(' and ')+'.');
   },
   async wdaddtask(){const ti=val('wt-title');if(!ti){toast('Type what needs doing.',true);return;}await wdSave({['tasks.t'+Date.now().toString(36)]:{title:ti,type:$('#wt-type').value,date:val('wt-date'),venue:val('wt-venue'),status:'open',createdAt:Date.now()}});toast('Added.');},
