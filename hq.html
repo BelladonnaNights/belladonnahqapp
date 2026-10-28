@@ -6877,8 +6877,8 @@ vesper:{
   ['Mark each venue good, watch or at risk after the conversation','After each check-in','You'],
   ['Approve or skip each nudge or check-in; approved text is copied for you to send','Whenever drafts are waiting','You']
  ],
- reads:['agent_leads (stage quoted, no repliedAt, quotedAt, nudges.n1, nudges.n2)','agent_venues (stage onboarding, lastCheckinAt, health)','shifts (host checkouts: venue, date, crowdSize, singers, energyLevel, venueBusy, tipScale, gotPaid, issues, checkoutNotes)'],
- writes:['agent_drafts (agent vesper, kind n1, n2 or checkin, status pending)','agent_venues (healthSuggested and healthWhy)'],
+ reads:['agent_leads (stage quoted, no repliedAt, quotedAt, nudges.n1, nudges.n2)','Our Venues (the venues you work with, from your Venues tab) and the Leads tab (venue leads)','agent_config/care (last check-in and health, saved per venue id)','shifts (host checkouts: venue, date, crowdSize, singers, energyLevel, venueBusy, tipScale, gotPaid, issues, checkoutNotes)'],
+ writes:['agent_drafts (agent vesper, kind n1, n2 or checkin, status pending)','agent_config/care (healthSuggested and healthWhy per venue id)'],
  handoff:'A cold lead goes to Ledger as lost, reason "Went cold".',
  rules:['Never nudge a lead that replied or booked.','Never send a third nudge.','Two to four sentences, one clear next step, no pressure.','Never check in with the same venue more than once every 3 months unless Ahnna asks.'],
  today:'HQ computes who is due today and builds the prompt. You run it in Claude, paste the draft, approve it, and send.',
@@ -6902,14 +6902,14 @@ HOW TO WRITE A NUDGE
 - Two to four sentences. One clear next step. Never send a third nudge.
 
 VENUE CARE (every 3 months)
-Also read agent_venues where stage is "onboarding" (venues Belladonna already works with). A venue is due when lastCheckinAt is empty or older than 90 days. For each due venue without a pending draft, write one document to agent_drafts: leadId (empty), venueId, agent "vesper", kind "checkin", body, label ("Check-in: " plus the venue name), status "pending", createdAt (ms).
+Also read Our Venues (the HQ ingest door op "readVenues"; skip any venue marked inactive). These are the venues Belladonna works with. Read agent_config/care for each venue's saved lastCheckinAt. A venue is due when lastCheckinAt is empty or older than 90 days. Use venueId "hq_" plus the venue id. For each due venue without a pending draft, write one document to agent_drafts: leadId (empty), venueId, agent "vesper", kind "checkin", body, label ("Check-in: " plus the venue name), status "pending", createdAt (ms).
 - Warm and short, from Ahnna. Ask how the nights are going, whether anything about the night, music, host or crowd should change, and whether we can help bring more people in.
 - If the checkouts show a good trend (growing crowd, more singers, high energy), mention one real number in the message and ask for an introduction to one other owner or manager.
 - If health is "risk" or "watch", ask what would make it better and offer a quick call. Never mention the health flag.
 - Never send. Ahnna approves and sends.
 
 HOST CHECKOUTS (venue health)
-Each Monday read the collection shifts for the last 90 days, not cancelled. Match each shift to a venue by the venue name. For each venue in agent_venues with stage "onboarding", compare the last 30 days to the 30 days before: crowdSize, singers (singers or players), energyLevel, venueBusy and tipScale. Note any issues text. Write to the venue document: healthSuggested ("good", "watch" or "risk") and healthWhy (one plain sentence with the real numbers, for example "Average crowd fell from 42 to 28 over the last 4 nights"). Never change the health field itself. Ahnna sets that. If there are fewer than 3 checkouts, write nothing.
+Each Monday read the collection shifts for the last 90 days, not cancelled. Match each shift to a venue by the venue name. For each venue in Our Venues (not inactive), compare the last 30 days to the 30 days before: crowdSize, singers (singers or players), energyLevel, venueBusy and tipScale. Note any issues text. Write to agent_config/care under venues.<venue id>: healthSuggested ("good", "watch" or "risk") and healthWhy (one plain sentence with the real numbers, for example "Average crowd fell from 42 to 28 over the last 4 nights"). Never change the health field itself. Ahnna sets that. If there are fewer than 3 checkouts, write nothing.
 
 THANK-YOUS. On the first Monday of the month, for each venue with health "good" and steady crowds in the last 30 days of checkouts, add one agent_drafts record (agent "vesper", kind "checkin", label "Thank-you: VENUE", status "pending") with a short warm note thanking them and asking how last month felt. Never more than one per venue per month.
 
@@ -7176,6 +7176,40 @@ const STARTER_VENUES=[
 
 /* ── derived state ── */
 function leadsById(){const m={};S.leads.forEach(l=>m[l.id]=l);return m;}
+
+/* ── Our Venues and Leads (HQ's own venue data) ── */
+function hqLeads(){return (typeof leads!=='undefined'&&Array.isArray(leads))?leads:[];}
+function hqVenuesList(){
+  try{if(typeof venues==='undefined'||!Array.isArray(venues))return [];}catch(e){return [];}
+  return venues.filter(v=>v&&v.name&&!v.inactive&&(typeof locationScopeMatches!=='function'||locationScopeMatches(v.locationId)));
+}
+function careVenues(){
+  const nm=x=>String(x||'').toLowerCase().replace(/[^a-z0-9]/g,'');
+  const care=(S.cfg.care&&S.cfg.care.venues)||{};
+  const hq=hqVenuesList();const names=new Set(hq.map(v=>nm(v.name)));
+  const legacy=S.venues.filter(v=>v.stage==='onboarding');
+  const out=hq.map(v=>{
+    const lg=legacy.find(x=>nm(x.name)===nm(v.name))||{};
+    const m=/Contact:\s*([^·\n]+)(?:·\s*([^·\n]+))?/.exec(v.notes||'');
+    const base={contactName:m?m[1].trim():'',contact:m&&m[2]?m[2].trim():''};
+    const o=Object.assign({},base,lg,care[v.id]||{});
+    o.id='hq_'+v.id;o.hqId=v.id;o.name=v.name;o.noRecurring=!!v.noRecurring;o.startDate=v.startDate||'';
+    o.contactName=o.contactName||base.contactName;o.contact=o.contact||base.contact;
+    return o;
+  });
+  legacy.filter(v=>!names.has(nm(v.name))).forEach(v=>out.push(v));
+  return out;
+}
+function venueLeadsDue(){
+  const today=isoDay(Date.now()),now=Date.now();
+  return hqLeads().filter(l=>l.name&&!['signed','transferred','paused'].includes(l.stage||'new')&&!l.followUpNone).map(l=>{
+    const upd=l.updatedAt?new Date(l.updatedAt).getTime():(l.createdAt?new Date(l.createdAt).getTime():0);
+    const over=l.nextFollowUp&&l.nextFollowUp<=today;const idle=upd?Math.floor((now-upd)/DAY):0;
+    return Object.assign({},l,{over:over,idle:idle,why:over?'follow-up date '+(l.nextFollowUp===today?'is today':'passed on '+fmtEv(l.nextFollowUp)):(idle>=14?'no activity in '+idle+' days':'')});
+  }).filter(l=>l.why).sort((a,b)=>String(a.nextFollowUp||'9').localeCompare(String(b.nextFollowUp||'9')));
+}
+async function careSave(patch){const ref=col('agent_config').doc('care');try{await ref.update(patch);}catch(e){await ref.set(expandPatch(patch),{merge:true});}}
+
 function vesperDue(){
   const now=Date.now(),live=new Set(S.drafts.filter(d=>d.agent==='vesper'&&d.status==='pending').map(d=>d.leadId));
   const out=[];
@@ -7208,9 +7242,10 @@ function D(){
     venYes:S.venues.filter(v=>v.stage==='yes'),
     rPending:dr.filter(d=>d.agent==='raven'&&d.status==='pending'),
     silenced:S.sites.filter(s=>s.active===false),
-    care:S.venues.filter(v=>v.stage==='onboarding'),
-    careDue:S.venues.filter(v=>v.stage==='onboarding'&&Date.now()-(v.lastCheckinAt||0)>=CARE),
-    careRisk:S.venues.filter(v=>v.stage==='onboarding'&&v.health==='risk'),
+    care:careVenues(),
+    careDue:careVenues().filter(v=>Date.now()-(v.lastCheckinAt||0)>=CARE),
+    careRisk:careVenues().filter(v=>v.health==='risk'),
+    vlDue:venueLeadsDue(),
     sPending:dr.filter(d=>d.agent==='sigil'&&d.status==='pending'),
     sg:sigilState(),
     wd:wardenState(),
@@ -7234,9 +7269,9 @@ function cardInfo(id,d){
     return {need:q+n,line:q?plural(q,'draft','drafts')+' waiting'+(n?' · '+n+' to write':''):(n?plural(n,'lead needs','leads need')+' a draft':'Nothing to draft')};
   }
   if(id==='vesper'){
-    const p=d.vPending.length,u=d.vDue.length,c=d.careDue.length;
-    const parts=[p?plural(p,'draft','drafts')+' to approve':'',u?u+' nudge'+(u===1?'':'s')+' due':'',c?plural(c,'venue check-in','venue check-ins')+' due':'',d.careRisk.length?d.careRisk.length+' at risk':''].filter(Boolean);
-    return {need:p+u+c,line:parts.length?parts.join(' · '):(d.waiting?plural(d.waiting,'quote','quotes')+' waiting, none due':'No quotes out')};
+    const p=d.vPending.length,u=d.vDue.length,c=d.careDue.length,w=d.vlDue.length;
+    const parts=[p?plural(p,'draft','drafts')+' to approve':'',u?u+' nudge'+(u===1?'':'s')+' due':'',c?plural(c,'venue check-in','venue check-ins')+' due':'',w?plural(w,'venue lead','venue leads')+' to follow up':'',d.careRisk.length?d.careRisk.length+' at risk':''].filter(Boolean);
+    return {need:p+u+c+w,line:parts.length?parts.join(' · '):(d.waiting?plural(d.waiting,'quote','quotes')+' waiting, none due':'No quotes out')};
   }
   if(id==='warden'){
     const w=d.wd,n=w.openRestocks.length+w.soon.length+w.issues.length;
@@ -7331,7 +7366,7 @@ function start(){
   list('agent_venues','venues');
   d.collection('agent_config').onSnapshot(s=>{const c={};s.docs.forEach(x=>c[x.id]=x.data());S.cfg=c;render();},onErr);
 }
-window.teamOpen=function(){start();render();if(typeof loadRecruits==='function'&&Date.now()-(S.recAt||0)>10*60*1000){S.recAt=Date.now();try{loadRecruits();}catch(e){}setTimeout(render,1200);}if(typeof loadShiftsData==='function'&&(!(typeof shiftsData!=='undefined'&&shiftsData.length)||Date.now()-(S.shiftsAt||0)>10*60*1000)){S.shiftsAt=Date.now();Promise.resolve(loadShiftsData()).then(()=>render()).catch(()=>{});}};
+window.teamOpen=function(){start();render();if(Date.now()-(S.recAt||0)>10*60*1000){S.recAt=Date.now();try{if(typeof loadRecruits==='function')loadRecruits();}catch(e){}try{if(typeof loadLeads==='function')loadLeads();}catch(e){}setTimeout(render,1200);}if(typeof loadShiftsData==='function'&&(!(typeof shiftsData!=='undefined'&&shiftsData.length)||Date.now()-(S.shiftsAt||0)>10*60*1000)){S.shiftsAt=Date.now();Promise.resolve(loadShiftsData()).then(()=>render()).catch(()=>{});}};
 
 
 /* ── Briefing ── */
@@ -7362,6 +7397,7 @@ function briefData(){
   d.cd.openCalls.forEach(x=>need.push({a:'coach',text:'Callout not covered: '+(x.host||'a host')+(x.venue?' at '+x.venue:'')+(x.date?' ('+fmtEv(x.date)+')':''),body:'Logged '+ago(x.loggedAt)+(x.reason?'. Reason: '+cut(x.reason,120):'')+'. Nobody has taken the shift yet.'}));
   d.cd.stuck.forEach(r=>need.push({a:'coach',text:(r.name||'A recruit')+' is stuck in onboarding',body:r.done+' of '+r.total+' steps done. Next: '+r.next+'. Nothing changed in '+r.idle+' days.'}));
   if(d.cd.flags.length)need.push({a:'coach',text:plural(d.cd.flags.length,'checkout flag','checkout flags'),body:d.cd.flags.slice(0,4).map(f=>f.host+' at '+f.venue+' ('+fmtEv(f.date)+'): '+f.what).join('; ')+(d.cd.flags.length>4?'; and '+(d.cd.flags.length-4)+' more':'')+'.'});
+  add('vesper',d.vlDue.length,plural(d.vlDue.length,'venue lead needs','venue leads need')+' a follow-up',d.vlDue.slice(0,4).map(l=>l.name+' ('+l.why+')').join('; ')+(d.vlDue.length>4?'; and '+(d.vlDue.length-4)+' more':'')+'. They are in your Leads tab.');
   add('mirror',d.mPending.length,plural(d.mPending.length,'review reply','review replies')+' to approve',d.mPending.map(x=>cut(x.label,60)).join('; ')+'.');
   add('mirror',d.stale.length,plural(d.stale.length,'profile is','profiles are')+' stale',d.stale.slice(0,6).map(x=>x.name+(x.profileRefreshed?' ('+ago(x.profileRefreshed)+')':' (never refreshed)')).join('; ')+'. Open Mirror for what to change on each.');
   add('sable',d.undecided,plural(d.undecided,'event idea','event ideas')+' to pursue or skip',d.top5.filter((_,i)=>!d.dec['t'+i]).map(x=>(x.date?fmtEv(x.date)+': ':'')+x.event).join('; ')+'.');
@@ -7503,7 +7539,7 @@ Belladonna Audio Alchemies`},
 Ahnna and the Belladonna crew`},
  {id:'revneg',label:'Calm reply to a 2-star review',body:`Hi {name},
 
-Thank you for telling us, and I am sorry the night missed the mark. That is not the standard we hold ourselves to. I would like to understand what went wrong and make it right. Could you reach out through belladonnanights.com so I can follow up with you directly?
+Thank you for telling us, and I am sorry the night missed the mark. That is not the standard we hold ourselves to. I would like to understand what went wrong and make it right. Could you email contact@belladonnanights.com so I can follow up with you directly?
 
 Ahnna
 Belladonna Audio Alchemies`},
@@ -7606,24 +7642,25 @@ const TK_HEAD=`You are part of the Belladonna Audio Alchemies agent team. You ne
 
 HQ door: POST JSON to {URL} with header  x-agent-key: {KEY}
 Ops:
- {"op":"read","collection":"agent_venues|agent_leads|agent_drafts|agent_sites|agent_config|shifts","limit":300}
+ {"op":"read","collection":"agent_venues|agent_leads|agent_drafts|agent_sites|agent_config|shifts|leads|recruits","limit":300}
+ {"op":"readVenues"}   (Our Venues from HQ, the venues we work with)
  {"op":"addLead","lead":{site,client,eventType,eventDate,location,headcount,budget,link,message,score,scoreWhy}}
  {"op":"addDraft","draft":{agent,kind,body,label,venueId?,leadId?}}
  {"op":"addVenue","fields":{name,city,contactName,contact,notes}}
  {"op":"updateVenue","id":"...","fields":{...}}
  {"op":"updateSite","id":"...","fields":{...}}
- {"op":"setConfig","doc":"sable|sigil|warden","data":{...}}
+ {"op":"setConfig","doc":"sable|sigil|warden|coach|care","data":{...}}
 
 First read agent_config (voice, pricing, outreach) and follow it exactly. Never invent prices, dates, or facts. Check agent_drafts first so you never write a draft that already exists. If nothing needs doing, write nothing. End every run with a one-line summary of what you wrote.`;
 const TASKS=[
- {name:'Lead run',who:'Raven and Quill',when:'Weekdays, 7:00 am',plain:'Looks for people and venues asking for karaoke, trivia or bingo, scores them hot / warm / cold, drafts cold emails and day-5 follow-ups for venues you have not heard back from, and drafts replies to the good leads.',ids:['raven','quill'],
+ {name:'Lead run',who:'Raven and Quill',when:'Weekdays, 7:00 am',plain:'Looks for people and venues asking for karaoke, trivia or bingo, scores them hot / warm / cold, drafts cold emails and day-5 follow-ups for venues you have not heard back from, and drafts replies to the good leads.',ids:['raven','quill'],lib:true,
   body:`TASK: Lead run.
 1. Search the public web for people and venues in Seattle-Tacoma asking for or likely to need karaoke, trivia, music bingo or themed nights. Score each Hot / Warm / Cold with a one-line reason. Skip anything older than 3 days.
 2. addLead for each (max 8 per run, skip duplicates by link). addVenue for any new bar or venue worth cold-emailing.
 3. Read agent_venues. For stage "target" with no emailedAt: addDraft kind "email" (agent raven, venueId set). For stage "followup" where emailedAt is 5 or more days ago and no emailed2At: addDraft kind "email2".
 4. For each new Hot or Warm lead, addDraft kind "reply" (agent quill, leadId set). Answer their question first, mention Belladonna second.
 Do not touch venues you did not just add except to draft.`},
- {name:'Inbox sweep',who:'Raven, Ledger and Sigil',when:'Weekdays, 7:30 am and 3:00 pm',plain:'Reads the last day of your business email. Sorts new inquiries (parties, events, venues, host applicants, vendors), moves venues to yes or no when they answer, and logs renewals and paperwork that need doing. Needs Google Workspace connected.',ids:['raven','ledger','sigil'],
+ {name:'Inbox sweep',who:'Raven, Ledger and Sigil',when:'Weekdays, 7:30 am and 3:00 pm',plain:'Reads the last day of your business email. Sorts new inquiries (parties, events, venues, host applicants, vendors), moves venues to yes or no when they answer, and logs renewals and paperwork that need doing. Needs Google Workspace connected.',ids:['raven','ledger','sigil'],lib:true,
   body:`TASK: Inbox sweep. Read the last 24 hours of the business Gmail only.
 0. New inquiries from people we have not written to: a party or event hire, wedding, corporate or private booking, a venue asking about services, a host applicant, a vendor or sponsor. Hire and venue inquiries: addLead (source "email", score Hot / Warm with a reason) and a Quill reply draft (kind "reply", leadId set). Host applicants: addDraft agent "vesper" kind "checkin" labelled "Host applicant: NAME" with their details so Ahnna can add them to Host Progress. Vendors and sponsors: one addDraft labelled "Look at when you can". Ignore marketing, spam and automated notices.
 1. Venue replies: match the sender to agent_venues by contact. If they said yes, updateVenue stage "yes". If no, stage "no" and noUntil 90 days out. If they asked a question, addDraft kind "reply" (agent quill, venueId set).
@@ -7636,11 +7673,12 @@ Do not touch venues you did not just add except to draft.`},
 3. Find requests for bingo sheets, trivia answer sheets, paper or supplies. setConfig doc "warden" with restocks{newId:{item,note,qty,host,venue,status:"requested",requestedAt}}. Use rough quantities (no inventory is kept).
 4. Real issues (equipment, venue problems, safety) go into tasks{newId:{title,type:"issue",date,venue,gigId,status:"open"}}.
 5. Add the shift id to handled{shiftId:true} when finished.`},
- {name:'Venue care',who:'Vesper',when:'Weekdays, 8:00 am',plain:'Rates how each venue is doing from host checkouts, drafts the 3-month check-in, and drafts follow-ups that are due.',ids:['vesper'],
-  body:`TASK: Venue care. Read agent_venues and shifts from the last 14 days.
-1. Per venue with stage "yes" or "onboarding", read host checkout energyLevel, crowdSize, singers, tipScale, issues. Set healthSuggested (good / watch / risk) and healthWhy (one plain sentence). Never overwrite "health", only the suggested fields.
-2. If lastCheckinAt is 90 or more days ago (or missing): addDraft kind "checkin" (agent vesper, venueId set).
-3. If followUpOn is today or past: addDraft kind "n1" or "n2" as fits.`},
+ {name:'Venue care',who:'Vesper',when:'Weekdays, 8:00 am',plain:'Reads Our Venues and your Leads tab, rates how each current venue is doing from host checkouts, drafts the 3-month check-in, and flags venue leads that need a follow-up.',ids:['vesper'],
+  body:`TASK: Venue care.
+1. Read Our Venues: {"op":"readVenues"}. Skip any venue marked inactive. These are the venues we work with. Read agent_config care (saved check-ins and health per venue id) and shifts from the last 14 days.
+2. For each venue, read the matching host checkouts (match by venue name): energyLevel, crowdSize, singers, tipScale, issues. setConfig doc "care" with data {"venues":{"<venue id>":{"healthSuggested":"good|watch|risk","healthWhy":"one plain sentence"}}}. Never write "health", only the suggested fields.
+3. If lastCheckinAt for that venue id is 90 or more days ago (or missing): addDraft kind "checkin" (agent vesper, venueId "hq_<venue id>", label "Check-in: NAME").
+4. Read the Leads: {"op":"read","collection":"leads"}. For any lead whose stage is not signed, transferred or paused, with nextFollowUp today or past, or no update in 14 days: addDraft kind "n1" (agent vesper, label "Lead follow-up: NAME") with a short follow-up email. Never change the lead.`},
  {name:'Presence check',who:'Mirror',when:'Mondays, 8:00 am',plain:'Checks your listings and website, flags profiles that have gone 90 days without a refresh with exact steps, and drafts review replies and review asks.',ids:['mirror'],
   body:`TASK: Presence check. Read agent_sites. Skip sites where silencedAt is set or active is false.
 1. For each active site, check the public page. If profileRefreshed is 90 or more days old, set auditNotes to the exact steps to fix it, and addDraft kind "seo".
@@ -7657,10 +7695,17 @@ Never message anyone.`},
   body:`TASK: Event scout. Find public Seattle-Tacoma events in the next 30 days that fit Belladonna (holidays, festivals, game days, venue anniversaries). setConfig doc "sable" with digest{...} and decisions{...} in the same shape as the existing sable doc. Read it first and keep the format.`}
 ];
 function tkLS(k,v){try{if(v===undefined)return localStorage.getItem('tmtk_'+k)||'';localStorage.setItem('tmtk_'+k,v);}catch(e){return '';}}
+function libPatterns(){
+  let t='QUILL REPLY PATTERNS (use for every reply draft; same patterns Ahnna uses by hand in HQ)\nPick the closest situation, keep its structure and warmth, fill the {tokens} from the email, and adapt it so it answers what they actually asked FIRST. Prices only from the price sheet in agent_config pricing, never invent one. If a detail is unknown, leave a [bracket] for Ahnna.\n\nSERVICES (use as {night} and {hook}):\n';
+  Object.keys(LIB_SERV).forEach(k=>{t+='- '+LIB_SERV[k].label+': night = "'+LIB_SERV[k].night+'", hook = "'+LIB_SERV[k].hook+'"\n';});
+  t+='\n';
+  LIB_SIT.forEach(x=>{t+='SITUATION: '+x.label+'\n'+x.body.replace('{trial}','{trial = the short trial-night line from agent_config outreach.short}')+'\n\n';});
+  return t.trim();
+}
 function tkText(i){
   const t=TASKS[i],url=tkLS('url').trim()||'PASTE_FUNCTION_URL_HERE',key=tkLS('key').trim()||'PASTE_KEY_HERE';
   const prompts=t.ids.map(id=>'---- '+agent(id).name.toUpperCase()+' ----\n'+((S.cfg.prompts&&S.cfg.prompts[id])||defPrompt(id))).join('\n\n');
-  return TK_HEAD.split('{URL}').join(url).split('{KEY}').join(key)+'\n\n'+t.body+'\n\n'+prompts;
+  return TK_HEAD.split('{URL}').join(url).split('{KEY}').join(key)+'\n\n'+t.body+'\n\n'+(t.lib?libPatterns()+'\n\n':'')+prompts;
 }
 function renderTasks(){
   const el=$('#tmTasks');if(!el||S.tasksDone)return;S.tasksDone=true;
@@ -7786,6 +7831,9 @@ function coldEmailText(v){
   const t=termsShort().trim();
   return 'Subject: Free trial night at '+v.name+'?\n\nHi '+(v.contactName||'there')+',\n\nI run Belladonna Audio Alchemies, live karaoke, music bingo and trivia in the Auburn area. '+hook+'\n\nI would like to run one free trial night at '+v.name+'. It costs you nothing, we bring everything, and you keep the bar sales. If it does not bring people in, we part friends.'+(t?'\n\n'+t:'')+'\n\nCould I stop by this week for 10 minutes, or would a quick call be easier?\n\nAhnna\nBelladonna Audio Alchemies\nbelladonnanights.com';
 }
+function leadFollowText(l){
+  return 'Subject: Following up: Belladonna at '+l.name+'\n\nHi '+(l.contactName||'there')+',\n\nI wanted to circle back about bringing Belladonna to '+l.name+'. [Add one line about where you left off. Delete this bracket before you send.]\n\nIf a night is still on your mind, tell me which one and I will hold it. If the timing is off, no problem, just say so and I will check back later.\n\nAhnna\nBelladonna Audio Alchemies\nbelladonnanights.com';
+}
 function followEmailText(v){
   return 'Subject: Re: Free trial night at '+v.name+'?\n\nHi '+(v.contactName||'there')+',\n\nA quick follow-up on my note about a free trial night at '+v.name+'. If a night is slow for you, we would love to fill it. No cost and no commitment.\n\nIf now is not the right time, no problem at all. Just let me know and I will leave you be.\n\nAhnna\nBelladonna Audio Alchemies\nbelladonnanights.com';
 }
@@ -7900,6 +7948,49 @@ function vQuill(){
 }
 
 /* ── Vesper ── */
+
+/* ── Vesper: venue timeline ── */
+function venueTimeline(v){
+  const norm=x=>String(x||'').toLowerCase().replace(/[^a-z0-9]/g,'');
+  const nv=norm(v.name),ev=[],now=Date.now();
+  const add=(ts,tag,text,cls)=>{if(ts)ev.push({ts:ts,tag:tag,text:text,cls:cls||''});};
+  add(v.createdAt,'Added','Added to HQ as '+(v.stage||'target'));
+  if(v.startDate)add(new Date(v.startDate+'T12:00:00').getTime(),'Started','Started with Belladonna','ok');
+  hqLeads().filter(l=>norm(l.name)===nv).forEach(l=>{if(l.createdAt)add(new Date(l.createdAt).getTime(),'Lead','First logged as a lead'+(l.source==='outbound'?' (we found them)':l.source?' (they found us)':''));if(l.stage&&l.updatedAt)add(new Date(l.updatedAt).getTime(),'Lead','Lead stage: '+(typeof leadStageLabel==='function'?leadStageLabel(l.stage):l.stage));});
+  add(v.emailedAt,'Email','Cold email sent');add(v.emailed2At,'Email','Follow-up email sent');
+  Object.values(v.visits||{}).forEach(x=>add(x.at,'Visit',[x.who?x.who+' visited':'Visit',x.said?'they said: '+x.said:'',x.outcome?'outcome: '+x.outcome:''].filter(Boolean).join(' · ')));
+  if(v.trialDate)add(new Date(v.trialDate+'T20:00:00').getTime(),'Trial','Trial night');
+  add(v.handedOffAt,'Onboarding','Moved to onboarding');
+  S.drafts.filter(x=>x.venueId===v.id&&x.kind==='checkin'&&x.status==='approved').forEach(x=>add(x.approvedAt||x.createdAt,'Check-in','Check-in message approved'));
+  if(v.lastCheckinAt)add(v.lastCheckinAt,'Check-in','Check-in logged','ok');
+  const sh=(typeof shiftsData!=='undefined'&&Array.isArray(shiftsData))?shiftsData:[];
+  const mine=sh.filter(s=>s.date&&!s.cancelled&&(norm(s.venue).includes(nv)||(nv&&nv.includes(norm(s.venue))&&norm(s.venue).length>3))).sort((a,b)=>String(b.date).localeCompare(String(a.date)));
+  mine.forEach(s=>{const bits=[s.hostName?'host '+s.hostName:'',s.crowdSize?'crowd '+s.crowdSize:'',s.singers?s.singers+' singers/players':'',s.energyLevel?'energy '+s.energyLevel:'',s.tipScale?'tips '+s.tipScale+'/5':''].filter(Boolean);
+    add(new Date(s.date+'T20:00:00').getTime(),'Night',bits.join(' · ')||'Night logged');
+    if(String(s.issues||'').trim())add(new Date(s.date+'T20:30:00').getTime(),'Issue',String(s.issues).trim().slice(0,160),'bad');});
+  const co=S.cfg.coach||{};
+  Object.values(co.callouts||{}).filter(x=>x&&norm(x.venue)===nv&&x.date).forEach(x=>add(new Date(x.date+'T12:00:00').getTime(),'Callout',(x.host||'A host')+' called out ('+(x.status==='covered'?'covered'+(x.coveredBy?' by '+x.coveredBy:''):x.status==='open'?'not covered yet':'nobody took it')+')',x.status==='open'?'bad':''));
+  Object.values(co.feedback||{}).filter(x=>x&&norm(x.venue)===nv).forEach(x=>add(new Date((x.date||isoDay(now))+'T12:00:00').getTime(),'Feedback',(x.score?x.score+'/5. ':'')+(x.note||'')));
+  ev.sort((a,b)=>b.ts-a.ts);
+  // stats from checkouts
+  const n30=mine.filter(s=>s.date>=isoDay(now-30*DAY)),n90=mine.filter(s=>s.date>=isoDay(now-90*DAY));
+  const num=x=>{const n=parseFloat(String(x||'').replace(/[^0-9.]/g,''));return isNaN(n)?null:n;};
+  const avg=arr=>{const a=arr.map(num).filter(x=>x!=null);return a.length?a.reduce((p,q)=>p+q,0)/a.length:null;};
+  const cr=mine.map(s=>s.crowdSize);const recent=avg(cr.slice(0,3)),prior=avg(cr.slice(3,6));
+  const trend=(recent!=null&&prior!=null)?(recent>prior*1.15?'crowds growing':recent<prior*0.85?'crowds shrinking':'crowds steady'):'';
+  return {events:ev,n30:n30.length,n90:n90.length,crowd:avg(n90.map(s=>s.crowdSize)),tips:avg(n90.map(s=>s.tipScale)),issues:n90.filter(s=>String(s.issues||'').trim()).length,trend:trend};
+}
+function timelineHtml(v){
+  const t=venueTimeline(v);
+  const stat=(a,b)=>'<span class="tm-tag" style="margin-right:.4rem">'+esc(a)+': '+esc(b)+'</span>';
+  let h='<div style="margin-top:.6rem;padding:.7rem .8rem;border-left:2px solid var(--ac,#b27cf0);background:rgba(255,255,255,.02);border-radius:6px">';
+  h+='<div class="t2" style="margin-bottom:.5rem">'+stat('Nights, 30 days',t.n30)+stat('Nights, 90 days',t.n90)+(t.crowd!=null?stat('Avg crowd',Math.round(t.crowd)):'')+(t.tips!=null?stat('Avg tips',t.tips.toFixed(1)+'/5'):'')+stat('Issues',t.issues)+(t.trend?stat('Trend',t.trend):'')+'</div>';
+  if(!t.events.length)return h+'<div class="tm-empty">Nothing logged for this venue yet. Checkouts, check-ins, visits and feedback land here.</div></div>';
+  t.events.slice(0,25).forEach(e=>{h+='<div style="display:flex;gap:.7rem;padding:.3rem 0;border-top:1px solid var(--border);font-size:.82rem"><div style="min-width:78px;color:var(--text3)">'+esc(fmtDay(e.ts))+'</div><div><span class="tm-tag'+(e.cls==='bad'?' lost':e.cls==='ok'?' booked':'')+'">'+esc(e.tag)+'</span> '+esc(e.text)+'</div></div>';});
+  if(t.events.length>25)h+='<div class="t2">Showing the latest 25 of '+t.events.length+'.</div>';
+  return h+'</div>';
+}
+
 function vVesper(){
   const d=D();let h='<div class="tm-sec">Due now ('+d.vDue.length+')</div>';
   if(!d.vDue.length)h+='<div class="tm-empty">Nothing due. '+(d.waiting?plural(d.waiting,'quote is','quotes are')+' still inside the window.':'No quotes are out.')+'</div>';
@@ -7926,9 +8017,12 @@ function vVesper(){
       (v.healthWhy?'<div class="t2"><b>Vesper\'s read:</b> '+esc(v.healthWhy)+'</div>':'')+checksHtml(v)+
       '<div class="t2">'+(v.lastCheckinAt?'Last check-in '+esc(fmtDay(v.lastCheckinAt)):'Never checked in')+(v.contactName||v.contact?' · '+esc([v.contactName,v.contact].filter(Boolean).join(' · ')):'')+'</div>'+
       '<div class="tm-row"><select class="tm-sel" style="width:auto" data-chg="venuehealth" data-id="'+esc(v.id)+'"><option value="good"'+(H==='good'?' selected':'')+'>Health: good</option><option value="watch"'+(H==='watch'?' selected':'')+'>Health: watch</option><option value="risk"'+(H==='risk'?' selected':'')+'>Health: at risk</option></select>'+
-      (due&&!has?'<button class="tm-b pri" data-act="carecheckin" data-id="'+esc(v.id)+'">Draft check-in</button>':'')+(has?'<span class="tm-tag">draft waiting</span>':'')+'</div></div>';
+      (due&&!has?'<button class="tm-b pri" data-act="carecheckin" data-id="'+esc(v.id)+'">Draft check-in</button>':'')+(has?'<span class="tm-tag">draft waiting</span>':'')+'<button class="tm-b dim" data-act="vtl" data-id="'+esc(v.id)+'">'+(S.open['tl_'+v.id]?'Hide timeline':'Timeline')+'</button></div>'+(S.open['tl_'+v.id]?timelineHtml(v):'')+'</div>';
   });
-  h+=det('careadd','Add a venue you already work with','<div class="tm-fg"><div><label class="tm-lbl">Venue</label><input class="tm-in" id="cv-name"></div><div><label class="tm-lbl">Contact name</label><input class="tm-in" id="cv-who"></div><div><label class="tm-lbl">Phone or email</label><input class="tm-in" id="cv-contact"></div><div><label class="tm-lbl">Last check-in (blank = due now)</label><input class="tm-in" id="cv-last" type="date"></div></div><div class="tm-row"><button class="tm-b pri" data-act="addcare">Add venue</button></div>',false);
+  h+='<div class="tm-hint" style="margin-top:.8rem">Venues come from <b>Our Venues</b> in the Venues tab. Add or retire one there and it shows here.</div>';
+  h+='<div class="tm-sec">Venue leads to follow up ('+d.vlDue.length+')</div><div class="tm-hint">From the Leads tab: follow-up dates that are due, or leads with no activity in 14 days. Signed, transferred and paused leads are left alone.</div>';
+  if(!d.vlDue.length)h+='<div class="tm-empty">No venue leads need a nudge.</div>';
+  d.vlDue.forEach(l=>{h+='<div class="tm-item"><div class="t1"><span class="tm-tag warn">'+esc(typeof leadStageLabel==='function'?leadStageLabel(l.stage||'new'):(l.stage||'new'))+'</span><b>'+esc(l.name)+'</b>'+(l.city?' · '+esc(l.city):'')+'</div><div class="t2">'+esc(l.why)+(l.contactName?' · contact '+esc(l.contactName):'')+'</div><div class="tm-row"><button class="tm-b" data-act="copyvl" data-id="'+esc(l.id)+'">Copy follow-up email</button></div></div>';});
   return h;
 }
 
@@ -8326,6 +8420,7 @@ const A={
   async copybrief(){toast(await copy(briefText())?'Briefing copied.':'Copy failed.',false);},
   chavatar(){$('#tmFile').click();},
   toggleinfo(){S.view=S.view==='info'?'work':'info';renderDrawer(true);$('#tmDrB').scrollTop=0;},
+  async vtl(t){S.open['tl_'+t.dataset.id]=!S.open['tl_'+t.dataset.id];renderDrawer(true);},
   async libbuild(){S.lib=libRead();S.lib.out=libFill(S.lib);const e=$('#lib-out');if(e)e.value=S.lib.out;toast('Draft built. Fix any [brackets], then copy.',false);},
   async libcopy(){const f=libRead();S.lib=f;toast(await copy(f.out)?'Reply copied.':'Nothing to copy yet. Press Build reply.',!f.out);},
   async libprompt(){const f=libRead();S.lib=f;toast(await copy(libPrompt(f))?'Quill prompt copied. Paste it into a Claude chat.':'Copy failed.',false);},
@@ -8371,11 +8466,12 @@ const A={
     toast('Draft is waiting in Needs you.');
   },
   async carecheckin(t){
-    const v=S.venues.find(x=>x.id===t.dataset.id);if(!v)return;
+    const v=careVenues().find(x=>x.id===t.dataset.id);if(!v)return;
     await col('agent_drafts').add({leadId:null,venueId:v.id,agent:'vesper',kind:'checkin',body:careText(v),label:'Check-in: '+v.name,status:'pending',createdAt:Date.now()});
     toast('Draft is waiting above.');
   },
-  async venuehealth(t){await col('agent_venues').doc(t.dataset.id).update({health:t.value});},
+  async venuehealth(t){const id=t.dataset.id;if(id.indexOf('hq_')===0)await careSave({['venues.'+id.slice(3)+'.health']:t.value});else await col('agent_venues').doc(id).update({health:t.value});},
+  async copyvl(t){const l=hqLeads().find(x=>x.id===t.dataset.id);if(!l)return;toast(await copy(leadFollowText(l))?'Follow-up copied. Check it, then send it yourself.':'Copy failed.',false);},
   async addcare(){
     const n=val('cv-name');if(!n){toast('Type the venue name.',true);return;}
     const last=val('cv-last'),u={name:n,city:'',stage:'onboarding',contactName:val('cv-who'),contact:val('cv-contact'),handedOffAt:Date.now(),createdAt:Date.now()};
@@ -8455,7 +8551,7 @@ const A={
       if(dr.kind==='reply'||!dr.kind){const u={};if(l.stage==='new'){u.stage='quoted';u.quotedAt=Date.now();}if(price)u.quotedPrice=price;if(Object.keys(u).length)b.update(col('agent_leads').doc(l.id),u);}
       else if(dr.kind==='n1'||dr.kind==='n2')b.update(col('agent_leads').doc(l.id),{['nudges.'+dr.kind]:Date.now()});
     }
-    if(dr.venueId&&dr.kind==='checkin')b.update(col('agent_venues').doc(dr.venueId),{lastCheckinAt:Date.now()});
+    if(dr.venueId&&dr.kind==='checkin'){if(String(dr.venueId).indexOf('hq_')===0)b.set(col('agent_config').doc('care'),{venues:{[String(dr.venueId).slice(3)]:{lastCheckinAt:Date.now()}}},{merge:true});else b.update(col('agent_venues').doc(dr.venueId),{lastCheckinAt:Date.now()});}
     if(dr.venueId&&(dr.kind==='email'||dr.kind==='email2')){
       const now2=Date.now();
       if(dr.kind==='email')b.update(col('agent_venues').doc(dr.venueId),{stage:'followup',emailedAt:now2,followUpOn:isoDay(now2+5*DAY)});
