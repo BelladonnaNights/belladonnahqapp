@@ -7421,6 +7421,125 @@ function renderBrief(){
 
 
 
+
+/* ── Quill's reply library ── */
+const LIB_SERV={
+ karaoke:{label:'Karaoke',night:'karaoke night',hook:'a full host, the whole catalog and a singer queue that keeps the room moving'},
+ bingo:{label:'Music bingo',night:'music bingo night',hook:'custom music bingo built around a decade, genre or artist, where everyone suddenly has opinions about one-hit wonders'},
+ trivia:{label:'Trivia',night:'trivia night',hook:'custom rounds, a host with timing, and teams who refuse to admit defeat'},
+ combo:{label:'Combo (karaoke + bingo or trivia)',night:'combo night',hook:'karaoke plus a bingo or trivia round, so there is something for the shy and the shameless'},
+ theme:{label:'Themed night',night:'themed night',hook:'a host in costume, a themed playlist, props, and a round built around the theme'}
+};
+const LIB_MISS={name:'name',venue:'venue or event',date:'date',price:'price from your sheet'};
+const LIB_SIT=[
+ {id:'price',label:'They asked what it costs',body:`Hi {name},
+
+Thanks for asking! For {venue}, a {night} comes to {price}. That includes the host, the sound, the setup and teardown, and everything printed. You get {hook}.
+
+If {date} works, I will hold it for you. Want me to lock it in?
+
+Ahnna
+Belladonna Audio Alchemies`},
+ {id:'intro',label:'Intro to a venue (cold)',body:`Subject: A free {night} at {venue}?
+
+Hi {name},
+
+I run Belladonna Audio Alchemies. We do {night}s for bars and venues around Auburn and the Seattle-Tacoma area: {hook}.
+
+{trial}
+
+Can I send you a couple of open nights to pick from?
+
+Ahnna
+Belladonna Audio Alchemies
+belladonnanights.com`},
+ {id:'slow',label:'Pitch a slow night',body:`Hi {name},
+
+Every bar has That Night, the one where the room could use a reason. That is what we are for. A {night} gives people a reason to leave the house on a Tuesday: {hook}.
+
+{trial}
+
+Which night is your quietest?
+
+Ahnna
+Belladonna Audio Alchemies`},
+ {id:'avail',label:'Confirm availability and next step',body:`Hi {name},
+
+Good news: {date} is open. Here is what happens next. I will send a short confirmation with the details, you tell me the start time and any house rules, and we handle the rest. {night} at {venue}, {price}.
+
+Reply "yes" and it is on the calendar.
+
+Ahnna
+Belladonna Audio Alchemies`},
+ {id:'nudge1',label:'Gentle follow-up after a quote',body:`Hi {name},
+
+Quick one: did the quote for {venue} land okay? Happy to tweak the hours or the format if something is off. {date} is still open on my end.
+
+Ahnna`},
+ {id:'nudge2',label:'Final follow-up',body:`Hi {name},
+
+Last nudge from me, promise. If {date} is still on your mind, tell me and I will keep it held. If the timing is off, no hard feelings, just say the word and I will leave you be.
+
+Either way, thanks for considering us.
+
+Ahnna
+Belladonna Audio Alchemies`},
+ {id:'thanks',label:'Thank-you after a trial night',body:`Hi {name},
+
+Thank you for having us at {venue}. We had a great time, and your crowd made it easy. How did the night feel from your side? Anything you would change?
+
+If you want it back, I would love to make it a regular thing. I can send two or three options this week.
+
+Ahnna
+Belladonna Audio Alchemies`},
+ {id:'rebook',label:'Ask a happy venue to keep the night',body:`Hi {name},
+
+The numbers from {venue} have been solid, and the crowd keeps coming back, so I would love to keep it going. Want to make {night} a standing night? I can send a simple schedule and rate.
+
+Ahnna
+Belladonna Audio Alchemies`},
+ {id:'revpos',label:'Reply to a great review',body:`Thank you, {name}! That made our week. Your crowd made the night as much as we did. See you at the next one.
+
+Ahnna and the Belladonna crew`},
+ {id:'revneg',label:'Calm reply to a 2-star review',body:`Hi {name},
+
+Thank you for telling us, and I am sorry the night missed the mark. That is not the standard we hold ourselves to. I would like to understand what went wrong and make it right. Could you reach out through belladonnanights.com so I can follow up with you directly?
+
+Ahnna
+Belladonna Audio Alchemies`},
+ {id:'decline',label:"Can't do that date",body:`Hi {name},
+
+Thank you for thinking of us for {date}. We are booked that night, and I do not want to squeeze you in and do it badly. If you have a backup date, I would love to hear it. Otherwise, I would be glad to help with the next one.
+
+Ahnna
+Belladonna Audio Alchemies`}
+];
+function libFill(f){
+  const sv=LIB_SERV[f.svc]||LIB_SERV.karaoke,sit=LIB_SIT.find(x=>x.id===f.sit)||LIB_SIT[0];
+  const v={name:f.name,venue:f.venue,date:f.date,price:f.price,night:sv.night,hook:sv.hook,trial:termsShort()};
+  return sit.body.replace(/\{(\w+)\}/g,(m,k)=>v[k]||('['+(LIB_MISS[k]||k)+']'));
+}
+function libPrompt(f){
+  const sv=LIB_SERV[f.svc]||LIB_SERV.karaoke,sit=LIB_SIT.find(x=>x.id===f.sit)||LIB_SIT[0];
+  return 'You are Quill, the reply and quote drafter for '+BRAND+'.\nVoice: '+voice()+'\n\nPRICE SHEET:\n'+(pricing()||'(not set: do not invent prices, tell me what is missing)')+'\n\nSITUATION: '+sit.label+'\nSERVICE: '+sv.label+'\nWHO I AM WRITING TO: '+(f.name||'(unknown)')+(f.venue?' at '+f.venue:'')+'\nDATE: '+(f.date||'(none)')+'\nPRICE TO USE: '+(f.price||'(work it out from the price sheet, or ask me)')+'\n\nWHAT THEY SENT ME:\n'+(f.msg||'(nothing, this is outbound)')+'\n\nHERE IS A STARTING DRAFT TO IMPROVE, NOT COPY:\n'+libFill(f)+'\n\nRewrite it so it answers their actual message first, uses only prices from the price sheet, and sounds like the voice above. Output only the message, ready to send.';
+}
+function libForm(){
+  const f=S.lib||{};
+  const o=(arr,cur)=>arr.map(x=>'<option value="'+esc(x[0])+'"'+(x[0]===cur?' selected':'')+'>'+esc(x[1])+'</option>').join('');
+  return '<div class="tm-hint">Pick what you are answering and the service. HQ builds a ready draft in your voice. Fill what you know, anything left blank shows as a [bracket] to fix before you send.</div>'+
+  '<div class="tm-fg"><div><label class="tm-lbl">Situation</label><select class="tm-sel" id="lib-sit">'+o(LIB_SIT.map(x=>[x.id,x.label]),f.sit)+'</select></div>'+
+  '<div><label class="tm-lbl">Service</label><select class="tm-sel" id="lib-svc">'+o(Object.keys(LIB_SERV).map(k=>[k,LIB_SERV[k].label]),f.svc)+'</select></div>'+
+  '<div><label class="tm-lbl">Their name</label><input class="tm-in" id="lib-name" value="'+esc(f.name||'')+'"></div>'+
+  '<div><label class="tm-lbl">Venue or event</label><input class="tm-in" id="lib-venue" value="'+esc(f.venue||'')+'"></div>'+
+  '<div><label class="tm-lbl">Date</label><input class="tm-in" id="lib-date" value="'+esc(f.date||'')+'" placeholder="e.g. Friday, Dec 12"></div>'+
+  '<div><label class="tm-lbl">Price</label><input class="tm-in" id="lib-price" value="'+esc(f.price||'')+'" placeholder="e.g. $450"></div>'+
+  '<div class="full"><label class="tm-lbl">What they sent you (optional, used by the Quill prompt)</label><textarea class="tm-ta" id="lib-msg" style="min-height:70px">'+esc(f.msg||'')+'</textarea></div></div>'+
+  '<div class="tm-row"><button class="tm-b pri" data-act="libbuild">Build reply</button><button class="tm-b" data-act="libprompt">Copy Quill prompt</button></div>'+
+  '<textarea class="tm-ta" id="lib-out" style="min-height:260px;margin-top:.7rem" placeholder="Your draft appears here. Edit it, then copy.">'+esc(f.out||'')+'</textarea>'+
+  '<div class="tm-row"><button class="tm-b" data-act="libcopy">Copy reply</button></div>';
+}
+function libRead(){const g=id=>{const e=$('#'+id);return e?e.value.trim():'';};return {sit:g('lib-sit'),svc:g('lib-svc'),name:g('lib-name'),venue:g('lib-venue'),date:g('lib-date'),price:g('lib-price'),msg:g('lib-msg'),out:(($('#lib-out')||{}).value||'')};}
+
 /* ── Wren: host recruiter and coach ── */
 function coachState(){
   const c=S.cfg.coach||{},now=Date.now(),today=isoDay(now),cut14=isoDay(now-14*DAY),cut90=isoDay(now-90*DAY);
@@ -7765,7 +7884,8 @@ function vInbound(){
 
 /* ── Quill ── */
 function vQuill(){
-  const d=D();let h='<div class="tm-sec">Drafts waiting ('+d.qPending.length+')</div>';
+  const d=D();let h=det('qlib','Reply library',''+libForm()+'',true);
+  h+='<div class="tm-sec">Drafts waiting ('+d.qPending.length+')</div>';
   if(!d.qPending.length)h+='<div class="tm-empty">No drafts waiting.</div>';
   d.qPending.forEach(x=>h+=draftCard(x,true));
   h+='<div class="tm-sec">Leads that need a draft ('+d.needDraft.length+')</div>';
@@ -8206,6 +8326,9 @@ const A={
   async copybrief(){toast(await copy(briefText())?'Briefing copied.':'Copy failed.',false);},
   chavatar(){$('#tmFile').click();},
   toggleinfo(){S.view=S.view==='info'?'work':'info';renderDrawer(true);$('#tmDrB').scrollTop=0;},
+  async libbuild(){S.lib=libRead();S.lib.out=libFill(S.lib);const e=$('#lib-out');if(e)e.value=S.lib.out;toast('Draft built. Fix any [brackets], then copy.',false);},
+  async libcopy(){const f=libRead();S.lib=f;toast(await copy(f.out)?'Reply copied.':'Nothing to copy yet. Press Build reply.',!f.out);},
+  async libprompt(){const f=libRead();S.lib=f;toast(await copy(libPrompt(f))?'Quill prompt copied. Paste it into a Claude chat.':'Copy failed.',false);},
   async cdcover(t){const w=($('#cb-'+t.dataset.id)||{}).value||'';await cdSave({['callouts.'+t.dataset.id+'.status']:'covered',['callouts.'+t.dataset.id+'.coveredBy']:w.trim(),['callouts.'+t.dataset.id+'.coveredAt']:Date.now()});toast('Marked covered.');},
   async cdnobody(t){await cdSave({['callouts.'+t.dataset.id+'.status']:'uncovered',['callouts.'+t.dataset.id+'.coveredAt']:Date.now()});toast('Logged: nobody took it.');},
   async cdaddcall(){const host=val('cd-host'),date=val('cd-date');if(!host||!date){toast('Add the host and the shift date.',true);return;}await cdSave({['callouts.c'+Date.now().toString(36)]:{host:host,venue:val('cd-venue'),date:date,reason:val('cd-reason'),status:'open',loggedAt:Date.now()}});toast('Callout logged.');},
