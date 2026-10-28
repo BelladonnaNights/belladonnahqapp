@@ -7288,26 +7288,30 @@ window.teamOpen=function(){start();render();if(typeof loadShiftsData==='function
 function briefData(){
   const d=D(),now=Date.now(),wk=now-7*DAY,today=isoDay(now);
   const need=[];
-  const add=(agentId,n,text)=>{if(n>0)need.push({a:agentId,text:text});};
-  add('quill',d.qPending.length,plural(d.qPending.length,'quote or reply','quotes and replies')+' to approve');
-  add('quill',d.needDraft.length,plural(d.needDraft.length,'new lead needs','new leads need')+' a draft');
-  add('raven',d.missing.length,plural(d.missing.length,'lead is','leads are')+' missing a date or location');
-  d.venDue.forEach(v=>need.push({a:'raven',text:v.name+': check-back is due'}));
-  d.venYes.forEach(v=>need.push({a:'raven',text:v.name+' said yes. Hand it to onboarding'}));
-  d.rPending.forEach(x=>need.push({a:'raven',text:(x.label||'Draft')+' is waiting to approve'}));
-  add('vesper',d.vPending.length,plural(d.vPending.length,'nudge','nudges')+' to approve');
-  add('vesper',d.vDue.length,plural(d.vDue.length,'quote is','quotes are')+' due a nudge');
-  add('vesper',d.careDue.length,plural(d.careDue.length,'venue check-in is','venue check-ins are')+' due');
-  d.careRisk.forEach(v=>need.push({a:'vesper',text:v.name+' is marked at risk'}));
-  d.sg.dueSoon.forEach(x=>need.push({a:'sigil',text:x.name+(x.days<0?' is overdue':' is due in '+x.days+' days')}));
-  add('sigil',d.sg.incomplete.length,plural(d.sg.incomplete.length,'person is','people are')+' missing paperwork');
-  add('sigil',d.sPending.length,plural(d.sPending.length,'paperwork reminder','paperwork reminders')+' to approve');
-  add('warden',d.wd.openRestocks.length,plural(d.wd.openRestocks.length,'restock request is','restock requests are')+' open');
-  d.wd.soon.forEach(x=>need.push({a:'warden',text:x.title+(x.days<0?' is overdue':x.days===0?' is due today':' is due in '+x.days+' days')}));
-  add('warden',d.wd.issues.length,plural(d.wd.issues.length,'checkout issue needs','checkout issues need')+' a look');
-  add('mirror',d.mPending.length,plural(d.mPending.length,'review reply','review replies')+' to approve');
-  add('mirror',d.stale.length,plural(d.stale.length,'profile is','profiles are')+' stale');
-  add('sable',d.undecided,plural(d.undecided,'event idea','event ideas')+' to pursue or skip');
+  const add=(agentId,n,text,body)=>{if(n>0)need.push({a:agentId,text:text,body:body||''});};
+  const cut=(t,n)=>{t=String(t||'').replace(/\s+/g,' ').trim();return t.length>n?t.slice(0,n-1)+'\u2026':t;};
+  const ago=ts=>{if(!ts)return 'never';const n=Math.floor((now-ts)/DAY);return n<=0?'today':n===1?'yesterday':n+' days ago';};
+  const lt=l=>[l.client||'Someone',l.eventType,l.eventDate?fmtEv(l.eventDate):'',l.location].filter(Boolean).join(', ');
+  const who=v=>[v.contactName,v.contact].filter(Boolean).join(' at ');
+  add('quill',d.qPending.length,plural(d.qPending.length,'quote or reply','quotes and replies')+' to approve',d.qPending.map(x=>cut(x.label||x.kind,60)).join('; ')+'. Read each one, tweak it, and approve.');
+  add('quill',d.needDraft.length,plural(d.needDraft.length,'new lead needs','new leads need')+' a draft',d.needDraft.slice(0,4).map(lt).join('; ')+(d.needDraft.length>4?'; and '+(d.needDraft.length-4)+' more':'')+'. Nobody has answered them yet.');
+  add('raven',d.missing.length,plural(d.missing.length,'lead is','leads are')+' missing a date or location',d.missing.slice(0,4).map(l=>(l.client||l.site||'A lead')+' has no '+[!l.eventDate?'date':'',!l.location?'location':''].filter(Boolean).join(' or ')).join('; ')+'. A quote needs both.');
+  d.venDue.forEach(v=>need.push({a:'raven',text:v.name+': check-back is due',body:'Emailed '+ago(v.emailedAt)+(v.emailed2At?', followed up '+ago(v.emailed2At):'')+', no answer logged.'+(who(v)?' Contact: '+who(v)+'.':'')+' Time for a nudge or a call.'}));
+  d.venYes.forEach(v=>need.push({a:'raven',text:v.name+' said yes. Hand it to onboarding',body:'They agreed'+(v.city?' ('+v.city+')':'')+'.'+(who(v)?' Contact: '+who(v)+'.':'')+' Next: contract, agreement and a first night on the calendar.'}));
+  d.rPending.forEach(x=>need.push({a:'raven',text:(x.label||'Draft')+' is waiting to approve',body:cut(x.body,200)}));
+  add('vesper',d.vPending.length,plural(d.vPending.length,'nudge','nudges')+' to approve',d.vPending.map(x=>cut(x.label||x.kind,60)).join('; ')+'.');
+  add('vesper',d.vDue.length,plural(d.vDue.length,'quote is','quotes are')+' due a nudge',d.vDue.slice(0,4).map(x=>{const l=x.lead||x;return (l.client||l.site||'A lead')+(l.quotedPrice?' ('+l.quotedPrice+')':'')+', quoted '+ago(l.quotedAt);}).join('; ')+'.');
+  add('vesper',d.careDue.length,plural(d.careDue.length,'venue check-in is','venue check-ins are')+' due',d.careDue.slice(0,5).map(v=>v.name+' (last '+ago(v.lastCheckinAt)+')').join('; ')+'. It has been 3 months or more.');
+  d.careRisk.forEach(v=>need.push({a:'vesper',text:v.name+' is marked at risk',body:cut(v.healthWhy||'No reason logged yet. Check recent host checkouts.',200)}));
+  d.sg.dueSoon.forEach(x=>need.push({a:'sigil',text:x.name+(x.days<0?' is overdue':' is due in '+x.days+' days'),body:(x.due?'Due '+fmtEv(x.due)+'. ':'')+(x.fromEmail?'Pulled from email, so confirm the date. ':'')+'Sigil can draft the reminder.'}));
+  add('sigil',d.sg.incomplete.length,plural(d.sg.incomplete.length,'person is','people are')+' missing paperwork',d.sg.incomplete.slice(0,5).map(p=>p.name+' needs '+p.miss.join(', ')).join('; ')+'.');
+  add('sigil',d.sPending.length,plural(d.sPending.length,'paperwork reminder','paperwork reminders')+' to approve',d.sPending.map(x=>cut(x.label,60)).join('; ')+'.');
+  d.wd.openRestocks.forEach(r=>need.push({a:'warden',text:'Restock: '+r.item,body:[r.qty?'Qty '+r.qty:'',r.venue?'for '+r.venue:'',r.host?'(host '+r.host+')':'',r.status==='ordered'?'Already ordered, mark delivered when it lands.':'Requested '+ago(r.requestedAt)+', not ordered yet.',r.note?'Note: '+cut(r.note,140):''].filter(Boolean).join(' ')}));
+  d.wd.soon.forEach(x=>need.push({a:'warden',text:x.title+(x.days<0?' is overdue':x.days===0?' is due today':' is due in '+x.days+' days'),body:[x.type,x.venue,x.date?fmtEv(x.date):''].filter(Boolean).join(' · ')}));
+  d.wd.issues.forEach(x=>need.push({a:'warden',text:'Checkout issue'+(x.venue?' at '+x.venue:'')+(x.date?' ('+fmtEv(x.date)+')':''),body:(x.host?x.host+' wrote: ':'')+'\u201c'+cut(x.text,260)+'\u201d'+(x.photo?' A photo is attached.':'')}));
+  add('mirror',d.mPending.length,plural(d.mPending.length,'review reply','review replies')+' to approve',d.mPending.map(x=>cut(x.label,60)).join('; ')+'.');
+  add('mirror',d.stale.length,plural(d.stale.length,'profile is','profiles are')+' stale',d.stale.slice(0,6).map(x=>x.name+(x.profileRefreshed?' ('+ago(x.profileRefreshed)+')':' (never refreshed)')).join('; ')+'. Open Mirror for what to change on each.');
+  add('sable',d.undecided,plural(d.undecided,'event idea','event ideas')+' to pursue or skip',d.top5.filter((_,i)=>!d.dec['t'+i]).map(x=>(x.date?fmtEv(x.date)+': ':'')+x.event).join('; ')+'.');
   const hsh=s=>{let h=5381;for(let k=0;k<s.length;k++)h=((h<<5)+h+s.charCodeAt(k))|0;return Math.abs(h).toString(36);};
   need.forEach(n=>{n.key=n.a+'_'+hsh(n.text);});
   const ideas=d.top5.map((x,i)=>({x:x,dec:d.dec['t'+i]})).filter(o=>o.dec!=='skip').map(o=>o.x).sort((a,b)=>String(a.date).localeCompare(String(b.date)));
@@ -7328,7 +7332,7 @@ function briefData(){
 }
 function briefText(){
   const b=briefData();let t='BELLADONNA BRIEFING: '+b.date+'\n\nNEEDS YOU ('+b.need.length+')\n';
-  t+=b.need.length?b.need.map((n,i)=>(i+1)+'. '+n.text+' ('+agent(n.a).name+')').join('\n'):'Nothing. All clear.';
+  t+=b.need.length?b.need.map((n,i)=>(i+1)+'. '+n.text+' ('+agent(n.a).name+')'+(n.body?'\n   '+n.body:'')).join('\n'):'Nothing. All clear.';
   if(b.ideas.length)t+='\n\nEVENT IDEAS (Sable)\n'+b.ideas.map(x=>'- '+fmtEv(x.date)+': '+x.event+'. '+(x.idea||'')).join('\n');
   if(b.avoid.length)t+='\n\nAVOID\n'+b.avoid.map(x=>'- '+fmtEv(x.date)+': '+x.reason).join('\n');
   t+='\n\nLEADS (Ledger)\n'+b.leads.map(x=>'- '+x).join('\n');
@@ -7350,7 +7354,7 @@ function renderBrief(){
   h+='<div class="np-mast">The Belladonna Gazette</div><div class="np-tag">'+esc(TAG[d0.getDay()])+'</div><div class="np-rule"></div>';
   h+='<div class="np-banner">'+(todo.length?'STOP THE PRESSES: '+todo.length+(todo.length===1?' THING NEEDS':' THINGS NEED')+' YOU':'QUIET ON THE PRESS: ALL CLEAR')+'</div>';
   if(todo.length){
-    h+='<div class="np-cols">'+todo.map(n=>'<label class="np-item"><input type="checkbox" data-chg="bchk" data-key="'+esc(n.key)+'"'+(S.bchk[n.key]?' checked':'')+'><span><span class="np-hd">'+esc(n.text)+'</span><span class="np-by">'+esc(BY[n.a]||agent(n.a).name)+' · <a href="#" data-act="open" data-agent="'+esc(n.a)+'">open</a></span></span></label>').join('')+'</div>';
+    h+='<div class="np-cols">'+todo.map(n=>'<label class="np-item"><input type="checkbox" data-chg="bchk" data-key="'+esc(n.key)+'"'+(S.bchk[n.key]?' checked':'')+'><span><span class="np-hd">'+esc(n.text)+'</span>'+(n.body?'<span class="np-body">'+esc(n.body)+'</span>':'')+'<span class="np-by">'+esc(BY[n.a]||agent(n.a).name)+' · <a href="#" data-act="open" data-agent="'+esc(n.a)+'">open</a></span></span></label>').join('')+'</div>';
   }else h+='<div class="np-quiet">Nothing is waiting on you. Go enjoy a night out.</div>';
   if(b.ideas.length){h+=sec('Around Town');h+='<div class="np-cols">'+b.ideas.map(x=>'<div class="np-story"><div class="np-hd">'+esc(fmtEv(x.date))+': '+esc(x.event)+'</div><div class="np-body">'+esc(x.idea||'')+'</div></div>').join('')+'</div>';}
   if(b.avoid.length){h+=sec('Dates to Dodge');h+='<div class="np-cols">'+b.avoid.map(x=>'<div class="np-story"><div class="np-hd">'+esc(fmtEv(x.date))+'</div><div class="np-body">'+esc(x.reason)+'</div></div>').join('')+'</div>';}
