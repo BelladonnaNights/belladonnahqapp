@@ -457,7 +457,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
 /* drawer */
 .tm-ov{position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:900;opacity:0;pointer-events:none;transition:opacity .2s;}
 .tm-ov.open{opacity:1;pointer-events:auto;}
-.tm-dr{--ac:#c9a96e;position:fixed;top:0;right:0;bottom:0;width:min(600px,100%);background:var(--bg);border-left:2px solid var(--ac);z-index:901;display:flex;flex-direction:column;transform:translateX(102%);transition:transform .25s ease;}
+.tm-dr{--ac:#c9a96e;position:fixed;top:0;right:0;bottom:0;width:min(var(--drw,600px),100%);background:var(--bg);border-left:2px solid var(--ac);z-index:901;display:flex;flex-direction:column;transform:translateX(102%);transition:transform .25s ease;}
 .tm-dr.open{transform:none;}
 .tm-dr-h{display:flex;align-items:center;gap:.9rem;padding:1rem 1.2rem;border-bottom:1px solid var(--border);background:var(--surface);}
 .tm-dr-h .tm-av{width:52px;height:52px;border-radius:14px;overflow:hidden;box-shadow:0 0 0 1px var(--ac);flex-shrink:0;}
@@ -579,6 +579,20 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
 #panel-team .pl-money .np-stat{border-color:var(--border);}
 #panel-team .pl-money .np-stat span{color:var(--text3);}
 #panel-team .pl-money{border-color:var(--border);}
+
+#panel-team .tm-item .t1.fold{cursor:pointer;}
+#panel-team .tm-item .t1.fold::after{content:"\25B4";float:right;color:var(--text3);font-size:.8rem;}
+#panel-team .tm-item.folded .t1.fold::after{content:"\25BE";}
+#panel-team .tm-item.folded>*:not(.t1){display:none;}
+
+.tm-grip{position:absolute;left:-4px;top:0;bottom:0;width:10px;cursor:ew-resize;z-index:5;}
+.tm-grip::after{content:"";position:absolute;left:3px;top:50%;height:48px;width:4px;margin-top:-24px;border-radius:2px;background:#c9a96e;opacity:.45;}
+.tm-grip:hover::after{opacity:1;}
+#panel-team *,.tm-dr,.tm-dr *{scrollbar-width:thin;scrollbar-color:#c9a96e transparent;}
+.tm-dr ::-webkit-scrollbar,.tm-dr::-webkit-scrollbar,#panel-team ::-webkit-scrollbar{width:6px;height:6px;}
+.tm-dr ::-webkit-scrollbar-track,#panel-team ::-webkit-scrollbar-track{background:transparent;}
+.tm-dr ::-webkit-scrollbar-thumb,#panel-team ::-webkit-scrollbar-thumb{background:#c9a96e;border-radius:3px;}
+.tm-dr ::-webkit-scrollbar-corner{background:transparent;}
 </style>
 </head>
 <body>
@@ -1032,9 +1046,10 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
       <div class="section-title">Venue Leads</div>
       <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
         <select class="roster-filter-select" id="leadSortBy" onchange="renderLeads()">
-          <option value="added">Sort: Order Added</option>
+          <option value="stage">Sort: By Step (new leads first)</option>
+          <option value="added">Sort: Date Added, newest first</option>
+          <option value="addedold">Sort: Date Added, oldest first</option>
           <option value="az">Sort: Alphabetical</option>
-          <option value="stage">Sort: By Stage</option>
           <option value="followup">Sort: Next Follow-Up</option>
         </select>
         <select class="roster-filter-select" id="leadStageFilter" onchange="renderLeads()">
@@ -1043,8 +1058,9 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
           <option value="contact">First Contact</option>
           <option value="interview">Interview</option>
           <option value="negotiation">Negotiations</option>
-          <option value="contract">Contract Sent</option>
-          <option value="signed">Signed</option>
+          <option value="contract">Agreement Sent</option>
+          <option value="active">Working, no agreement</option>
+          <option value="signed">Signed (now a venue)</option>
           <option value="paused">Paused</option>
           <option value="transferred">Transferred (archive)</option>
         </select>
@@ -1123,8 +1139,9 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
           <option value="contact">First Contact</option>
           <option value="interview">Interview</option>
           <option value="negotiation">Negotiations</option>
-          <option value="contract">Contract Sent</option>
-          <option value="signed">Signed</option>
+          <option value="contract">Agreement Sent</option>
+          <option value="active">Working, no agreement</option>
+          <option value="signed">Signed (now a venue)</option>
           <option value="paused">Paused</option>
         </select>
       </div>
@@ -1281,6 +1298,7 @@ match /agent_config/{id}  { allow read, write: if isAdmin(); }</pre>
   <input type="file" accept="image/*" id="tmFile" style="display:none">
   <div class="tm-ov" id="tmOv"></div>
   <aside class="tm-dr" id="tmDr">
+    <div class="tm-grip" id="tmGrip" title="Drag to resize"></div>
     <div class="tm-dr-h">
       <div class="tm-av" id="tmDrAv"></div>
       <div style="flex:1;min-width:0"><div class="tm-name" id="tmDrName"></div><div class="tm-role" id="tmDrRole"></div><div class="tm-one" id="tmDrOne"></div></div>
@@ -4414,8 +4432,9 @@ const LEAD_STAGES=[
   {key:'contact',label:'First Contact',color:'var(--teal2)'},
   {key:'interview',label:'Interview',color:'var(--gold)'},
   {key:'negotiation',label:'Negotiations',color:'var(--purple)'},
-  {key:'contract',label:'Contract Sent',color:'var(--rose)'},
-  {key:'signed',label:'Signed',color:'#3aaa6a'},
+  {key:'contract',label:'Agreement Sent',color:'var(--rose)'},
+  {key:'active',label:'Working, no agreement',color:'#5aa7c9'},
+  {key:'signed',label:'Signed (now a venue)',color:'#3aaa6a'},
   {key:'paused',label:'Paused',color:'var(--text4)'},
   {key:'transferred',label:'Transferred',color:'var(--text3)'}
 ];
@@ -4453,9 +4472,10 @@ function renderLeads(){
   const sortBy=document.getElementById('leadSortBy').value;
   const stageOrder=LEAD_STAGES.map(s=>s.key);
   const sorters={
-    added:(a,b)=>(a.createdAt||'').localeCompare(b.createdAt||''),
+    added:(a,b)=>(b.createdAt||'').localeCompare(a.createdAt||''),
+    addedold:(a,b)=>(a.createdAt||'').localeCompare(b.createdAt||''),
     az:(a,b)=>(a.name||'').localeCompare(b.name||''),
-    stage:(a,b)=>stageOrder.indexOf(a.stage||'new')-stageOrder.indexOf(b.stage||'new'),
+    stage:(a,b)=>(stageOrder.indexOf(a.stage||'new')-stageOrder.indexOf(b.stage||'new'))||(b.createdAt||'').localeCompare(a.createdAt||''),
     followup:(a,b)=>{
       if(!a.nextFollowUp&&!b.nextFollowUp)return 0;
       if(!a.nextFollowUp)return 1;
@@ -4463,12 +4483,12 @@ function renderLeads(){
       return a.nextFollowUp.localeCompare(b.nextFollowUp);
     }
   };
-  shown.sort(sorters[sortBy]||sorters.added);
+  shown.sort(sorters[sortBy]||sorters.stage);
   if(!shown.length){el.innerHTML='<div class="empty-state">No leads match this view.</div>';return;}
   const today=dateToKey(new Date());
   el.innerHTML=shown.map(l=>{
     const expanded=expandedLeadId===l.id;
-    const overdue=l.nextFollowUp&&l.nextFollowUp<today&&l.stage!=='signed'&&l.stage!=='transferred';
+    const overdue=l.nextFollowUp&&l.nextFollowUp<today&&l.stage!=='signed'&&l.stage!=='active'&&l.stage!=='transferred';
     const curStage=l.stage||'new';
     const interests=Array.isArray(l.interests)?l.interests.map(formatLeadInterest).join(', '):
       [l.interestedIn&&l.interestedIn.includes('trivia')?'Trivia':null,l.interestedIn&&l.interestedIn.includes('bingo')?'Bingo':null,l.interestedIn&&l.interestedIn.includes('karaoke')?'Karaoke':null].filter(Boolean).join(', ');
@@ -4480,7 +4500,7 @@ function renderLeads(){
           <div class="acct-meta">${l.city?l.city+' · ':''}${l.contactName||''}</div>
         </div>
         <div class="acct-badges">
-          ${l.nextFollowUp?`<span class="acct-status-badge${overdue?' banned':''}">${overdue?'Overdue: ':'Follow up: '}${formatDateShort(l.nextFollowUp)}</span>`:''}
+          ${(l.stage==='signed'||l.stage==='active')?'<span class="acct-status-badge" style="border-color:#3aaa6a;color:#3aaa6a;">Venue</span>':''}${l.nextFollowUp?`<span class="acct-status-badge${overdue?' banned':''}">${overdue?'Overdue: ':'Follow up: '}${formatDateShort(l.nextFollowUp)}</span>`:''}
         </div>
       </div>
       <div style="display:flex;gap:0.35rem;flex-wrap:wrap;margin-top:0.6rem;" onclick="event.stopPropagation();">
@@ -7241,7 +7261,7 @@ function careVenues(){
 }
 function venueLeadsDue(){
   const today=isoDay(Date.now()),now=Date.now();
-  return hqLeads().filter(l=>l.name&&!['signed','transferred','paused'].includes(l.stage||'new')&&!l.followUpNone).map(l=>{
+  return hqLeads().filter(l=>l.name&&!['signed','active','transferred','paused'].includes(l.stage||'new')&&!l.followUpNone).map(l=>{
     const upd=l.updatedAt?new Date(l.updatedAt).getTime():(l.createdAt?new Date(l.createdAt).getTime():0);
     const over=l.nextFollowUp&&l.nextFollowUp<=today;const idle=upd?Math.floor((now-upd)/DAY):0;
     return Object.assign({},l,{over:over,idle:idle,why:over?'follow-up date '+(l.nextFollowUp===today?'is today':'passed on '+fmtEv(l.nextFollowUp)):(idle>=14?'no activity in '+idle+' days':'')});
@@ -8109,7 +8129,7 @@ function vVesper(){
   d.care.slice().sort((a,b)=>(a.lastCheckinAt||0)-(b.lastCheckinAt||0)).forEach(v=>{
     const due=Date.now()-(v.lastCheckinAt||0)>=CARE,has=S.drafts.some(x=>x.venueId===v.id&&x.kind==='checkin'&&x.status==='pending');
     const H=v.health||'good';
-    h+='<div class="tm-item"><div class="t1"><b>'+esc(v.name)+'</b> '+(due?'<span class="tm-tag warn">check-in due</span>':'<span class="tm-tag booked">next '+esc(fmtDay((v.lastCheckinAt||0)+CARE))+'</span>')+(H==='risk'?'<span class="tm-tag lost">at risk</span>':H==='watch'?'<span class="tm-tag warn">watch</span>':'')+'</div>'+
+    h+='<div class="tm-item'+(S.open['c_'+v.id]?'':' folded')+'"><div class="t1 fold" data-act="fold" data-id="'+esc(v.id)+'"><b>'+esc(v.name)+'</b> '+(due?'<span class="tm-tag warn">check-in due</span>':'<span class="tm-tag booked">next '+esc(fmtDay((v.lastCheckinAt||0)+CARE))+'</span>')+(H==='risk'?'<span class="tm-tag lost">at risk</span>':H==='watch'?'<span class="tm-tag warn">watch</span>':'')+'</div>'+
       (v.healthWhy?'<div class="t2"><b>Vesper\'s read:</b> '+esc(v.healthWhy)+'</div>':'')+checksHtml(v)+
       '<div class="t2">'+(v.lastCheckinAt?'Last check-in '+esc(fmtDay(v.lastCheckinAt)):'Never checked in')+(v.contactName||v.contact?' · '+esc([v.contactName,v.contact].filter(Boolean).join(' · ')):'')+'</div>'+
       '<div class="tm-row"><select class="tm-sel" style="width:auto" data-chg="venuehealth" data-id="'+esc(v.id)+'"><option value="good"'+(H==='good'?' selected':'')+'>Health: good</option><option value="watch"'+(H==='watch'?' selected':'')+'>Health: watch</option><option value="risk"'+(H==='risk'?' selected':'')+'>Health: at risk</option></select>'+
@@ -8273,9 +8293,9 @@ function pipeData(){
     const st=l.stage||'new',col=vc.find(c=>c.k==='L_'+st);if(!col)return;
     const upd=l.updatedAt?new Date(l.updatedAt).getTime():(l.createdAt?new Date(l.createdAt).getTime():now);
     const idle=DAYS(upd),over=l.nextFollowUp&&l.nextFollowUp<=today&&!l.followUpNone;
-    if(st==='signed'&&idle>30)return;
-    col.items.push({name:l.name,sub:[l.city,l.contactName].filter(Boolean).join(' · '),age:idle,flag:over?'follow-up due':(idle>=14&&st!=='signed'?'idle '+idle+'d':'')});
-    if(st!=='signed'&&(over||idle>=14))stuck.push({age:idle,who:l.name,what:over?'follow-up date '+(l.nextFollowUp===today?'is today':'passed on '+fmtEv(l.nextFollowUp)):'no activity in '+idle+' days',next:'Vesper nudges',tag:'Venue lead'});
+    if((st==='signed'||st==='active')&&idle>30)return;
+    col.items.push({name:l.name,sub:[l.city,l.contactName].filter(Boolean).join(' · '),age:idle,flag:over?'follow-up due':(idle>=14&&st!=='signed'&&st!=='active'?'idle '+idle+'d':'')});
+    if(st!=='signed'&&st!=='active'&&(over||idle>=14))stuck.push({age:idle,who:l.name,what:over?'follow-up date '+(l.nextFollowUp===today?'is today':'passed on '+fmtEv(l.nextFollowUp)):'no activity in '+idle+' days',next:'Vesper nudges',tag:'Venue lead'});
   });
   stuck.sort((a,b)=>b.age-a.age);
   return {cols:cols,stuck:stuck,quotedVal:quotedVal,bookedAll:bookedAll,bookedMonth:bookedMonth,upcoming:upcoming,win:closed?Math.round(100*cols.booked.length/closed):null,avgBook:cols.booked.length?bookedAll/cols.booked.length:null,avgDays:days.length?days.reduce((p,q)=>p+q,0)/days.length:null,topLost:topLost,vc:vc};
@@ -8405,7 +8425,7 @@ function vMirror(){
   d.sites.forEach(s=>{
     const stale=!s.profileRefreshed||Date.now()-s.profileRefreshed>STALE,sp=siteSpec(s.name),done=S.mchk[s.id]||{},nDone=sp.tasks.filter((_,k)=>done[k]).length;
     const days=s.profileRefreshed?Math.floor((Date.now()-s.profileRefreshed)/DAY):null;
-    h+='<div class="tm-item"><div class="t1"><b>'+esc(s.name)+'</b> '+(stale?'<span class="tm-tag warn">stale</span>':'<span class="tm-tag booked">fresh</span>')+((s.url||sp.url)?' <a href="'+esc(s.url||sp.url)+'" target="_blank" rel="noopener" style="font-size:.76rem">open the site</a>':'')+'</div>'+
+    h+='<div class="tm-item'+(S.open['c_'+s.id]?'':' folded')+'"><div class="t1 fold" data-act="fold" data-id="'+esc(s.id)+'"><b>'+esc(s.name)+'</b> '+(stale?'<span class="tm-tag warn">stale</span>':'<span class="tm-tag booked">fresh</span>')+((s.url||sp.url)?' <a href="'+esc(s.url||sp.url)+'" target="_blank" rel="noopener" style="font-size:.76rem">open the site</a>':'')+'</div>'+
       '<div class="t2">'+(s.profileRefreshed?'Last refreshed '+days+' day'+(days===1?'':'s')+' ago ('+esc(fmtDay(s.profileRefreshed))+').':'Never marked refreshed.')+' Refresh it at least every 90 days.</div>'+
       '<details class="tm-det" data-k="m_'+esc(s.id)+'"'+(S.open['m_'+s.id]?' open':'')+' style="margin:.6rem 0 0"><summary>What to do on '+esc(s.name)+' ('+nDone+' of '+sp.tasks.length+' ticked)</summary><div class="in"><label class="tm-lbl">Link to your public page on this site (so Mirror can read it)</label><div class="tm-row" style="margin-top:.2rem"><input class="tm-in" style="flex:1;min-width:12rem" data-url="'+esc(s.id)+'" placeholder="https://" value="'+esc(s.url||'')+'"><button class="tm-b" data-act="savesiteurl" data-id="'+esc(s.id)+'">Save link</button></div>'+
       sp.tasks.map((t,k)=>'<label style="display:flex;gap:.55rem;align-items:flex-start;margin:.45rem 0;font-size:.84rem;color:var(--text2);line-height:1.45;cursor:pointer"><input type="checkbox" data-chg="mchk" data-id="'+esc(s.id)+'" data-k="'+k+'"'+(done[k]?' checked':'')+' style="margin-top:.2rem"><span>'+esc(t)+'</span></label>').join('')+
@@ -8583,6 +8603,7 @@ const A={
   async remadd(t){const x=$('#rem-text'),dt=$('#rem-date');const text=x?x.value.trim():'';if(!text){toast('Type what to remind you about.',true);return;}const d=dt?dt.value:'';if(x)x.value='';if(dt)dt.value='';await remSave({['items.r'+Date.now().toString(36)]:{agent:t.dataset.agent,text:text,date:d,createdAt:Date.now(),done:false}});toast('Added. It will show in your Gazette.');},
   async remdone(t){await remSave({['items.'+t.dataset.id+'.done']:true,['items.'+t.dataset.id+'.doneAt']:Date.now()});},
   async remdel(t){if(!confirm('Delete this reminder?'))return;await remSave({['items.'+t.dataset.id]:null});},
+  async fold(t,e){S.open['c_'+t.dataset.id]=!S.open['c_'+t.dataset.id];renderDrawer(true);},
   async vtl(t){S.open['tl_'+t.dataset.id]=!S.open['tl_'+t.dataset.id];renderDrawer(true);},
   async libbuild(){S.lib=libRead();S.lib.out=libFill(S.lib);const e=$('#lib-out');if(e)e.value=S.lib.out;toast('Draft built. Fix any [brackets], then copy.',false);},
   async libcopy(){const f=libRead();S.lib=f;toast(await copy(f.out)?'Reply copied.':'Nothing to copy yet. Press Build reply.',!f.out);},
@@ -8786,9 +8807,18 @@ const A={
 };
 function wire(){
   const root=$('#panel-team');if(!root||root.dataset.wired)return;root.dataset.wired='1';
+  (function(){const dr=document.getElementById('tmDr'),g=document.getElementById('tmGrip');if(!dr||!g)return;
+    try{const w=parseInt(localStorage.getItem('tm_drw'),10);if(w>=360)dr.style.setProperty('--drw',w+'px');}catch(e){}
+    g.addEventListener('pointerdown',e=>{e.preventDefault();g.setPointerCapture(e.pointerId);
+      const mv=ev=>{const w=Math.max(360,Math.min(window.innerWidth-40,window.innerWidth-ev.clientX));dr.style.transition='none';dr.style.setProperty('--drw',w+'px');};
+      const up=()=>{g.removeEventListener('pointermove',mv);g.removeEventListener('pointerup',up);dr.style.transition='';try{localStorage.setItem('tm_drw',String(parseInt(getComputedStyle(dr).width,10)));}catch(e){}};
+      g.addEventListener('pointermove',mv);g.addEventListener('pointerup',up);});
+    g.addEventListener('dblclick',()=>{dr.style.removeProperty('--drw');try{localStorage.removeItem('tm_drw');}catch(e){}});
+  })();
   root.addEventListener('click',e=>{
     const t=e.target.closest('[data-act]');if(!t||!root.contains(t))return;
     if(t.classList.contains('tm-card')&&e.target.closest('button'))return;
+    if(t.classList.contains('fold')&&e.target.closest('a,button,select,input'))return;
     const f=A[t.dataset.act];if(f){e.stopPropagation();run(()=>f(t)).then(()=>{if(S.pend)renderDrawer(true);});}
   });
   $('#tmOv').addEventListener('click',closeDrawer);
