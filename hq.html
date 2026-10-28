@@ -6895,7 +6895,7 @@ quill:{
  reads:['agent_leads (stage new, no live draft)','agent_config/pricing (your price sheet)','agent_config/voice (your voice notes)','agent_config/sable (pursued event ideas)'],
  writes:['agent_drafts (agent quill, kind reply or event, status pending)'],
  handoff:'An approved reply moves the lead to Quoted, which starts Vesper\'s follow-up clock.',
- rules:['Quote only from the price sheet. Never discount, never invent a price.','Lead with one best-fit package, not the whole menu.','One all-in number: package plus weekend, holiday, corporate and travel surcharges.','Always include the deposit terms and offer to hold the date.'],
+ rules:['When a renewal note is for a 3-month venue, never ask. Say it is renewal time and the agreement is now a full year. Stern, nice and a little fun.','Quote only from the price sheet. Never discount, never invent a price.','Lead with one best-fit package, not the whole menu.','One all-in number: package plus weekend, holiday, corporate and travel surcharges.','Always include the deposit terms and offer to hold the date.'],
  today:'Works by hand: HQ builds the prompt for each lead, you run it in Claude, paste the draft back, then approve.',
  auto:'Still needs automating: reading new leads and writing drafts without you pasting. Needs the business account to reach Firestore, or a small Firebase function that calls Claude when a lead is created.',
  prompt:PRE+`
@@ -6921,7 +6921,7 @@ EVENT IDEAS: when agent_config/sable has decisions marked "pursue", for each one
 OUTPUT: one line per run: how many drafts written, anything skipped and why.`
 },
 vesper:{
- one:'Nudges quoted leads that go quiet, and checks in with your venues every three months.',
+ one:'Chases quiet leads, runs the sales pipeline, and looks after venue check-ins and agreement renewals.',
  does:'Vesper watches every lead you have quoted. If the client goes quiet she drafts a first nudge at 24 hours and a final one at 72 hours, and flags the lead as cold at 7 days. She stops the moment they reply or book. She also looks after the venues you already work with: every three months she drafts a check-in asking how the nights are going and for an introduction to another owner, and you mark each venue good, watch or at risk.',
  jobs:[
   ['Once a month, draft a short thank-you or "how was last month?" note to your strongest venues (good health, steady crowds)','First Monday of the month','Vesper, you send'],
@@ -6933,12 +6933,16 @@ vesper:{
   ['Read the host checkouts for each venue: crowd size, singers or players, energy, how busy the venue was, tips, and issues, and say whether the venue is trending up or down','Every Monday, 9 AM','Vesper, planned (HQ shows the last 90 days on each venue today)'],
   ['Draft a check-in message for each current venue, using what the checkouts show','Every 3 months per venue','Vesper'],
   ['Mark each venue good, watch or at risk after the conversation','After each check-in','You'],
-  ['Approve or skip each nudge or check-in; approved text is copied for you to send','Whenever drafts are waiting','You']
+  ['Approve or skip each nudge or check-in; approved text is copied for you to send','Whenever drafts are waiting','You'],
+  ['One time: go through the email for every venue and find when its agreement was signed and how long it runs','Once, after setup (the Agreement history task)','Vesper, you confirm each one in HQ'],
+  ['3-month venues: draft a check-in at 2 months. If it goes well, draft the renewal 2 days later, and it is now a 1-year agreement. If it does not, tell you so you can talk to them first','2 months after signing','Vesper drafts, you decide'],
+  ['6-month and 1-year venues: draft a renewal note 45 and 60 days before the end','Before each term ends','Vesper drafts, you send'],
+  ['Show the whole pipeline (new, quoted, booked, venues from first contact to signed) and what is stuck','Live in HQ','HQ, built in']
  ],
- reads:['agent_leads (stage quoted, no repliedAt, quotedAt, nudges.n1, nudges.n2)','Our Venues (the venues you work with, from your Venues tab) and the Leads tab (venue leads)','agent_config/care (last check-in and health, saved per venue id)','shifts (host checkouts: venue, date, crowdSize, singers, energyLevel, venueBusy, tipScale, gotPaid, issues, checkoutNotes)'],
+ reads:['agent_config/sigil agreements (venue, signedOn, termMonths, endsOn, checkinAt, checkinOutcome)','agent_leads (stage quoted, no repliedAt, quotedAt, nudges.n1, nudges.n2)','Our Venues (the venues you work with, from your Venues tab) and the Leads tab (venue leads)','agent_config/care (last check-in and health, saved per venue id)','shifts (host checkouts: venue, date, crowdSize, singers, energyLevel, venueBusy, tipScale, gotPaid, issues, checkoutNotes)'],
  writes:['agent_drafts (agent vesper, kind n1, n2 or checkin, status pending)','agent_config/care (healthSuggested and healthWhy per venue id)'],
  handoff:'A cold lead goes to Ledger as lost, reason "Went cold".',
- rules:['Never nudge a lead that replied or booked.','Never send a third nudge.','Two to four sentences, one clear next step, no pressure.','Never check in with the same venue more than once every 3 months unless Ahnna asks.'],
+ rules:['A 3-month venue never gets a renewal before its check-in, and never if the check-in went badly. Tell Ahnna instead.','The 3-month renewal is not a question: say the renewal is due and the agreement is now a full year. Firm, warm and a little fun.','Never nudge a lead that replied or booked.','Never send a third nudge.','Two to four sentences, one clear next step, no pressure.','Never check in with the same venue more than once every 3 months unless Ahnna asks.'],
  today:'HQ computes who is due today and builds the prompt. You run it in Claude, paste the draft, approve it, and send.',
  auto:'Still needs automating: the daily 9 AM draft writing. Needs the business account to reach Firestore.',
  prompt:PRE+`
@@ -6969,12 +6973,14 @@ Also read Our Venues (the HQ ingest door op "readVenues"; skip any venue marked 
 HOST CHECKOUTS (venue health)
 Each Monday read the collection shifts for the last 90 days, not cancelled. Match each shift to a venue by the venue name. For each venue in Our Venues (not inactive), compare the last 30 days to the 30 days before: crowdSize, singers (singers or players), energyLevel, venueBusy and tipScale. Note any issues text. Write to agent_config/care under venues.<venue id>: healthSuggested ("good", "watch" or "risk") and healthWhy (one plain sentence with the real numbers, for example "Average crowd fell from 42 to 28 over the last 4 nights"). Never change the health field itself. Ahnna sets that. If there are fewer than 3 checkouts, write nothing.
 
+VENUE AGREEMENTS. Read agreements in agent_config/sigil. For each active 3-month agreement: when signedOn is 2 months ago and checkinAt is empty, write one draft (agent "vesper", kind "checkin", label "Check-in (2 months): VENUE", status "pending") asking how the nights are going. If checkinOutcome is "good" and renewAfter has passed, write a renewal draft (kind "paperwork", label "Renewal: VENUE") that says it is renewal time and the agreement is now a full year. Not a question. Stern but nice and a little fun, name the date, never mention a discount. If checkinOutcome is "bad", write nothing and report the venue by name so Ahnna can talk to them. For 6-month agreements start 45 days before endsOn, and 1-year agreements 60 days before, with a renewal draft offering the same term. Never change status or checkinOutcome. Skip any venue with a pending draft.
+
 THANK-YOUS. On the first Monday of the month, for each venue with health "good" and steady crowds in the last 30 days of checkouts, add one agent_drafts record (agent "vesper", kind "checkin", label "Thank-you: VENUE", status "pending") with a short warm note thanking them and asking how last month felt. Never more than one per venue per month.
 
 OUTPUT: one line per run: nudges drafted, check-ins drafted, venues flagged from checkouts (names), leads gone cold (names), anything skipped.`
 },
 ledger:{
- one:'Tracks every lead to a booking and shows which sites earn their fees.',
+ one:'Shows which gig sites earn back their fees, and which to drop.',
  does:'Ledger follows each lead from New to Quoted to Booked or Lost and keeps the score by site: leads, quotes, bookings, booking rate, revenue, fees and net. His job is to tell you which gig sites to keep paying for and which to drop.',
  jobs:[
   ['Keep the numbers by site: leads, quoted, booked, rate, revenue, fees, net','Live, every time you open it','HQ, built in'],
@@ -6997,7 +7003,6 @@ Every Monday at 7:30 AM Pacific:
 2. For each site report: leads, quoted, booked, booking rate (booked divided by leads), revenue (sum of bookedPrice), fees (feesPaid) and net (revenue minus fees).
 3. Write a summary of at most 120 words: what booked this week, what was lost and why, which site is winning, which is not paying for itself.
 4. Data checks: list any lead that is booked with no bookedPrice, quoted with no quotedAt, or still "new" after 7 days.
-5. Pipeline: report the total dollars in open quotes, dollars booked this month, win rate (booked divided by booked plus lost), and the top lost reasons. Name any lead quoted 3+ days with no reply, and any venue lead (agent_venues or HQ leads) with a follow-up date that has passed.
 
 On the first Monday of each month also review the paid sites. A site that has been paid for 90 days or more and still has negative net gets a plain recommendation: keep, downgrade or drop.
 
@@ -7058,6 +7063,8 @@ Output a tight digest, most actionable first:
 - Full list by date, one line each, with source links
 - Competitor watch: short list (include it only on the first Monday of the month; otherwise return an empty competitors array)
 - Dates to avoid or watch for traffic conflicts
+
+FORMAT RULES: One event per bullet, never combine two events or dates in one bullet. Write each bullet exactly like: - **Sat Oct 31, Event name:** the idea. Every bullet needs a specific date (for a multi-night run use the first night). Put each bullet under a bold heading line: **Strongest**, **Solid** or **Possible but weaker**, and put anything to skip on one line starting **Skip:**. And always finish with the JSON block, even if the digest text is complete.
 
 Be blunt and brief. No filler, no caveats. Run multiple distinct web searches per category and cite sources as links. If something could not be verified, leave it out.
 
@@ -7144,6 +7151,7 @@ sigil:{
   ['Keep a certificate of insurance ready for venues that ask','Whenever the insurance renews','You get it from your insurer, Sigil reminds you'],
   ['Check each host for a signed contract, a signed agreement and a W-9 received','Every Monday, and when a host is added','Sigil, planned'],
   ['Check each venue for a signed contract and agreement','Every Monday, and when a venue says yes','Sigil, planned'],
+  ['Spot a signed venue agreement in the Dropbox Sign completion email and add it to Vesper\'s agreements list for you to confirm','Every weekday inbox sweep','Sigil finds it, Vesper tracks it'],
   ['Read the business inbox for renewal notices, signature requests and forms to refill, and add them to the list with the date from the email','Every weekday morning','Sigil, planned (needs the business account to reach your email)'],
   ['Draft a reminder to anyone with paperwork missing','When something is missing','Sigil drafts, you send'],
   ['Tick each item when it comes back, and set the next due date after each renewal','After each one','You, one click']
@@ -7410,7 +7418,7 @@ function eventPrompt(t){
 function reviewPrompt(site,rating,text){
   return 'You are Mirror, the profile manager for '+BRAND+'.\nVoice: '+voice()+'\n\nReply to this '+(rating?rating+'-star ':'')+'review on '+(site||'our listing')+':\n"'+text+'"\n\nBe gracious and specific, two to four sentences. If it is negative, own what is fair, stay professional, offer a way to make it right. Output only the reply.';
 }
-const SABLE_PROMPT='You are the event scout for Belladonna Audio Alchemies, a live entertainment company (karaoke, music bingo, trivia, themed nights) serving bars and venues in the Seattle-Tacoma area, based in Auburn, WA. Use the session\'s current date for all searches.\n\nTask: search the web for events in the NEXT 6 WEEKS within about 30 miles of Auburn, WA (Seattle, Tacoma, Kent, Federal Way, Renton, Puyallup, Bellevue, Everett-south) that Belladonna could plan its own events around. Cover four categories:\n1. Concerts and festivals (Climate Pledge Arena, Tacoma Dome, Showbox, Moore, Paramount, Chateau Ste. Michelle, ShoWare Center, Emerald Queen, etc.)\n2. Holidays, big sports/game days (Seahawks, Kraken, Mariners, Sounders, UW/WSU), and pop-culture or themed dates worth a themed night (movie/album/TV releases, conventions, local festivals)\n3. Competing karaoke, trivia and music-bingo nights run by other hosts in the area, noting venue, day, and host company if listed\n4. Anything unusual (new venue openings, bar crawls, community events) that affects bar traffic\n\nFor each concert or event, think about the tie-in: a tribute or themed night, a pre/post-show karaoke or bingo angle (setlist or genre-based music bingo), or a night to avoid because of a competing draw.\n\nOutput a tight digest, most actionable first:\n- Top 5 opportunities this week: date (use specific day names), event, why it matters, one suggested Belladonna event idea\n- Full list by date, one line each, with source links\n- Competitor watch: short list (include it only on the first Monday of the month; otherwise return an empty competitors array)\n- Dates to avoid or watch for traffic conflicts\n\nBe blunt and brief. No filler, no caveats. Run multiple distinct web searches per category and cite sources as links. If something couldn\'t be verified, leave it out.\n\nAfter the digest, output ONE JSON block (and nothing after it) in exactly this shape, using YYYY-MM-DD dates:\n{"runDate":"","top5":[{"date":"","event":"","why":"","idea":"","sourceUrl":""}],"all":[{"date":"","event":"","category":"","sourceUrl":""}],"competitors":[{"venue":"","day":"","type":"","host":"","sourceUrl":""}],"avoid":[{"date":"","reason":""}]}';
+const SABLE_PROMPT='You are the event scout for Belladonna Audio Alchemies, a live entertainment company (karaoke, music bingo, trivia, themed nights) serving bars and venues in the Seattle-Tacoma area, based in Auburn, WA. Use the session\'s current date for all searches.\n\nTask: search the web for events in the NEXT 6 WEEKS within about 30 miles of Auburn, WA (Seattle, Tacoma, Kent, Federal Way, Renton, Puyallup, Bellevue, Everett-south) that Belladonna could plan its own events around. Cover four categories:\n1. Concerts and festivals (Climate Pledge Arena, Tacoma Dome, Showbox, Moore, Paramount, Chateau Ste. Michelle, ShoWare Center, Emerald Queen, etc.)\n2. Holidays, big sports/game days (Seahawks, Kraken, Mariners, Sounders, UW/WSU), and pop-culture or themed dates worth a themed night (movie/album/TV releases, conventions, local festivals)\n3. Competing karaoke, trivia and music-bingo nights run by other hosts in the area, noting venue, day, and host company if listed\n4. Anything unusual (new venue openings, bar crawls, community events) that affects bar traffic\n\nFor each concert or event, think about the tie-in: a tribute or themed night, a pre/post-show karaoke or bingo angle (setlist or genre-based music bingo), or a night to avoid because of a competing draw.\n\nOutput a tight digest, most actionable first:\n- Top 5 opportunities this week: date (use specific day names), event, why it matters, one suggested Belladonna event idea\n- Full list by date, one line each, with source links\n- Competitor watch: short list (include it only on the first Monday of the month; otherwise return an empty competitors array)\n- Dates to avoid or watch for traffic conflicts\n\nFORMAT RULES: One event per bullet, never combine two events or dates in one bullet. Write each bullet exactly like: - **Sat Oct 31, Event name:** the idea. Every bullet needs a specific date (for a multi-night run use the first night). Put each bullet under a bold heading line: **Strongest**, **Solid** or **Possible but weaker**, and put anything to skip on one line starting **Skip:**. And always finish with the JSON block, even if the digest text is complete.\n\nBe blunt and brief. No filler, no caveats. Run multiple distinct web searches per category and cite sources as links. If something couldn\'t be verified, leave it out.\n\nAfter the digest, output ONE JSON block (and nothing after it) in exactly this shape, using YYYY-MM-DD dates:\n{"runDate":"","top5":[{"date":"","event":"","why":"","idea":"","sourceUrl":""}],"all":[{"date":"","event":"","category":"","sourceUrl":""}],"competitors":[{"venue":"","day":"","type":"","host":"","sourceUrl":""}],"avoid":[{"date":"","reason":""}]}';
 
 /* ── listeners ── */
 function start(){
@@ -7447,6 +7455,12 @@ function briefData(){
   add('vesper',d.vDue.length,plural(d.vDue.length,'quote is','quotes are')+' due a nudge',d.vDue.slice(0,4).map(x=>{const l=x.lead||x;return (l.client||l.site||'A lead')+(l.quotedPrice?' ('+l.quotedPrice+')':'')+', quoted '+ago(l.quotedAt);}).join('; ')+'.');
   add('vesper',d.careDue.length,plural(d.careDue.length,'venue check-in is','venue check-ins are')+' due',d.careDue.slice(0,5).map(v=>v.name+(v.lastCheckinAt?' (last check-in '+ago(v.lastCheckinAt)+')':' (never checked in)')).join('; ')+'. Check-ins are due every 3 months.');
   d.careRisk.forEach(v=>need.push({a:'vesper',text:v.name+' is marked at risk',body:cut(v.healthWhy||'No reason logged yet. Check recent host checkouts.',200)}));
+  const ag=agrState();ag.due.forEach(x=>{const nm=x.venue,t=TERM_LBL(x.termMonths);
+    if(x.phase==='checkin')need.push({a:'vesper',text:'Time for '+nm+'\'s 2-month check-in',body:'3-month agreement, signed '+fmtEv(x.signedOn)+', ends '+fmtEv(x.endsOn)+'. Vesper can draft the check-in.'});
+    else if(x.phase==='reply')need.push({a:'vesper',text:'Waiting on '+nm+'\'s check-in reply',body:'Mark it went well or not good once they answer.'});
+    else if(x.phase==='talk')need.push({a:'vesper',u:true,text:'Talk to '+nm+' before any renewal goes out',body:'Their check-in did not go well. Call them first. The renewal waits until you say it is sorted.'});
+    else need.push({a:'vesper',u:x.days<0,text:nm+' renewal '+(x.phase==='renewwait'?'goes out '+fmtEv(x.renewAfter):x.days<0?'is overdue ('+(-x.days)+' days past the end)':'is due (ends in '+x.days+' days)'),body:t+' agreement ends '+fmtEv(x.endsOn)+'.'+(x.termMonths===3?' It becomes a 1-year agreement.':'')+' Vesper can draft the note.'});});
+  if(ag.found.length)need.push({a:'vesper',text:plural(ag.found.length,'signed agreement','signed agreements')+' found in your email',body:ag.found.map(x=>x.venue).join(', ')+'. Check the date and pick the term (3 months, 6 months or 1 year).'});
   d.sg.dueSoon.forEach(x=>need.push({a:'sigil',text:x.name+(x.days<0?' is overdue':' is due in '+x.days+' days'),body:(x.due?'Due '+fmtEv(x.due)+'. ':'')+(x.fromEmail?'Pulled from email, so confirm the date. ':'')+'Sigil can draft the reminder.'}));
   add('sigil',d.sg.incomplete.length,plural(d.sg.incomplete.length,'person is','people are')+' missing paperwork',d.sg.incomplete.slice(0,5).map(p=>p.name+' needs '+p.miss.join(', ')).join('; ')+'.');
   add('sigil',d.sPending.length,plural(d.sPending.length,'paperwork reminder','paperwork reminders')+' to approve',d.sPending.map(x=>cut(x.label,60)).join('; ')+'.');
@@ -7781,6 +7795,7 @@ Do not touch venues you did not just add except to draft.`},
 0. New inquiries from people we have not written to: a party or event hire, wedding, corporate or private booking, a venue asking about services, a host applicant, a vendor or sponsor. Hire and venue inquiries: addLead (source "email", score Hot / Warm with a reason) and a Quill reply draft (kind "reply", leadId set). Host applicants: addDraft agent "vesper" kind "checkin" labelled "Host applicant: NAME" with their details so Ahnna can add them to Host Progress. Vendors and sponsors: one addDraft labelled "Look at when you can". Ignore marketing, spam and automated notices.
 1. Venue replies: match the sender to agent_venues by contact. If they said yes, updateVenue stage "yes". If no, stage "no" and noUntil 90 days out. If they asked a question, addDraft kind "reply" (agent quill, venueId set).
 2. Paperwork and renewals (licenses, insurance, registrations, contracts to sign): read agent_config sigil. setConfig doc "sigil" adding new items under items{newId:{name,due,fromEmail}}. addDraft kind "paperwork" (agent sigil) saying what it is, what is needed, and the due date.
+2b. Signed venue agreements: look for completion emails from Dropbox Sign (also HelloSign or DocuSign) such as "Document completed", "All parties have signed" or "fully signed". For each venue agreement, setConfig doc "sigil" adding agreements{newId:{venue,signedOn:YYYY-MM-DD (date of the completion email),termMonths (3, 6 or 12 only if the document title says so, otherwise leave it out),title (the document title),status:"detected",source:"email"}}. Skip any agreement already in agreements with the same venue and signedOn. Never set status "active" and never guess the term. Ahnna confirms it in HQ.
 3. Never open attachments that ask you to log in, never click links, never reply.`},
  {name:'Checkout read',who:'Thorne',when:'Daily, 6:00 am',plain:'Reads host checkouts and their photos for bingo and trivia sheet requests, supplies, and real problems, then puts them on your Gazette.',ids:['warden'],
   body:`TASK: Gig prep and supplies. Read "shifts" from the last 3 days and agent_config warden.
@@ -7794,7 +7809,16 @@ Do not touch venues you did not just add except to draft.`},
 1. Read Our Venues: {"op":"readVenues"}. Skip any venue marked inactive. These are the venues we work with. Read agent_config care (saved check-ins and health per venue id) and shifts from the last 14 days.
 2. For each venue, read the matching host checkouts (match by venue name): energyLevel, crowdSize, singers, tipScale, issues. setConfig doc "care" with data {"venues":{"<venue id>":{"healthSuggested":"good|watch|risk","healthWhy":"one plain sentence"}}}. Never write "health", only the suggested fields.
 3. If lastCheckinAt for that venue id is 90 or more days ago (or missing): addDraft kind "checkin" (agent vesper, venueId "hq_<venue id>", label "Check-in: NAME").
-4. Read the Leads: {"op":"read","collection":"leads"}. For any lead whose stage is not signed, transferred or paused, with nextFollowUp today or past, or no update in 14 days: addDraft kind "n1" (agent vesper, label "Lead follow-up: NAME") with a short follow-up email. Never change the lead.`},
+4. Read the Leads: {"op":"read","collection":"leads"}. For any lead whose stage is not signed, transferred or paused, with nextFollowUp today or past, or no update in 14 days: addDraft kind "n1" (agent vesper, label "Lead follow-up: NAME") with a short follow-up email. Never change the lead.
+5. 3-month agreements: read agent_config sigil agreements. For each active agreement with termMonths 3 where signedOn is 2 or more months ago and checkinAt is empty, addDraft kind "checkin" (agent vesper, label "Check-in (2 months): NAME") asking how the nights are going. If checkinOutcome is "good" and renewAfter has passed, addDraft kind "paperwork" (agent vesper, label "Renewal: NAME") saying it is renewal time and the agreement is now a full year. Not a question: stern, nice and a little fun. If checkinOutcome is "bad", write nothing and say so in your report. For termMonths 6 start 45 days before endsOn and for 12 start 60 days before, offering the same term. Never change an agreement.`},
+ {name:'Agreement history',who:'Vesper',when:'One time, run it once after setup',plain:'Goes through your business email for every venue you work with and finds when each agreement was signed and how long it runs. You confirm each one in HQ.',ids:['vesper'],
+  body:`TASK: Agreement history. ONE TIME. Read email only.
+1. Read Our Venues: {"op":"readVenues"}. Skip venues marked inactive.
+2. For each venue, search the business Gmail, all dates, for signed agreements: Dropbox Sign (HelloSign) or DocuSign completion emails ("Document completed", "All parties have signed", "fully signed"), and any thread about the venue agreement or contract being signed. Also check the venue's own replies saying they signed. Search by venue name and by the contact name or email in the venue notes.
+3. For each signed agreement found, setConfig doc "sigil" adding agreements{newId:{venue (exactly as in Our Venues),signedOn:YYYY-MM-DD (the date it was fully signed),termMonths (3, 6 or 12 only if the document or emails clearly say so, otherwise leave it out),title (document title or email subject),evidence (one line: where you found it and the email date),status:"detected",source:"history"}}.
+4. If a venue has several signings (renewals), add only the newest one.
+5. A venue with no signed agreement found: list it by name in your report. Do not guess a date.
+6. Never open attachments that ask you to log in, never click links, never reply, never send anything. Never set status "active". Ahnna confirms every date and term in HQ.`},
  {name:'Presence check',who:'Mirror',when:'Mondays, 8:00 am',plain:'Checks your listings and website, flags profiles that have gone 90 days without a refresh with exact steps, and drafts review replies and review asks.',ids:['mirror'],
   body:`TASK: Presence check. Read agent_sites. Skip sites where silencedAt is set or active is false.
 1. For each active site, check the public page. If profileRefreshed is 90 or more days old, set auditNotes to the exact steps to fix it, and addDraft kind "seo".
@@ -8124,6 +8148,7 @@ function vVesper(){
   h+='<div class="tm-sec">Waiting to approve ('+d.vPending.length+')</div>';
   if(!d.vPending.length)h+='<div class="tm-empty">No nudges or check-ins waiting.</div>';
   d.vPending.forEach(x=>h+=draftCard(x,false));
+  h+=agreementsHtml();
   h+='<div class="tm-sec">Venue care: check in every 3 months ('+d.careDue.length+' due)</div>';
   if(!d.care.length)h+='<div class="tm-empty">No current venues yet. Add the venues you already work with below, or hand a yes to onboarding from Raven.</div>';
   d.care.slice().sort((a,b)=>(a.lastCheckinAt||0)-(b.lastCheckinAt||0)).forEach(v=>{
@@ -8135,6 +8160,7 @@ function vVesper(){
       '<div class="tm-row"><select class="tm-sel" style="width:auto" data-chg="venuehealth" data-id="'+esc(v.id)+'"><option value="good"'+(H==='good'?' selected':'')+'>Health: good</option><option value="watch"'+(H==='watch'?' selected':'')+'>Health: watch</option><option value="risk"'+(H==='risk'?' selected':'')+'>Health: at risk</option></select>'+
       (due&&!has?'<button class="tm-b pri" data-act="carecheckin" data-id="'+esc(v.id)+'">Draft check-in</button>':'')+(has?'<span class="tm-tag">draft waiting</span>':'')+'<button class="tm-b dim" data-act="vtl" data-id="'+esc(v.id)+'">'+(S.open['tl_'+v.id]?'Hide timeline':'Timeline')+'</button></div>'+(S.open['tl_'+v.id]?timelineHtml(v):'')+'</div>';
   });
+  h+=pipelineHtml();
   h+='<div class="tm-hint" style="margin-top:.8rem">Venues come from <b>Our Venues</b> in the Venues tab. Add or retire one there and it shows here.</div>';
   h+='<div class="tm-sec">Venue leads to follow up ('+d.vlDue.length+')</div><div class="tm-hint">From the Leads tab: follow-up dates that are due, or leads with no activity in 14 days. Signed, transferred and paused leads are left alone.</div>';
   if(!d.vlDue.length)h+='<div class="tm-empty">No venue leads need a nudge.</div>';
@@ -8144,6 +8170,58 @@ function vVesper(){
 
 
 const SG_STD=['Business license (state and city)','General liability insurance','Insurance certificate (COI) ready for venues','Music licensing (public performance)','LLC annual report (WA Secretary of State)','Sales tax and B&O tax filings','Domain and hosting renewals','Vehicle and equipment insurance','Quarterly estimated taxes (federal)','Quarterly sales and B&O filing window'];
+
+const TERM_LBL=n=>n===12?'1 year':n===6?'6 months':n===3?'3 months':n+' months';
+const TERM_LEAD={3:30,6:45,12:60};
+function addMonths(iso,n){const d=new Date(iso+'T12:00:00');const day=d.getDate();d.setMonth(d.getMonth()+n);if(d.getDate()!==day)d.setDate(0);return isoDay(d.getTime());}
+function agrState(){
+  const c=(S.cfg.sigil||{}).agreements||{},today=isoDay(Date.now()),t0=new Date(today+'T12:00:00').getTime();
+  const all=Object.entries(c).filter(([k,v])=>v&&v.venue).map(([k,v])=>Object.assign({id:k},v));
+  const found=all.filter(x=>x.status==='detected').sort((a,b)=>String(b.signedOn).localeCompare(String(a.signedOn)));
+  const active=all.filter(x=>(x.status||'active')==='active'&&x.endsOn).map(x=>{
+    x.days=Math.round((new Date(x.endsOn+'T12:00:00').getTime()-t0)/DAY);x.lead=TERM_LEAD[x.termMonths]||45;
+    if(x.termMonths===3){
+      x.ckOn=addMonths(x.signedOn,2);
+      if(!x.checkinAt)x.phase=today>=x.ckOn?'checkin':'wait';
+      else if(!x.checkinOutcome)x.phase='reply';
+      else if(x.checkinOutcome==='bad')x.phase='talk';
+      else{x.renewAfter=x.renewAfter||isoDay(x.checkinAt+2*DAY);x.phase=today>=x.renewAfter?'renew':'renewwait';}
+    }else x.phase=x.days<=x.lead?'renew':'wait';
+    x.due=x.phase!=='wait';return x;}).sort((a,b)=>a.days-b.days);
+  return {found:found,active:active,due:active.filter(x=>x.due)};
+}
+function agrTag(x){
+  const m={checkin:['warn','2-month check-in due'],reply:['warn','waiting on their reply'],talk:['lost','talk to them first'],renew:['warn','renewal due'],renewwait:['warn','renewal goes out '+(x.renewAfter?fmtEv(x.renewAfter):'soon')]}[x.phase];
+  if(m)return '<span class="tm-tag '+m[0]+'">'+m[1]+'</span>';
+  return '<span class="tm-tag booked">'+x.days+' days left</span>';
+}
+function agrNote(x){
+  if(x.termMonths===3)return 'Hi '+x.venue+' team! It is renewal time, and here is the good news: your agreement is now a full year. Same great nights, same crew, and no more three-month check-ins. The paperwork is coming your way from Dropbox Sign, so keep an eye out and get it signed back by '+fmtEv(x.endsOn)+'. Looking forward to a whole year of fun with you! - Ahnna, Belladonna Audio Alchemies';
+  return 'Hi '+x.venue+' team! Quick heads up: our agreement '+(x.days<0?'ended on ':'runs through ')+fmtEv(x.endsOn)+'. We love working with you and want to keep the nights going. Want to renew for another '+TERM_LBL(x.termMonths||12)+'? I can send the paperwork over whenever you are ready. Just say the word. - Ahnna, Belladonna Audio Alchemies';
+}
+function agrCheckin(x){return 'Hi '+x.venue+' team! We are two months in, so I wanted to check in. How are the nights going for you? Is the crowd what you hoped for, and is there anything you would change about the host, the music or the night itself? Tell me straight and I will make it right. - Ahnna, Belladonna Audio Alchemies';}
+function agrBtns(x){
+  const b=(act,l,c)=>'<button class="tm-b'+(c?' '+c:'')+'" data-act="'+act+'" data-id="'+esc(x.id)+'">'+l+'</button>';
+  let r='';
+  if(x.phase==='checkin')r+=(x.checkinDraftAt?b('agrsent','Check-in sent','pri'):b('agrcheckin','Draft 2-month check-in','pri'));
+  if(x.phase==='reply')r+=b('agrgood','Went well','pri')+b('agrbad','Not good, I will talk to them','red');
+  if(x.phase==='talk')r+=b('agrgood','Sorted it out, ready to renew','pri');
+  if(x.phase==='renew'||x.phase==='renewwait')r+=b('agrnote','Draft renewal note','pri');
+  r+=b('agrrenew','Renewed')+b('agrend','Venue left','dim')+b('agrdel','Remove','dim red');
+  return r;
+}
+function agreementsHtml(){
+  const g=agrState();
+  let h='<div class="tm-sec">Venue agreements ('+g.active.length+' active, '+g.due.length+' need you)</div><div class="tm-hint">Agreements run 3 months, 6 months or 1 year. A 3-month venue gets a check-in at 2 months. If it goes well, the renewal goes out 2 days later and it is now a year. If it does not go well, you talk to them first. 6-month and 1-year venues get a renewal note 45 and 60 days out. Nothing is ever sent for you.</div>';
+  if(g.found.length){h+='<div class="tm-sec">Signed, found in your email ('+g.found.length+'). Check the date and term</div>';
+    g.found.forEach(x=>{h+='<div class="tm-item"><div class="t1"><span class="tm-tag warn">new</span><b>'+esc(x.venue)+'</b></div><div class="t2">'+(x.title?esc(x.title)+' &middot; ':'')+(x.evidence?esc(x.evidence):'')+'</div><div class="tm-row"><input class="tm-in s" type="date" id="agd-'+esc(x.id)+'" value="'+esc(x.signedOn||'')+'"><select class="tm-sel" style="width:auto" id="agt-'+esc(x.id)+'"><option value="3"'+(x.termMonths==3?' selected':'')+'>3 months</option><option value="6"'+(x.termMonths==6?' selected':'')+'>6 months</option><option value="12"'+(!x.termMonths||x.termMonths==12?' selected':'')+'>1 year</option></select><button class="tm-b pri" data-act="agrconfirm" data-id="'+esc(x.id)+'">Confirm</button><button class="tm-b dim" data-act="agrdel" data-id="'+esc(x.id)+'">Not an agreement</button></div></div>';});}
+  if(!g.active.length)h+='<div class="tm-empty">No agreements tracked yet. Add one below, or run Vesper\'s Agreement history task to find them in your email.</div>';
+  g.active.forEach(x=>{h+='<div class="tm-item"><div class="t1"><b>'+esc(x.venue)+'</b> '+agrTag(x)+'<span class="tm-tag">'+esc(TERM_LBL(x.termMonths))+'</span></div><div class="t2">Signed '+esc(fmtEv(x.signedOn))+' &middot; ends '+esc(fmtEv(x.endsOn))+(x.termMonths===3?' &middot; check-in '+esc(fmtEv(x.ckOn)):'')+'</div><div class="tm-row">'+agrBtns(x)+'</div></div>';});
+  const vn=(typeof venues!=='undefined'&&Array.isArray(venues)?venues:[]).filter(v=>v&&v.name&&!v.inactive).map(v=>'<option value="'+esc(v.name)+'">').join('');
+  h+=det('agradd','Add a signed agreement','<datalist id="agrVen">'+vn+'</datalist><div class="tm-fg"><div><label class="tm-lbl">Venue</label><input class="tm-in" id="agr-v" list="agrVen"></div><div><label class="tm-lbl">Signed on</label><input class="tm-in" id="agr-d" type="date" value="'+isoDay(Date.now())+'"></div><div><label class="tm-lbl">Term</label><select class="tm-sel" id="agr-t"><option value="3">3 months</option><option value="6">6 months</option><option value="12" selected>1 year</option></select></div></div><div class="tm-row"><button class="tm-b pri" data-act="agradd">Add</button></div>',false);
+  return h;
+}
+
 function sigilState(){
   const c=S.cfg.sigil||{},today=isoDay(Date.now());
   const items=Object.entries(c.items||{}).filter(([k,v])=>v).map(([k,v])=>Object.assign({id:k},v));
@@ -8160,7 +8238,7 @@ async function sgSave(patch){const ref=col('agent_config').doc('sigil');try{awai
 function sgTag(x){if(x.days==null)return '<span class="tm-tag warn">set a date</span>';if(x.days<0)return '<span class="tm-tag lost">overdue '+(-x.days)+' days</span>';if(x.days<=30)return '<span class="tm-tag warn">due in '+x.days+' days</span>';return '<span class="tm-tag booked">'+x.days+' days</span>';}
 function vSigil(){
   const d=D(),sg=d.sg;
-  let h='<div class="tm-sec">Renewals and filings ('+sg.items.length+')</div>';
+  let h='<div class="tm-hint">Venue agreements, check-ins and renewals now live on Vesper\'s desk.</div><div class="tm-sec">Renewals and filings ('+sg.items.length+')</div>';
   if(!sg.items.length)h+='<div class="tm-empty">Nothing tracked yet.</div><div class="tm-row"><button class="tm-b pri" data-act="sgaddstd">Add the standard list</button></div>';
   sg.items.forEach(x=>{
     h+='<div class="tm-item"><div class="t1"><b>'+esc(x.name)+'</b> '+sgTag(x)+(x.fromEmail?'<span class="tm-tag">from email, confirm the date</span>':'')+'</div><div class="tm-row"><label class="tm-lbl" style="margin:0">Next due</label><input class="tm-in s" type="date" data-chg="sgdue" data-id="'+esc(x.id)+'" value="'+esc(x.due||'')+'"><button class="tm-b dim red" data-act="sgdelitem" data-id="'+esc(x.id)+'">Remove</button></div></div>';
@@ -8260,6 +8338,26 @@ function vThorne(){
 /* ── Ledger ── */
 
 /* ── Ledger: pipeline ── */
+
+function digestFromText(raw){
+  const MO={jan:1,feb:2,mar:3,apr:4,may:5,jun:6,jul:7,aug:8,sep:9,oct:10,nov:11,dec:12},now=new Date();
+  const top=[],avoid=[];let tier='';
+  String(raw).split(/\r?\n/).forEach(line=>{
+    const t=line.trim();if(!t)return;
+    const hd=t.match(/^\*\*([^*]+)\*\*\s*$/);
+    if(hd){tier=hd[1].replace(/\(.*?\)/g,'').trim();return;}
+    if(/^skip\b/i.test(tier)||/^\*\*skip/i.test(t)){const m=t.replace(/^\*\*skip:?\*\*:?/i,'').trim();if(m)avoid.push({date:'',reason:m.replace(/\*\*/g,'')});return;}
+    const b=t.match(/^[-*]\s+\*\*(.+?)\*\*:?\s*(.*)$/);if(!b||!tier)return;
+    let head=b[1].replace(/:$/,''),rest=b[2].replace(/^:\s*/,'');
+    const dm=head.match(/\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+(\d{1,2})/i);
+    let date='';if(dm){const mo=MO[dm[1].toLowerCase()];let y=now.getFullYear();if(mo<now.getMonth()+1-2)y++;date=y+'-'+String(mo).padStart(2,'0')+'-'+String(+dm[2]).padStart(2,'0');}
+    let ev=head;const ci=head.indexOf(',');if(dm&&ci>=0&&head.indexOf(dm[0])<ci)ev=head.slice(ci+1).trim();else if(dm){ev=head.replace(dm[0],'').replace(/^[A-Za-z]{3}\s*/,'').trim()||head;}
+    top.push({date:date,event:ev.replace(/:$/,''),why:tier,idea:rest.replace(/\*\*/g,''),sourceUrl:''});
+  });
+  if(!top.length)return null;
+  return {runDate:now.toISOString().slice(0,10),top5:top,all:[],competitors:[],avoid:avoid};
+}
+
 function pipeData(){
   const now=Date.now(),today=isoDay(now),DAYS=n=>Math.floor((now-n)/DAY);
   const L=S.leads,liveQ=new Set(S.drafts.filter(d=>d.agent==='quill'&&d.kind!=='event'&&(d.status==='pending'||d.status==='approved')).map(d=>d.leadId));
@@ -8321,7 +8419,7 @@ function pipelineHtml(){
 
 function vLedger(){
   const L=S.leads,names=Array.from(new Set(L.map(l=>l.site||'Unknown').concat(S.sites.filter(s=>s.active!==false&&s.type!=='presence').map(s=>s.name))));
-  let h=pipelineHtml()+'<div class="tm-sec">By site</div>';
+  let h='<div class="tm-hint">The sales pipeline and stuck leads now live on Vesper\'s desk. Ledger keeps the money by site.</div><div class="tm-sec">By site</div>';
   if(!names.length)h+='<div class="tm-empty">No leads yet.</div>';
   else{
     h+='<div class="tm-item" style="padding:.4rem .5rem;overflow-x:auto"><table class="tm-tbl"><tr><th>Site</th><th class="n">Leads</th><th class="n">Quoted</th><th class="n">Booked</th><th class="n">Rate</th><th class="n">Revenue</th><th class="n">Fees</th><th class="n">Net</th></tr>';
@@ -8662,6 +8760,16 @@ const A={
     if(last)u.lastCheckinAt=new Date(last+'T12:00:00').getTime();
     await col('agent_venues').add(u);toast('Venue added.');
   },
+  async agradd(){const v=val('agr-v'),d=val('agr-d'),t=+val('agr-t');if(!v||!d){toast('Add the venue and the date signed.',true);return;}await sgSave({['agreements.a'+Date.now().toString(36)]:{venue:v,signedOn:d,termMonths:t,endsOn:addMonths(d,t),status:'active',source:'hand'}});toast('Added.');},
+  async agrconfirm(t){const x=agrState().found.find(a=>a.id===t.dataset.id);if(!x)return;const n=+(document.getElementById('agt-'+x.id)||{}).value||12,d=(document.getElementById('agd-'+x.id)||{}).value||x.signedOn;if(!d){toast('Pick the date it was signed.',true);return;}await sgSave({['agreements.'+x.id+'.signedOn']:d,['agreements.'+x.id+'.termMonths']:n,['agreements.'+x.id+'.endsOn']:addMonths(d,n),['agreements.'+x.id+'.status']:'active'});toast('Confirmed. Ends '+fmtEv(addMonths(d,n))+'.');},
+  async agrrenew(t){const x=agrState().active.find(a=>a.id===t.dataset.id);if(!x)return;const n=x.termMonths===3?12:(x.termMonths||12),start=x.days<0?isoDay(Date.now()):x.endsOn;await sgSave({['agreements.'+x.id+'.status']:'renewed',['agreements.a'+Date.now().toString(36)]:{venue:x.venue,signedOn:start,termMonths:n,endsOn:addMonths(start,n),status:'active',source:'hand'}});toast('Renewed for '+TERM_LBL(n)+'.');},
+  async agrcheckin(t){const x=agrState().active.find(a=>a.id===t.dataset.id);if(!x)return;await col('agent_drafts').add({leadId:null,agent:'vesper',kind:'checkin',body:agrCheckin(x),label:'Check-in (2 months): '+x.venue,status:'pending',createdAt:Date.now()});await sgSave({['agreements.'+x.id+'.checkinDraftAt']:Date.now()});toast('Draft is in Waiting to approve.');},
+  async agrsent(t){await sgSave({['agreements.'+t.dataset.id+'.checkinAt']:Date.now()});toast('Check-in marked sent.');},
+  async agrgood(t){await sgSave({['agreements.'+t.dataset.id+'.checkinOutcome']:'good',['agreements.'+t.dataset.id+'.renewAfter']:isoDay(Date.now()+2*DAY)});toast('Renewal can go out in 2 days.');},
+  async agrbad(t){await sgSave({['agreements.'+t.dataset.id+'.checkinOutcome']:'bad'});toast('Held. It is on your Gazette to talk to them.');},
+  async agrnote(t){const x=agrState().active.find(a=>a.id===t.dataset.id);if(!x)return;await col('agent_drafts').add({leadId:null,agent:'vesper',kind:'paperwork',body:agrNote(x),label:'Renewal: '+x.venue,status:'pending',createdAt:Date.now()});toast('Draft is in Waiting to approve.');},
+  async agrend(t){if(!confirm('Mark this venue as gone?'))return;await sgSave({['agreements.'+t.dataset.id+'.status']:'ended'});},
+  async agrdel(t){if(!confirm('Remove this?'))return;await sgSave({['agreements.'+t.dataset.id]:null});},
   async sgaddstd(){const p={};const have=new Set(sigilState().items.map(x=>x.name));SG_STD.filter(n=>!have.has(n)).forEach((n,k)=>{p['items.s'+Date.now().toString(36)+k]={name:n,due:''};});await sgSave(p);toast('List added. Set a date on each.');},
   async sgadditem(){const n=val('sg-name');if(!n){toast('Type what to track.',true);return;}await sgSave({['items.s'+Date.now().toString(36)]:{name:n,due:val('sg-due')}});toast('Added.');},
   async sgdue(t){await sgSave({['items.'+t.dataset.id+'.due']:t.value});},
@@ -8762,6 +8870,7 @@ const A={
     const raw=val('sableJson');if(!raw){toast('Paste Sable\'s output first.',true);return;}
     const a=raw.indexOf('{'),b=raw.lastIndexOf('}');let o=null;
     if(a>=0&&b>a){try{o=JSON.parse(raw.slice(a,b+1));}catch(e){}}
+    if(!o||!Array.isArray(o.top5))o=digestFromText(raw);
     if(!o||!Array.isArray(o.top5)){toast('Could not find the JSON block with a top5 list.',true);return;}
     await col('agent_config').doc('sable').set({digest:o,decisions:{},loadedAt:Date.now()});toast('Digest loaded.');
   },
