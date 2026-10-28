@@ -593,6 +593,20 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
 .tm-dr ::-webkit-scrollbar-track,#panel-team ::-webkit-scrollbar-track{background:transparent;}
 .tm-dr ::-webkit-scrollbar-thumb,#panel-team ::-webkit-scrollbar-thumb{background:#c9a96e;border-radius:3px;}
 .tm-dr ::-webkit-scrollbar-corner{background:transparent;}
+
+#panel-team .np-sub em{font-style:normal;color:#1a1612;background:#d9cdb2;border-radius:10px;padding:0 .5rem;font-size:.8rem;margin-left:.4rem;}
+#panel-team .np-sub{font-size:1.25rem;margin:1rem 0 .4rem;}
+#panel-team .np-cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.7rem 1.4rem;}
+#panel-team .np-card{display:flex;gap:.8rem;align-items:flex-start;padding:.55rem .2rem;border-bottom:1px dotted #8c7f66;}
+#panel-team .np-date{flex:0 0 3.6rem;text-align:center;border:2px solid #1a1612;background:#f6efdd;padding:.15rem 0 .25rem;}
+#panel-team .np-date i{display:block;font-style:normal;font-family:'Bebas Neue',sans-serif;letter-spacing:.14em;font-size:.9rem;background:#7a1f2b;color:#efe6d2;}
+#panel-team .np-date b{display:block;font-family:'Bebas Neue',sans-serif;font-size:2rem;line-height:1.05;}
+#panel-team .np-date.tbd b{font-size:1.2rem;line-height:1.6;color:#6a5e4a;}
+#panel-team .np-cardt .np-hd{font-size:1.2rem;}
+#panel-team .np-cardt .np-body{display:block;font-size:1.05rem;margin-top:.15rem;}
+#panel-team .np-box{margin-top:1.1rem;}
+#panel-team .np-box .np-hd{font-size:1.05rem;}
+@media(max-width:760px){#panel-team .np-cards{grid-template-columns:1fr;}}
 </style>
 </head>
 <body>
@@ -7022,10 +7036,12 @@ herald:{
   ["Suggest the one missing piece (a category, a prop, a playlist) so an idea can work, and say it is worth building","With each idea","Iris, you decide"],
   ["Write venue-ready pitches to help win a venue over","With each idea","Iris, Quill polishes it"],
   ["Watch the public domain for films, music, books or art you could use that you missed","Every Monday","Iris, with a source link"],
+  ["Research every venue we work with and every venue we want or could try for, from the public web and social media: what it is, what people say, events it has done, what it would like","Every Tuesday, 9 AM, up to 6 venues a week","Iris, with source links"],
+  ["Suggest venues we do not have yet but should try for","Now and then","Iris, you decide"],
   ["Like, pursue or skip each idea. Pursue copies a pitch brief for Quill","When you review","You"]
  ],
  reads:['Our Venues (HQ Venues tab)','agent_config/curator (what each venue offers, your catalog, past ideas)','agent_config/sable (this week\'s events)','agent_leads and agent_venues','The public web (public domain)'],
- writes:['agent_config/curator (ideas)'],
+ writes:['agent_config/curator (ideas, research)'],
  handoff:'A pursued idea goes to Quill for the pitch, and to Thorne for any prep it needs.',
  rules:['Never contact a venue.','Never invent a venue feature or a catalog item. Use only what is ticked, noted or pasted.','Public domain claims need a source link. If it cannot be confirmed, leave it out.','Movie nights may need a public performance license unless the film is public domain. Flag it, never give legal advice.','Never repeat an idea already on the board, even a skipped one.'],
  today:'Works by hand: tick what each venue offers, paste your catalog, add ideas yourself, like, pursue or skip.',
@@ -7041,8 +7057,11 @@ Every Monday at 9 AM Pacific:
 5. Mix at least: one idea built only from existing catalog items put together in a new way, one idea tailored to a specific venue's feature, one that uses an upcoming Sable event, and one "Build this" where a small missing piece unlocks it.
 6. Skip any idea already in ideas, including skipped ones.
 
+VENUE RESEARCH. A second job, every Tuesday at 9 AM, studies up to 6 venues from Our Venues, the Leads tab and agent_venues using the public web and social media. It writes dossiers to agent_config/curator research. Use those dossiers when you write ideas.
+
 RULES
 - Never contact a venue and never send anything.
+- Public sources only. Never log in anywhere.
 - Never invent a venue feature or a catalog item.
 - Movie nights may need a public performance license unless the film is public domain. Flag it. No legal advice.
 
@@ -7457,6 +7476,19 @@ window.teamOpen=function(){start();render();if(Date.now()-(S.recAt||0)>10*60*100
 
 
 /* ── Briefing ── */
+
+const EV_CATS=['Concerts & shows','Sports','Holidays & civic days','Other'];
+function evCat(x){const t=String(x.event||'');
+  if(/seahawks|kraken|mariners|sounders|huskies|\buw\b|football|basketball|hockey|\bnfl\b|\bnba\b|game day|game-day|vs\./i.test(t))return 1;
+  if(/halloween|veterans|election|thanksgiving|black friday|christmas|new year|valentine|st\.? patrick|easter|memorial day|labor day|independence|mother|father|cinco/i.test(t))return 2;
+  if(/festival|fair|parade|market|convention|expo|crawl/i.test(t))return 3;
+  return 0;}
+function evBadge(x){const m=String(x.date||'').match(/^(\d{4})-(\d{2})-(\d{2})/);if(!m)return '<span class="np-date tbd"><i>Date</i><b>TBD</b></span>';const mo=['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'][+m[2]-1];return '<span class="np-date"><i>'+mo+'</i><b>'+(+m[3])+'</b></span>';}
+function ideasHtml(ideas){
+  const g=[[],[],[],[]];ideas.forEach(x=>g[evCat(x)].push(x));
+  return g.map((a,i)=>!a.length?'':'<div class="np-sub">'+EV_CATS[i]+' <em>'+a.length+'</em></div><div class="np-cards">'+a.map(x=>'<div class="np-card">'+evBadge(x)+'<div class="np-cardt"><span class="np-hd">'+esc(x.event)+'</span><span class="np-body">'+esc(x.idea||'')+'</span></div></div>').join('')+'</div>').join('');
+}
+
 function briefData(){
   const d=D(),now=Date.now(),wk=now-7*DAY,today=isoDay(now);
   const need=[];
@@ -7495,7 +7527,7 @@ function briefData(){
   add('vesper',d.vlDue.length,plural(d.vlDue.length,'venue lead needs','venue leads need')+' a follow-up',d.vlDue.slice(0,4).map(l=>l.name+' ('+l.why+')').join('; ')+(d.vlDue.length>4?'; and '+(d.vlDue.length-4)+' more':'')+'. They are in your Leads tab.');
   add('mirror',d.mPending.length,plural(d.mPending.length,'review reply','review replies')+' to approve',d.mPending.map(x=>cut(x.label,60)).join('; ')+'.');
   add('mirror',d.stale.length,plural(d.stale.length,'profile is','profiles are')+' stale',d.stale.slice(0,6).map(x=>x.name+(x.profileRefreshed?' ('+ago(x.profileRefreshed)+')':' (never refreshed)')).join('; ')+'. Open Mirror for what to change on each.');
-  add('sable',d.undecided,plural(d.undecided,'event idea','event ideas')+' to pursue or skip',d.top5.filter((_,i)=>!d.dec['t'+i]).map(x=>(x.date?fmtEv(x.date)+': ':'')+x.event).join('; ')+'.');
+  add('sable',d.undecided,plural(d.undecided,'event idea','event ideas')+' to pursue or skip',(()=>{const c=[0,0,0,0];d.top5.filter((_,i)=>!d.dec['t'+i]).forEach(x=>c[evCat(x)]++);return EV_CATS.map((n,i)=>c[i]?c[i]+' '+n.toLowerCase():'').filter(Boolean).join(', ')+'. All of them are listed by date below.';})());
   const RM=remState();
   RM.due.forEach(r=>need.push({a:r.agent,rem:true,rid:r.id,text:'Reminder: '+r.text,body:(r.date?(r.date<isoDay(now)?'Was due '+fmtEv(r.date)+'. ':r.date===isoDay(now)?'Due today. ':''):'')+'You asked '+(agent(r.agent)?agent(r.agent).name:'a desk')+' to remind you.'}));
   const hsh=s=>{let h=5381;for(let k=0;k<s.length;k++)h=((h<<5)+h+s.charCodeAt(k))|0;return Math.abs(h).toString(36);};
@@ -7560,14 +7592,16 @@ function renderBrief(){
   else h+='<div class="np-quiet">No emergencies. The rest of the paper is below.</div>';
   h+='</div>';
   // departments
-  const used=new Set();
+  const used=new Set();let avoidShown=false;
+  const avoidHtml=()=>'<div class="np-box"><div class="np-boxh">Dates to Dodge</div>'+b.avoid.map(x=>'<div class="np-story">'+(x.date?'<div class="np-hd">'+esc(fmtEv(x.date))+'</div>':'')+'<div class="np-body">'+esc(x.reason)+'</div></div>').join('')+'</div>';
   DEPT.forEach(dp=>{
     const items=rest.filter(n=>!n.rem&&dp.a.indexOf(n.a)>=0);items.forEach(n=>used.add(n.key));
     const ideas=dp.id==='town'?b.ideas:[];
     if(!items.length&&!ideas.length)return;
     h+='<div class="np-dept"><div class="np-dh"><span>'+esc(dp.t)+'</span><i>'+esc(dp.s)+'</i></div>';
     if(items.length)h+='<div class="'+(items.length>1?'np-cols':'np-one')+'">'+items.map(art).join('')+'</div>';
-    if(ideas.length)h+='<div class="np-sub">Ideas on the calendar</div><div class="np-cols">'+ideas.map(x=>'<div class="np-story"><div class="np-hd">'+esc(fmtEv(x.date))+': '+esc(x.event)+'</div><div class="np-body">'+esc(x.idea||'')+'</div></div>').join('')+'</div>';
+    if(ideas.length)h+=ideasHtml(ideas);
+    if(dp.id==='town'&&b.avoid.length){h+=avoidHtml();avoidShown=true;}
     h+='</div>';
   });
   const other=rest.filter(n=>!n.rem&&!used.has(n.key));
@@ -7580,7 +7614,7 @@ function renderBrief(){
     h+='</div>';
   }
   // sidebar and review
-  if(b.avoid.length)h+='<div class="np-box"><div class="np-boxh">Dates to Dodge</div>'+b.avoid.map(x=>'<div class="np-story"><div class="np-hd">'+esc(fmtEv(x.date))+'</div><div class="np-body">'+esc(x.reason)+'</div></div>').join('')+'</div>';
+  if(b.avoid.length&&!avoidShown)h+=avoidHtml();
   h+='<div class="np-dept"><div class="np-dh"><span>The Week in Review</span><i>What got done in the last 7 days</i></div><div class="np-body">'+(b.done.length?b.done.map(esc).join(' &middot; '):'A quiet week on the record.')+'</div></div>';
   const fr=filed.concat(b.filedRem.map(r=>({key:'rem_'+r.id,text:'Reminder: '+r.text})));
   if(fr.length){h+='<div class="np-dept"><div class="np-dh"><span>Filed Away Today</span><i>Handled</i></div>'+fr.map(n=>'<div class="np-filed"><s>'+esc(n.text)+'</s> <a href="#" data-act="bundo" data-key="'+esc(n.key)+'">undo</a></div>').join('')+'</div>';}
@@ -7841,6 +7875,14 @@ Do not touch venues you did not just add except to draft.`},
 4. Combine things we already have that nobody put together. When only a small piece is missing (a category, a prop, a playlist), still write the idea and say what is missing so Ahnna can decide to build it.
 5. Venue pitches: write the idea so a venue owner would want it, based on that venue's real features. Never invent a venue feature. Never contact anyone.
 6. Skip any idea already in ideas with any status, including skipped.`},
+ {name:'Venue research',who:'Iris',when:'Tuesdays, 9:00 am',plain:'Studies up to 6 venues a week (ones we work with first, then ones we want) across the public web and social media, and writes what she thinks about each and what we could do there.',ids:['herald'],
+  body:`TASK: Venue research. Public web and social media only. Never log in anywhere, never join a private group, never message anyone, never post.
+1. Read Our Venues ({"op":"readVenues"}, skip inactive), the Leads tab ({"op":"read","collection":"leads"}; skip transferred and paused) and agent_venues (skip stage "no"). Read agent_config curator: research (existing dossiers) and profiles.
+2. Pick up to 6 venues: never researched first, then oldest researchedAt (and only if older than 60 days). Venues we work with come before venues we want.
+3. For each, search the web and public social pages (their website, Facebook, Instagram, Google and Yelp listings, local news, event listings). Find: what the place is and its vibe and crowd, what customers and the press say, events and gigs they have hosted (including other karaoke, trivia, bingo or music hosts and nights), outdoor or special spaces, and anything useful for us.
+4. Write setConfig doc "curator" with research{<key>:{name,kind ("have" if in Our Venues, otherwise "want"),city,summary (2 to 3 sentences),social (what people say, in your own words with the overall feeling, never long quotes),pastEvents (list, include who ran it if known),likes (what you think this venue would like, and why),ideas (list of 2 to 4 concrete things Belladonna could do there, each one sentence),watch (a competing night on the same day, a bad reputation, or anything risky, empty if none),sources (URLs),researchedAt (ms)}}. The key is the venue name lowercased with every character that is not a letter or number replaced by an underscore, with a p in front, for example "Post & Pour" becomes "ppost___pour".
+5. Up to 3 times a week you may add a venue we do not have and do not track but think we SHOULD try for, with kind "suggest". Say why in summary.
+6. Mark anything you could not confirm as not verified. Never repeat rumors about named private people. Business information only. Never copy reviews at length.`},
  {name:'Agreement history',who:'Vesper',when:'One time, run it once after setup',plain:'Goes through your business email for every venue you work with and finds when each agreement was signed and how long it runs. You confirm each one in HQ.',ids:['vesper'],
   body:`TASK: Agreement history. ONE TIME. Read email only.
 1. Read Our Venues: {"op":"readVenues"}. Skip venues marked inactive.
@@ -8414,19 +8456,22 @@ function digestFromText(raw){
   const top=[],avoid=[];let tier='';
   const DT=/\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\.?\s+(\d{1,2})/i;
   String(raw).split(/\r?\n/).forEach(line=>{
-    let t=line.replace(/\*\*/g,'').replace(/^[\s•●▪‣\-\*–]+/,'').trim();if(!t)return;
+    let t=line.replace(/\*\*/g,'').replace(/^[\s•●▪‣\-\*–]+/,'').trim();if(!t){if(/^skip/i.test(tier))tier='';return;}
     const th=t.match(/^(strongest|solid|possible but weaker|possible|skip)\b[^:]{0,60}?(:\s*(.*))?$/i);
     if(th&&(t.length<70||/^skip/i.test(t))){
       tier=th[1].toLowerCase()==='possible'?'Possible but weaker':th[1][0].toUpperCase()+th[1].slice(1).toLowerCase();
-      if(/^skip/i.test(tier)){const m=(th[3]||'').trim();if(m)avoid.push({date:'',reason:m});}
+      if(/^skip/i.test(tier)){const m=(th[3]||'').trim();if(m){avoid.push({date:'',reason:m});tier='';}}
       return;}
     if(!tier)return;
     if(/^skip/i.test(tier)){avoid.push({date:'',reason:t});return;}
     const ci=t.indexOf(':');if(ci<2||ci>110)return;
     let head=t.slice(0,ci).trim(),rest=t.slice(ci+1).trim();
-    const dm=head.match(DT);
+    const dm=head.match(DT)||rest.match(DT);
     let date='';if(dm){const mo=MO[dm[1].toLowerCase()];let y=now.getFullYear();if(mo<now.getMonth()+1-2)y++;date=y+'-'+String(mo).padStart(2,'0')+'-'+String(+dm[2]).padStart(2,'0');}
-    let ev=head;const hc=head.indexOf(',');if(dm&&hc>=0&&head.indexOf(dm[0])<hc)ev=head.slice(hc+1).trim();else if(dm)ev=head.replace(dm[0],'').replace(/^[A-Za-z]{3,9}\.?\s*/,'').trim()||head;
+    let ev=head;
+    const lead=head.match(/^((?:Mon|Tue|Wed|Thu|Fri|Sat|Sun)[a-z]*\.?(?:[–-](?:Mon|Tue|Wed|Thu|Fri|Sat|Sun)[a-z]*)?\s+)?(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\.?\s+\d{1,2}(?:[–-]\d{1,2})?\s*,\s*/i);
+    if(lead){const r=head.slice(lead[0].length).trim();if(r)ev=r;}
+    else{ev=head.replace(/\s*\((?:[^)]*(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\.?\s+\d[^)]*)\)/i,'').trim()||head;}
     top.push({date:date,event:ev,why:tier,idea:rest,sourceUrl:''});
   });
   if(!top.length)return null;
@@ -8605,8 +8650,9 @@ function vMirror(){
       '<div class="tm-row"><button class="tm-b pri" data-act="refreshed" data-id="'+esc(s.id)+'">Refreshed today</button><button class="tm-b dim" data-act="silencesite" data-id="'+esc(s.id)+'" title="Not working with this site right now. No reminders until you resume it.">Silence</button><button class="tm-b dim red" data-act="delsite" data-id="'+esc(s.id)+'">Delete</button></div></div>';
   });
   if(d.silenced.length){
-    h+='<div class="tm-sec">Silenced ('+d.silenced.length+')</div><div class="tm-hint">No reminders and no stale flags. Resume one when you start working with it.</div>';
-    d.silenced.forEach(s=>{h+='<div class="tm-item"><div class="t1"><b>'+esc(s.name)+'</b> <span class="tm-tag">silenced</span></div><div class="tm-row"><button class="tm-b" data-act="resumesite" data-id="'+esc(s.id)+'">Resume</button><button class="tm-b dim red" data-act="delsite" data-id="'+esc(s.id)+'">Delete</button></div></div>';});
+    let sh='<div class="tm-hint">No reminders and no stale flags. Resume one when you start working with it.</div>';
+    d.silenced.forEach(s=>{sh+='<div class="tm-item"><div class="t1"><b>'+esc(s.name)+'</b> <span class="tm-tag">silenced</span></div><div class="tm-row"><button class="tm-b" data-act="resumesite" data-id="'+esc(s.id)+'">Resume</button><button class="tm-b dim red" data-act="delsite" data-id="'+esc(s.id)+'">Delete</button></div></div>';});
+    h+=det('msil','Silenced ('+d.silenced.length+')',sh,false);
   }
   const opts=d.sites.map(s=>'<option>'+esc(s.name)+'</option>').join('');
   h+=det('rev','Draft a review reply','<div class="tm-fg"><div><label class="tm-lbl">Site</label><select class="tm-sel" id="rv-site">'+(opts||'<option>Listing</option>')+'</select></div><div><label class="tm-lbl">Stars</label><input class="tm-in" id="rv-stars" inputmode="numeric" placeholder="5"></div><div class="full"><label class="tm-lbl">Review text</label><textarea class="tm-ta" id="rv-text" style="min-height:80px"></textarea></div></div><div class="tm-row"><button class="tm-b" data-act="copyreview">Copy Mirror prompt</button></div>'+
@@ -8716,6 +8762,35 @@ function ideaCard(x){
     (x.sourceUrl&&safeUrl(x.sourceUrl)?'<div class="t2"><a href="'+esc(safeUrl(x.sourceUrl))+'" target="_blank" rel="noopener">source</a></div>':'')+
     '<div class="tm-row">'+(st==='new'?b('ideaset','liked','Like','pri')+b('ideaset','pursuing','Pursue'):'')+(st==='liked'?b('ideaset','pursuing','Pursue','pri'):'')+(st==='pursuing'?b('ideaset','made','Made it','pri'):'')+((st==='pursuing'||st==='liked')?b('ideacopy','','Copy pitch for Quill'):'')+(st==='skipped'||st==='made'?b('ideaset','new','Undo','dim'):b('ideaset','skipped','Skip','dim'))+b('ideadel','','Remove','dim red')+'</div></div>';
 }
+
+function venueNames(){
+  const out=[],seen=new Set(),add=(n,k,city)=>{n=String(n||'').trim();const key=pfKey(n.toLowerCase());if(!n||seen.has(key))return;seen.add(key);out.push({name:n,kind:k,key:key,city:city||''});};
+  (typeof venues!=='undefined'&&Array.isArray(venues)?venues:[]).filter(v=>v&&v.name&&!v.inactive).forEach(v=>add(v.name,'have'));
+  hqLeads().filter(l=>l.name&&!['transferred','paused'].includes(l.stage||'new')&&(l.stage||'new')!=='signed'&&(l.stage||'new')!=='active').forEach(l=>add(l.name,'want',l.city));
+  S.venues.filter(v=>v.name&&v.stage!=='no').forEach(v=>add(v.name,'want',v.city));
+  return out;
+}
+function researchState(){
+  const r=(S.cfg.curator||{}).research||{},names=venueNames(),now=Date.now();
+  const byKey={};Object.entries(r).forEach(([k,v])=>{if(v&&v.name)byKey[k]=Object.assign({id:k},v);});
+  names.forEach(n=>{const d=byKey[n.key];if(d)d.kind=d.kind==='suggest'?'suggest':n.kind;});
+  const done=Object.values(byKey).sort((a,b)=>({have:0,want:1,suggest:2}[a.kind]||3)-({have:0,want:1,suggest:2}[b.kind]||3)||String(a.name).localeCompare(String(b.name)));
+  const waiting=names.filter(n=>!byKey[n.key]||now-(byKey[n.key].researchedAt||0)>60*DAY);
+  return {done:done,waiting:waiting};
+}
+function dossierCard(d){
+  const L=a=>[].concat(a||[]).filter(Boolean);
+  const sec=(t,x)=>x?'<div class="t2"><b>'+t+':</b> '+esc(x)+'</div>':'';
+  const list=(t,a)=>L(a).length?'<div class="t2"><b>'+t+':</b></div>'+L(a).map(x=>'<div class="t2">&bull; '+esc(x)+'</div>').join(''):'';
+  const tag={have:'<span class="tm-tag booked">we work here</span>',want:'<span class="tm-tag quoted">want</span>',suggest:'<span class="tm-tag new">Iris suggests</span>'}[d.kind]||'';
+  return '<div class="tm-item'+(S.open['c_'+d.id]?'':' folded')+'"><div class="t1 fold" data-act="fold" data-id="'+esc(d.id)+'"><b>'+esc(d.name)+'</b> '+tag+(d.city?'<span class="tm-tag">'+esc(d.city)+'</span>':'')+'</div>'+
+    sec('What it is',d.summary)+sec('What people say online',d.social)+list('Events and gigs they have done',d.pastEvents)+sec('What Iris thinks they would like',d.likes)+
+    (L(d.ideas).length?'<div class="t2"><b>What we could do there:</b></div>'+L(d.ideas).map((x,i)=>'<div class="t2">&bull; '+esc(x)+' <button class="tm-b dim" data-act="dossidea" data-id="'+esc(d.id)+'" data-i="'+i+'">Save as idea</button></div>').join(''):'')+
+    sec('Watch out for',d.watch)+
+    (L(d.sources).length?'<div class="t2">'+L(d.sources).filter(u=>safeUrl(u)).slice(0,6).map((u,i)=>'<a href="'+esc(safeUrl(u))+'" target="_blank" rel="noopener">source '+(i+1)+'</a>').join(' &middot; ')+'</div>':'')+
+    '<div class="t2">Researched '+esc(fmtDay(d.researchedAt))+'</div></div>';
+}
+
 function vIris(){
   const c=curatorState();
   let h='<div class="tm-sec">Ideas ('+c.fresh.length+' new, '+c.ideas.length+' total)</div><div class="tm-hint">Themed nights, events and pitches Iris built from what we have, the venues, Sable\'s finds and the public domain. Pursue one and copy the pitch brief for Quill.</div>';
@@ -8725,6 +8800,11 @@ function vIris(){
   if(sk.length)h+=det('ideask','Skipped ('+sk.length+')',sk.map(ideaCard).join(''),false);
   h+=det('ideaadd','Add an idea by hand','<div class="tm-fg"><div class="full"><label class="tm-lbl">Title</label><input class="tm-in" id="id-title" placeholder="e.g. Summer movie night on the patio"></div><div><label class="tm-lbl">Kind</label><select class="tm-sel" id="id-kind">'+CU_KIND.map(k=>'<option>'+k+'</option>').join('')+'</select></div><div class="full"><label class="tm-lbl">The idea</label><textarea class="tm-ta" id="id-pitch"></textarea></div><div class="full"><label class="tm-lbl">Best at (venues)</label><input class="tm-in" id="id-venues"></div></div><div class="tm-row"><button class="tm-b pri" data-act="ideaadd">Add</button></div>',false);
   const vl=(typeof venues!=='undefined'&&Array.isArray(venues)?venues:[]).filter(v=>v&&v.name&&!v.inactive).sort((a,b)=>String(a.name).localeCompare(String(b.name)));
+  const rs=researchState();
+  h+='<div class="tm-sec">Venue research ('+rs.done.length+' done, '+rs.waiting.length+' waiting)</div><div class="tm-hint">Iris studies every venue we work with and every venue we want or could try for: what it is, what people say about it online, events it has done, what she thinks it would like, and what we could do there. Public sources only. She never logs in anywhere.</div>';
+  if(!rs.done.length)h+='<div class="tm-empty">Nothing researched yet. The Venue research task fills this in.</div>';
+  rs.done.forEach(d=>h+=dossierCard(d));
+  if(rs.waiting.length)h+=det('rswait','Waiting to be researched ('+rs.waiting.length+')',rs.waiting.map(n=>'<div class="t2">'+esc(n.name)+' <span class="tm-tag">'+(n.kind==='have'?'we work here':'want')+'</span></div>').join(''),false);
   h+='<div class="tm-sec">What each venue offers ('+vl.length+')</div><div class="tm-hint">Tick what each venue has and add a note. Iris matches ideas to venues from this. Click a name to open it.</div>';
   if(!vl.length)h+='<div class="tm-empty">No venues in Our Venues yet.</div>';
   vl.forEach(v=>{const k=pfKey(v.id),p=c.profiles[k]||{},tg=p.tags||[];
@@ -8874,6 +8954,7 @@ const A={
   async agrnote(t){const x=agrState().active.find(a=>a.id===t.dataset.id);if(!x)return;await col('agent_drafts').add({leadId:null,agent:'vesper',kind:'paperwork',body:agrNote(x),label:'Renewal: '+x.venue,status:'pending',createdAt:Date.now()});toast('Draft is in Waiting to approve.');},
   async agrend(t){if(!confirm('Mark this venue as gone?'))return;await sgSave({['agreements.'+t.dataset.id+'.status']:'ended'});},
   async agrdel(t){if(!confirm('Remove this?'))return;await sgSave({['agreements.'+t.dataset.id]:null});},
+  async dossidea(t){const d=researchState().done.find(x=>x.id===t.dataset.id);if(!d)return;const a=[].concat(d.ideas||[])[+t.dataset.i];if(!a)return;await cuSave({['ideas.i'+Date.now().toString(36)]:{title:d.name+': '+String(a).slice(0,60),kind:'Venue pitch',pitch:a,venues:[d.name],status:'new',source:'research',createdAt:Date.now()}});toast('Saved to Ideas.');},
   async ideaset(t){const v=t.dataset.v;await cuSave({['ideas.'+t.dataset.id+'.status']:v,['ideas.'+t.dataset.id+'.updatedAt']:Date.now()});},
   async ideadel(t){if(!confirm('Remove this idea?'))return;await cuSave({['ideas.'+t.dataset.id]:null});},
   async ideacopy(t){const x=curatorState().ideas.find(i=>i.id===t.dataset.id);if(x)toast(await copy(ideaPrompt(x))?'Brief copied. Paste it into Claude.':'Copy failed.',false);},
