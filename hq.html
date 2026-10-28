@@ -563,6 +563,22 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
 #panel-team .np-box{border:2px solid #1a1612;outline:1px solid #1a1612;outline-offset:3px;padding:.5rem .8rem .6rem;margin:1.4rem .3rem 0;background:rgba(0,0,0,.03);}
 #panel-team .np-boxh{font-family:'Bebas Neue',sans-serif;font-size:1.2rem;letter-spacing:.14em;text-align:center;border-bottom:1px solid #1a1612;margin-bottom:.4rem;}
 @media(max-width:700px){#panel-team .np-frontgrid{grid-template-columns:1fr;}#panel-team .np-lead{border-right:none;padding-right:0;}#panel-team .np-stats{grid-template-columns:repeat(2,1fr);}}
+
+#panel-team .pl-board{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(185px,1fr);gap:.6rem;overflow-x:auto;padding-bottom:.4rem;}
+#panel-team .pl-col{background:var(--surface2);border:1px solid var(--border);border-top:2px solid var(--ac,#d03a46);border-radius:8px;padding:.5rem;min-height:90px;}
+#panel-team .pl-h{display:flex;justify-content:space-between;font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ac,#d03a46);font-weight:700;}
+#panel-team .pl-h i{font-style:normal;color:var(--text2);}
+#panel-team .pl-sub{font-size:.68rem;color:var(--text3);margin:.1rem 0 .3rem;}
+#panel-team .pl-card{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:.4rem .5rem;margin-top:.4rem;font-size:.78rem;}
+#panel-team .pl-card b{display:block;color:var(--text);}
+#panel-team .pl-card span{display:block;color:var(--text3);font-size:.7rem;}
+#panel-team .pl-card em{display:block;font-style:normal;color:var(--gold);font-size:.7rem;}
+#panel-team .pl-card.warn{border-color:#c9503a;}
+#panel-team .pl-none{font-size:.72rem;color:var(--text4,#777);margin-top:.5rem;}
+#panel-team .pl-money{margin:.2rem 0 .6rem;}
+#panel-team .pl-money .np-stat{border-color:var(--border);}
+#panel-team .pl-money .np-stat span{color:var(--text3);}
+#panel-team .pl-money{border-color:var(--border);}
 </style>
 </head>
 <body>
@@ -6961,6 +6977,7 @@ Every Monday at 7:30 AM Pacific:
 2. For each site report: leads, quoted, booked, booking rate (booked divided by leads), revenue (sum of bookedPrice), fees (feesPaid) and net (revenue minus fees).
 3. Write a summary of at most 120 words: what booked this week, what was lost and why, which site is winning, which is not paying for itself.
 4. Data checks: list any lead that is booked with no bookedPrice, quoted with no quotedAt, or still "new" after 7 days.
+5. Pipeline: report the total dollars in open quotes, dollars booked this month, win rate (booked divided by booked plus lost), and the top lost reasons. Name any lead quoted 3+ days with no reply, and any venue lead (agent_venues or HQ leads) with a follow-up date that has passed.
 
 On the first Monday of each month also review the paid sites. A site that has been paid for 90 days or more and still has negative net gets a plain recommendation: keep, downgrade or drop.
 
@@ -8221,9 +8238,70 @@ function vThorne(){
 }
 
 /* ── Ledger ── */
+
+/* ── Ledger: pipeline ── */
+function pipeData(){
+  const now=Date.now(),today=isoDay(now),DAYS=n=>Math.floor((now-n)/DAY);
+  const L=S.leads,liveQ=new Set(S.drafts.filter(d=>d.agent==='quill'&&d.kind!=='event'&&(d.status==='pending'||d.status==='approved')).map(d=>d.leadId));
+  const cols={new:[],quoted:[],booked:[],lost:[]},stuck=[];
+  L.forEach(l=>{
+    const st=l.stage||'new';
+    if(st==='new'){const age=DAYS(l.receivedAt||now);cols.new.push({l:l,age:age});if(age>=2&&!liveQ.has(l.id))stuck.push({age:age,who:l.client||l.site||'A lead',what:'new for '+age+' days with no quote draft',next:'Quill drafts the reply',tag:'Event lead'});}
+    else if(st==='quoted'){const age=DAYS(l.quotedAt||l.receivedAt||now);cols.quoted.push({l:l,age:age});if(age>=3&&!l.repliedAt)stuck.push({age:age,who:l.client||l.site||'A lead',what:'quoted '+age+' days ago, no reply'+(l.quotedPrice?' ('+l.quotedPrice+')':''),next:age>=7?'Mark lost or call them':'Vesper nudges',tag:'Event lead'});}
+    else if(st==='booked'){cols.booked.push({l:l,age:DAYS(l.bookedAt||l.receivedAt||now)});}
+    else if(st==='lost'){cols.lost.push({l:l,age:DAYS(l.lostAt||l.receivedAt||now)});}
+  });
+  const m=x=>money(x);
+  const quotedVal=cols.quoted.reduce((n,o)=>n+m(o.l.quotedPrice),0);
+  const bookedAll=cols.booked.reduce((n,o)=>n+m(o.l.bookedPrice),0);
+  const ym=today.slice(0,7);
+  const bookedMonth=cols.booked.filter(o=>o.l.bookedAt&&isoDay(o.l.bookedAt).slice(0,7)===ym).reduce((n,o)=>n+m(o.l.bookedPrice),0);
+  const upcoming=cols.booked.filter(o=>o.l.eventDate&&o.l.eventDate>=today&&o.l.eventDate<=isoDay(now+30*DAY)).reduce((n,o)=>n+m(o.l.bookedPrice),0);
+  const closed=cols.booked.length+cols.lost.length;
+  const days=cols.booked.filter(o=>o.l.bookedAt&&o.l.quotedAt).map(o=>(o.l.bookedAt-o.l.quotedAt)/DAY);
+  const reasons={};cols.lost.forEach(o=>{const r=String(o.l.lostReason||'No reason').trim()||'No reason';reasons[r]=(reasons[r]||0)+1;});
+  const topLost=Object.entries(reasons).sort((a,b)=>b[1]-a[1]).slice(0,3);
+  // venues
+  const vc=[{k:'target',t:'Target',src:'Raven',items:[]},{k:'followup',t:'Emailed',src:'Raven',items:[]}];
+  const lstages=(typeof LEAD_STAGES!=='undefined'?LEAD_STAGES:[]).filter(x=>!['paused','transferred'].includes(x.key));
+  lstages.forEach(x=>vc.push({k:'L_'+x.key,t:x.label,src:'Leads tab',items:[]}));
+  S.venues.forEach(v=>{
+    if(v.stage==='target'||!v.stage)vc[0].items.push({name:v.name,sub:v.city||'',age:null});
+    else if(v.stage==='followup'){const age=v.emailedAt?DAYS(v.emailedAt):null;const over=v.followUpOn&&v.followUpOn<=today;vc[1].items.push({name:v.name,sub:(v.emailedAt?'emailed '+age+'d ago':''),age:age,flag:over?'follow-up due':''});if(over)stuck.push({age:age||0,who:v.name,what:'emailed'+(age!=null?' '+age+' days ago':'')+', follow-up is due',next:'Send the day-5 follow-up',tag:'Venue outreach'});}
+  });
+  hqLeads().forEach(l=>{
+    const st=l.stage||'new',col=vc.find(c=>c.k==='L_'+st);if(!col)return;
+    const upd=l.updatedAt?new Date(l.updatedAt).getTime():(l.createdAt?new Date(l.createdAt).getTime():now);
+    const idle=DAYS(upd),over=l.nextFollowUp&&l.nextFollowUp<=today&&!l.followUpNone;
+    if(st==='signed'&&idle>30)return;
+    col.items.push({name:l.name,sub:[l.city,l.contactName].filter(Boolean).join(' · '),age:idle,flag:over?'follow-up due':(idle>=14&&st!=='signed'?'idle '+idle+'d':'')});
+    if(st!=='signed'&&(over||idle>=14))stuck.push({age:idle,who:l.name,what:over?'follow-up date '+(l.nextFollowUp===today?'is today':'passed on '+fmtEv(l.nextFollowUp)):'no activity in '+idle+' days',next:'Vesper nudges',tag:'Venue lead'});
+  });
+  stuck.sort((a,b)=>b.age-a.age);
+  return {cols:cols,stuck:stuck,quotedVal:quotedVal,bookedAll:bookedAll,bookedMonth:bookedMonth,upcoming:upcoming,win:closed?Math.round(100*cols.booked.length/closed):null,avgBook:cols.booked.length?bookedAll/cols.booked.length:null,avgDays:days.length?days.reduce((p,q)=>p+q,0)/days.length:null,topLost:topLost,vc:vc};
+}
+function plCard(title,sub,tag,cls){return '<div class="pl-card'+(cls?' '+cls:'')+'"><b>'+esc(title)+'</b>'+(sub?'<span>'+esc(sub)+'</span>':'')+(tag?'<em>'+esc(tag)+'</em>':'')+'</div>';}
+function pipelineHtml(){
+  const P=pipeData();
+  let h='<div class="tm-sec">Pipeline: money</div><div class="np-stats pl-money">'+
+    [[fmtMoney(P.quotedVal),'In open quotes'],[fmtMoney(P.upcoming),'Booked, next 30 days'],[fmtMoney(P.bookedMonth),'Booked this month'],[P.win==null?'–':P.win+'%','Win rate'],[P.avgBook==null?'–':fmtMoney(P.avgBook),'Avg booking']].map(x=>'<div class="np-stat"><b>'+esc(String(x[0]))+'</b><span>'+esc(x[1])+'</span></div>').join('')+'</div>';
+  h+='<div class="tm-hint">'+(P.avgDays!=null?'Quote to booking takes about '+Math.round(P.avgDays)+' days. ':'')+(P.topLost.length?'Top reasons for losing: '+P.topLost.map(x=>esc(x[0])+' ('+x[1]+')').join(', ')+'.':'No lost leads logged yet.')+'</div>';
+  h+='<div class="tm-sec">Stuck right now ('+P.stuck.length+')</div>';
+  if(!P.stuck.length)h+='<div class="tm-empty">Nothing is stuck. Every lead is moving.</div>';
+  P.stuck.slice(0,12).forEach(x=>{h+='<div class="tm-item"><div class="t1"><span class="tm-tag warn">'+esc(x.tag)+'</span><b>'+esc(x.who)+'</b></div><div class="t2">'+esc(x.what)+' &middot; <b>Next:</b> '+esc(x.next)+'</div></div>';});
+  if(P.stuck.length>12)h+='<div class="tm-hint">And '+(P.stuck.length-12)+' more.</div>';
+  const colHtml=(t,items,sub)=>'<div class="pl-col"><div class="pl-h"><span>'+esc(t)+'</span><i>'+items.length+'</i></div>'+(sub?'<div class="pl-sub">'+esc(sub)+'</div>':'')+(items.length?items.join(''):'<div class="pl-none">None</div>')+'</div>';
+  const lc=o=>{const l=o.l;return plCard(l.client||l.site||'Lead',[l.eventType,l.eventDate?fmtEv(l.eventDate):'',l.location].filter(Boolean).join(' · '),(l.stage==='booked'?(l.bookedPrice||''):l.stage==='quoted'?(l.quotedPrice||''):'')+(o.age>=1?(l.stage==='booked'?'':(l.quotedPrice||l.bookedPrice?' · ':'')+o.age+'d'):''),(l.stage==='quoted'&&o.age>=3&&!l.repliedAt)?'warn':'');};
+  h+='<div class="tm-sec">Event and private-booking pipeline</div><div class="pl-board">'+
+    colHtml('New',P.cols.new.map(lc))+colHtml('Quoted',P.cols.quoted.map(lc),fmtMoney(P.quotedVal)+' out')+colHtml('Booked',P.cols.booked.slice(0,15).map(lc),fmtMoney(P.bookedAll)+' total')+'</div>';
+  h+='<div class="tm-sec">Venue pipeline</div><div class="tm-hint">Target and Emailed come from Raven\'s outreach. The rest come from your Leads tab. Signed shows the last 30 days. Moving a lead is still done in the Leads tab.</div><div class="pl-board">'+
+    P.vc.map(c=>colHtml(c.t,c.items.slice(0,12).map(i=>plCard(i.name,i.sub,i.flag,i.flag?'warn':'')).concat(c.items.length>12?['<div class="pl-none">+'+(c.items.length-12)+' more</div>']:[]),c.src)).join('')+'</div>';
+  return h;
+}
+
 function vLedger(){
   const L=S.leads,names=Array.from(new Set(L.map(l=>l.site||'Unknown').concat(S.sites.filter(s=>s.active!==false&&s.type!=='presence').map(s=>s.name))));
-  let h='<div class="tm-sec">By site</div>';
+  let h=pipelineHtml()+'<div class="tm-sec">By site</div>';
   if(!names.length)h+='<div class="tm-empty">No leads yet.</div>';
   else{
     h+='<div class="tm-item" style="padding:.4rem .5rem;overflow-x:auto"><table class="tm-tbl"><tr><th>Site</th><th class="n">Leads</th><th class="n">Quoted</th><th class="n">Booked</th><th class="n">Rate</th><th class="n">Revenue</th><th class="n">Fees</th><th class="n">Net</th></tr>';
