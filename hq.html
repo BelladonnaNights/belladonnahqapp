@@ -8342,22 +8342,26 @@ function vThorne(){
 function digestFromText(raw){
   const MO={jan:1,feb:2,mar:3,apr:4,may:5,jun:6,jul:7,aug:8,sep:9,oct:10,nov:11,dec:12},now=new Date();
   const top=[],avoid=[];let tier='';
+  const DT=/\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\.?\s+(\d{1,2})/i;
   String(raw).split(/\r?\n/).forEach(line=>{
-    const t=line.trim();if(!t)return;
-    const hd=t.match(/^\*\*([^*]+)\*\*\s*$/);
-    if(hd){tier=hd[1].replace(/\(.*?\)/g,'').trim();return;}
-    if(/^skip\b/i.test(tier)||/^\*\*skip/i.test(t)){const m=t.replace(/^\*\*skip:?\*\*:?/i,'').trim();if(m)avoid.push({date:'',reason:m.replace(/\*\*/g,'')});return;}
-    const b=t.match(/^[-*]\s+\*\*(.+?)\*\*:?\s*(.*)$/);if(!b||!tier)return;
-    let head=b[1].replace(/:$/,''),rest=b[2].replace(/^:\s*/,'');
-    const dm=head.match(/\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+(\d{1,2})/i);
+    let t=line.replace(/\*\*/g,'').replace(/^[\s•●▪‣\-\*–]+/,'').trim();if(!t)return;
+    const th=t.match(/^(strongest|solid|possible but weaker|possible|skip)\b[^:]{0,60}?(:\s*(.*))?$/i);
+    if(th&&(t.length<70||/^skip/i.test(t))){
+      tier=th[1].toLowerCase()==='possible'?'Possible but weaker':th[1][0].toUpperCase()+th[1].slice(1).toLowerCase();
+      if(/^skip/i.test(tier)){const m=(th[3]||'').trim();if(m)avoid.push({date:'',reason:m});}
+      return;}
+    if(!tier)return;
+    if(/^skip/i.test(tier)){avoid.push({date:'',reason:t});return;}
+    const ci=t.indexOf(':');if(ci<2||ci>110)return;
+    let head=t.slice(0,ci).trim(),rest=t.slice(ci+1).trim();
+    const dm=head.match(DT);
     let date='';if(dm){const mo=MO[dm[1].toLowerCase()];let y=now.getFullYear();if(mo<now.getMonth()+1-2)y++;date=y+'-'+String(mo).padStart(2,'0')+'-'+String(+dm[2]).padStart(2,'0');}
-    let ev=head;const ci=head.indexOf(',');if(dm&&ci>=0&&head.indexOf(dm[0])<ci)ev=head.slice(ci+1).trim();else if(dm){ev=head.replace(dm[0],'').replace(/^[A-Za-z]{3}\s*/,'').trim()||head;}
-    top.push({date:date,event:ev.replace(/:$/,''),why:tier,idea:rest.replace(/\*\*/g,''),sourceUrl:''});
+    let ev=head;const hc=head.indexOf(',');if(dm&&hc>=0&&head.indexOf(dm[0])<hc)ev=head.slice(hc+1).trim();else if(dm)ev=head.replace(dm[0],'').replace(/^[A-Za-z]{3,9}\.?\s*/,'').trim()||head;
+    top.push({date:date,event:ev,why:tier,idea:rest,sourceUrl:''});
   });
   if(!top.length)return null;
   return {runDate:now.toISOString().slice(0,10),top5:top,all:[],competitors:[],avoid:avoid};
 }
-
 function pipeData(){
   const now=Date.now(),today=isoDay(now),DAYS=n=>Math.floor((now-n)/DAY);
   const L=S.leads,liveQ=new Set(S.drafts.filter(d=>d.agent==='quill'&&d.kind!=='event'&&(d.status==='pending'||d.status==='approved')).map(d=>d.leadId));
