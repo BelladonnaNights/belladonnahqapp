@@ -1318,10 +1318,11 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
   <div class="tm-head">
     <div>
       <div class="dash-title">My Team</div>
-      <div class="dash-sub">Ten agents, one job each. Nothing goes out without your tap.</div>
+      <div class="dash-sub">A team of twelve, one job each. Nothing goes out without your tap.</div>
     </div>
     <div class="tm-tools">
       <div class="tm-need zero" id="tmNeed"><b>0</b> need you</div>
+      <button class="hq-btn-ghost" data-act="open" data-agent="huddle">Ask the Team</button>
       <button class="hq-btn-ghost" data-act="open" data-agent="setup">Setup</button>
     </div>
   </div>
@@ -7359,6 +7360,7 @@ OUTPUT: whether an ad is needed this week, the money left, and the best idea.`
 };
 
 const SETUP={id:'setup',name:'Setup',role:'Prices, voice, sites',color:'#c9a96e'};
+const HUDDLE={id:'huddle',name:'Ask the Team',role:'Show them something, get everyone\'s take',color:'#c9a96e'};
 const DAY=864e5, STALE=90*DAY, CARE=90*DAY;
 const PRESENCE=['Website (belladonnanights.com)','Google Business Profile','Bing Places','Apple Business Connect','Yelp','Facebook Page','Instagram','Nextdoor'];
 const DEFAULT_SITES=['GigSalad','Thumbtack','The Bash','Eventective','GigMasters'];
@@ -7376,7 +7378,7 @@ const fmtMoney=n=>'$'+Math.round(n).toLocaleString('en-US');
 const fmtDay=ms=>ms?new Date(ms).toLocaleDateString('en-US',{month:'short',day:'numeric'}):'';
 const fmtEv=s=>{if(!s)return '';const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(String(s));if(!m)return String(s);return new Date(+m[1],+m[2]-1,+m[3]).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});};
 const plural=(n,a,b)=>n+' '+(n===1?a:b);
-const agent=id=>AGENTS.find(a=>a.id===id)||SETUP;
+const agent=id=>AGENTS.find(a=>a.id===id)||(id==='huddle'?HUDDLE:SETUP);
 const isoDay=ms=>{const d=new Date(ms);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');};
 const STARTER_VENUES=[
   {name:'Four Generals Brewing',city:'Renton',address:'229 Wells Ave S',evidence:'Open and active; all-ages taproom; Wednesday paint-and-sip booked in 2026',pitch:'Wednesday all-ages music bingo or trivia. Owners are the Hudspeth family (Mary, Mike, Ross)'},
@@ -8120,12 +8122,12 @@ function renderDrawer(force){
   S.pend=false;
   const a=agent(S.cur),body=$('#tmDrB'),top=body.scrollTop;
   dr.style.setProperty('--ac',a.color);
-  $('#tmDrAv').innerHTML=S.cur==='setup'?'<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:var(--surface3);font-size:1.4rem">⚙</div>':avImg(a.id);
+  $('#tmDrAv').innerHTML=(S.cur==='setup'||S.cur==='huddle')?'<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:var(--surface3);font-size:1.4rem">'+(S.cur==='huddle'?'✦':'⚙')+'</div>':avImg(a.id);
   $('#tmDrName').textContent=a.name;$('#tmDrRole').textContent=a.role;
-  $('#tmDrAct').style.display=S.cur==='setup'?'none':'flex';
+  $('#tmDrAct').style.display=(S.cur==='setup'||S.cur==='huddle')?'none':'flex';
   $('#tmInfoBtn').textContent=S.view==='info'?'← Back to work':'Job & prompt';
   $('#tmDrOne').textContent=(INFO[S.cur]&&INFO[S.cur].one)||'';
-  body.innerHTML=((S.view==='info'||S.cur==='setup')?'':remBox(S.cur))+((S.view==='info'&&INFO[S.cur])?vInfo(S.cur):({raven:vRaven,quill:vQuill,vesper:vVesper,ledger:vLedger,sable:vSable,mirror:vMirror,herald:vIris,ember:vSabine,marquee:vRen,coach:vWren,sigil:vSigil,warden:vThorne,setup:vSetup})[S.cur]());
+  body.innerHTML=((S.view==='info'||S.cur==='setup'||S.cur==='huddle')?'':remBox(S.cur))+((S.view==='info'&&INFO[S.cur])?vInfo(S.cur):({raven:vRaven,quill:vQuill,vesper:vVesper,ledger:vLedger,sable:vSable,mirror:vMirror,herald:vIris,ember:vSabine,marquee:vRen,coach:vWren,huddle:vHuddle,sigil:vSigil,warden:vThorne,setup:vSetup})[S.cur]());
   body.scrollTop=top;
 }
 function openAgent(id){
@@ -9137,6 +9139,39 @@ function vRen(){
   return h;
 }
 
+
+/* ── Ask the Team ── */
+function hdSave(patch){const ref=col('agent_config').doc('huddle');return ref.update(patch).catch(()=>ref.set(expandPatch(patch),{merge:true}));}
+function huddleItems(){return Object.entries((S.cfg.huddle&&S.cfg.huddle.items)||{}).filter(([k,v])=>v&&v.title).map(([k,v])=>Object.assign({id:k},v)).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));}
+function hdInc(){const d={venues:true,price:true,voice:false,leads:false,social:false,agents:{}};const c=S.hd&&S.hd.inc;return Object.assign(d,c||{},{agents:Object.assign({},c&&c.agents)});}
+function huddlePrompt(what,goal){
+  const I=hdInc(),sec=[];
+  sec.push('You are the Belladonna team. Belladonna Audio Alchemies (public name Belladonna Nights) runs karaoke, music bingo, trivia, sing-along and themed costume nights at bars and venues in the Seattle-Tacoma area, based in Auburn, WA. Owner: Ahnna. Co-owner: Eddy.');
+  sec.push('THE TEAM\n'+AGENTS.map(a=>a.name+': '+a.role).join('\n'));
+  const who=AGENTS.filter(a=>I.agents[a.id]&&INFO[a.id]);
+  if(who.length)sec.push('HOW EACH TEAM MEMBER WORKS (full training)\n\n'+who.map(a=>{const sv=S.cfg.prompts&&S.cfg.prompts[a.id];return '--- '+a.name+' ---\n'+(sv||defPrompt(a.id));}).join('\n\n'));
+  if(I.venues){const vn=hqVenuesList().map(v=>v.name+(v.city?' ('+v.city+')':''));sec.push('OUR VENUES RIGHT NOW\n'+(vn.join('\n')||'(none listed)'));}
+  if(I.leads){const L=hqLeads().filter(l=>!['signed','active','transferred','paused'].includes(l.stage||'new')).slice(0,40).map(l=>'- '+[l.name,l.site,l.stage||'new',l.city].filter(Boolean).join(' | '));sec.push('OPEN LEADS\n'+(L.join('\n')||'(none)'));}
+  sec.push('OUR VOICE\n'+(I.voice?voiceFull():VOICE_SHORT));
+  if(I.price)sec.push('PRICE SHEET\n'+pricing());
+  if(I.social){const g=S.cfg.social&&S.cfg.social.guide&&S.cfg.social.guide.text;const cats=Object.keys((S.bank&&S.bank.cats)||{});sec.push('SOCIAL\n'+(g?'Caption guide:\n'+g+'\n':'')+(cats.length?'Content bank categories: '+cats.join(', '):''));}
+  sec.push('I am attaching an image'+(what?': '+what:'')+'.'+(goal?'\nWhat I am hoping to figure out: '+goal:'')+'\n\nDo this:\n1) In two sentences, say what this is and what is worth noticing in it.\n2) Say whether the business or person in it is already one of our venues or leads (check the lists above). If you cannot tell, say so.\n3) Give each team member who has something useful to do with it one short paragraph, labeled with their name. Skip anyone with nothing real to add. Be specific to this image and to our business. Do not invent facts, prices or names that are not in the image or above.\n4) Give me the single best next step as one concrete action.\n5) Write the one email or message I would send first, in our voice, ready to paste. Never promise a price that is not on the price sheet.\n\nDo not send, post or contact anyone.');
+  return sec.join('\n\n');
+}
+function vHuddle(){
+  S.hd=S.hd||{what:'',goal:''};
+  let h='<div class="tm-sec">Show the team something</div><div class="tm-hint">Got a post, a flyer, a venue\'s menu, a competitor\'s ad, anything? Upload it in a Claude chat and the whole team gives you their take. Images never go into HQ. This builds the request with your team, venues, voice and price sheet, and opens Claude for you. Then attach the image there and send.</div>'+
+   '<div class="tm-fg"><div class="full"><label class="tm-lbl">What is it, and where did you find it</label><input class="tm-in" id="hd-what" value="'+esc(S.hd.what)+'" placeholder="e.g. A Facebook post from Kingfisher &amp; Rye Tavern about private holiday parties"></div><div class="full"><label class="tm-lbl">What do you want to figure out (optional)</label><input class="tm-in" id="hd-goal" value="'+esc(S.hd.goal)+'" placeholder="e.g. Is this a venue we could work with?"></div></div>'+
+   (function(){const I=hdInc(),cb=(k,l,on,ag)=>'<label class="np-item" style="display:inline-flex;gap:.4rem;margin:.15rem .8rem .15rem 0;font-size:.82rem"><input type="checkbox" data-chg="hdinc" data-k="'+k+'"'+(ag?' data-ag="1"':'')+(on?' checked':'')+'><span>'+esc(l)+'</span></label>';return '<div class="tm-sec">What to send along</div><div class="tm-hint">The more you tick, the longer the request. Your team names and roles always go.</div><div>'+cb('venues','Venues',I.venues)+cb('leads','Open leads',I.leads)+cb('price','Price sheet',I.price)+cb('voice','Full voice guide',I.voice)+cb('social','Social guide and bank categories',I.social)+'</div><div class="tm-lbl" style="margin-top:.5rem">Full training for (their prompt, in full)</div><div>'+AGENTS.filter(a=>INFO[a.id]).map(a=>cb(a.id,a.name,I.agents[a.id],1)).join('')+'</div><div class="tm-row"><button class="tm-b dim" data-act="hdall">Tick all</button><button class="tm-b dim" data-act="hdnone">Clear all</button></div>';})()+'<div class="tm-row"><button class="tm-b pri" data-act="hdopen">Copy request &amp; open Claude</button><button class="tm-b" data-act="hdcopy">Copy request only</button></div>'+
+   '<div class="tm-hint">In the Claude chat: paste the request, attach your image, press send. If the answer is useful, paste it back below to keep it.</div>';
+  h+='<div class="tm-sec">Keep an answer</div><div class="tm-fg"><div class="full"><label class="tm-lbl">Title</label><input class="tm-in" id="hd-title" placeholder="e.g. Kingfisher &amp; Rye holiday parties"></div><div class="full"><label class="tm-lbl">What the team said</label><textarea class="tm-ta" id="hd-ans" style="min-height:160px"></textarea></div></div><div class="tm-row"><button class="tm-b pri" data-act="hdsave">Save it</button></div>';
+  const L=huddleItems();
+  h+='<div class="tm-sec">Saved ('+L.length+')</div>';
+  if(!L.length)h+='<div class="tm-empty">Nothing saved yet.</div>';
+  L.forEach(x=>{h+='<div class="tm-item'+(S.open['c_hd'+x.id]?'':' folded')+'"><div class="t1 fold" data-act="fold" data-id="hd'+esc(x.id)+'"><b>'+esc(x.title)+'</b> <span class="tm-tag">'+esc(fmtDay(x.createdAt))+'</span></div><div class="t2" style="white-space:pre-wrap;line-height:1.5">'+esc(x.answer||'')+'</div><div class="tm-row"><button class="tm-b" data-act="hdcopyans" data-id="'+esc(x.id)+'">Copy</button><button class="tm-b dim red" data-act="hddel" data-id="'+esc(x.id)+'">Delete</button></div></div>';});
+  return h;
+}
+
 /* ── Setup ── */
 function vSetup(){
   let h='<div class="tm-sec">Price sheet</div><div class="tm-hint">Quill quotes only from this. Packages, prices, add-ons, travel fees, service area, blackout dates.</div>'+
@@ -9233,6 +9268,16 @@ const A={
   async mqspendadd(){const w=val('ms-what'),a=val('ms-amt');if(!w||!a){toast('Add what it was and how much.',true);return;}await mqSave({['spend.s'+Date.now().toString(36)]:{what:w,amount:a,date:val('ms-date')||isoDay(Date.now()),createdAt:Date.now()}});toast('Added.');},
   async mqspenddel(t){await mqSave({['spend.'+t.dataset.id]:null});},
   async fold2(t){const k='c_'+t.dataset.id;S.open[k]=S.open[k]===false;renderDrawer(true);},
+
+
+  hdinc(t){S.hd=S.hd||{what:'',goal:''};S.hd.what=val('hd-what');S.hd.goal=val('hd-goal');const I=hdInc();if(t.dataset.ag)I.agents[t.dataset.k]=t.checked;else I[t.dataset.k]=t.checked;S.hd.inc=I;},
+  hdall(){S.hd=S.hd||{};const I=hdInc();['venues','leads','price','voice','social'].forEach(k=>I[k]=true);AGENTS.forEach(a=>I.agents[a.id]=true);S.hd.what=val('hd-what');S.hd.goal=val('hd-goal');S.hd.inc=I;renderDrawer(true);},
+  hdnone(){S.hd=S.hd||{};const I=hdInc();['venues','leads','price','voice','social'].forEach(k=>I[k]=false);I.agents={};S.hd.what=val('hd-what');S.hd.goal=val('hd-goal');S.hd.inc=I;renderDrawer(true);},
+  async hdopen(){window.open('https://claude.ai/new','_blank','noopener');S.hd=Object.assign(S.hd||{},{what:val('hd-what'),goal:val('hd-goal')});toast(await copy(huddlePrompt(S.hd.what,S.hd.goal))?'Request copied. Paste it in Claude, attach your image, press send.':'Copy failed.',false);},
+  async hdcopy(){S.hd=Object.assign(S.hd||{},{what:val('hd-what'),goal:val('hd-goal')});toast(await copy(huddlePrompt(S.hd.what,S.hd.goal))?'Request copied.':'Copy failed.',false);},
+  async hdsave(){const t=val('hd-title'),a=val('hd-ans');if(!t||!a){toast('Add a title and paste the answer.',true);return;}await hdSave({['items.h'+Date.now().toString(36)]:{title:t,answer:a,createdAt:Date.now()}});['hd-title','hd-ans'].forEach(i=>{const e=$('#'+i);if(e)e.value='';});toast('Saved.');},
+  async hdcopyans(t){const x=((S.cfg.huddle||{}).items||{})[t.dataset.id];if(!x)return;toast(await copy(x.answer||'')?'Copied.':'Copy failed.',false);},
+  async hddel(t){if(!confirm('Delete this saved answer?'))return;await hdSave({['items.'+t.dataset.id]:null});},
   async fold(t,e){S.open['c_'+t.dataset.id]=!S.open['c_'+t.dataset.id];renderDrawer(true);},
   async vtl(t){S.open['tl_'+t.dataset.id]=!S.open['tl_'+t.dataset.id];renderDrawer(true);},
   async libbuild(){S.lib=libRead();S.lib.out=libFill(S.lib);const e=$('#lib-out');if(e)e.value=S.lib.out;toast('Draft built. Fix any [brackets], then copy.',false);},
