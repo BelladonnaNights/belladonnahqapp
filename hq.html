@@ -7504,14 +7504,14 @@ function cardInfo(id,d){
   }
   if(id==='sable'){
     if(!d.digest)return {need:0,line:'No digest loaded yet'};
-    return {need:d.undecided,line:(d.digest.runDate?fmtEv(d.digest.runDate)+': ':'')+(d.undecided?d.undecided+' to review':'all reviewed')};
+    return {need:0,line:(d.digest.runDate?fmtEv(d.digest.runDate)+': ':'')+(d.undecided?d.undecided+' to review':'all reviewed')};
   }
   if(id==='coach'){
     const c=d.cd,n=c.openCalls.length+c.stuck.length+c.flags.length;
     const parts=[c.openCalls.length?plural(c.openCalls.length,'callout','callouts')+' nobody picked up':'',c.stuck.length?plural(c.stuck.length,'recruit','recruits')+' stuck':'',c.flags.length?plural(c.flags.length,'checkout flag','checkout flags'):''].filter(Boolean);
     return {need:n,line:parts.length?parts.join(' · '):(c.hosts.length?'All hosts on track':'No host data yet')};
   }
-  if(id==='ember'){const e=emberState();const parts=[e.ready.length?plural(e.ready.length,'caption','captions')+' ready':'',e.have&&e.need.length?plural(e.need.length,'post needs','posts need')+' one':''].filter(Boolean);return {need:e.ready.length+e.urgent.length,line:parts.length?parts.join(' · '):(e.kits.length?'All caught up':'No captions yet')};}
+  if(id==='ember'){const e=emberState();const parts=[e.ready.length?plural(e.ready.length,'caption','captions')+' ready':'',e.have&&e.need.length?plural(e.need.length,'post needs','posts need')+' one':''].filter(Boolean);return {need:0,line:parts.length?parts.join(' · '):(e.kits.length?'All caught up':'No captions yet')};}
   if(id==='marquee'){const a=adsState();const parts=[a.fresh.length?plural(a.fresh.length,'ad move','ad moves')+' waiting':'',a.stale.length?plural(a.stale.length,'ad','ads')+' to check':'',a.budget?fmtMoney(a.total)+' of '+fmtMoney(a.budget)+' spent':''].filter(Boolean);return {need:a.fresh.length+a.stale.length,line:parts.length?parts.join(' · '):'Set your budget'};}
   if(id==='herald'){const c=curatorState();return {need:c.fresh.length,line:c.fresh.length?plural(c.fresh.length,'new idea','new ideas'):(c.ideas.length?'No new ideas':'No ideas yet')};}
   if(id==='mirror'){
@@ -7649,7 +7649,6 @@ function briefData(){
   add('sigil',d.sg.incomplete.length,plural(d.sg.incomplete.length,'person is','people are')+' missing paperwork',d.sg.incomplete.slice(0,5).map(p=>p.name+' needs '+p.miss.join(', ')).join('; ')+'.');
   add('sigil',d.sPending.length,plural(d.sPending.length,'paperwork reminder','paperwork reminders')+' to approve',d.sPending.map(x=>cut(x.label,60)).join('; ')+'.');
   {const pr=printRun();if(pr.unk.length)need.push({a:'warden',text:plural(pr.unk.length,'restock request needs','restock requests need')+' a category from the host',body:pr.unk.map(r=>(r.venue||'?')+(r.host?' ('+r.host+')':'')).join(', ')+'. Thorne can draft the question.'});if(pr.toPrint.length)need.push({a:'warden',text:'Print run ready: '+plural(pr.toPrint.length,'item','items'),body:pr.groups.map(g=>g.item+' '+g.cat).join('; ')+'.'});}
-  {const em=emberState();if(em.urgent.length)need.push({a:'ember',u:true,text:plural(em.urgent.length,'post in the next 3 days has','posts in the next 3 days have')+' no caption',body:em.urgent.slice(0,4).map(p=>(p.title||'Post')+' ('+fmtEv(p.date)+')').join('; ')+'.'+(em.ready.length?' Sabine has '+em.ready.length+' ready to copy.':' Sabine writes them each morning.')});else if(em.ready.length)add('ember',em.ready.length,plural(em.ready.length,'caption is','captions are')+' ready to copy',em.ready.slice(0,4).map(x=>x.title||'Post').join('; ')+'. Copy them from Clio or Sabine\'s desk.');if(em.reqs.length)add('ember',em.reqs.length,plural(em.reqs.length,'event kit','event kits')+' asked for',em.reqs.map(r=>r.title).join('; ')+'.');}
   {const ad=adsState();if(ad.fresh.length)add('marquee',ad.fresh.length,plural(ad.fresh.length,'ad move is','ad moves are')+' waiting for you',ad.fresh.slice(0,3).map(p=>p.title+(p.when?' ('+p.when+')':'')).join('; ')+'.');ad.stale.forEach(p=>need.push({a:'marquee',text:'Check how "'+p.title+'" is doing',body:'It has been live a few days. Type in the numbers from Meta and Ren will say keep, change or stop.'}));if(ad.budget&&ad.total>=ad.budget*0.9)need.push({a:'marquee',u:true,text:'Marketing budget almost used up',body:fmtMoney(ad.total)+' of '+fmtMoney(ad.budget)+' spent this month.'});}
   {const cu=curatorState();if(cu.fresh.length)add('herald',cu.fresh.length,plural(cu.fresh.length,'new idea','new ideas')+' from Iris',cu.fresh.slice(0,4).map(x=>x.title).join('; ')+'.');}
   d.wd.openRestocks.filter(r=>!NEEDCAT(r)).forEach(r=>need.push({a:'warden',text:'Restock: '+r.item,body:[[r.qty?'Qty '+r.qty:'',r.venue?'for '+r.venue:'',r.host?'(host '+r.host+')':''].filter(Boolean).join(' ')+'.',r.status==='ordered'?'Already ordered, mark delivered when it lands.':'Requested '+ago(r.requestedAt)+', not ordered yet.',r.note?'Note: '+cut(r.note,140):''].filter(Boolean).join(' ')}));
@@ -7661,7 +7660,6 @@ function briefData(){
   add('vesper',d.vlDue.length,plural(d.vlDue.length,'venue lead needs','venue leads need')+' a follow-up',d.vlDue.slice(0,4).map(l=>l.name+' ('+l.why+')').join('; ')+(d.vlDue.length>4?'; and '+(d.vlDue.length-4)+' more':'')+'. They are in your Leads tab.');
   add('mirror',d.mPending.length,plural(d.mPending.length,'review reply','review replies')+' to approve',d.mPending.map(x=>cut(x.label,60)).join('; ')+'.');
   add('mirror',d.stale.length,plural(d.stale.length,'profile is','profiles are')+' stale',d.stale.slice(0,6).map(x=>x.name+(x.profileRefreshed?' ('+ago(x.profileRefreshed)+')':' (never refreshed)')).join('; ')+'. Open Mirror for what to change on each.');
-  add('sable',d.undecided,plural(d.undecided,'event idea','event ideas')+' to pursue or skip',(()=>{const c=[0,0,0,0];d.top5.filter((_,i)=>!d.dec['t'+i]).forEach(x=>c[evCat(x)]++);return EV_CATS.map((n,i)=>c[i]?c[i]+' '+n.toLowerCase():'').filter(Boolean).join(', ')+'. All of them are listed by date below.';})());
   const RM=remState();
   RM.due.forEach(r=>need.push({a:r.agent,rem:true,rid:r.id,text:'Reminder: '+r.text,body:(r.date?(r.date<isoDay(now)?'Was due '+fmtEv(r.date)+'. ':r.date===isoDay(now)?'Due today. ':''):'')+'You asked '+(agent(r.agent)?agent(r.agent).name:'a desk')+' to remind you.'}));
   const hsh=s=>{let h=5381;for(let k=0;k<s.length;k++)h=((h<<5)+h+s.charCodeAt(k))|0;return Math.abs(h).toString(36);};
