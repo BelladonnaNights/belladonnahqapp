@@ -7318,6 +7318,8 @@ YOUR JOB: you write Belladonna's social media captions and event kits. You never
 
 Every morning at 7:15 AM Pacific:
 1. Read Clio posts for today through 14 days ahead ({"op":"readPosts","from":"TODAY","to":"TODAY+14"}). Skip posts already posted, Big Night posts, Story posts, and posts that already have a caption.
+1a. Each post's imageText is what Ahnna typed or picked as the exact words or a description of its image. Write to fit it, and treat it as the truth about the image. If a post has no imageText and no bankRef, write from the title, type and notes, and say in note that the image text was missing.
+1b. Read the content bank ({"op":"read","collection":"socialLibrary"}, document id "bank"). A post's bankRef is "<category id>|<item id>": the item's t is the exact text printed on the image and the category name is the kind of image. Write the caption to fit that image and add to it, never repeat it word for word. No bankRef means use the title, type and notes.
 2. Read agent_config social. guide.text is what Ahnna looks for in a caption. Follow it exactly. Also read voice, pricing, sable and curator.
 3. Write each missing caption in the Belladonna voice using only facts from the post and the venue list. Never invent a prize, price, time or guest. Give a second version with a different angle, and hashtags for Instagram only.
 4. Write them with setConfig doc "social": captions{<post id>:{title,date,platform,caption,alt,hashtags,note,status:"new",createdAt}}.
@@ -7580,6 +7582,7 @@ function start(){
   list('agent_sites','sites');
   list('agent_venues','venues');
   try{d.collection('socialPosts').where('date','>=',isoDay(Date.now()-DAY)).onSnapshot(s=>{S.posts=s.docs.map(x=>Object.assign({id:x.id},x.data()));render();},e=>{S.posts=null;});}catch(e){S.posts=null;}
+  try{d.collection('socialLibrary').onSnapshot(s=>{const x=s.docs.find(y=>y.id==='bank');S.bank=x?x.data():null;},e=>{S.bank=null;});}catch(e){}
   d.collection('agent_config').onSnapshot(s=>{const c={};s.docs.forEach(x=>c[x.id]=x.data());S.cfg=c;render();},onErr);
 }
 window.teamOpen=function(){start();render();if(Date.now()-(S.recAt||0)>10*60*1000){S.recAt=Date.now();try{if(typeof loadRecruits==='function')loadRecruits();}catch(e){}try{if(typeof loadLeads==='function')loadLeads();}catch(e){}setTimeout(render,1200);}if(typeof loadShiftsData==='function'&&(!(typeof shiftsData!=='undefined'&&shiftsData.length)||Date.now()-(S.shiftsAt||0)>10*60*1000)){S.shiftsAt=Date.now();Promise.resolve(loadShiftsData()).then(()=>render()).catch(()=>{});}};
@@ -8027,7 +8030,7 @@ Do not touch venues you did not just add except to draft.`},
  {name:'Social captions',who:'Sabine',when:'Daily, 7:15 am',plain:'Writes captions in your voice for every Clio post in the next two weeks that has none, and builds Facebook event kits for special nights. They show up in Clio and on Sabine\'s desk for you to copy into Buffer.',ids:['ember'],
   body:`TASK: Social captions. Read-only everywhere except agent_config social. Never post, never schedule, never contact anyone.
 1. Read Clio posts for today through 14 days ahead: {"op":"readPosts","from":"TODAY","to":"TODAY+14"} (use the real dates). Skip posts with posted true, type "big", a platform containing "Story", or a caption that is not empty.
-2. Read agent_config: social (guide.text is what Ahnna looks for in a caption and you follow it exactly; also captions, kits, kitreq), voice (text and full), pricing, sable (this week's events), curator (ideas and research). Read Our Venues ({"op":"readVenues"}) for the real venue names.
+2. Read the content bank: {"op":"read","collection":"socialLibrary"} and find the document with id "bank". FIRST use each post's imageText: it is what Ahnna typed or picked as the exact words or description of the image, and it beats everything else. Only when imageText is empty fall back to the bank. Its cats map holds each category (name, items[{id,t}], pnotes). A post's bankRef is "<category id>|<item id>". That item's t is the exact text printed on the post's image, and the category name says what kind of image it is. Use that text and the category's pnotes to make the caption match the image: never repeat the image text word for word, add to it. If a post has no bankRef, use its title, type and notes. Also read agent_config: social (guide.text is what Ahnna looks for in a caption and you follow it exactly; also captions, kits, kitreq), voice (text and full), pricing, sable (this week's events), curator (ideas and research). Read Our Venues ({"op":"readVenues"}) for the real venue names.
 3. Skip any post id that already has an entry in social captions with status new or used. For each other post, soonest first, at most 12 per run, write a caption in the Belladonna voice using only real facts from the post (title, date, time, venue, notes, host). Never invent a prize, price, time or guest. If a fact you need is missing, write the caption without it and put the gap in note. setConfig doc "social" with captions{<post id>:{title,date,platform,caption,alt (a second version with a different angle),hashtags (only when the platform includes IG; 5 to 8, kept out of the caption),note,status:"new",createdAt (ms)}}.
 4. Never repeat a caption you or Ahnna wrote for another post in the last 8 weeks. Check captions and the posts you read. A weekly night gets a fresh angle each time.
 5. Event kits. For every entry in kitreq, and for up to 2 special nights in the next 21 days that have no kit (a post of type cover or monthly, or a title naming a holiday, costume, prize or theme), write kits{<new id>:{title,date,venue,fbTitle,fbDesc (what it is, when, where, what to wear or bring, what you win, how to join; 4 to 8 short lines),caption,hashtags,banner (one paragraph image prompt for a 1920x1005 Facebook event banner in the Belladonna look: dark, gothic, gold; text on the banner is only the title and date),status:"ready",createdAt}}. Then clear each request you answered by setting kitreq.<id> to null.
@@ -9006,8 +9009,15 @@ function emberState(){
   return {have:have,ready:ready,need:need,urgent:need.filter(p=>p.date<=soon),kits:kits,openKits:kits.filter(k=>k.status!=='done'),reqs:reqs};
 }
 function postWhen(p){return fmtEv(p.date)+(p.time?' '+p.time:'');}
+function emBankBrief(p){
+  const img=p.imageText?'\nWhat is on the image: '+p.imageText:'';
+  const ref=p.bankRef||(p.bankCat?p.bankCat+'|':''),parts=String(ref).split('|'),cats=(S.bank&&S.bank.cats)||{},cat=cats[parts[0]];
+  if(!cat)return img;
+  const it=(cat.items||[]).find(x=>String(x.id)===parts[1]);
+  return img+'\nWhat the image is: a "'+cat.name+'" post'+(it?'\nThe exact text that appears on the image: '+it.t:'')+(cat.pnotes?'\nNotes for this kind of post: '+cat.pnotes:'');
+}
 function emCaptionPrompt(p){
-  return 'You are Sabine, the social media caption writer for Belladonna Audio Alchemies. Write the caption for the post below.\n\n'+emGuide()+'\n\nFULL VOICE GUIDE\n'+voiceFull()+'\n\nTHE POST\nDate: '+postWhen(p)+'\nType: '+(p.type||'')+'\nTitle: '+(p.title||'')+'\nPlatform: '+(p.platform||'')+(p.notes?'\nNotes: '+p.notes:'')+'\n\nGive me: 1) the caption, 2) a second version with a different angle, 3) the hashtags on their own line (Instagram only). Do not post anything.';
+  return 'You are Sabine, the social media caption writer for Belladonna Audio Alchemies. Write the caption for the post below.\n\n'+emGuide()+'\n\nFULL VOICE GUIDE\n'+voiceFull()+'\n\nTHE POST\nDate: '+postWhen(p)+'\nType: '+(p.type||'')+'\nTitle: '+(p.title||'')+'\nPlatform: '+(p.platform||'')+emBankBrief(p)+(p.notes?'\nNotes: '+p.notes:'')+'\n\nGive me: 1) the caption, 2) a second version with a different angle, 3) the hashtags on their own line (Instagram only). Do not post anything.';
 }
 function emKitPrompt(k){
   return 'You are Sabine, the social media caption writer for Belladonna Audio Alchemies. Build an EVENT KIT for a special night.\n\n'+emGuide()+'\n\nFULL VOICE GUIDE\n'+voiceFull()+'\n\nTHE NIGHT\nName: '+k.title+'\nDate: '+(k.date?fmtEv(k.date):'to be set')+'\nVenue: '+(k.venue||'')+(k.note?'\nDetails: '+k.note:'')+'\n\nGive me, each labeled:\n1) FACEBOOK EVENT TITLE (short, clear)\n2) FACEBOOK EVENT DESCRIPTION (what it is, when, where, what to bring or wear, what you win, how to join; 4 to 8 short lines)\n3) POST CAPTION for Instagram and Facebook\n4) HASHTAGS (Instagram only)\n5) BANNER PROMPT: a one-paragraph image prompt for a 1920x1005 Facebook event banner in the Belladonna look (dark, gothic, gold). Leave the text on the banner to the title and date only.\nDo not post or create anything.';
@@ -9038,7 +9048,7 @@ function vSabine(){
   else{
     h+='<div class="tm-hint">Clio posts in the next 14 days with no caption yet. Sabine writes these on her next run. Need one right now? Copy the request and paste it into any Claude or ChatGPT chat.</div>';
     if(!e.need.length)h+='<div class="tm-empty">Every post in the next 14 days has a caption.</div>';
-    e.need.slice(0,20).forEach(p=>{h+='<div class="tm-item"><div class="t1">'+(e.urgent.indexOf(p)>=0?'<span class="tm-tag warn">soon</span>':'')+'<b>'+esc(p.title||'Post')+'</b> <span class="tm-tag">'+esc(postWhen(p))+'</span>'+(p.platform?'<span class="tm-tag">'+esc(p.platform)+'</span>':'')+'</div><div class="tm-row"><button class="tm-b" data-act="emask" data-id="'+esc(p.id)+'">Copy request for a chat</button></div></div>';});
+    e.need.slice(0,20).forEach(p=>{h+='<div class="tm-item"><div class="t1">'+(e.urgent.indexOf(p)>=0?'<span class="tm-tag warn">soon</span>':'')+(p.imageText||p.bankRef?'':'<span class="tm-tag">no image text</span>')+'<b>'+esc(p.title||'Post')+'</b> <span class="tm-tag">'+esc(postWhen(p))+'</span>'+(p.platform?'<span class="tm-tag">'+esc(p.platform)+'</span>':'')+'</div><div class="tm-row"><button class="tm-b" data-act="emask" data-id="'+esc(p.id)+'">Copy request for a chat</button></div></div>';});
     if(e.need.length>20)h+='<div class="tm-hint">+'+(e.need.length-20)+' more.</div>';
   }
   h+='<div class="tm-sec">Event kits ('+e.openKits.length+' open)</div><div class="tm-hint">A kit is the Facebook event title and description, the post caption, hashtags and a banner prompt, all for one special night. Ask for one below, or Sabine makes one when she sees a themed night in Clio.</div>';
