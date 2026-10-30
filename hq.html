@@ -564,8 +564,8 @@ html::-webkit-scrollbar-thumb:hover,.modal::-webkit-scrollbar-thumb:hover{backgr
 .tm-fsec>summary::before{content:none!important;}
 .tm-arr::before{content:'\25BE';margin-right:.5rem;}
 .tm-fsec:not([open])>summary .tm-arr::before{content:'\25B8';}
-.tm-grip{cursor:grab;color:var(--ac);font-size:.55rem;margin-right:.55rem;padding:.3rem .25rem;vertical-align:middle;opacity:.8;}
-.tm-grip:hover{opacity:1;}
+.tm-dgrip{cursor:grab;color:var(--ac);font-size:.55rem;margin-right:.55rem;padding:.3rem .25rem;vertical-align:middle;opacity:.8;}
+.tm-dgrip:hover{opacity:1;}
 .tm-fsec.drop-above{box-shadow:0 -3px 0 var(--ac);}
 .tm-fsec.drop-below{box-shadow:0 3px 0 var(--ac);}
 .tm-det{border:1px solid var(--border);border-radius:10px;background:var(--surface);margin-bottom:.8rem;}
@@ -8286,7 +8286,7 @@ const TASKS=[
   body:`TASK: Lead run.
 0. Read agent_config outreach blocklist (each entry has a name and optional venueId). NEVER addVenue, draft, email or DM any venue on it, and skip it in every step below.
 1. Search the public web for people and venues in Seattle-Tacoma asking for or likely to need karaoke, trivia, music bingo or themed nights. Score each Hot / Warm / Cold with a one-line reason. Skip anything older than 3 days.
-2. addLead for each (max 8 per run, skip duplicates by link). addVenue for any new bar or venue worth cold-emailing.
+2. addLead for each (max 8 per run, skip duplicates by link). addVenue for any new bar or venue worth cold-emailing, but FIRST read agent_venues (every stage, including ones Ahnna added by hand), Our Venues (readVenues) and the outreach blocklist, and skip any venue whose name matches one of them when you ignore capitals, spaces, punctuation and "and" versus "&". Never addVenue a duplicate and never overwrite or delete an existing prospect; to add a fact to one, use updateVenue on that id and change only the empty fields.
 3. COLD OUTREACH RULES. Read agent_venues, agent_config outreach (touches: every email or Instagram contact, with date and channel) and agent_config curator research. Check agent_drafts first so you never write a draft that already exists, and write at most one draft per venue per run. A "touch" is one cold contact, an email or a DM. A venue gets ONE touch every 4 months and at most 3 touches in total. If they never answer, that is fine: after touch 3 the venue is closed and you write nothing more. Count the touches from agent_config outreach touches (steps email1, email2, email3, cold-email, cold-dm; also count emailedAt, emailed2At and emailed3At on the venue).
    a. Touch 1 (stage "target", no touches): kind "email", tailored to that venue and to the season. If curator research has a dossier for the venue (its key is p plus the venue name lowercased with every non-letter and non-number replaced by an underscore) with a bait line, open with that idea, using only what the dossier says about the venue.
    b. Touch 2 and touch 3: only when the last touch was 4 or more months ago (or the date in notNowUntil has arrived). Write kind "email2" for touch 2 and "email3" for touch 3. Each one needs a NEW angle that fits the timing (the season, a holiday, a slow night, something new from the curator research or Sable). Read the earlier emails and never repeat them. You may write the touch as kind "colddm" (one DM, only if the venue has an instagram handle) instead of an email, never both for the same touch.
@@ -8473,7 +8473,7 @@ function foldSections(html){
   for(let i=1;i<parts.length;i++){
     const e=parts[i].indexOf('</div>'),title=parts[i].slice(0,e),rest=parts[i].slice(e+6);
     const key='f_'+S.cur+'_'+title.replace(/<[^>]*>/g,'').toLowerCase().replace(/\(.*?\)/g,'').replace(/[^a-z]+/g,'');
-    secs.push({key:key,html:'<details class="tm-fsec" data-k="'+key+'"'+(S.open[key]===true?' open':'')+'><summary class="tm-sec"><span class="tm-grip" draggable="true" title="Drag to move this section">&#9679;</span><span class="tm-arr"></span>'+title+'</summary>'+rest+'</details>'});
+    secs.push({key:key,html:'<details class="tm-fsec" data-k="'+key+'"'+(S.open[key]===true?' open':'')+'><summary class="tm-sec"><span class="tm-dgrip" draggable="true" title="Drag to move this section">&#9679;</span><span class="tm-arr"></span>'+title+'</summary>'+rest+'</details>'});
   }
   const ord=((S.cfg.layout||{})[S.cur])||[];
   if(ord.length)secs.sort((a,b)=>{const x=ord.indexOf(a.key),y=ord.indexOf(b.key);return (x<0?999:x)-(y<0?999:y);});
@@ -9420,7 +9420,9 @@ async function addProspectDoc(o){
   const sent=!!o.emailed;
   const doc={name:String(o.name).trim(),city:o.city||'',address:o.address||'',contact:o.contact||'',contactName:o.contactName||'',evidence:o.evidence||'',pitch:o.pitch||'',stage:sent?'cold':'target',createdAt:Date.now(),addedBy:'manual'};
   if(sent){doc.emailedAt=o.emailedAt||Date.now();}
-  await col('agent_venues').add(doc);toast('Added to Prospects.');return true;
+  const ref=await col('agent_venues').add(doc);
+  if(sent){try{await otSave({['touches.'+otId()]:otDoc({kind:'venue',tid:ref.id,name:doc.name,step:'email1',date:isoDay(doc.emailedAt),note:'Added by hand as already emailed'})});}catch(e){}}
+  toast('Added to Prospects.');return true;
 }
 async function addProspect(){
   const g=i=>{const e=document.getElementById(i);return e?e.value.trim():'';};
@@ -10310,8 +10312,8 @@ function wire(){
   document.addEventListener('keydown',e=>{if(e.key==='Escape'&&S.cur)closeDrawer();});
   (function(){
     let dk=null;const clr=()=>document.querySelectorAll('#tmDrB .tm-fsec').forEach(x=>x.classList.remove('drop-above','drop-below'));
-    root.addEventListener('click',e=>{if(e.target.closest&&e.target.closest('.tm-grip'))e.preventDefault();},true);
-    root.addEventListener('dragstart',e=>{const g=e.target.closest&&e.target.closest('.tm-grip');if(!g){return;}const sec=g.closest('.tm-fsec');dk=sec.dataset.k;try{e.dataTransfer.setData('text/plain',dk);e.dataTransfer.effectAllowed='move';e.dataTransfer.setDragImage(sec,12,12);}catch(x){}});
+    root.addEventListener('click',e=>{if(e.target.closest&&e.target.closest('.tm-dgrip'))e.preventDefault();},true);
+    root.addEventListener('dragstart',e=>{const g=e.target.closest&&e.target.closest('.tm-dgrip');if(!g){return;}const sec=g.closest('.tm-fsec');dk=sec.dataset.k;try{e.dataTransfer.setData('text/plain',dk);e.dataTransfer.effectAllowed='move';e.dataTransfer.setDragImage(sec,12,12);}catch(x){}});
     root.addEventListener('dragover',e=>{if(!dk)return;const sec=e.target.closest&&e.target.closest('.tm-fsec');if(!sec||sec.dataset.k===dk)return;e.preventDefault();clr();const r=sec.getBoundingClientRect();sec.classList.add(e.clientY<r.top+r.height/2?'drop-above':'drop-below');});
     root.addEventListener('drop',e=>{if(!dk)return;const sec=e.target.closest&&e.target.closest('.tm-fsec');if(!sec||sec.dataset.k===dk){dk=null;clr();return;}e.preventDefault();
       const r=sec.getBoundingClientRect(),after=e.clientY>=r.top+r.height/2,keys=[...document.querySelectorAll('#tmDrB .tm-fsec')].map(x=>x.dataset.k).filter(k=>k!==dk);
