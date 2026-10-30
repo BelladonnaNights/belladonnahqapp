@@ -6975,7 +6975,7 @@ const AGENTS=[
   {id:'sable', name:'Sable', role:'Event Scout',           color:'#2aa7a7', btn:'Open digest'},
   {id:'mirror',name:'Mirror',role:'SEO & Presence',         color:'#d9cdbd', btn:'Check presence'},
   {id:'herald',name:'Iris',role:'Curator: Themed Nights & Ideas', color:'#e07a3a', btn:'See ideas'},
-  {id:'coach', name:'Wren', role:'Host Recruiter & Coach', color:'#d0508a', btn:'Open host desk'},
+  {id:'coach', name:'Jett', role:'Host Recruiter & Coach', color:'#d0508a', btn:'Open host desk'},
   {id:'sigil', name:'Sigil', role:'Paperwork & Renewals',  color:'#4fae6a', btn:'Open paperwork'},
   {id:'warden',name:'Thorne',role:'Gig Prep & Supplies',   color:'#e2c230', btn:'Open prep list'},
   {id:'ember', name:'Sabine', role:'Social Captions & Event Kits', color:'#4fa3e0', btn:'Open captions'},
@@ -7292,14 +7292,14 @@ OUTPUT: one line per run: fixes written, review requests drafted, replies drafte
 },
 coach:{
  one:'Recruits and onboards hosts, tracks callouts, and coaches the roster.',
- does:'Wren runs your host desk. Wren keeps the callout log (who called out, who covered, who picks up shifts), nudges recruits who are stuck mid-onboarding, flags hosts who check in late or leave thin checkouts, and keeps venue feedback in one place. Area managers will get the same treatment later.',
+ does:'Jett runs your host desk. Jett keeps the callout log (who called out, who covered, who picks up shifts), nudges recruits who are stuck mid-onboarding, flags hosts who check in late or leave thin checkouts, and keeps venue feedback in one place. Area managers will get the same treatment later.',
  jobs:[
   ['Track callouts: who called out, how often, who covered, and shifts nobody picked up','As they happen; open callouts in the next 3 days go on your Gazette','You log them, the ping system will feed this later'],
-  ['Flag late check-ins (20+ minutes after start), unfinished checkouts, and thin checkouts','Daily, 8:30 AM','Wren'],
-  ['Nudge recruits who have not moved in 7 days, with a ready-to-send text','Daily','Wren drafts, you send'],
-  ['Build the host report: shifts, callouts, covers, late and thin counts per host','Always live in HQ','Wren'],
-  ['Collect venue feedback from survey answers and pass it to Vesper','As answers come in','Wren'],
-  ['Onboard new hosts: keep the Host Progress steps moving','Daily','Wren nudges, you approve people']
+  ['Flag late check-ins (20+ minutes after start), unfinished checkouts, and thin checkouts','Daily, 8:30 AM','Jett'],
+  ['Nudge recruits who have not moved in 7 days, with a ready-to-send text','Daily','Jett drafts, you send'],
+  ['Build the host report: shifts, callouts, covers, late and thin counts per host','Always live in HQ','Jett'],
+  ['Collect venue feedback from survey answers and pass it to Vesper','As answers come in','Jett'],
+  ['Onboard new hosts: keep the Host Progress steps moving','Daily','Jett nudges, you approve people']
  ],
  reads:['shifts (check-in and checkout times, details)','gig_schedule (start times)','recruits (Host Progress steps)','agent_config/coach (callouts, feedback)'],
  writes:['agent_config/coach (callouts, feedback)'],
@@ -7784,7 +7784,7 @@ function renderBrief(){
   const isDone=n=>n.rem?false:doneMap[n.key]===today;
   const todo=b.need.filter(n=>!isDone(n)),filed=b.need.filter(isDone);
   const TAG=["All the news that's fit to sing.","Monday: stop the presses, the week begins.","Tuesday: trivia night is never a neutral party.","Wednesday: the hump, the bingo, the glory.","Thursday: nearly the weekend, and the bars know it.","Friday: extra, extra, everyone is going out.","Saturday: the biggest night of the paper's week."];
-  const BY={quill:'Quill sharpens the pen',vesper:'Vesper keeps watch',raven:'Raven reports',sable:'Sable spots a trend',mirror:'Mirror reflects',sigil:'Sigil seals the deal',warden:'Thorne stocks up',coach:'Wren checks the roster',ledger:'Ledger counts the take',herald:'Iris curates',ember:'Sabine finds the words',marquee:'Ren counts the cost'};
+  const BY={quill:'Quill sharpens the pen',vesper:'Vesper keeps watch',raven:'Raven reports',sable:'Sable spots a trend',mirror:'Mirror reflects',sigil:'Sigil seals the deal',warden:'Thorne stocks up',coach:'Jett checks the roster',ledger:'Ledger counts the take',herald:'Iris curates',ember:'Sabine finds the words',marquee:'Ren counts the cost'};
   const DEPT=[
    {id:'lead',t:'The Lead Desk',s:'New business, and the people waiting on an answer',a:['raven','quill','ledger']},
    {id:'venues',t:'Venues & Hosts',s:'Who we work with, and who works for us',a:['vesper','coach']},
@@ -7990,7 +7990,7 @@ function libForm(){
 }
 function libRead(){const g=id=>{const e=$('#'+id);return e?e.value.trim():'';};return {sit:g('lib-sit'),svc:g('lib-svc'),name:g('lib-name'),venue:g('lib-venue'),date:g('lib-date'),price:g('lib-price'),msg:g('lib-msg'),out:(($('#lib-out')||{}).value||'')};}
 
-/* ── Wren: host recruiter and coach ── */
+/* ── Jett: host recruiter and coach ── */
 function coachState(){
   const c=S.cfg.coach||{},now=Date.now(),today=isoDay(now),cut14=isoDay(now-14*DAY),cut90=isoDay(now-90*DAY);
   const callouts=Object.entries(c.callouts||{}).filter(([k,v])=>v).map(([k,v])=>Object.assign({id:k},v)).sort((a,b)=>String(b.date).localeCompare(String(a.date)));
@@ -8143,7 +8143,7 @@ Do not touch venues you did not just add except to draft.`},
 1. For each active site, check the public page. If profileRefreshed is 90 or more days old, set auditNotes to the exact steps to fix it, and addDraft kind "seo".
 2. Audit belladonnanights.com and the Google Business Profile for SEO issues. addDraft kind "seo" for each fix, one per draft.
 3. Draft replies to new public reviews (kind "review"). Draft review asks to give to happy venues (kind "reviewask"). Never ask for Yelp reviews, never buy or fake reviews.`},
- {name:'Host desk',who:'Wren',when:'Daily, 8:30 am',plain:'Reads callouts, check-ins, checkouts and onboarding progress, and flags callouts nobody covered, hosts who keep checking in late, and recruits who have gone quiet.',ids:['coach'],
+ {name:'Host desk',who:'Jett',when:'Daily, 8:30 am',plain:'Reads callouts, check-ins, checkouts and onboarding progress, and flags callouts nobody covered, hosts who keep checking in late, and recruits who have gone quiet.',ids:['coach'],
   body:`TASK: Host desk. Read "shifts" (last 14 days), agent_config coach, and recruits.
 1. Callouts in agent_config coach with status "open" and a shift date within 3 days: list them first in your summary.
 2. Late check-ins (more than 20 minutes after the gig start), checkouts never finished, and checkouts missing crowd size, energy and tip scale. List by host.
