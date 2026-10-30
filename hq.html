@@ -4919,6 +4919,7 @@ function openLeadModal(id){
 function saveLead(){
   const name=document.getElementById('leadName').value.trim();
   if(!name){alert('Enter a venue or company name.');return;}
+  try{if(window.obSaveCtx)window.obSaveCtx('ld');}catch(e){}
   const interests=collectLeadInterests().filter(i=>i.type);
   const data={
     name, contactName:document.getElementById('leadContactName').value.trim(),
@@ -6341,6 +6342,7 @@ function matchGatewayAccount2(venueIdVal,emailVal){
 }
 function saveVenue(){
   const name=document.getElementById('vmName').value.trim();if(!name)return;
+  try{if(window.obSaveCtx)window.obSaveCtx('vm');}catch(e){}
   const venueId=document.getElementById('vmVenueId').value.trim();
   const gatewayEmail=document.getElementById('vmGatewayEmail').value.trim().toLowerCase();
   const gigs=[...document.querySelectorAll('#gigChips .selected-skill')].map(el=>el.textContent);
@@ -8035,7 +8037,7 @@ function start(){
   list('agent_venues','venues');
   try{d.collection('socialPosts').where('date','>=',isoDay(Date.now()-DAY)).onSnapshot(s=>{S.posts=s.docs.map(x=>Object.assign({id:x.id},x.data()));render();},e=>{S.posts=null;});}catch(e){S.posts=null;}
   try{d.collection('socialLibrary').onSnapshot(s=>{const x=s.docs.find(y=>y.id==='bank');S.bank=x?x.data():null;},e=>{S.bank=null;});}catch(e){}
-  d.collection('agent_config').onSnapshot(s=>{const c={};s.docs.forEach(x=>c[x.id]=x.data());S.cfg=c;render();try{if(typeof renderVenueManage==='function')renderVenueManage();}catch(e){}},onErr);
+  d.collection('agent_config').onSnapshot(s=>{const c={};s.docs.forEach(x=>c[x.id]=x.data());S.cfg=c;render();try{refreshOffers();}catch(e){}try{if(typeof renderVenueManage==='function')renderVenueManage();}catch(e){}},onErr);
 }
 window.teamOpen=function(){start();render();if(Date.now()-(S.recAt||0)>10*60*1000){S.recAt=Date.now();try{if(typeof loadRecruits==='function')loadRecruits();}catch(e){}try{if(typeof loadLeads==='function')loadLeads();}catch(e){}setTimeout(render,1200);}if(typeof loadShiftsData==='function'&&(!(typeof shiftsData!=='undefined'&&shiftsData.length)||Date.now()-(S.shiftsAt||0)>10*60*1000)){S.shiftsAt=Date.now();Promise.resolve(loadShiftsData()).then(()=>render()).catch(()=>{});}};
 
@@ -9640,21 +9642,24 @@ const CU_TAGS=[['outdoor','Outdoor space'],['screen','Screen or projector'],['st
 const CU_KIND=['Themed night','Event','Venue pitch','Build this','Public domain find'];
 function cuSave(patch){const ref=col('agent_config').doc('curator');return ref.update(patch).catch(()=>ref.set(expandPatch(patch),{merge:true}));}
 function offersBlock(id,name,ctx){
+  try{if(S&&!S.started)start();}catch(e){}
   const c=(S&&S.cfg&&S.cfg.curator)||{},p=(c.profiles||{})[pfKey(id)]||{},tg=p.tags||[],x=ctx+'-'+id;
   const r=(c.research||{})[pfKey(String(name||'').toLowerCase())];
   const L=a=>[].concat(a||[]).filter(Boolean);
   const ln=(t,v)=>v?'<div style="font-size:.8rem;margin:.2rem 0"><b>'+t+':</b> '+esc(v)+'</div>':'';
-  let h='<div class="offers-box" style="border:1px solid var(--border,#444);border-radius:8px;padding:.7rem .8rem;margin:.6rem 0"><div style="font-weight:600;margin-bottom:.4rem">What this place offers <span style="font-weight:400;font-size:.72rem;opacity:.7">(same info as on Iris\'s desk)</span></div><div>'+
+  let h='<div class="offers-box" data-id="'+esc(id)+'" data-name="'+esc(name||'')+'" data-ctx="'+esc(ctx)+'" style="border:1px solid var(--border,#444);border-radius:8px;padding:.7rem .8rem;margin:.6rem 0"><div style="font-weight:600;margin-bottom:.4rem">What this place offers <span style="font-weight:400;font-size:.72rem;opacity:.7">(same info as on Iris\'s desk)</span></div><div>'+
     CU_TAGS.map(t=>'<label style="display:inline-flex;gap:.3rem;align-items:center;margin:0 .8rem .3rem 0;font-size:.8rem"><input type="checkbox" data-ob="'+esc(x)+'" value="'+t[0]+'"'+(tg.indexOf(t[0])>=0?' checked':'')+'>'+t[1]+'</label>').join('')+'</div>'+
-    '<div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.3rem"><input class="form-input" style="width:8rem" id="ob-cap-'+esc(x)+'" placeholder="Capacity" value="'+esc(p.capacity||'')+'"><input class="form-input" style="flex:1;min-width:200px" id="ob-note-'+esc(x)+'" placeholder="e.g. Big covered patio, great for movie nights" value="'+esc(p.notes||'')+'"><button type="button" class="btn-sm" data-id="'+esc(id)+'" data-name="'+esc(name||'')+'" data-ctx="'+esc(ctx)+'" onclick="obSave(this)">Save</button></div>';
+    '<div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.3rem"><input class="form-input" style="width:8rem" id="ob-cap-'+esc(x)+'" placeholder="Capacity" value="'+esc(p.capacity||'')+'"><input class="form-input" style="flex:1;min-width:200px" id="ob-note-'+esc(x)+'" placeholder="e.g. Big covered patio, great for movie nights" value="'+esc(p.notes||'')+'">'+(ctx==='pr'?'<button type="button" class="btn-sm" data-id="'+esc(id)+'" data-name="'+esc(name||'')+'" data-ctx="'+esc(ctx)+'" onclick="obSave(this)">Save</button>':'')+'</div>'+(ctx==='pr'?'':'<div style="font-size:.72rem;opacity:.65;margin-top:.3rem">Saves when you press Save below.</div>');
   if(r){h+='<div style="margin-top:.5rem;padding-top:.4rem;border-top:1px dashed var(--border,#444)"><div style="font-size:.72rem;opacity:.7;margin-bottom:.2rem">From Iris\'s research</div>'+ln('What it is',r.summary)+ln('What people say online',r.social)+(L(r.pastEvents).length?ln('Events they have done',L(r.pastEvents).join('; ')):'')+(L(r.features).length?ln('What the place has',L(r.features).join('; ')):'')+(L(r.needsLook).length?ln('Needs a look from you',L(r.needsLook).join('; ')):'')+ln('What Iris thinks they would like',r.likes)+ln('Bait for the pitch',r.bait)+ln('Watch out for',r.watch)+'</div>';}
   return h+'</div>';
 }
 function obSave(b,quiet){
+  if(!b)return Promise.resolve();
   const id=b.dataset.id,x=b.dataset.ctx+'-'+id;
   const tags=[...document.querySelectorAll('input[data-ob="'+x+'"]:checked')].map(e=>e.value);
   const g=i=>{const e=document.getElementById(i);return e?e.value.trim():'';};
-  cuSave({['profiles.'+pfKey(id)]:{name:b.dataset.name||'',tags:tags,capacity:g('ob-cap-'+x),notes:g('ob-note-'+x)}}).then(()=>{if(!quiet)toast('Saved. Iris and every profile show this now.');else{b.textContent='Saved';setTimeout(()=>{b.textContent='Save';},1500);}}).catch(e=>toast('Could not save: '+(e&&e.message||e),true));
+  const bx=b.classList&&b.classList.contains('offers-box')?b:b.closest('.offers-box');if(bx)delete bx.dataset.dirty;
+  return cuSave({['profiles.'+pfKey(id)]:{name:b.dataset.name||'',tags:tags,capacity:g('ob-cap-'+x),notes:g('ob-note-'+x)}}).then(()=>{if(!quiet)toast('Saved. Iris and every profile show this now.');else if(b.tagName==='BUTTON'){b.textContent='Saved';setTimeout(()=>{b.textContent='Save';},1500);}}).catch(e=>toast('Could not save: '+(e&&e.message||e),true));
 }
 function prospectExists(name){const n=blNorm(name);return !!n&&(S.venues||[]).some(v=>blNorm(v.name)===n);}
 async function addProspectDoc(o){
@@ -9696,7 +9701,10 @@ function renderProspects(){
   el.innerHTML=h;
   if(keep==='prQ'){const i=document.getElementById('prQ');if(i){i.focus();const n=i.value.length;i.setSelectionRange(n,n);}}
 }
-document.addEventListener('change',function(e){const bx=e.target&&e.target.closest&&e.target.closest('.offers-box');if(!bx)return;const bt=bx.querySelector('button[data-ctx]');if(bt)obSave(bt,true);});
+['input','change'].forEach(ev=>document.addEventListener(ev,function(e){const bx=e.target&&e.target.closest&&e.target.closest('.offers-box');if(!bx)return;bx.dataset.dirty='1';if(ev==='change'&&bx.dataset.ctx==='pr')obSave(bx,true);}));
+function obSaveCtx(ctx){const bx=document.querySelector('.offers-box[data-ctx="'+ctx+'"]');return(bx&&bx.dataset.dirty)?obSave(bx,true):Promise.resolve();}
+function refreshOffers(){[['vmOffers','vm'],['leadOffers','ld']].forEach(p=>{const o=document.getElementById(p[0]),bx=o&&o.querySelector('.offers-box');if(bx&&!bx.dataset.dirty)o.innerHTML=offersBlock(bx.dataset.id,bx.dataset.name,p[1]);});}
+window.obSaveCtx=obSaveCtx;
 window.offersBlock=offersBlock;window.obSave=obSave;window.renderProspects=renderProspects;window.PR=PR;window.addProspect=addProspect;
 document.addEventListener('toggle',e=>{const d=e.target;if(d&&d.dataset&&d.dataset.pk){S.open['pr_'+d.dataset.pk]=d.open;}},true);
 function curatorState(){
