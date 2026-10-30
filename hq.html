@@ -686,6 +686,13 @@ html::-webkit-scrollbar-thumb:hover,.modal::-webkit-scrollbar-thumb:hover{backgr
 #panel-team .np-item input{width:24px;height:24px;}
 #panel-team .np-paper .tm-b{font-size:.85rem;}
 #panel-team .np-cardt{flex:1;min-width:0;}
+#panel-team .np-acts{display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.5rem;}
+#panel-team .np-act{font-family:'Bebas Neue',sans-serif;letter-spacing:.12em;font-size:1rem;padding:.2rem .75rem;border:1px solid #4a4034;background:transparent;color:#4a4034;cursor:pointer;border-radius:3px;}
+#panel-team .np-act:hover{background:rgba(74,64,52,.14);}
+#panel-team .np-act.on{background:#4a4034;color:#efe6d2;}
+#panel-team .np-act.cp{border-style:dashed;}
+#panel-team .np-cap{display:block;white-space:pre-wrap;background:rgba(0,0,0,.05);border-left:3px solid #7a1f2b;padding:.4rem .6rem;margin:.25rem 0;font-size:1.05rem;color:#2a231b;}
+.mq-cap{white-space:pre-wrap;border-left:2px solid var(--gold);padding-left:.6rem;margin:.2rem 0;}
 #panel-team .np-thumbs{display:flex;flex-direction:column;gap:.35rem;flex-shrink:0;}
 #panel-team .np-th{background:transparent;border:0;padding:.1rem;cursor:pointer;line-height:0;}
 #panel-team .np-th svg path{fill:none;stroke:#a87c1f;stroke-width:1.6;stroke-linejoin:round;}
@@ -7822,13 +7829,15 @@ function renderBrief(){
     const items=rest.filter(n=>!n.rem&&dp.a.indexOf(n.a)>=0);items.forEach(n=>used.add(n.key));
     const ideas=dp.id==='town'?b.ideas:[];
     const ig=dp.id==='curator'?irisGazette():null;
-    if(!items.length&&!ideas.length&&!(ig&&ig.n))return;
+    const rg=dp.id==='social'?renGazette():null;
+    if(!items.length&&!ideas.length&&!(ig&&ig.n)&&!(rg&&rg.n))return;
     let inner='';
     if(items.length)inner+='<div class="'+(items.length>1?'np-cols':'np-one')+'">'+items.map(art).join('')+'</div>';
     if(ideas.length)inner+=ideasHtml(ideas);
     if(ig)inner+=ig.html;
+    if(rg)inner+=rg.html;
     if(dp.id==='town'&&b.avoid.length){inner+=avoidHtml();avoidShown=true;}
-    secs+=gsec_(dp.id,dp.t,dp.s,inner,items.length+ideas.length+(ig?ig.n:0),dp.id!=='town');
+    secs+=gsec_(dp.id,dp.t,dp.s,inner,items.length+ideas.length+(ig?ig.n:0)+(rg?rg.n:0),dp.id!=='town');
   });
   const other=rest.filter(n=>!n.rem&&!used.has(n.key));
   if(other.length)secs+=gsec_('other','Also in Today\'s Paper','Everything else','<div class="np-cols">'+other.map(art).join('')+'</div>',other.length,true);
@@ -8128,7 +8137,7 @@ Do not touch venues you did not just add except to draft.`},
 4. Decide if an ad is needed this week. Only when there is a real reason: a big, themed or holiday night inside 3 weeks, a new venue trial night that needs a crowd, an event that sold well and could be pushed further, a slow night, private event season, or a post doing unusually well. If there is no reason, write no plan and say "No ad needed this week" and why. Free methods come before paid ones.
 5. Write at most 2 plans into plans{<new id>:{title,purpose (what the ad is for),why (why now),when (the exact start date and time),duration (how long it runs, with an end date),frequency (how often to repeat it),budget (plain math, for example "$8 a day for 5 days = $40"),audience (plain words: place and radius, ages, interests),headline,text (the main ad text, in the Belladonna voice),cta (the exact button name offered in the current ad setup),creative (exactly which picture or video to use, or what to make),steps (an array; see below),check (how to know it worked and when to look),status:"new",createdAt (ms)}}. No single plan may cost more than 40 percent of the remaining budget, and the plan total must fit the remaining budget.
 6. Steps. First search the web for Meta's current Business Help Center pages and current Ads Manager screens, and write steps from what is there today, not from memory. Start the first step with "Checked against Meta help pages on <date>." Each step is ONE action: name the exact button, menu or field and where it is on the screen, and what to type or pick, for example "Click the green Create button at the top left." Cover everything: open Meta Ads Manager (or boost a post from Meta Business Suite when that is simpler and say why); choose the objective; name the campaign; set daily budget and schedule with the end date; audience (location and radius around the venue or Auburn, age, interests, and what to leave alone); placements; pick the Facebook Page and Instagram account; the ad (format, upload, primary text, headline, button, destination); review; Publish; confirm the payment method is already set; and what to look at 24 hours later. Anything you could not confirm on a current Meta page, write "check this on screen" beside it. Explain why a setting matters in a few words when it affects the money.
-7. Ideas. Add 3 to 5 new marketing ideas to ideas{<new id>:{title,kind ("free" or "paid"),pitch,cost,how (the first three actions),result (what she may get),status:"new",createdAt}} using web research: Google Business Profile posts, Nextdoor, local Facebook groups, flyers and table tents at venues, venue cross-promotion, QR codes, local event calendars and press, community and college events. Never repeat an idea already in ideas. Never suggest buying reviews, fake accounts, engagement pods or anything against a platform's rules.
+7. Ideas. Add 3 to 5 new marketing ideas to ideas{<new id>:{title,kind ("free" or "paid"),pitch,cost,when (the day or date to do it, based on the next themed night or event in Clio posts and Sable),where (an array of {name,url,note}: every exact site or place to post, each found on the web today, with the direct link to its submission page and a short note on its rules, deadline or required fields),image (exactly which picture to use: name the Clio post, Sabine event kit or poster it comes from, or describe the photo to take),caption (the finished text, in the Belladonna voice from the voice doc, ready to paste, with the real date, venue and time; put anything unknown in [brackets]),how (the first three actions),result (what she may get),status:"new",createdAt}} using web research: Google Business Profile posts, Nextdoor, local Facebook groups, flyers and table tents at venues, venue cross-promotion, QR codes, local event calendars and press, community and college events. For event-calendar ideas, search each city (Auburn, Kent, Puyallup, Tacoma, Federal Way, Seattle) and list only calendars that currently accept submissions, each with its direct submit link, after reading its rules. Never invent a site or a link; if you cannot confirm one, leave it out and say so in the note. If an existing idea with status "new" or "liked" is missing where, image or caption, fill in only those missing fields on that idea instead of adding a duplicate. Never repeat an idea already in ideas. Never suggest buying reviews, fake accounts, engagement pods or anything against a platform's rules.
 8. Report in plain words: whether an ad is needed this week, the money left, and the best idea.`},
  {name:'Agreement history',who:'Vesper',when:'One time, run it once after setup',plain:'Goes through your business email for every venue you work with and finds when each agreement was signed and how long it runs. You confirm each one in HQ.',ids:['vesper'],
   body:`TASK: Agreement history. ONE TIME. Read email only.
@@ -9191,15 +9200,40 @@ function planCard(p){
     (p.check?'<div class="t2"><b>How to know it worked:</b> '+esc(p.check)+'</div>':'')+
     '<div class="tm-row">'+(stt==='new'?'<button class="tm-b pri" data-act="mqplan" data-id="'+esc(p.id)+'" data-v="doing">I am setting it up</button><button class="tm-b dim" data-act="mqplan" data-id="'+esc(p.id)+'" data-v="skipped">Skip</button>':'')+(stt==='doing'?'<button class="tm-b pri" data-act="mqplan" data-id="'+esc(p.id)+'" data-v="running">It is live</button>':'')+(stt==='running'?'<button class="tm-b pri" data-act="mqplan" data-id="'+esc(p.id)+'" data-v="done">It finished or I turned it off</button>':'')+((stt==='done'||stt==='skipped')?'<button class="tm-b" data-act="mqplan" data-id="'+esc(p.id)+'" data-v="new">Put it back</button>':'')+'<button class="tm-b dim red" data-act="mqplandel" data-id="'+esc(p.id)+'">Delete</button></div></div>';
 }
+function mqWhere(x){return [].concat(x.where||[]).map(w=>typeof w==='string'?{name:w}:w).filter(w=>w&&(w.name||w.url));}
+// The how-to detail for one marketing idea: when, exactly where to post (with links), which image, and a ready caption.
+// np=true renders it in the Gazette's newspaper style, false in Ren's own page.
+function mqIdeaDetail(x,np){
+  const L=t=>np?'<span class="np-body">'+t+'</span>':'<div class="t2">'+t+'</div>';
+  const wh=mqWhere(x);let h='';
+  if(x.when)h+=L('<b>When:</b> '+esc(x.when));
+  if(wh.length)h+=L('<b>Post it at:</b>')+wh.map(w=>{const u=w.url?safeUrl(w.url):'';return L('&bull; '+(u?'<a href="'+esc(u)+'" target="_blank" rel="noopener">'+esc(w.name||u)+'</a>':esc(w.name||''))+(w.note?' &mdash; '+esc(w.note):''));}).join('');
+  if(x.image)h+=L('<b>Image:</b> '+esc(x.image));
+  if(x.caption)h+=L('<b>Caption:</b>')+'<span class="'+(np?'np-cap':'mq-cap t2')+'" style="display:block">'+esc(x.caption)+'</span>'+(np?'<span class="np-acts"><button class="np-act cp" data-act="mqcopycap" data-id="'+esc(x.id)+'">Copy caption</button></span>':'<div class="tm-row"><button class="tm-b" data-act="mqcopycap" data-id="'+esc(x.id)+'">Copy caption</button></div>');
+  if(!wh.length&&!x.caption&&!x.image)h+=np?'<span class="np-acts"><button class="np-act cp" data-act="mqcopybrief" data-id="'+esc(x.id)+'">Copy a brief to get the details</button></span>':'<div class="t2" style="color:var(--text3)">Ren has not filled in where to post, the image or the caption yet. He will on his next Monday run, or copy a brief and paste it into your own chat.</div><div class="tm-row"><button class="tm-b" data-act="mqcopybrief" data-id="'+esc(x.id)+'">Copy a brief to get the details</button></div>';
+  return h;
+}
+function mqIdeaPrompt(x){
+  const st=adsState().settings;
+  return 'You are Ren, the marketing helper for Belladonna Audio Alchemies (karaoke, music bingo, trivia and themed nights at venues, plus private events, based in Auburn, WA). Owner: Ahnna.\n\nMARKETING IDEA: '+(x.title||x.what||'')+'\n'+(x.pitch?x.pitch+'\n':'')+(x.how?'How: '+x.how+'\n':'')+'Area we cover: '+(st.area||'Auburn, Kent, Puyallup, Tacoma, Federal Way, Seattle')+'\n\nFinish this idea so I can just do it. Search the web and give me:\n1) WHERE: every exact website or place to post, each with the real link to its submission page, whether it is free, and its rules or deadlines. Only list ones you confirmed on a current page. Never invent a site or a link; if you could not confirm one, say so.\n2) WHEN: the best day to post, based on the next themed night or event.\n3) IMAGE: exactly which picture to use and what it should show.\n4) CAPTION: the finished caption, ready to paste, in a warm, fun Belladonna voice. Put anything you do not know (date, venue, time) in [brackets].\n5) STEPS: numbered, one action each.';
+}
 function mqIdeaCard(x){
   const st=x.status||'new',b=(v,l,c)=>'<button class="tm-b'+(c?' '+c:'')+'" data-act="mqidea" data-id="'+esc(x.id)+'" data-v="'+v+'">'+l+'</button>';
-  return '<div class="tm-item"><div class="t1"><span class="tm-tag '+(x.kind==='free'?'booked':'quoted')+'">'+(x.kind==='free'?'free':'costs money')+'</span><span class="tm-tag">'+esc(st)+'</span><b>'+esc(x.title||x.what)+'</b></div>'+(x.pitch?'<div class="t2">'+esc(x.pitch)+'</div>':'')+(x.cost?'<div class="t2"><b>Cost:</b> '+esc(x.cost)+'</div>':'')+(x.how?'<div class="t2"><b>How:</b> '+esc(x.how)+'</div>':'')+(x.result?'<div class="t2"><b>What you may get:</b> '+esc(x.result)+'</div>':'')+
-    '<div class="tm-row">'+(st==='new'?b('liked','I like it','pri')+b('skipped','Skip','dim'):'')+(st==='liked'?b('done','I did it','pri')+b('skipped','Skip','dim'):'')+((st==='done'||st==='skipped')?b('new','Put back'):'')+'</div></div>';
+  const LBL={new:'new',liked:'in progress',done:'done',skipped:'hidden',archived:'archived'};
+  return '<div class="tm-item"><div class="t1"><span class="tm-tag '+(x.kind==='free'?'booked':'quoted')+'">'+(x.kind==='free'?'free':'costs money')+'</span><span class="tm-tag">'+esc(LBL[st]||st)+'</span><b>'+esc(x.title||x.what)+'</b></div>'+(x.pitch?'<div class="t2">'+esc(x.pitch)+'</div>':'')+(x.cost?'<div class="t2"><b>Cost:</b> '+esc(x.cost)+'</div>':'')+(x.how?'<div class="t2"><b>How:</b> '+esc(x.how)+'</div>':'')+(x.result?'<div class="t2"><b>What you may get:</b> '+esc(x.result)+'</div>':'')+mqIdeaDetail(x,false)+
+    '<div class="tm-row">'+(st==='new'?b('liked','In progress','pri'):'')+((st==='new'||st==='liked')?b('done','Done','pri')+b('skipped','Hide','dim'):'')+((st==='done'||st==='skipped'||st==='archived')?b('new','Put back'):'')+(st!=='archived'?b('archived','Archive','dim'):'')+'</div></div>';
+}
+function renGazette(){
+  const a=adsState(),live=a.ideas.filter(x=>['new','liked'].indexOf(x.status||'new')>=0).sort((p,q)=>(q.status==='liked'?1:0)-(p.status==='liked'?1:0));
+  if(!live.length)return {html:'',n:0};
+  const btn=(x,v,l)=>{const cur=(x.status||'new')===v;return '<button class="np-act'+(cur?' on':'')+'" data-act="mqidea" data-id="'+esc(x.id)+'" data-v="'+(cur&&v==='liked'?'new':v)+'">'+l+'</button>';};
+  const card=x=>'<div class="np-card'+(x.status==='liked'?' on':'')+'"><span class="np-date kind"><b>'+(x.kind==='free'?'Free':'Paid')+'</b></span><div class="np-cardt"><span class="np-hd">'+esc(x.title||x.what)+(x.status==='liked'?' <em>(in progress)</em>':'')+'</span>'+(x.pitch?'<span class="np-body">'+esc(x.pitch)+'</span>':'')+(x.cost?'<span class="np-by">Cost: '+esc(x.cost)+'</span>':'')+mqIdeaDetail(x,true)+'<span class="np-acts">'+btn(x,'liked','In progress')+btn(x,'done','Done')+btn(x,'skipped','Hide')+btn(x,'archived','Archive')+'</span></div></div>';
+  return {html:'<div class="np-sub">Marketing ideas from Ren <em>'+live.length+'</em></div><div class="np-cards">'+live.map(card).join('')+'</div>',n:live.length};
 }
 function mqAskPrompt(){
   const a=adsState(),st=a.settings;
   const rs=a.results.slice(0,12).map(r=>'- '+r.date+' '+(r.name||'')+': spent $'+r.spend+', reach '+(r.reach||'?')+', clicks '+(r.clicks||'?')+', results '+(r.leads||0)+(r.note?' ('+r.note+')':'')).join('\n')||'(none yet)';
-  return 'You are Ren, the advertising and marketing helper for Belladonna Audio Alchemies (karaoke, music bingo, trivia and themed nights at venues, plus private events, in the Seattle-Tacoma area; based in Auburn, WA). Owner: Ahnna.\n\nMy monthly marketing budget: '+(st.budget?'$'+st.budget:'not set')+'\nMy goal right now: '+(st.goal||'not set')+'\nWhat I would happily pay per lead or message: '+(st.targetCost?'$'+st.targetCost:'not set')+'\nArea we cover: '+(st.area||'Auburn, Kent, Federal Way, Tacoma, Seattle')+'\nSpent so far this month: $'+a.total.toFixed(0)+'\n\nRECENT RESULTS\n'+rs+'\n\nPRICE SHEET\n'+pricing()+'\n\nTell me exactly what ad (if any) I should run this week and why. If none, say so. For the one best ad give: what it is for, the start date, how long, how often, the total budget, who should see it, the exact headline and text, what picture to use, and numbered click-by-click steps in Meta Ads Manager (name every button and menu exactly as it is on screen, and say where it is). I will do the clicking myself. If you are not sure a menu name is current, say "check this on screen". Then give me 3 other marketing ideas, free and paid, ranked by how likely they are to help. Never tell me to spend more than my budget.';
+  return 'You are Ren, the advertising and marketing helper for Belladonna Audio Alchemies (karaoke, music bingo, trivia and themed nights at venues, plus private events, in the Seattle-Tacoma area; based in Auburn, WA). Owner: Ahnna.\n\nMy monthly marketing budget: '+(st.budget?'$'+st.budget:'not set')+'\nMy goal right now: '+(st.goal||'not set')+'\nWhat I would happily pay per lead or message: '+(st.targetCost?'$'+st.targetCost:'not set')+'\nArea we cover: '+(st.area||'Auburn, Kent, Federal Way, Tacoma, Seattle')+'\nSpent so far this month: $'+a.total.toFixed(0)+'\n\nRECENT RESULTS\n'+rs+'\n\nPRICE SHEET\n'+pricing()+'\n\nTell me exactly what ad (if any) I should run this week and why. If none, say so. For the one best ad give: what it is for, the start date, how long, how often, the total budget, who should see it, the exact headline and text, what picture to use, and numbered click-by-click steps in Meta Ads Manager (name every button and menu exactly as it is on screen, and say where it is). I will do the clicking myself. If you are not sure a menu name is current, say "check this on screen". Then give me 3 other marketing ideas, free and paid, ranked by how likely they are to help. For each: the exact places to post with real links to their submission pages (only ones you confirmed), what image to use, when to post, and a finished caption. Never tell me to spend more than my budget.';
 }
 function vRen(){
   const a=adsState(),st=a.settings;
@@ -9224,9 +9258,10 @@ function vRen(){
   h+=det('mqsp','Add other marketing spend','<div class="tm-fg"><div class="full"><label class="tm-lbl">What</label><input class="tm-in" id="ms-what"></div><div><label class="tm-lbl">Dollars</label><input class="tm-in" id="ms-amt" inputmode="decimal"></div><div><label class="tm-lbl">Date</label><input class="tm-in" id="ms-date" type="date" value="'+isoDay(Date.now())+'"></div></div><div class="tm-row"><button class="tm-b pri" data-act="mqspendadd">Add</button></div>',false);
   h+='<div class="tm-sec">Marketing ideas ('+a.freshIdeas.length+' new)</div><div class="tm-hint">Free and paid ways to get the name out, ranked by what Ren thinks will help most.</div>';
   if(!a.ideas.length)h+='<div class="tm-empty">No ideas yet.</div>';
-  a.ideas.filter(x=>x.status!=='skipped').forEach(x=>h+=mqIdeaCard(x));
-  const sk=a.ideas.filter(x=>x.status==='skipped');
-  if(sk.length)h+=det('mqidsk','Skipped ('+sk.length+')',sk.map(mqIdeaCard).join(''),false);
+  a.ideas.filter(x=>x.status!=='skipped'&&x.status!=='archived').forEach(x=>h+=mqIdeaCard(x));
+  const sk=a.ideas.filter(x=>x.status==='skipped'),ar=a.ideas.filter(x=>x.status==='archived');
+  if(sk.length)h+=det('mqidsk','Hidden ('+sk.length+')',sk.map(mqIdeaCard).join(''),false);
+  if(ar.length)h+=det('mqidar','Archived ('+ar.length+')',ar.map(mqIdeaCard).join(''),false);
   h+='<div class="tm-sec">Budget and goals</div><div class="tm-hint">Ren plans inside these. Change them any time.</div><div class="tm-fg"><div><label class="tm-lbl">Monthly marketing budget ($)</label><input class="tm-in" id="mq-budget" inputmode="decimal" value="'+esc(st.budget||'')+'"></div><div><label class="tm-lbl">What I would pay per lead or message ($)</label><input class="tm-in" id="mq-tc" inputmode="decimal" value="'+esc(st.targetCost||'')+'"></div><div class="full"><label class="tm-lbl">What I want most right now</label><input class="tm-in" id="mq-goal" value="'+esc(st.goal||'')+'" placeholder="e.g. More private event bookings, more people at the Thursday trivia night"></div><div class="full"><label class="tm-lbl">Area to reach</label><input class="tm-in" id="mq-area" value="'+esc(st.area||'')+'" placeholder="Auburn, Kent, Federal Way, Tacoma, Seattle"></div></div><div class="tm-row"><button class="tm-b pri" data-act="mqsettings">Save</button></div>';
   return h;
 }
@@ -9383,7 +9418,9 @@ const A={
   async mqstep(t){await mqSave({['plans.'+t.dataset.id+'.checks.'+t.dataset.i]:t.checked});},
   async mqplan(t){const v=t.dataset.v,p={['plans.'+t.dataset.id+'.status']:v};if(v==='running')p['plans.'+t.dataset.id+'.startedAt']=Date.now();await mqSave(p);},
   async mqplandel(t){if(!confirm('Delete this plan?'))return;await mqSave({['plans.'+t.dataset.id]:null});},
-  async mqidea(t){await mqSave({['ideas.'+t.dataset.id+'.status']:t.dataset.v});},
+  async mqidea(t){await mqSave({['ideas.'+t.dataset.id+'.status']:t.dataset.v,['ideas.'+t.dataset.id+'.updatedAt']:Date.now()});},
+  async mqcopycap(t){const x=adsState().ideas.find(i=>i.id===t.dataset.id);if(x)toast(await copy(x.caption||'')?'Caption copied.':'Copy failed.',false);},
+  async mqcopybrief(t){const x=adsState().ideas.find(i=>i.id===t.dataset.id);if(x)toast(await copy(mqIdeaPrompt(x))?'Brief copied. Paste it into your chat.':'Copy failed.',false);},
   async mqresadd(){const spend=val('mr-spend');if(!spend){toast('Type how many dollars were spent.',true);return;}const pid=val('mr-plan'),pl=pid?((S.cfg.ads||{}).plans||{})[pid]:null;await mqSave({['results.r'+Date.now().toString(36)]:{planId:pid,name:pl?pl.title:(val('mr-name')||'Ad'),date:isoDay(Date.now()),spend:spend,reach:val('mr-reach'),clicks:val('mr-clicks'),leads:val('mr-leads'),note:val('mr-note'),createdAt:Date.now()}});toast('Saved. Ren will judge it.');},
   async mqresdel(t){if(!confirm('Delete these results?'))return;await mqSave({['results.'+t.dataset.id]:null});},
   async mqspendadd(){const w=val('ms-what'),a=val('ms-amt');if(!w||!a){toast('Add what it was and how much.',true);return;}await mqSave({['spend.s'+Date.now().toString(36)]:{what:w,amount:a,date:val('ms-date')||isoDay(Date.now()),createdAt:Date.now()}});toast('Added.');},
