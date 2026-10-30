@@ -115,13 +115,13 @@
     if(live.length){
       var names = live.map(function(n){ return kindName(n)+(n.time?' &middot; '+esc(n.time):''); }).join('<br>');
       var nm = live.map(function(n){ return esc(kindName(n)); });
-      h += '<button class="choice primary" onclick="go(\'play\')"><div class="c-t">Play tonight <span>&rarr;</span></div><div class="c-s">'+names+'</div></button>';
+      h += '<button class="choice primary" onclick="go(\'play\')"><div class="c-t">Play Tonight <span>&rarr;</span></div><div class="c-s">'+names+'</div></button>';
     } else {
       h += '<div class="msg" style="margin:.4rem 0 1.2rem">Nothing is scheduled here tonight.</div>';
     }
-    h += '<button class="choice" onclick="location.href=\'shoutout.html?v=\'+encodeURIComponent(slug)"><div class="c-t">Shout-outs &amp; song requests <span>&rarr;</span></div><div class="c-s">Dedicate a message to the big screen, or request a song for the interim music.</div></button>';
+    h += '<button class="choice" onclick="location.href=\'shoutout.html?v=\'+encodeURIComponent(slug)"><div class="c-t">Shout-Outs &amp; Song Requests <span>&rarr;</span></div><div class="c-s">Dedicate a message to the big screen, or request a song for the interim music.</div></button>';
     var more = (d.ahead||[]).length;
-    h += '<button class="choice" onclick="go(\'upcoming\')"><div class="c-t">Upcoming events <span>&rarr;</span></div><div class="c-s">'+(more ? 'See what\'s coming up at '+esc(d.venue)+' &mdash; nights, themes and bingo categories.' : 'Nothing else is posted yet &mdash; check back soon.')+'</div></button>';
+    h += '<button class="choice" onclick="go(\'upcoming\')"><div class="c-t">Upcoming Events <span>&rarr;</span></div><div class="c-s">'+(more ? 'See what\'s coming up at '+esc(d.venue)+' &mdash; nights, themes and bingo categories.' : 'Nothing else is posted yet &mdash; check back soon.')+'</div></button>';
     return h + moreBlock();
   }
 
@@ -152,8 +152,8 @@
   function pickVenue(slug){ location.href = location.pathname + '?v=' + encodeURIComponent(slug); }
   function moreBlock(){
     return '<div class="more"><div class="more-h">Looking for somewhere else?</div>'
-      + '<button class="choice" onclick="go(\'venues\')"><div class="c-t">See another venue <span>&rarr;</span></div><div class="c-s">Pick any Belladonna venue to see what\'s on there.</div></button>'
-      + '<button class="choice" onclick="go(\'all\')"><div class="c-t">All upcoming events <span>&rarr;</span></div><div class="c-s">Everything coming up at every Belladonna venue, in one list.</div></button></div>';
+      + '<button class="choice" onclick="go(\'venues\')"><div class="c-t">See Another Venue <span>&rarr;</span></div><div class="c-s">Pick any Belladonna venue to see what\'s on there.</div></button>'
+      + '<button class="choice" onclick="go(\'all\')"><div class="c-t">All Upcoming Events <span>&rarr;</span></div><div class="c-s">Everything coming up at every Belladonna venue, in one list.</div></button></div>';
   }
   var VENUES = null;   // [{name, slug}]
   function loadVenues(cb){
@@ -246,7 +246,7 @@
 
   function render(d){
     var main = document.getElementById('main');
-    if(!d.found){ main.innerHTML = '<div class="msg">We couldn\'t find that venue.</div><button class="choice primary" onclick="showVenuePicker()"><div class="c-t">Choose a venue <span>&rarr;</span></div></button>'; return; }
+    if(!d.found){ main.innerHTML = '<div class="msg">We couldn\'t find that venue.</div><button class="choice primary" onclick="showVenuePicker()"><div class="c-t">Choose A Venue <span>&rarr;</span></div></button>'; return; }
     D = d; CUR.venue=d.venue; CUR.date=d.date;
     paint();
   }
@@ -262,7 +262,7 @@
   window.addEventListener('hashchange', paint);
 
   var slug = new URLSearchParams(location.search).get('v');
-  if(!slug){ document.getElementById('main').innerHTML = '<div class="msg">This link is missing its venue.<br>Scan the QR code at your table again, or pick a venue below.</div><button class="choice primary" onclick="showVenuePicker()"><div class="c-t">Choose a venue <span>&rarr;</span></div></button>'; }
+  if(!slug){ document.getElementById('main').innerHTML = '<div class="msg">This link is missing its venue.<br>Scan the QR code at your table again, or pick a venue below.</div><button class="choice primary" onclick="showVenuePicker()"><div class="c-t">Choose A Venue <span>&rarr;</span></div></button>'; }
   else load();
   function load(quiet){
     fetch(API+'?v='+encodeURIComponent(slug)).then(function(r){ if(!r.ok) throw new Error(r.status); return r.json(); }).then(render)
