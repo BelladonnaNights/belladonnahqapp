@@ -7107,7 +7107,7 @@ HARD RULES
 - Never invent prices, dates, availability or facts. If something is missing, say exactly what is missing.
 - Never log into a gig site or any account with a bot. Work only from emails, HQ data and public web pages.
 - Voice: gothic and regal but warm, confident, blunt, brief. No filler, no hedging.
-- LAST STEP OF EVERY RUN, even a quiet one or one that was blocked: addDraft {agent: your lowercase name, kind: the SAME kind you already use for your other drafts (the door rejects unknown kinds; Mirror uses "seo"), label:"Run note", body}. Body line 1: one plain sentence of what you did or what blocked you. If you need something from Ahnna add "NEEDS YOU:" then one "- " line per ask saying exactly what to do and where. HQ shows it on your desk and on the Gazette.
+- LAST STEP OF EVERY RUN, even a quiet one or one that was blocked: write a run note. If you have a config doc, use setConfig with your doc and data {runNote:{body:"...",at:<ms>}} (Sable doc sable, Sigil doc sigil, Thorne doc warden, Jett doc coach, Vesper doc care, Iris doc curator, Sabine doc social, Ren doc ads). If you have no config doc (Raven, Quill, Mirror), addDraft {agent: your lowercase name, kind: the SAME kind you already use for your other drafts (Raven the kind of her cold emails, Quill "reply", Mirror "seo"), label:"Run note", body}. The door rejects any other kind or agent. Body line 1: one plain sentence of what you did or what blocked you. If you need something from Ahnna add "NEEDS YOU:" then one "- " line per ask saying exactly what to do and where. HQ shows it on your desk and on the Gazette.
 `;
 const INFO={
 raven:{
@@ -7895,7 +7895,7 @@ function briefData(){
     add('mirror',nl.length,plural(nl.length,'new place to list the business','new places to list the business'),nl.map(x=>cut(String(x.label).replace(/^new listing:\s*/i,''),40)).join('; ')+'.');
     add('mirror',rv.length,plural(rv.length,'review reply or request','review replies and requests')+' to approve',rv.map(x=>cut(x.label,60)).join('; ')+'.');}
   add('mirror',d.stale.length,plural(d.stale.length,'profile is','profiles are')+' stale',d.stale.slice(0,6).map(x=>x.name+(x.profileRefreshed?' ('+ago(x.profileRefreshed)+')':' (never refreshed)')).join('; ')+'. Open Mirror for what to change on each.');
-  (S.notes||[]).filter(n=>n.status==='pending'&&/NEEDS YOU:/i.test(n.body||'')).forEach(n=>{
+  allNotes().filter(n=>n.status==='pending'&&/NEEDS YOU:/i.test(n.body||'')).forEach(n=>{
     const m=String(n.body).split(/NEEDS YOU:/i)[1]||'',ls=m.split('\n').map(x=>x.replace(/^\s*[-*\u2022]\s*/,'').trim()).filter(Boolean);
     ls.forEach(l=>need.push({a:n.agent,text:l,body:agent(n.agent)?agent(n.agent).name+' left this in her run note '+ago(n.createdAt)+'.':'',note:n.id}));
   });
@@ -8221,7 +8221,7 @@ Ops:
  {"op":"setConfig","doc":"sable|sigil|warden|coach|care|curator|social|ads","data":{...}}
 
 First read agent_config (voice, pricing, outreach) and follow it exactly. Never invent prices, dates, or facts. Check agent_drafts first so you never write a draft that already exists. If nothing needs doing, write nothing else.
-RUN NOTE (LAST STEP OF EVERY RUN, even a quiet one, even if something blocked you): addDraft {agent: your lowercase name, kind: the SAME kind you already use for your other drafts (the door rejects unknown kinds; Mirror uses "seo"), label:"Run note", body}. The body's first line is one plain sentence: what you did, what you wrote, and anything that blocked you. If you need something from Ahnna, add a line "NEEDS YOU:" and then one line per ask, each starting with "- ", saying exactly what to do and where. Do not repeat an identical note. HQ shows the note on your desk and puts every NEEDS YOU line on the Gazette.`;
+RUN NOTE (LAST STEP OF EVERY RUN, even a quiet one, even if something blocked you). If you have a config doc, use setConfig with your doc and data {runNote:{body:"<the note>",at:<ms>}} (Sable doc sable, Sigil doc sigil, Thorne doc warden, Jett doc coach, Vesper doc care, Iris doc curator, Sabine doc social, Ren doc ads). If you have no config doc (Raven, Quill, Mirror), addDraft {agent: your lowercase name, kind: the SAME kind you already use for your other drafts (Raven the kind of her cold emails, Quill "reply", Mirror "seo"), label:"Run note", body}. The door rejects any other kind or agent, so never try others. The note's first line is one plain sentence: what you did, what you wrote, and anything that blocked you. If you need something from Ahnna, add a line "NEEDS YOU:" and then one line per ask, each starting with "- ", saying exactly what to do and where. Do not repeat an identical note. HQ shows the note on your desk and puts every NEEDS YOU line on the Gazette.`;
 const TASKS=[
  {name:'Lead run',who:'Raven and Quill',when:'Weekdays, 7:00 am',plain:'Looks for people and venues asking for karaoke, trivia or bingo, scores them hot / warm / cold, drafts cold emails and day-5 follow-ups for venues you have not heard back from, and drafts replies to the good leads.',ids:['raven','quill'],lib:true,
   body:`TASK: Lead run.
@@ -8393,8 +8393,14 @@ function renderDrawer(force){
   body.innerHTML=_pre+(_fold?foldSections(_main):_main);
   body.scrollTop=top;
 }
+const NOTE_DOC={sable:'sable',sigil:'sigil',warden:'warden',coach:'coach',vesper:'care',herald:'curator',ember:'social',marquee:'ads'};
+function allNotes(){
+  const out=(S.notes||[]).slice();
+  Object.keys(NOTE_DOC).forEach(a=>{const rn=(S.cfg[NOTE_DOC[a]]||{}).runNote;if(rn&&rn.body)out.push({id:'cfg:'+NOTE_DOC[a],agent:a,body:rn.body,createdAt:rn.at||0,status:(rn.doneAt&&rn.doneAt>=(rn.at||0))?'done':'pending'});});
+  return out.sort((x,y)=>(y.createdAt||0)-(x.createdAt||0));
+}
 function notesBlock(id){
-  const L=(S.notes||[]).filter(n=>n.agent===id&&n.status==='pending').slice(0,5);
+  const L=allNotes().filter(n=>n.agent===id&&n.status==='pending').slice(0,5);
   let h='<div class="tm-sec">Run notes ('+L.length+')</div>';
   if(!L.length)return h+'<div class="tm-empty">No notes. After each run she leaves a short note here.</div>';
   L.forEach(n=>{h+='<div class="tm-item"><div class="t2" style="white-space:pre-wrap;color:var(--text)">'+esc(n.body||'')+'</div><div class="tm-row"><span class="tm-tag">'+esc(fmtDay(n.createdAt))+'</span><button class="tm-b" data-act="notedone" data-id="'+esc(n.id)+'">Got it</button></div></div>';});
@@ -9214,7 +9220,7 @@ function vMirror(){
   const hit=(t,x)=>{t=String(t||'').toLowerCase();return SK(x).some(k=>t.indexOf(k)>=0);};
   const mine={},todo={},used=new Set();
   d.mPending.forEach(dr=>{const st=d.sites.find(x=>hit(dr.label,x));if(st){(mine[st.id]=mine[st.id]||[]).push(dr);used.add(dr.id);}});
-  (S.notes||[]).filter(n=>n.agent==='mirror'&&n.status==='pending'&&/NEEDS YOU:/i.test(n.body||'')).slice(0,1).forEach(n=>{
+  allNotes().filter(n=>n.agent==='mirror'&&n.status==='pending'&&/NEEDS YOU:/i.test(n.body||'')).slice(0,1).forEach(n=>{
     String(n.body).split(/NEEDS YOU:/i)[1].split('\n').map(x=>x.replace(/^\s*[-*\u2022]\s*/,'').trim()).filter(Boolean).forEach(l=>{const st=d.sites.find(x=>hit(l,x));if(st)(todo[st.id]=todo[st.id]||[]).push(l);});
   });
   const have=new Set(S.sites.map(s=>s.name)),miss=PRESENCE.filter(n=>!have.has(n));
@@ -9832,7 +9838,7 @@ const A={
   async delvenue(t){if(!confirm('Delete this venue?'))return;await col('agent_venues').doc(t.dataset.id).delete();},
   async savesnap(t){const e=document.querySelector('[data-snap="'+t.dataset.id+'"]'),v=e?e.value.trim():'';await col('agent_sites').doc(t.dataset.id).update({snapshot:v,snapshotAt:Date.now()});toast('Saved for Mirror.');},
   async setrefreshed(t){const v=t.value;if(!v)return;const ms=new Date(v+'T12:00:00').getTime();if(isNaN(ms))return;await col('agent_sites').doc(t.dataset.id).update({profileRefreshed:ms});toast('Refresh date saved.');},
-  async notedone(t){await col('agent_drafts').doc(t.dataset.id).update({status:'done',doneAt:Date.now()});},
+  async notedone(t){const id=t.dataset.id;if(String(id).indexOf('cfg:')===0){const doc=id.slice(4),ref=col('agent_config').doc(doc);try{await ref.update({'runNote.doneAt':Date.now()});}catch(e){await ref.set({runNote:{doneAt:Date.now()}},{merge:true});}return;}await col('agent_drafts').doc(id).update({status:'done',doneAt:Date.now()});},
   async foldall(t){const o=t.dataset.v==='1';document.querySelectorAll('#tmDrB details.tm-fsec').forEach(d=>{S.open[d.dataset.k]=o;});renderDrawer(true);},
   async blockvenue(t){
     const pk=document.getElementById('bl-pick'),nm=document.getElementById('bl-name'),why=document.getElementById('bl-why');
