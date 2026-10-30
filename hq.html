@@ -1900,6 +1900,8 @@ match /agent_config/{id}  { allow read, write: if isAdmin(); }</pre>
         <div class="form-group" id="vmBillDayWrap"><label class="form-label" title="Sigil reminds you a couple of days before this day each month">Bill on day of month</label><select class="form-input" id="vmBillDay"><option value="">1st (default)</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option><option value="11">11</option><option value="12">12</option><option value="13">13</option><option value="14">14</option><option value="15">15</option><option value="16">16</option><option value="17">17</option><option value="18">18</option><option value="19">19</option><option value="20">20</option><option value="21">21</option><option value="22">22</option><option value="23">23</option><option value="24">24</option><option value="25">25</option><option value="26">26</option><option value="27">27</option><option value="28">28</option><option value="last">Last day</option></select></div>
         <div class="form-group"><label class="form-label">Monthly amount (optional)</label><input type="text" class="form-input" id="vmBillAmount" placeholder="$ total per invoice"></div>
         <div class="form-group"><label class="form-label">Billing notes</label><input type="text" class="form-input" id="vmBillNote" placeholder="e.g. QuickBooks, email to owner, collect cash on the 1st"></div>
+        <div class="form-group"><label class="form-label" title="Sigil starts reminding you from this month. Leave empty to start now.">First invoice month (optional)</label><input type="month" class="form-input" id="vmBillStart"></div>
+        <div class="form-group" style="grid-column:1/-1"><div id="vmInvHist" style="font-size:.8rem"></div></div>
       </div>
     </div>
 
@@ -1944,6 +1946,7 @@ match /agent_config/{id}  { allow read, write: if isAdmin(); }</pre>
     <div class="vm-sec" id="vmOffers"></div>
 
     <div class="vm-sec" id="vmLeadInfo"></div>
+    <div class="vm-sec" id="vmAll"></div>
 
     <div class="vm-sec">
       <div class="vm-sec-h">Account Link</div>
@@ -6225,12 +6228,13 @@ function openVenueModal(id=null){
   try{const L=Object.assign({},(venue&&leadForVenue(venue))||{},(venue&&venue.leadInfo)||{});const sv=(i,x)=>{const e=document.getElementById(i);if(e)e.value=x||'';};
     sv('vmAddress',venue&&venue.address);sv('vmCity',(venue&&venue.city)||L.city);sv('vmOwner',venue&&venue.owner);sv('vmManager',venue&&venue.manager);sv('vmContactName',(venue&&venue.contactName)||L.contactName);sv('vmPhone',(venue&&venue.phone)||L.phone);sv('vmEmail',(venue&&venue.email)||L.email);sv('vmWebsite',venue&&venue.website);sv('vmInstagram',venue&&venue.instagram);sv('vmFacebook',venue&&venue.facebook);sv('vmOtherContacts',venue&&venue.otherContacts);}catch(e){}
   try{renderVenueLeadInfo(id);}catch(e){}
+  {const o=document.getElementById('vmAll');if(o){o.innerHTML=(venue&&window.hqVenueAll)?window.hqVenueAll(venue):'';o.dataset.vid=venue?venue.id:'';}}
   {const o=document.getElementById('vmOffers');if(o)o.innerHTML=(venue&&typeof offersBlock==='function')?offersBlock(venue.id,venue.name,'vm'):'<div style="font-size:.8rem;opacity:.7">Save the venue first, then reopen it to fill in what it offers.</div>';}
   document.getElementById('vmInactive').checked=!!(venue&&venue.inactive);document.getElementById('vmStatus').value=venue?(venue.inactive?'inactive':(venue.noRecurring?'norecurring':'active')):'active';
   const amounts=(venue&&venue.payAmounts)||{};
   VENUE_AMOUNT_KINDS.forEach(k=>{document.getElementById('vmAmount'+k).value=amounts[k]||'';});
   document.getElementById('vmPayMethod').value=venue?venue.payMethod||'':'';
-  document.getElementById('vmBillDay').value=venue?String(venue.billDay||''):'';document.getElementById('vmBillFreq').value=venue?venue.billFreq||'':'';document.getElementById('vmBillDayWrap').style.display=(venue&&venue.billFreq==='gig')?'none':'';document.getElementById('vmBillAmount').value=venue?venue.billAmount||'':'';document.getElementById('vmBillNote').value=venue?venue.billNote||'':'';
+  document.getElementById('vmBillDay').value=venue?String(venue.billDay||''):'';document.getElementById('vmBillFreq').value=venue?venue.billFreq||'':'';document.getElementById('vmBillDayWrap').style.display=(venue&&venue.billFreq==='gig')?'none':'';document.getElementById('vmBillAmount').value=venue?venue.billAmount||'':'';document.getElementById('vmBillNote').value=venue?venue.billNote||'':'';{const bs=document.getElementById('vmBillStart');if(bs)bs.value=venue?venue.billStart||'':'';const ih=document.getElementById('vmInvHist');if(ih)ih.innerHTML=(venue&&window.hqInvHistory)?window.hqInvHistory(venue.id):'';}
   document.getElementById('vmStartDate').value=venue?venue.startDate||'':'';
   document.getElementById('vmHistoryBtn').style.display=id?'':'none';
   renderVenueGigSlotRows(venue?fillSlotTimes(venueEditorSlots(venue),venue.name):[]);
@@ -6356,7 +6360,7 @@ function saveVenue(){
   const gigSlots=readVenueGigSlotRows();
   const host=document.getElementById('vmHost').value||null;
   const gv=i=>{const e=document.getElementById(i);return e?e.value.trim():'';};
-  const det={address:gv('vmAddress'),city:gv('vmCity'),owner:gv('vmOwner'),manager:gv('vmManager'),contactName:gv('vmContactName'),phone:gv('vmPhone'),email:gv('vmEmail'),website:gv('vmWebsite'),instagram:gv('vmInstagram'),facebook:gv('vmFacebook'),otherContacts:gv('vmOtherContacts'),billDay:gv('vmBillFreq')==='gig'?'':gv('vmBillDay'),billFreq:gv('vmBillFreq'),billAmount:gv('vmBillAmount'),billNote:gv('vmBillNote')};
+  const det={address:gv('vmAddress'),city:gv('vmCity'),owner:gv('vmOwner'),manager:gv('vmManager'),contactName:gv('vmContactName'),phone:gv('vmPhone'),email:gv('vmEmail'),website:gv('vmWebsite'),instagram:gv('vmInstagram'),facebook:gv('vmFacebook'),otherContacts:gv('vmOtherContacts'),billDay:gv('vmBillFreq')==='gig'?'':gv('vmBillDay'),billFreq:gv('vmBillFreq'),billAmount:gv('vmBillAmount'),billNote:gv('vmBillNote'),billStart:gv('vmBillStart')};
   const today=new Date().toISOString().slice(0,10);
   if(editVenueId){
     const v=venues.find(x=>x.id===editVenueId);
@@ -7575,7 +7579,7 @@ Every Monday at 8 AM Pacific:
 5. INBOX. Search the business email inbox for the last 7 days for renewal notices, expiring policies or licenses, signature requests (DocuSign and similar), W-9 or tax-form requests, and forms that need to be filled out again. For each, add or update an item in agent_config/sigil items (name, due as YYYY-MM-DD from the email, fromEmail true). If an email asks for something with no clear date, add it with no date and say so in the output. Never reply to, forward or delete an email.
 6. VENUE CHECK-INS (every 3 months). Read Our Venues ({"op":"readVenues"}, skip inactive) and agent_config/care for each venue's saved lastCheckinAt. A venue is due when lastCheckinAt is empty or older than 90 days. Use venueId "hq_" plus the venue id. For each due venue without a pending draft, write one document to agent_drafts: leadId (empty), venueId, agent "sigil", kind "checkin", body, label ("Check-in: " plus the venue name), status "pending", createdAt (ms). Follow the EMAIL VOICE. Ask one specific question about how the nights are going and whether anything about the night, music, host or crowd should change. If the checkouts show a good trend, mention one real number and ask for an introduction. If health is "risk" or "watch", ask what would make it better and offer a quick call, and never mention the flag.
 7. AGREEMENT RENEWALS. Read agent_config/sigil agreements (status active, with signedOn, endsOn and termMonths). A 3-month agreement is due a check-in at 2 months. Other agreements are due for renewal when endsOn is within 30 days (3 months), 45 days (6 months) or 60 days (1 year). For each due agreement without a pending draft write kind "paperwork", label ("Renewal: " plus the venue), a short renewal note in the EMAIL VOICE, status "pending".
-8. INVOICES. Read Our Venues (readVenues). For every active venue whose payMethod contains "invoice" or "QuickBooks", the invoice is due on billDay of each month (empty means the 1st, "last" means the last day). Read agent_config/sigil invoices (invoices.v<venue id>.m<YYYY_MM> holds the time it was marked sent). From 2 days before the billing day until it is marked sent, include the venue in your run note under NEEDS YOU as "Send <venue> its invoice (<amount or per-night amounts>, due <date>)". Never send an invoice yourself.
+8. INVOICES. Read Our Venues (readVenues). For every active venue whose payMethod contains "invoice" or "QuickBooks", the invoice is due on billDay of each month (empty means the 1st, "last" means the last day). Read agent_config/sigil invoices (invoices.v<venue id>.m<YYYY_MM> holds the time it was marked sent; the value -1 means that month was skipped on purpose, so do not remind for it). Skip any venue whose billStart (YYYY-MM) is later than the current month. From 2 days before the billing day until it is marked sent or skipped, include the venue in your run note under NEEDS YOU as "Send <venue> its invoice (<amount or per-night amounts>, due <date>)". Never send an invoice yourself.
 9. Never mark anything complete. Ahnna ticks items herself.
 
 OUTPUT: one line per run: renewals due soon, overdue items, people missing paperwork, venue check-ins and renewal reminders drafted, invoices due.`
@@ -8663,9 +8667,9 @@ function allNotes(){
   return out.sort((x,y)=>(y.createdAt||0)-(x.createdAt||0));
 }
 function remFold(id){const key='rem_'+id,n=remState().open.filter(x=>x.agent===id).length;
-  return '<details class="tm-fsec" data-k="'+key+'"'+(S.open[key]===true?' open':'')+'><summary class="tm-sec"><span class="tm-arr"></span>Remind me ('+n+' open)</summary>'+remBox(id)+'</details>';}
+  return '<details class="tm-fsec" data-k="'+key+'"'+(S.open[key]===true?' open':'')+'><summary class="tm-sec"><span class="tm-dgrip" style="cursor:default;opacity:.35" title="Stays in place">&#9679;</span><span class="tm-arr"></span>Remind me ('+n+' open)</summary>'+remBox(id)+'</details>';}
 function notesFold(id){const key='notes_'+id,L=allNotes().filter(n=>n.agent===id&&n.status==='pending').slice(0,5);
-  let h='<details class="tm-fsec" data-k="'+key+'"'+(S.open[key]===true?' open':'')+'><summary class="tm-sec"><span class="tm-arr"></span>Run notes ('+L.length+')</summary>';
+  let h='<details class="tm-fsec" data-k="'+key+'"'+(S.open[key]===true?' open':'')+'><summary class="tm-sec"><span class="tm-dgrip" style="cursor:default;opacity:.35" title="Stays in place">&#9679;</span><span class="tm-arr"></span>Run notes ('+L.length+')</summary>';
   if(!L.length)h+='<div class="tm-empty">No notes. After each run a short note shows up here.</div>';
   L.forEach(n=>{h+='<div class="tm-item"><div class="t2" style="white-space:pre-wrap;color:var(--text)">'+esc(n.body||'')+'</div><div class="tm-row"><span class="tm-tag">'+esc(fmtDay(n.createdAt))+'</span><button class="tm-b" data-act="notedone" data-id="'+esc(n.id)+'">Got it</button></div></div>';});
   return h+'</details>';}
@@ -9051,6 +9055,27 @@ function venueTimeline(v){
   const trend=(recent!=null&&prior!=null)?(recent>prior*1.15?'crowds growing':recent<prior*0.85?'crowds shrinking':'crowds steady'):'';
   return {events:ev,n30:n30.length,n90:n90.length,crowd:avg(n90.map(s=>s.crowdSize)),tips:avg(n90.map(s=>s.tipScale)),issues:n90.filter(s=>String(s.issues||'').trim()).length,trend:trend};
 }
+window.hqVenueAll=function(v){
+  try{if(S&&!S.started)start();}catch(e){}
+  try{
+    const nm=x=>String(x||'').toLowerCase().replace(/[^a-z0-9]/g,''),nv=nm(v.name);
+    const sec=(t,inner)=>'<details style="border-top:1px solid var(--border,#444);padding:.35rem 0"><summary style="cursor:pointer;font-size:.85rem;font-weight:600">'+t+'</summary><div style="padding:.4rem 0 .2rem;font-size:.8rem">'+inner+'</div></details>';
+    const none=t=>'<div style="opacity:.7">'+t+'</div>';
+    const care=(careVenues()||[]).find(c=>c.id==='hq_'+v.id)||null;
+    let out='';
+    out+=sec('Timeline (nights, check-ins, outreach, feedback)',timelineHtml(care||{id:'hq_'+v.id,name:v.name}));
+    const ag=agrState(),mine=ag.active.concat(ag.found).filter(x=>nm(x.venue)===nv);
+    out+=sec('Agreement and renewals ('+mine.length+')',mine.length?mine.map(x=>'<div style="margin:.2rem 0"><b>'+esc(TERM_LBL(x.termMonths||12))+'</b> &middot; signed '+esc(fmtEv(x.signedOn))+(x.endsOn?' &middot; ends '+esc(fmtEv(x.endsOn)):'')+' '+(x.status==='detected'?'<span class="tm-tag new">found in email, confirm on Sigil\'s desk</span>':agrTag(x))+(x.checkinAt?' &middot; check-in sent '+esc(fmtFull(x.checkinAt)):'')+(x.checkinOutcome?' &middot; outcome: '+esc(x.checkinOutcome):'')+'</div>').join('')+none('Manage these on Sigil\'s desk.'):none('No agreement tracked for this venue yet. Add one on Sigil\'s desk.'));
+    out+=sec('Check-ins and health',care?('<div>'+(care.lastCheckinAt?'Last check-in '+esc(fmtFull(care.lastCheckinAt)):'Never checked in')+'</div>'+(care.health?'<div>Health: '+esc(care.health)+'</div>':'')+(care.healthWhy?'<div>Why: '+esc(care.healthWhy)+'</div>':'')):none('Nothing logged yet.'));
+    out+=sec('Invoices',(v.payMethod?'<div>Paid by: '+esc(v.payMethod)+(v.billFreq==='gig'?' (per gig)':(v.billDay?', billed on day '+esc(v.billDay):', billed on the 1st'))+(v.billStart?', first invoice '+esc(invMonthLabel('m'+String(v.billStart).replace('-','_'))):'')+'</div>':'')+window.hqInvHistory(v.id));
+    const dr=(S.drafts||[]).filter(x=>(x.venueId===('hq_'+v.id)||x.venueId===v.id)&&x.status==='pending');
+    out+=sec('Drafts waiting ('+dr.length+')',dr.length?dr.map(x=>'<div style="margin:.2rem 0"><span class="tm-tag">'+esc(x.kind||'draft')+'</span> '+esc(x.label||'')+'</div>').join('')+none('Open them on the owner\'s desk in My Team.'):none('No drafts waiting.'));
+    const ci=((curatorState()||{}).ideas||[]).filter(x=>ideaVenues(x).some(y=>nm(y.name)===nv));
+    out+=sec('Ideas that fit this venue ('+ci.length+')',ci.length?ci.map(x=>'<div style="margin:.2rem 0"><b>'+esc(x.title)+'</b> <span class="tm-tag">'+esc(x.status||'new')+'</span></div>').join(''):none('No ideas name this venue yet.'));
+    out+=sec('Iris\'s dossier',researchHtml(v.name)||none('Not researched yet.'));
+    return '<details style="border:1px solid var(--border,#444);border-radius:8px;padding:.5rem .8rem;margin:.6rem 0"><summary style="cursor:pointer;font-weight:600">Everything about this venue</summary>'+out+'</details>';
+  }catch(e){return '<div style="font-size:.8rem;opacity:.7">Could not load the venue overview: '+esc(e&&e.message||e)+'</div>';}
+};
 function timelineHtml(v){
   const t=venueTimeline(v);
   const stat=(a,b)=>'<span class="tm-tag" style="margin-right:.4rem">'+esc(a)+': '+esc(b)+'</span>';
@@ -9156,24 +9181,43 @@ function sigilState(){
 const expandPatch=o=>{const r={};Object.keys(o).forEach(k=>{const p=k.split('.');let t=r;p.forEach((s,n)=>{if(n===p.length-1)t[s]=o[k];else t=t[s]=t[s]||{};});});return r;};
 async function sgSave(patch){const ref=col('agent_config').doc('sigil');try{await ref.update(patch);}catch(e){await ref.set(expandPatch(patch),{merge:true});}}
 function sgTag(x){if(x.days==null)return '<span class="tm-tag warn">set a date</span>';if(x.days<0)return '<span class="tm-tag lost">overdue '+(-x.days)+' days</span>';if(x.days<=30)return '<span class="tm-tag warn">due in '+x.days+' days</span>';return '<span class="tm-tag booked">'+x.days+' days</span>';}
+function invMonthLabel(k){const m=/^m(\d{4})_(\d{2})$/.exec(k||'');return m?new Date(+m[1],+m[2]-1,1).toLocaleDateString('en-US',{month:'long',year:'numeric'}):String(k||'');}
+const fmtFull=ms=>ms?new Date(ms).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'';
+function invoiceRows(){
+  const c=((S.cfg.sigil||{}).invoices)||{},out=[];
+  Object.keys(c).forEach(vk=>{if(vk[0]!=='v')return;const vid=vk.slice(1),mo=c[vk]||{};Object.keys(mo).forEach(k=>{const val=mo[k];if(val&&(val>0||val===-1))out.push({vid:vid,k:k,val:val});});});
+  const vs=(typeof venues!=='undefined'&&Array.isArray(venues)?venues:[]);
+  out.forEach(r=>{const v=vs.find(x=>x.id===r.vid);r.name=v?v.name:'(removed venue)';});
+  return out.sort((a,b)=>String(b.k).localeCompare(String(a.k))||String(a.name).localeCompare(String(b.name)));
+}
+window.hqInvHistory=function(id){
+  const rows=invoiceRows().filter(r=>r.vid===id);
+  if(!rows.length)return '<div style="opacity:.7">No invoices logged yet. They show here once Sigil\'s check is ticked.</div>';
+  return '<div style="font-weight:600;margin-bottom:.2rem">Invoice history</div>'+rows.map(r=>'<div>'+esc(invMonthLabel(r.k))+': '+(r.val===-1?'skipped':'sent '+esc(fmtFull(r.val)))+'</div>').join('')+'<div style="opacity:.65;margin-top:.2rem">Edit or delete these on Sigil\'s desk.</div>';
+};
 function invoiceState(){
   const c=((S.cfg.sigil||{}).invoices)||{},now=new Date(),today=isoDay(now.getTime()),ym=today.slice(0,7),y=now.getFullYear(),m=now.getMonth();
   const last=new Date(y,m+1,0).getDate(),k='m'+ym.replace('-','_');
   const vs=(typeof venues!=='undefined'&&Array.isArray(venues)?venues:[]).filter(v=>v&&v.name&&!v.inactive&&!v.noRecurring&&v.billFreq!=='gig'&&/invoice|quickbooks/i.test(v.payMethod||''));
   const all=vs.map(v=>{const day=v.billDay==='last'?last:Math.min(Math.max(+v.billDay||1,1),last);const due=ym+'-'+String(day).padStart(2,'0');
-    const days=Math.round((new Date(due+'T12:00:00').getTime()-new Date(today+'T12:00:00').getTime())/DAY);const sent=((c['v'+v.id])||{})[k]||0;
-    return {id:v.id,name:v.name,method:v.payMethod,amount:v.billAmount||'',note:v.billNote||'',nights:Object.entries(v.payAmounts||{}).filter(e=>e[1]).map(e=>e[0]+' '+e[1]).join(', '),due:due,days:days,sent:sent,k:k,ym:ym,remind:!sent&&days<=2};}).sort((a,b)=>a.days-b.days);
+    const days=Math.round((new Date(due+'T12:00:00').getTime()-new Date(today+'T12:00:00').getTime())/DAY);const raw=((c['v'+v.id])||{})[k]||0;const skipped=raw===-1,sent=raw>0?raw:0;const notYet=!!v.billStart&&v.billStart>ym;
+    return {id:v.id,name:v.name,method:v.payMethod,amount:v.billAmount||'',note:v.billNote||'',nights:Object.entries(v.payAmounts||{}).filter(e=>e[1]).map(e=>e[0]+' '+e[1]).join(', '),due:due,days:days,sent:sent,skipped:skipped,notYet:notYet,start:v.billStart||'',k:k,ym:ym,remind:!sent&&!skipped&&!notYet&&days<=2};}).sort((a,b)=>a.days-b.days);
   return {all:all,due:all.filter(x=>x.remind)};
 }
 function invoicesHtml(){
   const g=invoiceState();
-  let h='<div class="tm-sec">Invoices to send ('+g.due.length+' due)</div><div class="tm-hint">Venues that pay by invoice (set "Paid by" and the billing day on the venue, in the Venues tab). Sigil reminds you 2 days before the billing day. Venues set to Per gig are left out, since they have no billing day. Tick the check when the invoice is sent. Cash and other payment types are in each venue\'s info.</div>';
+  let h='<div class="tm-sec">Invoices to send ('+g.due.length+' due)</div><div class="tm-hint">Venues that pay by invoice (set "Paid by", the billing day and the first invoice month on the venue, in the Venues tab). Sigil reminds you 2 days before the billing day. Venues set to Per gig are left out, since they have no billing day. Tick the check when the invoice is sent, or skip this month if no invoice applies. Cash and other payment types are in each venue\'s info.</div>';
   if(!g.all.length)h+='<div class="tm-empty">No venues are set to pay by invoice yet. Set "Paid by" to QuickBooks invoice on a venue.</div>';
   g.all.forEach(x=>{
-    const tag=x.sent?'<span class="tm-tag booked">sent '+esc(fmtDay(x.sent))+'</span>':(x.days<0?'<span class="tm-tag lost">overdue '+(-x.days)+' day'+(x.days===-1?'':'s')+'</span>':x.days<=2?'<span class="tm-tag warn">'+(x.days===0?'send today':'send '+(x.days===1?'tomorrow':'in 2 days'))+'</span>':'<span class="tm-tag">due '+esc(fmtEv(x.due))+'</span>');
+    const tag=x.sent?'<span class="tm-tag booked">sent '+esc(fmtDay(x.sent))+'</span>':x.skipped?'<span class="tm-tag">skipped this month</span>':x.notYet?'<span class="tm-tag">starts '+esc(invMonthLabel('m'+x.start.replace('-','_')))+'</span>':(x.days<0?'<span class="tm-tag lost">overdue '+(-x.days)+' day'+(x.days===-1?'':'s')+'</span>':x.days<=2?'<span class="tm-tag warn">'+(x.days===0?'send today':'send '+(x.days===1?'tomorrow':'in 2 days'))+'</span>':'<span class="tm-tag">due '+esc(fmtEv(x.due))+'</span>');
     h+='<div class="tm-item"><div class="t1"><b>'+esc(x.name)+'</b> '+tag+'</div><div class="t2">'+esc(x.method)+' &middot; bills '+esc(fmtEv(x.due))+(x.amount?' &middot; '+esc(x.amount):(x.nights?' &middot; per night: '+esc(x.nights):''))+(x.note?' &middot; '+esc(x.note):'')+'</div>'+
-      '<div class="tm-row">'+(x.sent?'<button class="tm-b dim" data-act="invundo" data-id="'+esc(x.id)+'">Undo</button>':'<button class="tm-b pri" data-act="invsent" data-id="'+esc(x.id)+'" title="Mark this month\'s invoice as sent" aria-label="Mark invoice sent">&#10003;</button>')+'<button class="tm-b" data-act="invcopy" data-id="'+esc(x.id)+'">Copy details</button></div></div>';
+      '<div class="tm-row">'+((x.sent||x.skipped)?'<button class="tm-b dim" data-act="invundo" data-id="'+esc(x.id)+'">Undo</button>':(x.notYet?'':'<button class="tm-b pri" data-act="invsent" data-id="'+esc(x.id)+'" title="Mark this month\'s invoice as sent" aria-label="Mark invoice sent">&#10003;</button><button class="tm-b dim" data-act="invskip" data-id="'+esc(x.id)+'" title="No invoice this month. Stops the overdue reminder">Skip this month</button>'))+'<button class="tm-b" data-act="invcopy" data-id="'+esc(x.id)+'">Copy details</button></div></div>';
   });
+  const rows=invoiceRows();
+  const vs=(typeof venues!=='undefined'&&Array.isArray(venues)?venues:[]).filter(v=>v&&v.name&&!v.inactive).sort((a,b)=>String(a.name).localeCompare(String(b.name)));
+  let hh=rows.length?rows.map(r=>'<div class="t2" style="display:flex;gap:.4rem;flex-wrap:wrap;align-items:center"><b style="min-width:9rem">'+esc(r.name)+'</b><span>'+esc(invMonthLabel(r.k))+'</span>'+(r.val===-1?'<span class="tm-tag">skipped</span>':'<input type="date" class="tm-in s" data-invd="'+esc(r.vid)+'|'+esc(r.k)+'" value="'+esc(isoDay(r.val))+'"><button class="tm-b" data-act="invedit" data-id="'+esc(r.vid)+'" data-k="'+esc(r.k)+'">Save date</button>')+'<button class="tm-b dim" data-act="invdel" data-id="'+esc(r.vid)+'" data-k="'+esc(r.k)+'">Delete</button></div>').join(''):'<div class="tm-empty">No invoices logged yet.</div>';
+  hh+='<div class="t2" style="margin-top:.6rem"><b>Add a past invoice</b></div><div class="tm-row"><select class="tm-sel" id="inv-add-v">'+vs.map(v=>'<option value="'+esc(v.id)+'">'+esc(v.name)+'</option>').join('')+'</select><input type="month" class="tm-in s" id="inv-add-m"><input type="date" class="tm-in s" id="inv-add-d" title="Date it was sent"><button class="tm-b pri" data-act="invadd">Add</button></div>';
+  h+=det('invhist','Invoice history ('+rows.length+')',hh,false);
   return h;
 }
 function careHtml(){
@@ -9711,7 +9755,7 @@ function renderProspects(){
 }
 ['input','change'].forEach(ev=>document.addEventListener(ev,function(e){const bx=e.target&&e.target.closest&&e.target.closest('.offers-box');if(!bx)return;bx.dataset.dirty='1';if(ev==='change'&&bx.dataset.ctx==='pr')obSave(bx,true);}));
 function obSaveCtx(ctx){const bx=document.querySelector('.offers-box[data-ctx="'+ctx+'"]');return(bx&&bx.dataset.dirty)?obSave(bx,true):Promise.resolve();}
-function refreshOffers(){[['vmOffers','vm'],['leadOffers','ld']].forEach(p=>{const o=document.getElementById(p[0]),bx=o&&o.querySelector('.offers-box');if(bx&&!bx.dataset.dirty)o.innerHTML=offersBlock(bx.dataset.id,bx.dataset.name,p[1]);});}
+function refreshOffers(){try{const a=document.getElementById('vmAll');if(a&&a.dataset.vid&&!a.querySelector('details[open]')){const vv=(typeof venues!=='undefined'?venues:[]).find(x=>x.id===a.dataset.vid);if(vv)a.innerHTML=hqVenueAll(vv);}}catch(e){}[['vmOffers','vm'],['leadOffers','ld']].forEach(p=>{const o=document.getElementById(p[0]),bx=o&&o.querySelector('.offers-box');if(bx&&!bx.dataset.dirty)o.innerHTML=offersBlock(bx.dataset.id,bx.dataset.name,p[1]);});}
 window.obSaveCtx=obSaveCtx;
 window.offersBlock=offersBlock;window.obSave=obSave;window.renderProspects=renderProspects;window.PR=PR;window.addProspect=addProspect;
 document.addEventListener('toggle',e=>{const d=e.target;if(d&&d.dataset&&d.dataset.pk){S.open['pr_'+d.dataset.pk]=d.open;}},true);
@@ -10356,6 +10400,10 @@ const A={
     toast('Draft is waiting in Needs you.');
   },
   async invsent(t){const g=invoiceState().all.find(x=>x.id===t.dataset.id);if(!g)return;await sgSave({['invoices.v'+g.id+'.'+g.k]:Date.now()});toast('Marked sent for '+g.name+'.',false);},
+  async invskip(t){const g=invoiceState().all.find(x=>x.id===t.dataset.id);if(!g)return;await sgSave({['invoices.v'+g.id+'.'+g.k]:-1});toast('Skipped this month for '+g.name+'.',false);},
+  async invedit(t){const inp=document.querySelector('[data-invd="'+t.dataset.id+'|'+t.dataset.k+'"]');if(!inp||!inp.value){toast('Pick a date first.',true);return;}const ts=new Date(inp.value+'T12:00:00').getTime();await sgSave({['invoices.v'+t.dataset.id+'.'+t.dataset.k]:ts});toast('Date saved.',false);},
+  async invdel(t){if(!confirm('Delete this invoice record?'))return;await sgSave({['invoices.v'+t.dataset.id+'.'+t.dataset.k]:0});toast('Deleted.',false);},
+  async invadd(t){const v=($('#inv-add-v')||{}).value,m=($('#inv-add-m')||{}).value,d=($('#inv-add-d')||{}).value;if(!v||!m){toast('Pick a venue and a month.',true);return;}const ts=d?new Date(d+'T12:00:00').getTime():new Date(m+'-01T12:00:00').getTime();await sgSave({['invoices.v'+v+'.m'+m.replace('-','_')]:ts});toast('Added.',false);},
   async invundo(t){const g=invoiceState().all.find(x=>x.id===t.dataset.id);if(!g)return;await sgSave({['invoices.v'+g.id+'.'+g.k]:0});toast('Undone.',false);},
   async invcopy(t){const g=invoiceState().all.find(x=>x.id===t.dataset.id);if(!g)return;const mo=new Date(g.due+'T12:00:00').toLocaleDateString('en-US',{month:'long',year:'numeric'});toast(await copy('Invoice for '+g.name+', '+mo+'\nPayment: '+g.method+'\nBilling date: '+fmtEv(g.due)+'\n'+(g.amount?'Amount: '+g.amount+'\n':(g.nights?'Per night: '+g.nights+'\n':''))+(g.note?'Notes: '+g.note+'\n':''))?'Copied.':'Copy failed.',false);},
   async carecheckin(t){
