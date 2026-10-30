@@ -1213,7 +1213,7 @@ html::-webkit-scrollbar-thumb:hover,.modal::-webkit-scrollbar-thumb:hover{backgr
           <option value="active">Working, no agreement</option>
           <option value="signed">Signed (now a venue)</option>
           <option value="paused">Paused</option>
-          <option value="transferred">Transferred (archive)</option>
+          <option value="transferred">Transferred / already a venue (archive)</option>
         </select>
         <button class="btn-sm btn-gold" onclick="openLeadModal()">+ Add Lead</button>
       </div>
@@ -1223,6 +1223,18 @@ html::-webkit-scrollbar-thumb:hover,.modal::-webkit-scrollbar-thumb:hover{backgr
   </div>
   <div class="subpanel" id="sub-venues-prospects">
     <div class="section-header"><div class="section-title">Prospects</div></div>
+    <details style="border:1px solid var(--border,#444);border-radius:10px;padding:.6rem .8rem;margin-bottom:.8rem"><summary style="cursor:pointer;font-weight:600">+ Add a prospect</summary>
+      <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.6rem">
+        <input class="form-input" id="pa-name" placeholder="Venue name" style="flex:2;min-width:180px">
+        <input class="form-input" id="pa-city" placeholder="City" style="flex:1;min-width:120px">
+        <input class="form-input" id="pa-addr" placeholder="Address" style="flex:2;min-width:180px">
+        <input class="form-input" id="pa-who" placeholder="Contact name" style="flex:1;min-width:140px">
+        <input class="form-input" id="pa-email" placeholder="Email or phone" style="flex:1;min-width:160px">
+        <input class="form-input" id="pa-why" placeholder="Why them (optional)" style="flex:2;min-width:200px">
+        <input class="form-input" id="pa-pitch" placeholder="Pitch or idea to open with (optional)" style="flex:2;min-width:200px">
+      </div>
+      <div style="display:flex;gap:.8rem;flex-wrap:wrap;align-items:center;margin-top:.6rem"><label style="font-size:.85rem;display:inline-flex;gap:.3rem;align-items:center"><input type="checkbox" id="pa-sent"> I already sent them a cold email</label><label style="font-size:.85rem">on <input type="date" class="form-input" id="pa-date" style="width:auto;display:inline-block"></label><button type="button" class="btn-sm btn-gold" onclick="addProspect()">Add to Prospects</button></div>
+    </details>
     <div id="prospectsBody"></div>
   </div>
 
@@ -4747,8 +4759,9 @@ function renderLeads(){
   if(!el)return;
   const stageF=document.getElementById('leadStageFilter').value;
   let shown=leads.filter(l=>{
-    if(stageF)return (l.stage||'new')===stageF;
-    return (l.stage||'new')!=='transferred'; // transferred leads live in Our Venues now
+    if(stageF==='transferred')return l.stage==='transferred'||!!venueForLead(l);
+    if(stageF)return (l.stage||'new')===stageF&&!venueForLead(l);
+    return (l.stage||'new')!=='transferred'&&!venueForLead(l); // anything already in Our Venues is hidden here
   });
   const sortBy=document.getElementById('leadSortBy').value;
   const stageOrder=LEAD_STAGES.map(s=>s.key);
@@ -6093,7 +6106,7 @@ function renderVenueManage(){
     // each with a dropdown that changes the PERMANENT host (a one-off fill-in is done from the
     // This Week dashboard or the Planner). Venues with no Planner night keep the old default host.
     const hostLine=v.host?`<div style="font-size:0.68rem;color:var(--gold);margin-top:0.4rem;">Default host: ${esc(v.host)}</div>`:'';
-    return `<div class="venue-manage-card"${v.inactive?' style="opacity:0.55;"':(v.noRecurring?' style="opacity:0.8;"':'')}><div class="venue-manage-header"><div class="venue-manage-name">${v.name}${v.inactive?' <span style="font-size:0.62rem;color:var(--text4);font-weight:400;text-transform:uppercase;letter-spacing:0.08em;">· Inactive</span>':(v.noRecurring?' <span style="font-size:0.62rem;color:var(--text3);font-weight:400;text-transform:uppercase;letter-spacing:0.08em;">· No recurring gig</span>':'')}${v.locationId?` <span style="font-size:0.65rem;color:var(--text3);font-weight:400;">· ${locationLabel(v.locationId)}</span>`:''}</div><div style="display:flex;gap:0.4rem;align-items:center;"><button class="btn-sm modal-history-btn" style="padding:0.3rem 0.6rem;font-size:0.6rem;" onclick="openVenueHistoryModal('${v.id}')">History</button><button class="action-btn edit" onclick="openVenueModal('${v.id}')">✎</button><button class="action-btn delete" onclick="deleteVenue('${v.id}')">✕</button></div></div><div class="venue-gig-tags">${(v.gigs||[]).map(g=>`<span class="venue-gig-tag ${gigClass(g)}">${g}</span>`).join('')}</div>${v.venueId?`<div style="font-size:0.6rem;color:var(--text4);margin-top:0.3rem;">Venue ID: ${esc(v.venueId)}</div>`:''}${payLine}${slotsLine}${hostLine}${window.hqAgr?window.hqAgr(v):''}${v.notes?`<div style="font-size:0.81rem;color:var(--text3);margin-top:0.5rem;">${v.notes}</div>`:''}</div>`;
+    return `<div class="venue-manage-card"${v.inactive?' style="opacity:0.55;"':(v.noRecurring?' style="opacity:0.8;"':'')}><div class="venue-manage-header"><div class="venue-manage-name">${v.name}${v.inactive?' <span style="font-size:0.62rem;color:var(--text4);font-weight:400;text-transform:uppercase;letter-spacing:0.08em;">· Inactive</span>':(v.noRecurring?' <span style="font-size:0.62rem;color:var(--text3);font-weight:400;text-transform:uppercase;letter-spacing:0.08em;">· No recurring gig</span>':'')}${v.locationId?` <span style="font-size:0.65rem;color:var(--text3);font-weight:400;">· ${locationLabel(v.locationId)}</span>`:''}</div><div style="display:flex;gap:0.4rem;align-items:center;"><button class="btn-sm modal-history-btn" style="padding:0.3rem 0.6rem;font-size:0.6rem;" onclick="openVenueHistoryModal('${v.id}')">History</button><button class="action-btn edit" onclick="openVenueModal('${v.id}')">✎</button><button class="action-btn delete" onclick="deleteVenue('${v.id}')">✕</button></div></div><div class="venue-gig-tags">${(v.gigs||[]).map(g=>`<span class="venue-gig-tag ${gigClass(g)}">${g}</span>`).join('')}</div>${v.venueId?`<div style="font-size:0.6rem;color:var(--text4);margin-top:0.3rem;">Venue ID: ${esc(v.venueId)}</div>`:''}${payLine}${slotsLine}${hostLine}${window.hqBadges?window.hqBadges(v):''}${window.hqAgr?window.hqAgr(v):''}${v.notes?`<div style="font-size:0.81rem;color:var(--text3);margin-top:0.5rem;">${v.notes}</div>`:''}</div>`;
   }).join('');
 }
 const VENUE_GIG_SLOT_DAYS=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
@@ -8412,6 +8425,7 @@ function render(){
   }).join('');
   renderBrief();renderTasks();
   try{if(document.getElementById('sub-venues-prospects').classList.contains('active'))renderProspects();}catch(e){}
+  try{const sg=window.hqBadgeSig();if(sg!==window._bdSig){const first=window._bdSig===undefined;window._bdSig=sg;if(!first&&typeof renderVenueManage==='function')renderVenueManage();}}catch(e){}
   const n=$('#tmNeed');n.innerHTML='<b>'+total+'</b> need you';n.className='tm-need'+(total?'':' zero');
   const b=$('#tmBanner');
   b.innerHTML=S.err?'<div class="tm-banner">Could not read the agent data: '+esc(S.err)+'. If this says permission denied, add the five <b>agent_</b> collections to your Firestore rules (see "How the agents plug in" below).</div>':'';
@@ -9399,6 +9413,21 @@ function obSave(b){
   const g=i=>{const e=document.getElementById(i);return e?e.value.trim():'';};
   cuSave({['profiles.'+pfKey(id)]:{name:b.dataset.name||'',tags:tags,capacity:g('ob-cap-'+x),notes:g('ob-note-'+x)}}).then(()=>toast('Saved. Iris and every profile show this now.')).catch(e=>toast('Could not save: '+(e&&e.message||e),true));
 }
+function prospectExists(name){const n=blNorm(name);return !!n&&(S.venues||[]).some(v=>blNorm(v.name)===n);}
+async function addProspectDoc(o){
+  if(!o.name||!String(o.name).trim()){toast('Type a name first.',true);return false;}
+  if(prospectExists(o.name)){toast(o.name+' is already a prospect.',true);return false;}
+  const sent=!!o.emailed;
+  const doc={name:String(o.name).trim(),city:o.city||'',address:o.address||'',contact:o.contact||'',contactName:o.contactName||'',evidence:o.evidence||'',pitch:o.pitch||'',stage:sent?'cold':'target',createdAt:Date.now(),addedBy:'manual'};
+  if(sent){doc.emailedAt=o.emailedAt||Date.now();}
+  await col('agent_venues').add(doc);toast('Added to Prospects.');return true;
+}
+async function addProspect(){
+  const g=i=>{const e=document.getElementById(i);return e?e.value.trim():'';};
+  const d=g('pa-date');
+  const ok=await addProspectDoc({name:g('pa-name'),city:g('pa-city'),address:g('pa-addr'),contact:g('pa-email'),contactName:g('pa-who'),evidence:g('pa-why'),pitch:g('pa-pitch'),emailed:document.getElementById('pa-sent').checked,emailedAt:d?new Date(d+'T12:00:00').getTime():0});
+  if(ok){['pa-name','pa-city','pa-addr','pa-email','pa-who','pa-why','pa-pitch','pa-date'].forEach(i=>{const e=document.getElementById(i);if(e)e.value='';});document.getElementById('pa-sent').checked=false;}
+}
 const PR={q:'',stage:'',city:''};
 function renderProspects(){
   const el=document.getElementById('prospectsBody');if(!el)return;
@@ -9422,7 +9451,7 @@ function renderProspects(){
   el.innerHTML=h;
   if(keep==='prQ'){const i=document.getElementById('prQ');if(i){i.focus();const n=i.value.length;i.setSelectionRange(n,n);}}
 }
-window.offersBlock=offersBlock;window.obSave=obSave;window.renderProspects=renderProspects;window.PR=PR;
+window.offersBlock=offersBlock;window.obSave=obSave;window.renderProspects=renderProspects;window.PR=PR;window.addProspect=addProspect;
 document.addEventListener('toggle',e=>{const d=e.target;if(d&&d.dataset&&d.dataset.pk){S.open['pr_'+d.dataset.pk]=d.open;}},true);
 function curatorState(){
   const c=S.cfg.curator||{};
@@ -9437,7 +9466,7 @@ function ideaCard(x){
   const st=x.status||'new',tg={new:'new',liked:'booked',pursuing:'quoted',made:'booked',skipped:'lost'}[st]||'new';
   const b=(a,v,l,c)=>'<button class="tm-b'+(c?' '+c:'')+'" data-act="'+a+'" data-id="'+esc(x.id)+'"'+(v?' data-v="'+v+'"':'')+'>'+l+'</button>';
   return '<div class="tm-item"><div class="t1"><span class="tm-tag '+tg+'">'+esc(st)+'</span><span class="tm-tag">'+esc(x.kind||'Idea')+'</span><b>'+esc(x.title)+'</b></div><div class="t2">'+esc(x.pitch||'')+'</div>'+
-    (function(){const L=ideaVenues(x);if(!L.length)return '';const row=v=>'<div class="t2">&bull; <b>'+esc(v.name)+'</b>'+(IV_TAG[v.kind]?' <span class="tm-tag'+(v.kind==='have'?' booked':v.kind==='want'?' quoted':' new')+'">'+IV_TAG[v.kind]+'</span>':'')+(v.why?' '+esc(v.why):'')+'</div>';const bt=L.filter(v=>v.best),rest=L.filter(v=>!v.best);return (bt.length?'<div class="t2"><b>Best at ('+bt.length+'):</b></div>'+bt.map(row).join(''):'')+(rest.length?'<div class="t2"><b>'+(bt.length?'Also a good fit':'Pitch to')+' ('+rest.length+'):</b></div>'+rest.map(row).join(''):'');})()+
+    (function(){const L=ideaVenues(x);if(!L.length)return '';const row=v=>'<div class="t2">&bull; <b>'+esc(v.name)+'</b>'+(IV_TAG[v.kind]?' <span class="tm-tag'+(v.kind==='have'?' booked':v.kind==='want'?' quoted':' new')+'">'+IV_TAG[v.kind]+'</span>':'')+(v.why?' '+esc(v.why):'')+(v.kind!=='have'&&!prospectExists(v.name)?' <button class="tm-b dim" data-act="addprospect" data-name="'+esc(v.name)+'" data-why="'+esc(v.why||'')+'">Add to prospects</button>':'')+'</div>';const bt=L.filter(v=>v.best),rest=L.filter(v=>!v.best);return (bt.length?'<div class="t2"><b>Best at ('+bt.length+'):</b></div>'+bt.map(row).join(''):'')+(rest.length?'<div class="t2"><b>'+(bt.length?'Also a good fit':'Pitch to')+' ('+rest.length+'):</b></div>'+rest.map(row).join(''):'');})()+
     ([].concat(x.uses||[]).length?'<div class="t2"><b>Uses what we have:</b> '+[].concat(x.uses).map(esc).join(', ')+'</div>':'')+
     (x.missing?'<div class="t2"><span class="tm-tag warn">only missing</span> '+esc(x.missing)+'</div>':'')+
     (x.when?'<div class="t2"><b>When:</b> '+esc(x.when)+'</div>':'')+
@@ -9470,6 +9499,7 @@ function dossierCard(d){
     (L(d.ideas).length?'<div class="t2"><b>What we could do there:</b></div>'+L(d.ideas).map((x,i)=>'<div class="t2">&bull; '+esc(x)+' <button class="tm-b dim" data-act="dossidea" data-id="'+esc(d.id)+'" data-i="'+i+'">Save as idea</button></div>').join(''):'')+
     sec('Bait for the pitch (Raven and Quill use this)',d.bait)+sec('Watch out for',d.watch)+
     (L(d.sources).length?'<div class="t2">'+L(d.sources).filter(u=>safeUrl(u)).slice(0,6).map((u,i)=>'<a href="'+esc(safeUrl(u))+'" target="_blank" rel="noopener">source '+(i+1)+'</a>').join(' &middot; ')+'</div>':'')+
+    (d.kind!=='have'&&!prospectExists(d.name)?'<div class="tm-row"><button class="tm-b" data-act="addprospect" data-name="'+esc(d.name)+'" data-why="'+esc(d.summary||'')+'" data-pitch="'+esc(d.bait||'')+'" data-city="'+esc(d.city||'')+'">Add to prospects</button></div>':'')+
     '<div class="t2">Researched '+esc(fmtDay(d.researchedAt))+'</div></div>';
 }
 
@@ -9771,6 +9801,23 @@ function vhLog(name,text,date){
   }catch(e){console.warn('vhLog',e&&e.message);}
 }
 function agrVenueOf(id){const a=((S.cfg.sigil||{}).agreements||{})[id];return a&&a.venue;}
+window.hqBadgeSig=function(){try{return (venues||[]).map(v=>window.hqBadges(v)).join('|');}catch(e){return '';}};
+window.hqBadges=function(v){
+  const n=vnorm(v.name),a=agrState().active.find(x=>vnorm(x.venue)===n);
+  const l=Object.assign({},(typeof leadForVenue==='function'?leadForVenue(v):null)||{},v.leadInfo||{});
+  const bd=(t,c,tip)=>'<span class="acct-status-badge" title="'+esc(tip||'')+'" style="border-color:'+c+';color:'+c+';margin-right:.35rem;">'+t+'</span>';
+  let b='';
+  if(a){
+    const m={checkin:['2-month check-in due','#d9a441'],reply:['Waiting on their reply','#d9a441'],talk:['Talk to them first','#d9534f'],renew:['Renewal coming up','#d9a441'],renewwait:['Renewal coming up','#d9a441']}[a.phase];
+    if(a.days<0&&a.phase!=='checkin')b=bd('Agreement ended','#d9534f','Ended '+a.endsOn);
+    else if(m)b=bd(m[0],m[1],'Ends '+a.endsOn);
+    else b=bd('Signed','#3aaa6a',a.days+' days left');
+  }else if(v.noAgreement||(l.signedStage==='active'))b=bd('No agreement','#5aa7c9','Working with us, nothing signed');
+  else if(l.signedStage==='signed')b=bd('Signed','#3aaa6a','');
+  const info=[l.city,l.contactName,l.phone,l.email].filter(Boolean).map(esc).join(' &middot; ');
+  if(!b&&!info)return '';
+  return '<div style="margin-top:.4rem">'+b+'</div>'+(info?'<div style="font-size:0.68rem;color:var(--text3);margin-top:.3rem;">'+info+'</div>':'');
+};
 window.hqAgr=function(v){
   const c=(S.cfg.sigil||{}).agreements||{},n=vnorm(v.name);
   const mine=Object.entries(c).filter(([k,a])=>a&&vnorm(a.venue)===n).map(([k,a])=>Object.assign({id:k},a));
@@ -10043,6 +10090,7 @@ const A={
   async agrnote(t){const x=agrState().active.find(a=>a.id===t.dataset.id);if(!x)return;await col('agent_drafts').add({leadId:null,agent:'vesper',kind:'paperwork',body:agrNote(x),label:'Renewal: '+x.venue,status:'pending',createdAt:Date.now()});toast('Draft is in Waiting to approve.');},
   async agrend(t){if(!confirm('Mark this venue as gone?'))return;const vn=agrVenueOf(t.dataset.id);await sgSave({['agreements.'+t.dataset.id+'.status']:'ended'});vhLog(vn,'Agreement ended: venue left');},
   async agrdel(t){if(!confirm('Remove this?'))return;await sgSave({['agreements.'+t.dataset.id]:null});},
+  async addprospect(t){await addProspectDoc({name:t.dataset.name,city:t.dataset.city||'',evidence:t.dataset.why||'',pitch:t.dataset.pitch||''});},
   async dossidea(t){const d=researchState().done.find(x=>x.id===t.dataset.id);if(!d)return;const a=[].concat(d.ideas||[])[+t.dataset.i];if(!a)return;await cuSave({['ideas.i'+Date.now().toString(36)]:{title:d.name+': '+String(a).slice(0,60),kind:'Venue pitch',pitch:a,venues:[d.name],status:'new',source:'research',createdAt:Date.now()}});toast('Saved to Ideas.');},
   async ideaset(t){const v=t.dataset.v;await cuSave({['ideas.'+t.dataset.id+'.status']:v,['ideas.'+t.dataset.id+'.updatedAt']:Date.now()});},
   async ideadel(t){if(!confirm('Remove this idea?'))return;await cuSave({['ideas.'+t.dataset.id]:null});},
