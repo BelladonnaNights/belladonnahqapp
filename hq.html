@@ -7002,6 +7002,7 @@ HARD RULES
 - Never invent prices, dates, availability or facts. If something is missing, say exactly what is missing.
 - Never log into a gig site or any account with a bot. Work only from emails, HQ data and public web pages.
 - Voice: gothic and regal but warm, confident, blunt, brief. No filler, no hedging.
+- LAST STEP OF EVERY RUN, even a quiet one or one that was blocked: addDraft {agent: your lowercase name, kind:"note", label:"Run note", body}. Body line 1: one plain sentence of what you did or what blocked you. If you need something from Ahnna add "NEEDS YOU:" then one "- " line per ask saying exactly what to do and where. HQ shows it on your desk and on the Gazette.
 `;
 const INFO={
 raven:{
@@ -7301,7 +7302,11 @@ YOUR JOB: make sure Belladonna is found everywhere people look, set up completel
 
 RULES: never log in to a site. Never buy or fake reviews. Never keyword-stuff. Keep name, address, phone and hours identical everywhere. Only claim what is true.
 
-OUTPUT: one line per run: fixes written, review requests drafted, replies drafted, listings flagged.`
+7. PAGE TEXT. If a public page cannot be fetched, do not stop. agent_config mirror has snapshot{text,at} (pasted text of belladonnanights.com) and each agent_sites doc may have snapshot and snapshotAt (pasted text of that listing). Audit from those. If one you need is missing or older than 60 days, put it in NEEDS YOU in your run note. If profileRefreshed is missing, ask for it there too.
+
+8. WORDING AND NEW PLACES: write the best wording for the business description, headline, services and calls to action on each site (kind "seo", exact text). Recommend up to 3 new listings or directories that would bring bookings, each as kind "seo" labelled "New listing: NAME".
+
+OUTPUT: one line per run: fixes written, review requests drafted, replies drafted, listings flagged. Then the run note.`
 },
 coach:{
  one:'Recruits and onboards hosts, tracks callouts, and coaches the roster.',
@@ -7462,7 +7467,7 @@ const HUDDLE={id:'huddle',name:'Ask the Team',role:'Show them something, get eve
 const DAY=864e5, STALE=90*DAY, CARE=90*DAY;
 const PRESENCE=['Website (belladonnanights.com)','Google Business Profile','Bing Places','Apple Business Connect','Yelp','Facebook Page','Instagram','Nextdoor'];
 const DEFAULT_SITES=['GigSalad','Thumbtack','The Bash','Eventective','GigMasters'];
-const S={mchk:{},bchk:{},hz:{range:'tonight',from:'',to:'',time:'15:00'},leads:[],drafts:[],sites:[],venues:[],cfg:{},err:null,cur:null,started:false,pend:false,open:{},rtab:'outreach',logFor:null,tripCity:'',view:'work'};
+const S={mchk:{},bchk:{},hz:{range:'tonight',from:'',to:'',time:'15:00'},leads:[],drafts:[],notes:[],sites:[],venues:[],cfg:{},err:null,cur:null,started:false,pend:false,open:{},rtab:'outreach',logFor:null,tripCity:'',view:'work'};
 const $=(s,r)=>(r||document).querySelector(s);
 const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 const safeUrl=u=>/^https?:\/\//i.test(String(u||'').trim())?String(u).trim():'';
@@ -7678,7 +7683,7 @@ function start(){
   const onErr=e=>{S.err=(e&&(e.code||e.message))||String(e);render();};
   const list=(name,key)=>d.collection(name).onSnapshot(s=>{S[key]=s.docs.map(x=>Object.assign({id:x.id},x.data()));S.err=null;render();},onErr);
   list('agent_leads','leads');
-  list('agent_drafts','drafts');
+  d.collection('agent_drafts').onSnapshot(sn=>{const all=sn.docs.map(x=>Object.assign({id:x.id},x.data()));S.drafts=all.filter(x=>x.kind!=='note');S.notes=all.filter(x=>x.kind==='note').sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));S.err=null;render();},onErr);
   list('agent_sites','sites');
   list('agent_venues','venues');
   try{d.collection('socialPosts').where('date','>=',isoDay(Date.now()-DAY)).onSnapshot(s=>{S.posts=s.docs.map(x=>Object.assign({id:x.id},x.data()));render();},e=>{S.posts=null;});}catch(e){S.posts=null;}
@@ -7782,6 +7787,10 @@ function briefData(){
   add('vesper',d.vlDue.length,plural(d.vlDue.length,'venue lead needs','venue leads need')+' a follow-up',d.vlDue.slice(0,4).map(l=>l.name+' ('+l.why+')').join('; ')+(d.vlDue.length>4?'; and '+(d.vlDue.length-4)+' more':'')+'. They are in your Leads tab.');
   add('mirror',d.mPending.length,plural(d.mPending.length,'review reply','review replies')+' to approve',d.mPending.map(x=>cut(x.label,60)).join('; ')+'.');
   add('mirror',d.stale.length,plural(d.stale.length,'profile is','profiles are')+' stale',d.stale.slice(0,6).map(x=>x.name+(x.profileRefreshed?' ('+ago(x.profileRefreshed)+')':' (never refreshed)')).join('; ')+'. Open Mirror for what to change on each.');
+  (S.notes||[]).filter(n=>n.status==='pending'&&/NEEDS YOU:/i.test(n.body||'')).forEach(n=>{
+    const m=String(n.body).split(/NEEDS YOU:/i)[1]||'',ls=m.split('\n').map(x=>x.replace(/^\s*[-*\u2022]\s*/,'').trim()).filter(Boolean);
+    ls.forEach(l=>need.push({a:n.agent,text:l,body:agent(n.agent)?agent(n.agent).name+' left this in her run note '+ago(n.createdAt)+'.':'',note:n.id}));
+  });
   const RM=remState();
   RM.due.forEach(r=>need.push({a:r.agent,rem:true,rid:r.id,text:'Reminder: '+r.text,body:(r.date?(r.date<isoDay(now)?'Was due '+fmtEv(r.date)+'. ':r.date===isoDay(now)?'Due today. ':''):'')+'You asked '+(agent(r.agent)?agent(r.agent).name:'a desk')+' to remind you.'}));
   const hsh=s=>{let h=5381;for(let k=0;k<s.length;k++)h=((h<<5)+h+s.charCodeAt(k))|0;return Math.abs(h).toString(36);};
@@ -7833,7 +7842,7 @@ function renderBrief(){
   const d0=new Date(),dt=d0.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
   const doy=Math.floor((d0-new Date(d0.getFullYear(),0,0))/DAY);
   const sec=t=>'<div class="np-sec">'+esc(t)+'</div>';
-  const art=n=>'<label class="np-item"><input type="checkbox" data-chg="bchk" data-key="'+esc(n.key)+'"'+(S.bchk[n.key]?' checked':'')+'><span><span class="np-hd">'+esc(n.text)+'</span>'+(n.body?'<span class="np-body">'+esc(n.body)+'</span>':'')+'<span class="np-by">'+esc(BY[n.a]||agent(n.a).name)+(n.rem?' &middot; your reminder':'')+' &middot; <a href="#" data-act="open" data-agent="'+esc(n.a)+'">open desk</a>'+(n.ig?' &middot; <a href="'+esc(n.ig)+'" target="_blank" rel="noopener">open Instagram</a>':'')+(n.mail?' &middot; <a href="'+esc(gmailHref(n.mail))+'" target="_blank" rel="noopener"'+(n.mail.to?'':' title="No email address on file for this venue. Add one in the To box."')+'>open email'+(n.mail.to?'':' (add address)')+'</a>':'')+'</span></span></label>';
+  const art=n=>'<label class="np-item"><input type="checkbox" data-chg="bchk" data-key="'+esc(n.key)+'"'+(S.bchk[n.key]?' checked':'')+'><span><span class="np-hd">'+esc(n.text)+'</span>'+(n.body?'<span class="np-body">'+esc(n.body)+'</span>':'')+'<span class="np-by">'+esc(BY[n.a]||agent(n.a).name)+(n.rem?' &middot; your reminder':'')+' &middot; <a href="#" data-act="open" data-agent="'+esc(n.a)+'">open desk</a>'+(n.note?' &middot; <a href="#" data-act="notedone" data-id="'+esc(n.note)+'">got it</a>':'')+(n.ig?' &middot; <a href="'+esc(n.ig)+'" target="_blank" rel="noopener">open Instagram</a>':'')+(n.mail?' &middot; <a href="'+esc(gmailHref(n.mail))+'" target="_blank" rel="noopener"'+(n.mail.to?'':' title="No email address on file for this venue. Add one in the To box."')+'>open email'+(n.mail.to?'':' (add address)')+'</a>':'')+'</span></span></label>';
   const urgent=todo.filter(n=>n.u),rest=todo.filter(n=>!n.u);
   let h='<details class="tm-det tm-brief np" data-k="brief"'+(open?' open':'')+'><summary>The Belladonna Gazette · '+esc(b.date)+' · '+(todo.length?'<b style="color:var(--gold)">'+todo.length+' to do</b>':'all clear')+'</summary><div class="in"><div class="np-paper">';
   h+='<div class="np-top"><span>Auburn, Washington</span><span>'+esc(dt)+'</span><span>Vol. I &middot; No. '+doy+' &middot; Free with every gig</span></div>';
@@ -8103,7 +8112,8 @@ Ops:
  {"op":"updateSite","id":"...","fields":{...}}
  {"op":"setConfig","doc":"sable|sigil|warden|coach|care|curator|social|ads","data":{...}}
 
-First read agent_config (voice, pricing, outreach) and follow it exactly. Never invent prices, dates, or facts. Check agent_drafts first so you never write a draft that already exists. If nothing needs doing, write nothing. End every run with a one-line summary of what you wrote.`;
+First read agent_config (voice, pricing, outreach) and follow it exactly. Never invent prices, dates, or facts. Check agent_drafts first so you never write a draft that already exists. If nothing needs doing, write nothing else.
+RUN NOTE (LAST STEP OF EVERY RUN, even a quiet one, even if something blocked you): addDraft {agent: your lowercase name, kind:"note", label:"Run note", body}. The body's first line is one plain sentence: what you did, what you wrote, and anything that blocked you. If you need something from Ahnna, add a line "NEEDS YOU:" and then one line per ask, each starting with "- ", saying exactly what to do and where. Do not repeat an identical note. HQ shows the note on your desk and puts every NEEDS YOU line on the Gazette.`;
 const TASKS=[
  {name:'Lead run',who:'Raven and Quill',when:'Weekdays, 7:00 am',plain:'Looks for people and venues asking for karaoke, trivia or bingo, scores them hot / warm / cold, drafts cold emails and day-5 follow-ups for venues you have not heard back from, and drafts replies to the good leads.',ids:['raven','quill'],lib:true,
   body:`TASK: Lead run.
@@ -8191,10 +8201,14 @@ Do not touch venues you did not just add except to draft.`},
 5. A venue with no signed agreement found: list it by name in your report. Do not guess a date.
 6. Never open attachments that ask you to log in, never click links, never reply, never send anything. Never set status "active". Ahnna confirms every date and term in HQ.`},
  {name:'Presence check',who:'Mirror',when:'Mondays, 8:00 am',plain:'Checks your listings and website, flags profiles that have gone 90 days without a refresh with exact steps, and drafts review replies and review asks.',ids:['mirror'],
-  body:`TASK: Presence check. Read agent_sites. Skip sites where silencedAt is set or active is false.
-1. For each active site, check the public page. If profileRefreshed is 90 or more days old, set auditNotes to the exact steps to fix it, and addDraft kind "seo".
-2. Audit belladonnanights.com and the Google Business Profile for SEO issues. addDraft kind "seo" for each fix, one per draft.
-3. Draft replies to new public reviews (kind "review"). Draft review asks to give to happy venues (kind "reviewask"). Never ask for Yelp reviews, never buy or fake reviews.`},
+  body:`TASK: Presence check. Read agent_sites and agent_config mirror. Skip sites where silencedAt is set or active is false.
+YOUR JOB: look over Belladonna's whole online image (website, Google Business Profile, Facebook, Instagram, Yelp, Nextdoor, gig sites, directories) and tell Ahnna what to change to be found more, chosen more, and booked more.
+0. PAGE TEXT. If a public page cannot be fetched, do not stop. agent_config mirror has snapshot{text,at}: the pasted text of belladonnanights.com (title, meta description, page text). Each agent_sites doc may also have snapshot (pasted text of that listing) and snapshotAt. Audit from those. If a snapshot you need is missing or older than 60 days, add it to NEEDS YOU in your run note ("- Paste the text of belladonnanights.com into Mirror's desk, Website box"). Never log in to anything.
+1. For each active site, if profileRefreshed is missing or 90 or more days old, set auditNotes to the exact steps to fix it and addDraft kind "seo". If profileRefreshed is missing, add "- Set the Last refreshed date on SITE in Mirror's desk" to NEEDS YOU.
+2. SEO AND DISCOVERY: from the snapshots, check titles, meta descriptions, headings, service and city wording, hours, phone, name consistency across sites. addDraft kind "seo", one fix per draft, with the exact new text.
+3. WORDING: write the best wording for the business description, headline, services list and calls to action on each site, in Belladonna's voice, so the right people choose us. Only claim what is true.
+4. NEW PLACES: recommend up to 3 sites, directories or groups (not already in agent_sites) that would bring bookings, each as an addDraft kind "seo" labelled "New listing: NAME" with why and the first step.
+5. Draft replies to new public reviews (kind "review") and review asks for happy venues (kind "reviewask"). Never ask for Yelp reviews, never buy or fake reviews.`},
  {name:'Host desk',who:'Jett',when:'Daily, 8:30 am',plain:'Reads callouts, check-ins, checkouts and onboarding progress, and flags callouts nobody covered, hosts who keep checking in late, and recruits who have gone quiet.',ids:['coach'],
   body:`TASK: Host desk. Read "shifts" (last 14 days), agent_config coach, and recruits.
 1. Callouts in agent_config coach with status "open" and a shift date within 3 days: list them first in your summary.
@@ -8273,9 +8287,16 @@ function renderDrawer(force){
   $('#tmDrOne').textContent=(INFO[S.cur]&&INFO[S.cur].one)||'';
   const _fold=!(S.view==='info'||S.cur==='setup'||S.cur==='huddle');
   const _pre=_fold?'<div class="tm-row" style="margin:0 0 .8rem"><button class="tm-b dim" data-act="foldall" data-v="0">Collapse all</button><button class="tm-b dim" data-act="foldall" data-v="1">Open all</button></div>':'';
-  const _main=((S.view==='info'||S.cur==='setup'||S.cur==='huddle')?'':remBox(S.cur))+((S.view==='info'&&INFO[S.cur])?vInfo(S.cur):({raven:vRaven,quill:vQuill,vesper:vVesper,ledger:vLedger,sable:vSable,mirror:vMirror,herald:vIris,ember:vSabine,marquee:vRen,coach:vWren,huddle:vHuddle,sigil:vSigil,warden:vThorne,setup:vSetup})[S.cur]());
+  const _main=((S.view==='info'||S.cur==='setup'||S.cur==='huddle')?'':notesBlock(S.cur)+remBox(S.cur))+((S.view==='info'&&INFO[S.cur])?vInfo(S.cur):({raven:vRaven,quill:vQuill,vesper:vVesper,ledger:vLedger,sable:vSable,mirror:vMirror,herald:vIris,ember:vSabine,marquee:vRen,coach:vWren,huddle:vHuddle,sigil:vSigil,warden:vThorne,setup:vSetup})[S.cur]());
   body.innerHTML=_pre+(_fold?foldSections(_main):_main);
   body.scrollTop=top;
+}
+function notesBlock(id){
+  const L=(S.notes||[]).filter(n=>n.agent===id&&n.status==='pending').slice(0,5);
+  let h='<div class="tm-sec">Run notes ('+L.length+')</div>';
+  if(!L.length)return h+'<div class="tm-empty">No notes. After each run she leaves a short note here.</div>';
+  L.forEach(n=>{h+='<div class="tm-item"><div class="t2" style="white-space:pre-wrap;color:var(--text)">'+esc(n.body||'')+'</div><div class="tm-row"><span class="tm-tag">'+esc(fmtDay(n.createdAt))+'</span><button class="tm-b" data-act="notedone" data-id="'+esc(n.id)+'">Got it</button></div></div>';});
+  return h;
 }
 function foldSections(html){
   const parts=html.split('<div class="tm-sec">');if(parts.length<2)return html;
@@ -9083,7 +9104,10 @@ const SITE_SPECS=[
 function siteSpec(name){return SITE_SPECS.find(x=>x.m.test(String(name||'')))||{url:'',tasks:GIGSITE_TASKS.slice(0,5),note:'No specific list for this site yet, so this is the general checklist.'};}
 
 function vMirror(){
-  const d=D();let h='<div class="tm-sec">Listings</div>';
+  const d=D();let h='';
+  const ws=(S.cfg.mirror&&S.cfg.mirror.snapshot)||{};
+  h+=det('wsnap','Website text for Mirror (belladonnanights.com)'+(ws.at?' &middot; saved '+esc(fmtDay(ws.at)):' &middot; not saved yet'),'<div class="tm-hint">Mirror cannot open your website, so she reads what you paste here. Open belladonnanights.com, press Ctrl+A then Ctrl+C to copy the page text, and paste it below. Add the page title and meta description if you know them (right-click the page, View page source, search for &lt;title&gt; and name=&quot;description&quot;).</div><textarea class="tm-ta" id="ws-text" style="min-height:120px">'+esc(ws.text||'')+'</textarea><div class="tm-row"><button class="tm-b pri" data-act="savewsnap">Save for Mirror</button></div>',!ws.at);
+  h+='<div class="tm-sec">Listings</div>';
   const have=new Set(S.sites.map(s=>s.name)),miss=PRESENCE.filter(n=>!have.has(n));
   if(miss.length)h+='<div class="tm-item"><div class="t1">'+(d.sites.length?'Listings not set up here yet':'Add the places you need to show up')+'</div><div class="t2">'+miss.map(esc).join(', ')+'</div><div class="tm-row"><button class="tm-b pri" data-act="addpresence">Add these listings</button></div></div>';
   if(!d.sites.length)h+='<div class="tm-empty">No listings yet.</div>';
@@ -9095,6 +9119,7 @@ function vMirror(){
       '<details class="tm-det" data-k="m_'+esc(s.id)+'"'+(S.open['m_'+s.id]?' open':'')+' style="margin:.6rem 0 0"><summary>What to do on '+esc(s.name)+' ('+nDone+' of '+sp.tasks.length+' ticked)</summary><div class="in"><label class="tm-lbl">Link to your public page on this site (so Mirror can read it)</label><div class="tm-row" style="margin-top:.2rem"><input class="tm-in" style="flex:1;min-width:12rem" data-url="'+esc(s.id)+'" placeholder="https://" value="'+esc(s.url||'')+'"><button class="tm-b" data-act="savesiteurl" data-id="'+esc(s.id)+'">Save link</button></div>'+
       sp.tasks.map((t,k)=>'<label style="display:flex;gap:.55rem;align-items:flex-start;margin:.45rem 0;font-size:.84rem;color:var(--text2);line-height:1.45;cursor:pointer"><input type="checkbox" data-chg="mchk" data-id="'+esc(s.id)+'" data-k="'+k+'"'+(done[k]?' checked':'')+' style="margin-top:.2rem"><span>'+esc(t)+'</span></label>').join('')+
       (sp.note?'<div class="tm-hint" style="margin-top:.5rem">'+esc(sp.note)+'</div>':'')+'</div></details>'+
+      '<details class="tm-det" data-k="sn_'+esc(s.id)+'"'+(S.open['sn_'+s.id]?' open':'')+' style="margin:.6rem 0 0"><summary>Page text and refresh date for Mirror'+(s.snapshotAt?' (saved '+esc(fmtDay(s.snapshotAt))+')':'')+'</summary><div class="in"><label class="tm-lbl">Last refreshed on</label><input class="tm-in" type="date" style="width:auto" data-chg="setrefreshed" data-id="'+esc(s.id)+'" value="'+(s.profileRefreshed?esc(isoDay(s.profileRefreshed)):'')+'"><label class="tm-lbl" style="margin-top:.6rem">What this page says now (copy and paste it)</label><textarea class="tm-ta" data-snap="'+esc(s.id)+'" style="min-height:90px">'+esc(s.snapshot||'')+'</textarea><div class="tm-row"><button class="tm-b pri" data-act="savesnap" data-id="'+esc(s.id)+'">Save for Mirror</button></div></div></details>'+
       '<div class="tm-row"><button class="tm-b pri" data-act="refreshed" data-id="'+esc(s.id)+'">Refreshed today</button><button class="tm-b dim" data-act="silencesite" data-id="'+esc(s.id)+'" title="Not working with this site right now. No reminders until you resume it.">Silence</button><button class="tm-b dim red" data-act="delsite" data-id="'+esc(s.id)+'">Delete</button></div></div>';
   });
   if(d.silenced.length){
@@ -9691,6 +9716,10 @@ const A={
     await col('agent_venues').add({name:n,city:val('nv-city'),address:val('nv-addr'),evidence:val('nv-ev'),pitch:val('nv-pitch'),stage:'target',createdAt:Date.now()});toast('Venue added.');
   },
   async delvenue(t){if(!confirm('Delete this venue?'))return;await col('agent_venues').doc(t.dataset.id).delete();},
+  async savewsnap(t){const e=document.getElementById('ws-text'),v=e?e.value.trim():'';if(!v){toast('Paste the page text first.',true);return;}await col('agent_config').doc('mirror').set({snapshot:{text:v,at:Date.now()}},{merge:true});toast('Saved. Mirror reads it on her next run.');},
+  async savesnap(t){const e=document.querySelector('[data-snap="'+t.dataset.id+'"]'),v=e?e.value.trim():'';await col('agent_sites').doc(t.dataset.id).update({snapshot:v,snapshotAt:Date.now()});toast('Saved for Mirror.');},
+  async setrefreshed(t){const v=t.value;if(!v)return;const ms=new Date(v+'T12:00:00').getTime();if(isNaN(ms))return;await col('agent_sites').doc(t.dataset.id).update({profileRefreshed:ms});toast('Refresh date saved.');},
+  async notedone(t){await col('agent_drafts').doc(t.dataset.id).update({status:'done',doneAt:Date.now()});},
   async foldall(t){const o=t.dataset.v==='1';document.querySelectorAll('#tmDrB details.tm-fsec').forEach(d=>{S.open[d.dataset.k]=o;});renderDrawer(true);},
   async blockvenue(t){
     const pk=document.getElementById('bl-pick'),nm=document.getElementById('bl-name'),why=document.getElementById('bl-why');
