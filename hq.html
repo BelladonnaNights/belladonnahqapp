@@ -7004,6 +7004,8 @@ raven:{
  one:'Finds you new business: catches gig-site inquiries and runs your venue outreach.',
  does:'Raven has two jobs and both are "getting leads". Inbound: she turns every gig-site inquiry email into a clean lead record in HQ. Outbound: she keeps your list of target venues, plans each three-venue trip, tracks every visit, schedules the follow-ups and writes the thank-you drafts. The visits themselves are done in person by you or Eddy.',
  jobs:[
+  ['Find local businesses that could sponsor your nights and hand Quill the pitch (you send it)','Mondays, 11:00 am','Raven finds, Quill writes'],
+  ['Follow the cold outreach rules: one touch (email or DM) per venue every 4 months, 3 at most, each with a new angle that fits the timing, plus one extra Instagram DM a month after touch 1','Weekdays, 7:00 am','Raven drafts, you send'],
   ['Read the lead inbox and turn each gig-site inquiry into a lead record','Every hour, 8 AM to 10 PM, every day (goal: a new lead in HQ within an hour)','Raven, automatic'],
   ['Sort every other new email: party or event hires, venue inquiries, host applicants, vendors. Hires become leads with a Quill reply drafted','Weekdays, 7:30 AM and 3 PM','Raven, automatic (needs Google Workspace connected)'],
   ['Flag leads missing a date or location so Quill asks before quoting','Same run, every lead','Raven, automatic'],
@@ -7547,7 +7549,7 @@ function D(){
     vPending:dr.filter(d=>d.agent==='vesper'&&d.status==='pending'),
     mPending:dr.filter(d=>d.agent==='mirror'&&d.status==='pending'),
     vDue:vesperDue(),
-    venDue:S.venues.filter(v=>v.stage==='followup'&&v.followUpOn&&v.followUpOn<=isoDay(Date.now())),
+    venDue:S.venues.filter(v=>(v.stage==='followup'||v.stage==='cold')&&otTouchDue(v)),
     venYes:S.venues.filter(v=>v.stage==='yes'),
     rPending:dr.filter(d=>d.agent==='raven'&&d.status==='pending'),
     silenced:S.sites.filter(s=>s.active===false),
@@ -7715,6 +7717,17 @@ function ideasHtml(ideas){
   return g.map((a,i)=>!a.length?'':'<div class="np-sub">'+EV_CATS[i]+' <em>'+a.length+'</em></div><div class="np-cards">'+a.map(x=>'<div class="np-card'+(x.dec==='pursue'?' on':'')+'">'+evBadge(x)+'<div class="np-cardt"><span class="np-hd">'+esc(x.event)+'</span><span class="np-body">'+esc(x.idea||'')+'</span></div>'+(x.i!=null?'<div class="np-thumbs"><button class="np-th'+(x.dec==='pursue'?' act':'')+'" data-act="gthumb" data-i="'+x.i+'" data-v="pursue" title="Pursue this">'+THUMB+'</button><button class="np-th dn" data-act="gthumb" data-i="'+x.i+'" data-v="skip" title="Pass on this">'+THUMB+'</button></div>':'')+'</div>').join('')+'</div>').join('');
 }
 
+// Pulls the To address, subject and body out of a cold-email draft so the Gazette can open it ready to send.
+function draftMail(x){
+  const vs=S.venues||[];
+  const v=vs.find(v=>v.id===x.venueId)||vs.find(v=>v.name&&x.label&&String(x.label).toLowerCase().indexOf(String(v.name).toLowerCase())>=0)||null;
+  const em=v&&String(v.contact||'').match(/[^\s<>,;:]+@[^\s<>,;]+\.[^\s<>,;]+/);
+  let body=String(x.body||''),subj='';
+  const m=body.match(/^\s*subject:\s*(.*)\r?\n+/i);if(m){subj=m[1].trim();body=body.slice(m[0].length);}
+  const name=(v&&v.name)||String(x.label||'').replace(/^(cold email|email|follow[- ]?up( email)?|intro)\s*[:\-\u2013]\s*/i,'').trim()||'venue';
+  return {to:em?em[0]:'',subject:subj,body:body.trim(),venue:v,name:name};
+}
+function mailHref(m){return 'mailto:'+encodeURIComponent(m.to).replace(/%40/g,'@')+'?subject='+encodeURIComponent(m.subject)+'&body='+encodeURIComponent(m.body);}
 function briefData(){
   const d=D(),now=Date.now(),wk=now-7*DAY,today=isoDay(now);
   const need=[];
@@ -7726,9 +7739,17 @@ function briefData(){
   add('quill',d.qPending.length,plural(d.qPending.length,'quote or reply','quotes and replies')+' to approve',d.qPending.map(x=>cut(x.label||x.kind,60)).join('; ')+'. Read each one, tweak it, and approve.');
   add('quill',d.needDraft.length,plural(d.needDraft.length,'new lead needs','new leads need')+' a draft',d.needDraft.slice(0,4).map(lt).join('; ')+(d.needDraft.length>4?'; and '+(d.needDraft.length-4)+' more':'')+'. Nobody has answered them yet.');
   add('raven',d.missing.length,plural(d.missing.length,'lead is','leads are')+' missing a date or location',d.missing.slice(0,4).map(l=>(l.client||l.site||'A lead')+' has no '+[!l.eventDate?'date':'',!l.location?'location':''].filter(Boolean).join(' or ')).join('; ')+'. A quote needs both.');
-  d.venDue.forEach(v=>need.push({a:'raven',text:v.name+': check-back is due',body:'Emailed '+ago(v.emailedAt)+(v.emailed2At?', followed up '+ago(v.emailed2At):'')+', no answer logged.'+(who(v)?' Contact: '+who(v)+'.':'')+' Time for a nudge or a call.'}));
+  d.venDue.forEach(v=>{const n=otTouches(v).length;need.push({a:'raven',text:v.name+': '+(v.notNowUntil?'their not-now date has arrived':'touch '+(n+1)+' is due')+' (a new angle that fits the timing)',body:'Touches so far: '+n+' of 3'+(n?', last '+ago(otMs(otTouches(v)[n-1].date)):'')+'. No answer is fine. One touch every 4 months, an email or a DM.'+(who(v)?' Contact: '+who(v)+'.':'')+' Raven drafts it for you to review.'});});
   d.venYes.forEach(v=>need.push({a:'raven',text:v.name+' said yes. Hand it to onboarding',body:'They agreed'+(v.city?' ('+v.city+')':'')+'.'+(who(v)?' Contact: '+who(v)+'.':'')+' Next: contract, agreement and a first night on the calendar.'}));
-  d.rPending.forEach(x=>need.push({a:'raven',text:(x.label||'Draft')+' is waiting to approve',body:cut(x.body,200)}));
+  d.rPending.forEach(x=>{
+    const NOUN={email:'email',email2:'email',email3:'email',cold:'email',dm:'Instagram message',colddm:'Instagram message'};
+    if(NOUN[x.kind]){
+      const m=draftMail(x),dm=x.kind==='dm'||x.kind==='colddm',art2=(/^[aeiou]/i.test(m.name)?'An ':'A ');
+      const it={a:'raven',text:art2+m.name+' '+NOUN[x.kind]+' is ready for review',body:dm?cut(m.body,200):(m.subject?'Subject: '+m.subject+'. ':'')+cut(m.body,170)};
+      if(dm){const u=igUrl(m.venue);if(u)it.ig=u;}else it.mail=m;
+      need.push(it);
+    }else need.push({a:'raven',text:(x.label||'Draft')+' is waiting to approve',body:cut(x.body,200)});
+  });
   add('vesper',d.vPending.length,plural(d.vPending.length,'nudge','nudges')+' to approve',d.vPending.map(x=>cut(x.label||x.kind,60)).join('; ')+'.');
   add('vesper',d.vDue.length,plural(d.vDue.length,'quote is','quotes are')+' due a nudge',d.vDue.slice(0,4).map(x=>{const l=x.lead||x;return (l.client||l.site||'A lead')+(l.quotedPrice?' ('+l.quotedPrice+')':'')+', quoted '+ago(l.quotedAt);}).join('; ')+'.');
   add('vesper',d.careDue.length,plural(d.careDue.length,'venue check-in is','venue check-ins are')+' due',d.careDue.slice(0,5).map(v=>v.name+(v.lastCheckinAt?' (last check-in '+ago(v.lastCheckinAt)+')':' (never checked in)')).join('; ')+'. Check-ins are due every 3 months.');
@@ -7743,7 +7764,7 @@ function briefData(){
   add('sigil',d.sg.incomplete.length,plural(d.sg.incomplete.length,'person is','people are')+' missing paperwork',d.sg.incomplete.slice(0,5).map(p=>p.name+' needs '+p.miss.join(', ')).join('; ')+'.');
   add('sigil',d.sPending.length,plural(d.sPending.length,'paperwork reminder','paperwork reminders')+' to approve',d.sPending.map(x=>cut(x.label,60)).join('; ')+'.');
   {const pr=printRun();if(pr.unk.length)need.push({a:'warden',text:plural(pr.unk.length,'restock request needs','restock requests need')+' a category from the host',body:pr.unk.map(r=>(r.venue||'?')+(r.host?' ('+r.host+')':'')).join(', ')+'. Thorne can draft the question.'});if(pr.toPrint.length)need.push({a:'warden',text:'Print run ready: '+plural(pr.toPrint.length,'item','items'),body:pr.groups.map(g=>g.item+' '+g.cat).join('; ')+'.'});}
-  {const ad=adsState();if(ad.fresh.length)add('marquee',ad.fresh.length,plural(ad.fresh.length,'ad move is','ad moves are')+' waiting for you',ad.fresh.slice(0,3).map(p=>p.title+(p.when?' ('+p.when+')':'')).join('; ')+'.');ad.stale.forEach(p=>need.push({a:'marquee',text:'Check how "'+p.title+'" is doing',body:'It has been live a few days. Type in the numbers from Meta and Ren will say keep, change or stop.'}));if(ad.budget&&ad.total>=ad.budget*0.9)need.push({a:'marquee',u:true,text:'Marketing budget almost used up',body:fmtMoney(ad.total)+' of '+fmtMoney(ad.budget)+' spent this month.'});}
+  {const ad=adsState();if(ad.settings.budgetReviewed!==ad.mon)need.push({a:'marquee',u:!ad.budget,text:'Recheck your monthly marketing budget',body:(ad.budget?'It is set to '+fmtMoney(ad.budget)+'. ':'It is not set yet. ')+'Open Ren to confirm or change it. It will ask again next month.'});if(ad.fresh.length)add('marquee',ad.fresh.length,plural(ad.fresh.length,'ad move is','ad moves are')+' waiting for you',ad.fresh.slice(0,3).map(p=>p.title+(p.when?' ('+p.when+')':'')).join('; ')+'.');ad.stale.forEach(p=>need.push({a:'marquee',text:'Check how "'+p.title+'" is doing',body:'It has been live a few days. Type in the numbers from Meta and Ren will say keep, change or stop.'}));if(ad.budget&&ad.total>=ad.budget*0.9)need.push({a:'marquee',u:true,text:'Marketing budget almost used up',body:fmtMoney(ad.total)+' of '+fmtMoney(ad.budget)+' spent this month.'});}
   {const cu=curatorState();if(cu.fresh.length)add('herald',cu.fresh.length,plural(cu.fresh.length,'new idea','new ideas')+' from Iris',cu.fresh.slice(0,4).map(x=>x.title).join('; ')+'.');}
   d.wd.openRestocks.filter(r=>!NEEDCAT(r)).forEach(r=>need.push({a:'warden',text:'Restock: '+r.item,body:[[r.qty?'Qty '+r.qty:'',r.venue?'for '+r.venue:'',r.host?'(host '+r.host+')':''].filter(Boolean).join(' ')+'.',r.status==='ordered'?'Already ordered, mark delivered when it lands.':'Requested '+ago(r.requestedAt)+', not ordered yet.',r.note?'Note: '+cut(r.note,140):''].filter(Boolean).join(' ')}));
   d.wd.soon.forEach(x=>need.push({a:'warden',text:x.title+(x.days<0?' is overdue':x.days===0?' is due today':' is due in '+x.days+' days'),body:[x.type,x.venue,x.date?fmtEv(x.date):''].filter(Boolean).join(' · ')}));
@@ -7805,7 +7826,7 @@ function renderBrief(){
   const d0=new Date(),dt=d0.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
   const doy=Math.floor((d0-new Date(d0.getFullYear(),0,0))/DAY);
   const sec=t=>'<div class="np-sec">'+esc(t)+'</div>';
-  const art=n=>'<label class="np-item"><input type="checkbox" data-chg="bchk" data-key="'+esc(n.key)+'"'+(S.bchk[n.key]?' checked':'')+'><span><span class="np-hd">'+esc(n.text)+'</span>'+(n.body?'<span class="np-body">'+esc(n.body)+'</span>':'')+'<span class="np-by">'+esc(BY[n.a]||agent(n.a).name)+' &middot; <a href="#" data-act="open" data-agent="'+esc(n.a)+'">open desk</a></span></span></label>';
+  const art=n=>'<label class="np-item"><input type="checkbox" data-chg="bchk" data-key="'+esc(n.key)+'"'+(S.bchk[n.key]?' checked':'')+'><span><span class="np-hd">'+esc(n.text)+'</span>'+(n.body?'<span class="np-body">'+esc(n.body)+'</span>':'')+'<span class="np-by">'+esc(BY[n.a]||agent(n.a).name)+(n.rem?' &middot; your reminder':'')+' &middot; <a href="#" data-act="open" data-agent="'+esc(n.a)+'">open desk</a>'+(n.ig?' &middot; <a href="'+esc(n.ig)+'" target="_blank" rel="noopener">open Instagram</a>':'')+(n.mail?' &middot; <a href="'+esc(mailHref(n.mail))+'"'+(n.mail.to?'':' title="No email address on file for this venue. Add one in the To box."')+'>open email'+(n.mail.to?'':' (add address)')+'</a>':'')+'</span></span></label>';
   const urgent=todo.filter(n=>n.u),rest=todo.filter(n=>!n.u);
   let h='<details class="tm-det tm-brief np" data-k="brief"'+(open?' open':'')+'><summary>The Belladonna Gazette · '+esc(b.date)+' · '+(todo.length?'<b style="color:var(--gold)">'+todo.length+' to do</b>':'all clear')+'</summary><div class="in"><div class="np-paper">';
   h+='<div class="np-top"><span>Auburn, Washington</span><span>'+esc(dt)+'</span><span>Vol. I &middot; No. '+doy+' &middot; Free with every gig</span></div>';
@@ -7826,10 +7847,10 @@ function renderBrief(){
   const gsec_=(id,t,sub,inner,n,dflt)=>{gids.push(id);const o=S.open['g_'+id]!==undefined?S.open['g_'+id]:false;return '<div class="np-dept'+(o?'':' shut')+'"><div class="np-dh" data-act="gsec" data-id="'+id+'"><span>'+esc(t)+(n?' <em class="np-n">'+n+'</em>':'')+'</span><i>'+esc(sub)+'</i><b class="np-chev"></b></div><div class="np-sb">'+inner+'</div></div>';};
   let secs='';
   DEPT.forEach(dp=>{
-    const items=rest.filter(n=>!n.rem&&dp.a.indexOf(n.a)>=0);items.forEach(n=>used.add(n.key));
+    const items=rest.filter(n=>dp.a.indexOf(n.a)>=0);items.forEach(n=>used.add(n.key));
     const ideas=dp.id==='town'?b.ideas:[];
     const ig=dp.id==='curator'?irisGazette():null;
-    const rg=dp.id==='social'?renGazette():null;
+    const rg=dp.id==='social'?renGazette():(dp.id==='lead'?sponsorGazette():null);
     if(!items.length&&!ideas.length&&!(ig&&ig.n)&&!(rg&&rg.n))return;
     let inner='';
     if(items.length)inner+='<div class="'+(items.length>1?'np-cols':'np-one')+'">'+items.map(art).join('')+'</div>';
@@ -7841,7 +7862,7 @@ function renderBrief(){
   });
   const other=rest.filter(n=>!n.rem&&!used.has(n.key));
   if(other.length)secs+=gsec_('other','Also in Today\'s Paper','Everything else','<div class="np-cols">'+other.map(art).join('')+'</div>',other.length,true);
-  const notes=rest.filter(n=>n.rem);
+  const notes=rest.filter(n=>n.rem&&!used.has(n.key));
   if(notes.length||b.upcoming.length){
     let inner='';
     if(notes.length)inner+='<div class="'+(notes.length>1?'np-cols':'np-one')+'">'+notes.map(art).join('')+'</div>';
@@ -8081,7 +8102,12 @@ const TASKS=[
   body:`TASK: Lead run.
 1. Search the public web for people and venues in Seattle-Tacoma asking for or likely to need karaoke, trivia, music bingo or themed nights. Score each Hot / Warm / Cold with a one-line reason. Skip anything older than 3 days.
 2. addLead for each (max 8 per run, skip duplicates by link). addVenue for any new bar or venue worth cold-emailing.
-3. Read agent_venues and agent_config curator research. For stage "target" with no emailedAt: addDraft kind "email" (agent raven, venueId set). If curator research has a dossier for that venue (its key is p plus the venue name lowercased with every non-letter and non-number replaced by an underscore) with a bait line, open the email with that idea, using only what the dossier says about the venue. For stage "followup" where emailedAt is 5 or more days ago and no emailed2At: addDraft kind "email2".
+3. COLD OUTREACH RULES. Read agent_venues, agent_config outreach (touches: every email or Instagram contact, with date and channel) and agent_config curator research. Check agent_drafts first so you never write a draft that already exists, and write at most one draft per venue per run. A "touch" is one cold contact, an email or a DM. A venue gets ONE touch every 4 months and at most 3 touches in total. If they never answer, that is fine: after touch 3 the venue is closed and you write nothing more. Count the touches from agent_config outreach touches (steps email1, email2, email3, cold-email, cold-dm; also count emailedAt, emailed2At and emailed3At on the venue).
+   a. Touch 1 (stage "target", no touches): kind "email", tailored to that venue and to the season. If curator research has a dossier for the venue (its key is p plus the venue name lowercased with every non-letter and non-number replaced by an underscore) with a bait line, open with that idea, using only what the dossier says about the venue.
+   b. Touch 2 and touch 3: only when the last touch was 4 or more months ago (or the date in notNowUntil has arrived). Write kind "email2" for touch 2 and "email3" for touch 3. Each one needs a NEW angle that fits the timing (the season, a holiday, a slow night, something new from the curator research or Sable). Read the earlier emails and never repeat them. You may write the touch as kind "colddm" (one DM, only if the venue has an instagram handle) instead of an email, never both for the same touch.
+   c. The one extra DM: kind "dm", only when the venue has an instagram handle, touch 1 was an email, it is 1 month or more after touch 1, there was no reply and no ig-dm touch exists. One or two lines, for example "I sent a note to your email, just wanted to say hi here too." It is allowed once, ever, and does not count as a touch.
+   d. Never email and DM the same venue on the same day, and never post publicly on their page asking for work.
+   e. A "no" (declinedAt set, or stage "no" with no noUntil) stops outreach: write nothing. A "not now" waits for the time they gave. If conversation is true they replied: write nothing, Ahnna handles it, and anything they reply to restarts the normal conversation.
 4. For each new Hot or Warm lead, addDraft kind "reply" (agent quill, leadId set). Answer their question first, mention Belladonna second.
 Do not touch venues you did not just add except to draft.`},
  {name:'Inbox sweep',who:'Raven and Sigil',when:'Weekdays, 7:30 am and 3:00 pm',plain:'Reads the last day of your business email. Sorts new inquiries (parties, events, venues, host applicants, vendors), moves venues to yes or no when they answer, and logs renewals and paperwork that need doing. Needs Google Workspace connected.',ids:['raven','sigil'],lib:true,
@@ -8139,6 +8165,15 @@ Do not touch venues you did not just add except to draft.`},
 6. Steps. First search the web for Meta's current Business Help Center pages and current Ads Manager screens, and write steps from what is there today, not from memory. Start the first step with "Checked against Meta help pages on <date>." Each step is ONE action: name the exact button, menu or field and where it is on the screen, and what to type or pick, for example "Click the green Create button at the top left." Cover everything: open Meta Ads Manager (or boost a post from Meta Business Suite when that is simpler and say why); choose the objective; name the campaign; set daily budget and schedule with the end date; audience (location and radius around the venue or Auburn, age, interests, and what to leave alone); placements; pick the Facebook Page and Instagram account; the ad (format, upload, primary text, headline, button, destination); review; Publish; confirm the payment method is already set; and what to look at 24 hours later. Anything you could not confirm on a current Meta page, write "check this on screen" beside it. Explain why a setting matters in a few words when it affects the money.
 7. Ideas. Add 3 to 5 new marketing ideas to ideas{<new id>:{title,kind ("free" or "paid"),pitch,cost,when (the day or date to do it, based on the next themed night or event in Clio posts and Sable),where (an array of {name,url,note}: every exact site or place to post, each found on the web today, with the direct link to its submission page and a short note on its rules, deadline or required fields),image (exactly which picture to use: name the Clio post, Sabine event kit or poster it comes from, or describe the photo to take),caption (the finished text, in the Belladonna voice from the voice doc, ready to paste, with the real date, venue and time; put anything unknown in [brackets]),how (the first three actions),result (what she may get),status:"new",createdAt}} using web research: Google Business Profile posts, Nextdoor, local Facebook groups, flyers and table tents at venues, venue cross-promotion, QR codes, local event calendars and press, community and college events. For event-calendar ideas, search each city (Auburn, Kent, Puyallup, Tacoma, Federal Way, Seattle) and list only calendars that currently accept submissions, each with its direct submit link, after reading its rules. Never invent a site or a link; if you cannot confirm one, leave it out and say so in the note. If an existing idea with status "new" or "liked" is missing where, image or caption, fill in only those missing fields on that idea instead of adding a duplicate. Never repeat an idea already in ideas. Never suggest buying reviews, fake accounts, engagement pods or anything against a platform's rules.
 8. Report in plain words: whether an ad is needed this week, the money left, and the best idea.`},
+
+ {name:'Sponsor hunt',who:'Raven and Quill',when:'Mondays, 11:00 am',plain:'Finds local businesses that could sponsor your nights (screensaver slide, shout-outs, a winners\' prize) and writes the pitch email for each. You send it yourself.',ids:['raven','quill'],
+  body:`TASK: Sponsor hunt. Public web only. Never email or message anyone, never log in, never post.
+1. Read agent_config ads: settings (sponsorOffer, area) and sponsors (every business already there, with any status). Read Our Venues ({"op":"readVenues"}, skip inactive) and agent_leads.
+2. What a sponsor gets: use settings.sponsorOffer. If it is empty use this: a slide on our gig screensavers (it plays between our trivia and bingo games and between karaoke singers), shout-outs during those nights, and the chance to give a prize to the winners as free marketing.
+3. Search the web for up to 6 NEW local businesses likely to want to reach our crowd (adults who go out for karaoke, trivia and bingo): restaurants, breweries and distilleries, auto shops, gyms, salons, realtors, insurance, local services, within the area and near the venues we work with. Prefer ones near a venue we work with and ones that already advertise locally. Skip national chains with no local decision-maker, other karaoke, trivia or bingo hosts, and any business already in sponsors.
+4. For each, confirm on its own website that it exists and find a public contact: an email address or its contact page link. Never guess an email.
+5. setConfig doc "ads" with sponsors{<new id>:{business,kind (what kind of business),city,nearVenue (a venue from Our Venues, or empty),why (one sentence on why they fit),contact (a name if public, else empty),email (empty if none found),url (their website or contact page),pitch (a short, friendly email, subject line first, in the Belladonna voice from the voice doc, that offers what a sponsor gets, names the nearVenue night when there is one, and asks for a 10 minute chat; no prices, and no claims about crowd size unless the data shows it),status:"new",createdAt (ms)}}.
+6. Report in one line: how many you found and the best one.`},
  {name:'Agreement history',who:'Vesper',when:'One time, run it once after setup',plain:'Goes through your business email for every venue you work with and finds when each agreement was signed and how long it runs. You confirm each one in HQ.',ids:['vesper'],
   body:`TASK: Agreement history. ONE TIME. Read email only.
 1. Read Our Venues: {"op":"readVenues"}. Skip venues marked inactive.
@@ -8243,7 +8278,7 @@ function draftCard(dr,withPrice){
   const l=leadsById()[dr.leadId];
   const head=l?leadLine(l):'<b>'+esc(dr.label||'Draft')+'</b>';
   return '<div class="tm-item"><div class="t1">'+head+'</div>'+
-    '<div class="t2">'+esc(dr.kind==='n1'?'First nudge':dr.kind==='n2'?'Final nudge':dr.kind==='review'?'Review reply':dr.kind==='thanks'?'Thank-you':dr.kind==='email'?'Cold email':dr.kind==='email2'?'Email follow-up':dr.kind==='reviewask'?'Review request':dr.kind==='checkin'?'Venue check-in':dr.kind==='paperwork'?'Paperwork reminder':dr.kind==='seo'?'SEO fix':'Reply and quote')+' · drafted '+fmtDay(dr.createdAt)+'</div>'+
+    '<div class="t2">'+esc(dr.kind==='n1'?'First nudge':dr.kind==='n2'?'Final nudge':dr.kind==='review'?'Review reply':dr.kind==='thanks'?'Thank-you':dr.kind==='email'?'Cold email (touch 1)':dr.kind==='email2'?'Cold email (touch 2)':dr.kind==='email3'?'Cold email (touch 3)':dr.kind==='cold'?'Cold email':dr.kind==='dm'?'Extra Instagram DM':dr.kind==='colddm'?'Instagram message (touch)':dr.kind==='reviewask'?'Review request':dr.kind==='checkin'?'Venue check-in':dr.kind==='paperwork'?'Paperwork reminder':dr.kind==='seo'?'SEO fix':'Reply and quote')+' · drafted '+fmtDay(dr.createdAt)+'</div>'+
     '<textarea class="tm-ta" style="margin-top:.6rem" data-did="'+esc(dr.id)+'">'+esc(dr.body||'')+'</textarea>'+
     '<div class="tm-row">'+(withPrice?'<input class="tm-in s" data-pid="'+esc(dr.id)+'" placeholder="Quoted $" value="'+esc(l&&l.quotedPrice||'')+'">':'')+
     '<button class="tm-b pri" data-act="approve" data-id="'+esc(dr.id)+'">Approve &amp; copy</button>'+
@@ -8275,8 +8310,8 @@ const TERMS_SHORT="We do a free trial night: full host, equipment, music and pri
 const VOICE_SHORT="Warm, witty and confident: a charming troublemaker with impeccable taste. Conversational, short punchy sentences, dry humor that teases the experience and never the person. Honest and self-aware when something goes wrong, firm and clear when it matters. Gothic in look, not in language: no spells, potions or Victorian theatrics. No corporate filler, no manufactured urgency, no bubbly positivity. At most one emoji, and exclamation points only when earned.";
 function terms(){return (S.cfg.outreach&&S.cfg.outreach.terms)||TERMS_FULL;}
 function termsShort(){return (S.cfg.outreach&&S.cfg.outreach.short)||TERMS_SHORT;}
-const TAGC={target:'new',followup:'quoted',yes:'booked',no:'lost',onboarding:'booked'};
-const TAGL={target:'target',followup:'check back',yes:'yes',no:'no',onboarding:'handed off'};
+const TAGC={target:'new',followup:'quoted',cold:'quoted',closed:'lost',yes:'booked',no:'lost',onboarding:'booked'};
+const TAGL={target:'target',followup:'in progress',cold:'in progress',closed:'closed (no answer)',yes:'yes',no:'no',onboarding:'handed off'};
 function eligibleTrip(){
   const now=Date.now(),today=isoDay(now);
   return S.venues.filter(v=>!v.verify&&(v.stage==='target'||!v.stage||(v.stage==='followup'&&v.followUpOn&&v.followUpOn<=today)||(v.stage==='no'&&v.noUntil&&v.noUntil<=now)));
@@ -8329,8 +8364,87 @@ function logForm(v){
     '<div><label class="tm-lbl">Trial date (if yes)</label><input class="tm-in" id="lv-trial" type="date"></div>'+
     '<div><label class="tm-lbl">Check back on</label><input class="tm-in" id="lv-back" type="date"></div>'+
     '<div></div><div class="full"><label class="tm-lbl">What they said</label><textarea class="tm-ta" id="lv-said" style="min-height:80px"></textarea></div></div>'+
-    '<div class="tm-hint">If you pick "Not now" and leave the date blank, Raven sets the check-back for 5 days out. A "No" holds the venue for 60 days.</div>'+
+    '<div class="tm-hint">If you pick "Not now" and leave the date blank, Raven waits 5 days. A "No" stops all outreach to the venue.</div>'+
     '<div class="tm-row"><button class="tm-b pri" data-act="savevisit" data-id="'+esc(v.id)+'">Save visit</button><button class="tm-b dim" data-act="cancellog">Cancel</button></div></div>';
+}
+/* ── Cold outreach: every contact is a "touch"; the history and the cadence rules live here ── */
+const OT_STEP={email1:'Touch 1 (email)',email2:'Touch 2 (email)',email3:'Touch 3 (email, the last)','ig-follow':'Followed + liked on Instagram','ig-dm':'Extra Instagram DM','cold-email':'Touch (email)','cold-dm':'Touch (Instagram DM)',pitch:'Sponsor pitch email',email:'Email',reply:'They replied',no:'Said no',notnow:'Not now'};
+const OT_TOUCH=/^(email1|email2|email3|cold-email|cold-dm)$/;
+const otIsEmail=s=>/^(email|email1|email2|email3|cold-email|pitch)$/.test(s);
+const otIsDm=s=>/^(ig-dm|cold-dm)$/.test(s);
+const otMs=d=>Date.parse(String(d)+'T12:00:00');
+const otPlus=(ms,n)=>isoDay(ms+n*DAY);
+const otPlusMonths=(ms,n)=>{const d=new Date(ms);d.setMonth(d.getMonth()+n);return isoDay(d.getTime());};
+async function otSave(patch){const ref=col('agent_config').doc('outreach');try{await ref.update(patch);}catch(e){await ref.set(expandPatch(patch),{merge:true});}}
+function otId(){return 't'+Date.now().toString(36)+Math.random().toString(36).slice(2,5);}
+function otDoc(o){const now=Date.now();return Object.assign({kind:'venue',channel:otIsDm(o.step)||o.step==='ig-follow'?'instagram':'email',date:isoDay(now),at:now},o);}
+function igUrl(v){const h=String(v&&v.instagram||'').trim().replace(/^https?:\/\/(www\.)?instagram\.com\//i,'').replace(/^@/,'').replace(/[\/?].*$/,'');return h?'https://www.instagram.com/'+encodeURIComponent(h)+'/':'';}
+// Every touch, newest first. Emails sent before the log existed are read from the venue's own dates so nothing is missing.
+function otAll(){
+  const T=Object.entries((S.cfg.outreach&&S.cfg.outreach.touches)||{}).map(([id,t])=>Object.assign({id:id},t)).filter(t=>t&&t.date&&t.name);
+  (S.venues||[]).forEach(v=>{[['emailedAt','email1'],['emailed2At','email2'],['emailed3At','email3']].forEach(([f,step])=>{if(v[f]&&!T.some(t=>t.tid===v.id&&t.step===step))T.push({id:'legacy_'+v.id+'_'+step,kind:'venue',tid:v.id,name:v.name,channel:'email',step:step,date:isoDay(v[f]),at:v[f],legacy:true});});});
+  return T.sort((a,b)=>String(b.date).localeCompare(String(a.date))||(b.at||0)-(a.at||0));
+}
+// Never email and DM the same venue on the same day.
+function otConflict(tid,step,date){
+  if(!tid)return '';const mine=otAll().filter(t=>t.tid===tid&&t.date===date);
+  if(otIsDm(step)&&mine.some(t=>otIsEmail(t.step)))return 'You already emailed them on '+fmtEv(date)+'. Never email and message on the same day. Do the Instagram message tomorrow.';
+  if(otIsEmail(step)&&mine.some(t=>otIsDm(t.step)))return 'You already messaged them on Instagram on '+fmtEv(date)+'. Never email and message on the same day. Send the email tomorrow.';
+  return '';
+}
+// A "touch" is one cold contact: an email or a DM. One every 4 months, three at most. The one extra DM (ig-dm) does not count.
+function otTouches(v){return otAll().filter(t=>t.tid===v.id&&OT_TOUCH.test(t.step)).sort((a,b)=>String(a.date).localeCompare(String(b.date)));}
+function otTouchDue(v){
+  const today=isoDay(Date.now());
+  if(v.conversation||v.declinedAt||v.stage==='yes'||v.stage==='onboarding'||v.stage==='closed')return false;
+  if(v.notNowUntil)return v.notNowUntil<=today;
+  const T=otTouches(v);if(T.length<1||T.length>=3)return false;
+  return today>=otPlusMonths(otMs(T[T.length-1].date),4);
+}
+function otExtraDmDue(v){
+  if(!v.instagram||v.conversation||v.declinedAt)return '';
+  const all=otAll().filter(t=>t.tid===v.id),T=otTouches(v);
+  if(!T.length||!(T[0].step==='email1'||T[0].step==='cold-email')||all.some(t=>t.step==='ig-dm'||t.step==='reply'))return '';
+  return otPlusMonths(otMs(T[0].date),1);
+}
+function otVenueNote(v){
+  const st=v.stage||'target';if(st==='yes'||st==='onboarding')return '';
+  const L=[];
+  if(st==='no'&&!v.noUntil&&!v.notNowUntil)return '<div class="t2"><b>Outreach:</b> Said no'+(v.declinedAt?' on '+esc(fmtEv(isoDay(v.declinedAt))):'')+'. No more outreach.</div>';
+  if(v.conversation)return '<div class="t2"><b>Outreach:</b> They replied, so the schedule is paused while you talk. Press Resume if it goes quiet.</div>';
+  const T=otTouches(v),n=T.length,last=n?T[n-1].date:'';
+  if(v.notNowUntil)L.push('Not now. Waiting until '+fmtEv(v.notNowUntil)+', the time they gave.');
+  else if(n===0)L.push('Next: touch 1, an email tailored to this venue and the season.');
+  else if(n<3)L.push('Touch '+n+' went '+fmtEv(last)+'. Touch '+(n+1)+', with a new angle that fits the timing, is due '+fmtEv(otPlusMonths(otMs(last),4))+'. One touch every 4 months, an email or a DM.');
+  else L.push('Touch 3 went '+fmtEv(last)+'. No answer after 3 touches, so outreach stops. A reply starts it again.');
+  const x=otExtraDmDue(v);
+  if(x)L.push('Instagram: one extra DM is due '+fmtEv(x)+' if they have not answered the email ("I sent a note to your email, just wanted to say hi here too."). Only one, ever.');
+  else if(!v.instagram&&n>=1&&n<3)L.push('Add their Instagram handle if you want the one extra DM.');
+  return '<div class="t2"><b>Outreach:</b> '+L.map(esc).join(' ')+'</div>';
+}
+function coldCheckText(v){
+  const bait=baitFor(v.name);
+  return 'Subject: A night idea for '+v.name+'\n\nHi '+(v.contactName||'there')+',\n\n[New angle for this touch. Pick one that fits the timing: a season or holiday, a slow night, something new at '+v.name+'. Do not repeat an earlier email. Delete this bracket before you send.]'+(bait?' One idea I had: '+bait:'')+'\n\nWe still offer a free trial night at no cost and no contract. If it is ever worth a conversation, just reply.\n\nAhnna\nBelladonna Audio Alchemies\nbelladonnanights.com';
+}
+function dmText(v,kind){return kind==='colddm'?'Hi! Ahnna from Belladonna Audio Alchemies. [One short line with a new angle that fits the timing. Delete this bracket.] We do a free trial night if it is ever useful. No pressure.':'Hi! Ahnna from Belladonna Audio Alchemies. I sent a note to your email, just wanted to say hi here too.';}
+const OT_KIND={email:{step:'email1',label:'Cold email (touch 1): '},email2:{step:'email2',label:'Cold email (touch 2): '},email3:{step:'email3',label:'Cold email (touch 3): '},cold:{step:'cold-email',label:'Cold email: '},dm:{step:'ig-dm',label:'Extra Instagram DM: '},colddm:{step:'cold-dm',label:'Instagram message (touch): '}};
+function outreachHistory(){
+  const T=otAll(),f=S.ohf||'all',G={};
+  T.forEach(t=>{const k=(t.kind||'venue')+'|'+(t.tid||String(t.name).toLowerCase());(G[k]=G[k]||{kind:t.kind||'venue',name:t.name,tid:t.tid,t:[]}).t.push(t);});
+  const all=Object.values(G),n=k=>all.filter(g=>g.kind===k).length;
+  const list=all.filter(g=>f==='all'||g.kind===f).sort((a,b)=>String(b.t[0].date).localeCompare(String(a.t[0].date)));
+  let h='<div class="tm-sec">Outreach history ('+all.length+' contacted)</div><div class="tm-hint">Every venue, sponsor and host we have emailed or messaged, with the date and channel of each touch. Sending a draft from here logs it automatically.</div>';
+  h+='<div class="tm-row"><select class="tm-sel" style="max-width:14rem" data-chg="ohf">'+[['all','Everyone ('+all.length+')'],['venue','Venues ('+n('venue')+')'],['sponsor','Sponsors ('+n('sponsor')+')'],['host','Hosts ('+n('host')+')']].map(o=>'<option value="'+o[0]+'"'+(f===o[0]?' selected':'')+'>'+o[1]+'</option>').join('')+'</select><button class="tm-b" data-act="ohcopy">Copy history</button></div>';
+  if(!list.length)h+='<div class="tm-empty">Nothing logged yet.</div>';
+  list.forEach(g=>{
+    const v=g.kind==='venue'&&g.tid?(S.venues||[]).find(x=>x.id===g.tid):null;
+    const status=v?(v.declinedAt||(v.stage==='no'&&!v.noUntil)?'said no':v.conversation?'in conversation':v.stage==='closed'?'closed, no answer':v.stage==='yes'||v.stage==='onboarding'?'yes':'in progress'):'';
+    const sent=g.t.filter(t=>!({reply:1,no:1,notnow:1})[t.step]);
+    h+='<div class="tm-item"><div class="t1"><span class="tm-tag">'+esc(g.kind)+'</span><b>'+esc(g.name)+'</b>'+(status?' <span class="tm-tag">'+esc(status)+'</span>':'')+' <span class="tm-tag">'+sent.length+(sent.length===1?' touch':' touches')+'</span></div>'+
+      g.t.map(t=>'<div class="t2">'+esc(fmtDay(otMs(t.date)))+' &middot; '+esc(OT_STEP[t.step]||t.step)+' &middot; '+(t.channel==='instagram'?'Instagram':'Email')+(t.subject?' &middot; &ldquo;'+esc(t.subject)+'&rdquo;':'')+(t.note?' &middot; '+esc(t.note):'')+'</div>').join('')+'</div>';
+  });
+  h+=det('otlog','Log a touch by hand (hosts, sponsors, Instagram, older emails)','<div class="tm-fg"><div><label class="tm-lbl">Who is it</label><select class="tm-sel" id="ot-kind"><option value="venue">Venue</option><option value="sponsor">Sponsor</option><option value="host">Host</option></select></div><div><label class="tm-lbl">Name</label><input class="tm-in" id="ot-name"></div><div><label class="tm-lbl">What we did</label><select class="tm-sel" id="ot-step"><option value="email">Sent an email</option><option value="ig-dm">Sent an Instagram DM</option><option value="ig-follow">Followed + liked posts</option><option value="reply">They replied</option></select></div><div><label class="tm-lbl">Date</label><input class="tm-in" id="ot-date" type="date" value="'+isoDay(Date.now())+'"></div><div class="full"><label class="tm-lbl">Subject or note (optional)</label><input class="tm-in" id="ot-note"></div></div><div class="tm-row"><button class="tm-b pri" data-act="touchadd">Add to history</button></div>',false);
+  return h;
 }
 function venueCard(v){
   const st=v.stage||'target',now=Date.now();
@@ -8341,6 +8455,7 @@ function venueCard(v){
   if(v.pitch)h+='<div class="t2"><b>Pitch:</b> '+esc(v.pitch)+'</div>';
   if(baitFor(v.name))h+='<div class="t2"><b>Iris\'s idea to open with:</b> '+esc(baitFor(v.name))+'</div>';
   if(v.contactName||v.contact)h+='<div class="t2"><b>Contact:</b> '+esc([v.contactName,v.contact].filter(Boolean).join(' · '))+'</div>';
+  h+=otVenueNote(v);
   if(st==='yes')h+='<div class="t2"><b>Trial night:</b> '+esc(v.trialDate?fmtEv(v.trialDate):'date not set')+'</div>';
   if(st==='followup'&&v.followUpOn)h+='<div class="t2"><b>Check back:</b> '+esc(fmtEv(v.followUpOn))+(v.followUpOn<=isoDay(now)?' <span class="tm-tag warn">due</span>':'')+'</div>';
   if(st==='no'&&v.noUntil)h+='<div class="t2">Hold until '+esc(fmtDay(v.noUntil))+(last&&last.said?'. Reason: '+esc(last.said):'')+'</div>';
@@ -8348,11 +8463,18 @@ function venueCard(v){
   h+='<div class="tm-row">';
   if(v.verify)h+='<button class="tm-b" data-act="verified" data-id="'+esc(v.id)+'">Confirmed open</button>';
   if(st!=='onboarding'&&S.logFor!==v.id)h+='<button class="tm-b'+(st==='target'||st==='followup'?' pri':'')+'" data-act="openlog" data-id="'+esc(v.id)+'">Log visit</button>';
-  if(st==='target'||st==='followup'||!v.stage){
-    const em=emailOf(v),sent=v.emailedAt,second=v.emailed2At;
+  if(st==='target'||st==='followup'||st==='cold'||!v.stage){
+    const em=emailOf(v),T=otTouches(v),n=T.length,sent=n>0||v.emailedAt;
     if(!em)h+='<input class="tm-in s" style="width:12rem" data-email="'+esc(v.id)+'" placeholder="their email" value="">';
-    if(!sent)h+='<button class="tm-b" data-act="emailvenue" data-id="'+esc(v.id)+'" data-kind="email">Draft email</button>';
-    else if(!second)h+='<button class="tm-b" data-act="emailvenue" data-id="'+esc(v.id)+'" data-kind="email2">Draft follow-up email</button>';
+    if(!v.conversation){
+      if(n<3){const nk=n===0?'email':n===1?'email2':'email3';
+        h+='<button class="tm-b" data-act="emailvenue" data-id="'+esc(v.id)+'" data-kind="'+nk+'">Draft touch '+(n+1)+' email</button>';
+        if(v.instagram)h+='<button class="tm-b dim" data-act="emailvenue" data-id="'+esc(v.id)+'" data-kind="colddm">Draft touch '+(n+1)+' as an Instagram DM instead</button>';}
+      if(!v.instagram)h+='<input class="tm-in s" style="width:10rem" data-ig="'+esc(v.id)+'" placeholder="@instagram"><button class="tm-b dim" data-act="saveig" data-id="'+esc(v.id)+'">Save Instagram</button>';
+      else if(otExtraDmDue(v)&&otExtraDmDue(v)<=isoDay(now))h+='<button class="tm-b" data-act="emailvenue" data-id="'+esc(v.id)+'" data-kind="dm">Draft the one extra DM</button>';
+      if(sent)h+='<button class="tm-b" data-act="vreplied" data-id="'+esc(v.id)+'">They replied</button>';
+    }else h+='<button class="tm-b pri" data-act="vresume" data-id="'+esc(v.id)+'">Resume outreach</button>';
+    if(sent||st==='followup')h+='<button class="tm-b dim red" data-act="vno" data-id="'+esc(v.id)+'">Said no</button>';
   }
   if(st==='yes')h+='<button class="tm-b pri" data-act="handoff" data-id="'+esc(v.id)+'">Hand to onboarding</button>';
   if(st==='followup')h+='<button class="tm-b dim" data-act="snooze" data-id="'+esc(v.id)+'">Snooze 5 days</button>';
@@ -8376,6 +8498,8 @@ function vOutreach(){
   if(!due.length&&!d.rPending.length)h+='<div class="tm-empty">No follow-ups due, nothing to hand off, no thank-yous waiting.</div>';
   due.forEach(v=>h+=venueCard(v));
   d.rPending.forEach(x=>h+=draftCard(x,false));
+  h+=sponsorSection();
+  h+=outreachHistory();
   const tp=tripPlan();
   h+='<div class="tm-sec">Next trip</div>';
   if(!tp.stops.length)h+='<div class="tm-empty">No venues are ready to visit. Add venues below, or wait for a hold to end.</div>';
@@ -8435,7 +8559,8 @@ function venueTimeline(v){
   add(v.createdAt,'Added','Added to HQ as '+(v.stage||'target'));
   if(v.startDate)add(new Date(v.startDate+'T12:00:00').getTime(),'Started','Started with Belladonna','ok');
   hqLeads().filter(l=>norm(l.name)===nv).forEach(l=>{if(l.createdAt)add(new Date(l.createdAt).getTime(),'Lead','First logged as a lead'+(l.source==='outbound'?' (we found them)':l.source?' (they found us)':''));if(l.stage&&l.updatedAt)add(new Date(l.updatedAt).getTime(),'Lead','Lead stage: '+(typeof leadStageLabel==='function'?leadStageLabel(l.stage):l.stage));});
-  add(v.emailedAt,'Email','Cold email sent');add(v.emailed2At,'Email','Follow-up email sent');
+  add(v.emailedAt,'Email','Cold email sent');add(v.emailed2At,'Email','Follow-up email sent');add(v.emailed3At,'Email','Email 3 (close-out) sent');
+  otAll().filter(t=>t.tid===v.id&&!t.legacy&&t.step!=='email1'&&t.step!=='email2'&&t.step!=='email3').forEach(t=>add(t.at||otMs(t.date),'Outreach',(OT_STEP[t.step]||t.step)+(t.channel==='instagram'?' (Instagram)':'')));
   Object.values(v.visits||{}).forEach(x=>add(x.at,'Visit',[x.who?x.who+' visited':'Visit',x.said?'they said: '+x.said:'',x.outcome?'outcome: '+x.outcome:''].filter(Boolean).join(' · ')));
   if(v.trialDate)add(new Date(v.trialDate+'T20:00:00').getTime(),'Trial','Trial night');
   add(v.handedOffAt,'Onboarding','Moved to onboarding');
@@ -9174,9 +9299,10 @@ function adsState(){
   const other=arr(a.spend).sort((x,y)=>String(y.date||'').localeCompare(String(x.date||'')));
   const ideas=arr(a.ideas).sort((x,y)=>(y.createdAt||0)-(x.createdAt||0));
   const sum=(L)=>L.filter(x=>String(x.date||'').slice(0,7)===mon).reduce((n,x)=>n+money(x.spend!==undefined?x.spend:x.amount),0);
+  const sponsors=Object.entries(a.sponsors||{}).filter(([k,v])=>v&&v.business).map(([k,v])=>Object.assign({id:k},v)).sort((x,y)=>(y.createdAt||0)-(x.createdAt||0));
   const adSpend=sum(results),otherSpend=sum(other),budget=money(st.budget);
   const stale=plans.filter(p=>p.status==='running'&&!results.some(r=>r.planId===p.id&&now-new Date(r.date+'T12:00:00').getTime()<7*DAY)&&now-(p.startedAt||0)>2*DAY);
-  return {settings:st,plans:plans,fresh:plans.filter(p=>!p.status||p.status==='new'),results:results,other:other,ideas:ideas,freshIdeas:ideas.filter(i=>!i.status||i.status==='new'),adSpend:adSpend,otherSpend:otherSpend,total:adSpend+otherSpend,budget:budget,stale:stale,mon:mon};
+  return {sponsors:sponsors,settings:st,plans:plans,fresh:plans.filter(p=>!p.status||p.status==='new'),results:results,other:other,ideas:ideas,freshIdeas:ideas.filter(i=>!i.status||i.status==='new'),adSpend:adSpend,otherSpend:otherSpend,total:adSpend+otherSpend,budget:budget,stale:stale,mon:mon};
 }
 function mqVerdict(r,st){
   const spend=money(r.spend),res=money(r.leads),tc=money(st.targetCost);
@@ -9199,6 +9325,43 @@ function planCard(p){
     (steps.length?'<div class="t2" style="margin-top:.6rem"><b>Do it step by step. Tick each one as you go.</b></div>'+steps.map((s,i)=>'<label class="t2" style="display:flex;gap:.5rem;align-items:flex-start;margin:.3rem 0"><input type="checkbox" data-chg="mqstep" data-id="'+esc(p.id)+'" data-i="'+i+'"'+(ck[i]?' checked':'')+' style="margin-top:.25rem"><span><b>'+(i+1)+'.</b> '+esc(s)+'</span></label>').join(''):'')+
     (p.check?'<div class="t2"><b>How to know it worked:</b> '+esc(p.check)+'</div>':'')+
     '<div class="tm-row">'+(stt==='new'?'<button class="tm-b pri" data-act="mqplan" data-id="'+esc(p.id)+'" data-v="doing">I am setting it up</button><button class="tm-b dim" data-act="mqplan" data-id="'+esc(p.id)+'" data-v="skipped">Skip</button>':'')+(stt==='doing'?'<button class="tm-b pri" data-act="mqplan" data-id="'+esc(p.id)+'" data-v="running">It is live</button>':'')+(stt==='running'?'<button class="tm-b pri" data-act="mqplan" data-id="'+esc(p.id)+'" data-v="done">It finished or I turned it off</button>':'')+((stt==='done'||stt==='skipped')?'<button class="tm-b" data-act="mqplan" data-id="'+esc(p.id)+'" data-v="new">Put it back</button>':'')+'<button class="tm-b dim red" data-act="mqplandel" data-id="'+esc(p.id)+'">Delete</button></div></div>';
+}
+const SPONSOR_OFFER_DEFAULT="a slide on our gig screensavers (it plays between our trivia and bingo games and between karaoke singers), shout-outs during those nights, and the chance to give a prize to the winners as free marketing";
+function sponsorOffer(){return (adsState().settings.sponsorOffer||'').trim()||SPONSOR_OFFER_DEFAULT;}
+function sponsorCardBody(x,np){
+  const L=t=>np?'<span class="np-body">'+t+'</span>':'<div class="t2">'+t+'</div>';
+  const u=x.url?safeUrl(x.url):'';let h='';
+  if(x.why)h+=L(esc(x.why));
+  const who=[x.contact,x.email].filter(Boolean).map(esc).join(' &middot; ');
+  h+=L('<b>Business:</b> '+(u?'<a href="'+esc(u)+'" target="_blank" rel="noopener">'+esc(x.business)+'</a>':esc(x.business))+(x.kind?' ('+esc(x.kind)+')':'')+(x.city?' &middot; '+esc(x.city):'')+(x.nearVenue?' &middot; near '+esc(x.nearVenue):''));
+  if(who)h+=L('<b>Contact:</b> '+who);
+  if(x.pitch)h+=L('<b>Pitch email:</b>')+'<span class="'+(np?'np-cap':'mq-cap t2')+'" style="display:block">'+esc(x.pitch)+'</span>';
+  const cp=x.pitch?'<button class="'+(np?'np-act cp':'tm-b')+'" data-act="sponsorcopy" data-id="'+esc(x.id)+'">Copy pitch</button>':'';
+  if(cp)h+=np?'<span class="np-acts">'+cp+'</span>':'<div class="tm-row">'+cp+'</div>';
+  return h;
+}
+function sponsorGazette(){
+  const live=adsState().sponsors.filter(x=>['new','pitched'].indexOf(x.status||'new')>=0).sort((p,q)=>(q.status==='pitched'?1:0)-(p.status==='pitched'?1:0));
+  if(!live.length)return {html:'',n:0};
+  const btn=(x,v,l)=>{const cur=(x.status||'new')===v;return '<button class="np-act'+(cur?' on':'')+'" data-act="sponsorset" data-id="'+esc(x.id)+'" data-v="'+(cur&&v==='pitched'?'new':v)+'">'+l+'</button>';};
+  const card=x=>'<div class="np-card'+(x.status==='pitched'?' on':'')+'"><span class="np-date kind"><b>Sponsor</b></span><div class="np-cardt"><span class="np-hd">'+esc(x.business)+(x.status==='pitched'?' <em>(pitched)</em>':'')+'</span>'+sponsorCardBody(x,true)+'<span class="np-acts">'+btn(x,'pitched','Pitched')+btn(x,'signed','Signed')+btn(x,'skipped','Hide')+btn(x,'archived','Archive')+'</span></div></div>';
+  return {html:'<div class="np-sub">Possible sponsors from Raven <em>'+live.length+'</em></div><div class="np-cards">'+live.map(card).join('')+'</div>',n:live.length};
+}
+function sponsorCard(x){
+  const st=x.status||'new',b=(v,l,c)=>'<button class="tm-b'+(c?' '+c:'')+'" data-act="sponsorset" data-id="'+esc(x.id)+'" data-v="'+v+'">'+l+'</button>';
+  const LBL={new:'new',pitched:'pitched',signed:'signed',skipped:'hidden',archived:'archived'};
+  return '<div class="tm-item"><div class="t1"><span class="tm-tag">'+esc(LBL[st]||st)+'</span><b>'+esc(x.business)+'</b></div>'+sponsorCardBody(x,false)+
+    '<div class="tm-row">'+(st==='new'?b('pitched','Pitched','pri'):'')+((st==='new'||st==='pitched')?b('signed','Signed','pri')+b('skipped','Hide','dim'):'')+((st==='signed'||st==='skipped'||st==='archived')?b('new','Put back'):'')+(st!=='archived'?b('archived','Archive','dim'):'')+'</div></div>';
+}
+function sponsorSection(){
+  const sp=adsState().sponsors,live=sp.filter(x=>['skipped','archived'].indexOf(x.status)<0);
+  let h='<div class="tm-sec">Possible sponsors ('+sp.filter(x=>!x.status||x.status==='new').length+' new)</div><div class="tm-hint">Local businesses that could sponsor our nights. Raven finds them on Mondays and Quill writes the pitch. You send it yourself: nothing goes out on its own.</div>';
+  if(!live.length)h+='<div class="tm-empty">No sponsors yet. They show up after the Sponsor hunt task runs.</div>';
+  live.forEach(x=>h+=sponsorCard(x));
+  const sk=sp.filter(x=>x.status==='skipped'),ar=sp.filter(x=>x.status==='archived');
+  if(sk.length)h+=det('spsk','Hidden ('+sk.length+')',sk.map(sponsorCard).join(''),false);
+  if(ar.length)h+=det('spar','Archived ('+ar.length+')',ar.map(sponsorCard).join(''),false);
+  return h;
 }
 function mqWhere(x){return [].concat(x.where||[]).map(w=>typeof w==='string'?{name:w}:w).filter(w=>w&&(w.name||w.url));}
 // The how-to detail for one marketing idea: when, exactly where to post (with links), which image, and a ready caption.
@@ -9238,7 +9401,7 @@ function mqAskPrompt(){
 function vRen(){
   const a=adsState(),st=a.settings;
   const pct=a.budget?Math.min(100,Math.round(a.total/a.budget*100)):0;
-  let h='<div class="tm-sec">This month: '+fmtMoney(a.total)+(a.budget?' of '+fmtMoney(a.budget):'')+'</div><div class="tm-hint">Ads plus anything else you spent to get the name out (printing, sponsorships, flyers). Ren never plans past your budget.</div>';
+  let h=(st.budgetReviewed!==a.mon?'<div class="tm-item"><div class="t1"><span class="tm-tag warn">monthly check</span><b>Recheck your marketing budget</b></div><div class="t2">'+(a.budget?'It is set to '+fmtMoney(a.budget)+'. Change it under Budget and goals below, or confirm it is still right.':'It is not set yet. Set it under Budget and goals below.')+'</div>'+(a.budget?'<div class="tm-row"><button class="tm-b pri" data-act="mqbudgetok">Still right for this month</button></div>':'')+'</div>':'')+'<div class="tm-sec">This month: '+fmtMoney(a.total)+(a.budget?' of '+fmtMoney(a.budget):'')+'</div><div class="tm-hint">Ads plus anything else you spent to get the name out (printing, sponsorships, flyers). Ren never plans past your budget.</div>';
   if(a.budget)h+='<div style="height:10px;background:rgba(255,255,255,.08);border-radius:6px;overflow:hidden;margin:.3rem 0 .8rem"><div style="height:100%;width:'+pct+'%;background:'+(pct>=100?'#d03a46':pct>=80?'#e2c230':'#e2584a')+'"></div></div>';
   h+='<div class="tm-sec">Do this now ('+a.fresh.length+' waiting)</div><div class="tm-hint">Each card is one ad move with the exact words, the money, and the clicks. Ren never logs in or spends anything. You do the clicking, Ren tells you exactly where.</div>';
   const live=a.plans.filter(p=>p.status!=='skipped'&&p.status!=='done');
@@ -9262,7 +9425,7 @@ function vRen(){
   const sk=a.ideas.filter(x=>x.status==='skipped'),ar=a.ideas.filter(x=>x.status==='archived');
   if(sk.length)h+=det('mqidsk','Hidden ('+sk.length+')',sk.map(mqIdeaCard).join(''),false);
   if(ar.length)h+=det('mqidar','Archived ('+ar.length+')',ar.map(mqIdeaCard).join(''),false);
-  h+='<div class="tm-sec">Budget and goals</div><div class="tm-hint">Ren plans inside these. Change them any time.</div><div class="tm-fg"><div><label class="tm-lbl">Monthly marketing budget ($)</label><input class="tm-in" id="mq-budget" inputmode="decimal" value="'+esc(st.budget||'')+'"></div><div><label class="tm-lbl">What I would pay per lead or message ($)</label><input class="tm-in" id="mq-tc" inputmode="decimal" value="'+esc(st.targetCost||'')+'"></div><div class="full"><label class="tm-lbl">What I want most right now</label><input class="tm-in" id="mq-goal" value="'+esc(st.goal||'')+'" placeholder="e.g. More private event bookings, more people at the Thursday trivia night"></div><div class="full"><label class="tm-lbl">Area to reach</label><input class="tm-in" id="mq-area" value="'+esc(st.area||'')+'" placeholder="Auburn, Kent, Federal Way, Tacoma, Seattle"></div></div><div class="tm-row"><button class="tm-b pri" data-act="mqsettings">Save</button></div>';
+  h+='<div class="tm-sec">Budget and goals</div><div class="tm-hint">Ren plans inside these. Change them any time.</div><div class="tm-fg"><div><label class="tm-lbl">Monthly marketing budget ($)</label><input class="tm-in" id="mq-budget" inputmode="decimal" value="'+esc(st.budget||'')+'"></div><div><label class="tm-lbl">What I would pay per lead or message ($)</label><input class="tm-in" id="mq-tc" inputmode="decimal" value="'+esc(st.targetCost||'')+'"></div><div class="full"><label class="tm-lbl">What I want most right now</label><input class="tm-in" id="mq-goal" value="'+esc(st.goal||'')+'" placeholder="e.g. More private event bookings, more people at the Thursday trivia night"></div><div class="full"><label class="tm-lbl">Area to reach</label><input class="tm-in" id="mq-area" value="'+esc(st.area||'')+'" placeholder="Auburn, Kent, Federal Way, Tacoma, Seattle"></div><div class="full"><label class="tm-lbl">What a sponsor gets (Quill uses this in the pitch)</label><textarea class="tm-in" id="mq-offer" rows="3">'+esc(st.sponsorOffer||SPONSOR_OFFER_DEFAULT)+'</textarea></div></div><div class="tm-row"><button class="tm-b pri" data-act="mqsettings">Save</button></div>';
   return h;
 }
 
@@ -9412,13 +9575,20 @@ const A={
   async kitcopy(t){const k=((S.cfg.social||{}).kits||{})[t.dataset.id];if(!k)return;toast(await copy(k[t.dataset.f]||'')?'Copied.':'Copy failed.',false);},
   async kitdone(t){await emSave({['kits.'+t.dataset.id+'.status']:'done'});toast('Marked as up.');},
   async kitdel(t){if(!confirm('Delete this kit?'))return;await emSave({['kits.'+t.dataset.id]:null});},
-  async mqsettings(){await mqSave({'settings.budget':val('mq-budget'),'settings.targetCost':val('mq-tc'),'settings.goal':val('mq-goal'),'settings.area':val('mq-area')});toast('Saved.');},
+  async mqsettings(){await mqSave({'settings.budget':val('mq-budget'),'settings.targetCost':val('mq-tc'),'settings.goal':val('mq-goal'),'settings.area':val('mq-area'),'settings.sponsorOffer':val('mq-offer'),'settings.budgetReviewed':isoDay(Date.now()).slice(0,7)});toast('Saved.');},
   async mqask(){toast(await copy(mqAskPrompt())?'Request copied. Paste it into a Claude or ChatGPT chat.':'Copy failed.',false);},
   async mqcopy(t){const p=((S.cfg.ads||{}).plans||{})[t.dataset.id];if(!p)return;toast(await copy(p[t.dataset.f]||'')?'Copied.':'Copy failed.',false);},
   async mqstep(t){await mqSave({['plans.'+t.dataset.id+'.checks.'+t.dataset.i]:t.checked});},
   async mqplan(t){const v=t.dataset.v,p={['plans.'+t.dataset.id+'.status']:v};if(v==='running')p['plans.'+t.dataset.id+'.startedAt']=Date.now();await mqSave(p);},
   async mqplandel(t){if(!confirm('Delete this plan?'))return;await mqSave({['plans.'+t.dataset.id]:null});},
   async mqidea(t){await mqSave({['ideas.'+t.dataset.id+'.status']:t.dataset.v,['ideas.'+t.dataset.id+'.updatedAt']:Date.now()});},
+  async sponsorset(t){
+    await mqSave({['sponsors.'+t.dataset.id+'.status']:t.dataset.v,['sponsors.'+t.dataset.id+'.updatedAt']:Date.now()});
+    const x=adsState().sponsors.find(i=>i.id===t.dataset.id);
+    if(x&&t.dataset.v==='pitched'&&!otAll().some(o=>o.tid===x.id&&o.step==='pitch')){const sm=String(x.pitch||'').match(/^\s*subject:\s*(.*)/i);await otSave({['touches.'+otId()]:otDoc({kind:'sponsor',tid:x.id,name:x.business,step:'pitch',subject:sm?sm[1].trim():''})});}
+  },
+  async sponsorcopy(t){const x=adsState().sponsors.find(i=>i.id===t.dataset.id);if(x)toast(await copy(x.pitch||'')?'Pitch copied.':'Copy failed.',false);},
+  async mqbudgetok(){await mqSave({'settings.budgetReviewed':isoDay(Date.now()).slice(0,7)});toast('Budget confirmed for this month.');},
   async mqcopycap(t){const x=adsState().ideas.find(i=>i.id===t.dataset.id);if(x)toast(await copy(x.caption||'')?'Caption copied.':'Copy failed.',false);},
   async mqcopybrief(t){const x=adsState().ideas.find(i=>i.id===t.dataset.id);if(x)toast(await copy(mqIdeaPrompt(x))?'Brief copied. Paste it into your chat.':'Copy failed.',false);},
   async mqresadd(){const spend=val('mr-spend');if(!spend){toast('Type how many dollars were spent.',true);return;}const pid=val('mr-plan'),pl=pid?((S.cfg.ads||{}).plans||{})[pid]:null;await mqSave({['results.r'+Date.now().toString(36)]:{planId:pid,name:pl?pl.title:(val('mr-name')||'Ad'),date:isoDay(Date.now()),spend:spend,reach:val('mr-reach'),clicks:val('mr-clicks'),leads:val('mr-leads'),note:val('mr-note'),createdAt:Date.now()}});toast('Saved. Ren will judge it.');},
@@ -9468,19 +9638,65 @@ const A={
   },
   async delvenue(t){if(!confirm('Delete this venue?'))return;await col('agent_venues').doc(t.dataset.id).delete();},
   async verified(t){await col('agent_venues').doc(t.dataset.id).update({verify:false});toast('Marked confirmed.');},
+  async touchadd(){
+    const kind=val('ot-kind'),name=val('ot-name').trim(),step=val('ot-step'),date=val('ot-date')||isoDay(Date.now()),note=val('ot-note').trim();
+    if(!name){toast('Type the name first.',true);return;}
+    const lc=name.toLowerCase();
+    const tid=kind==='venue'?((S.venues.find(x=>String(x.name||'').toLowerCase()===lc)||{}).id||''):kind==='sponsor'?((adsState().sponsors.find(x=>String(x.business||'').toLowerCase()===lc)||{}).id||''):'';
+    const bad=otConflict(tid,step,date);if(bad){toast(bad,true);return;}
+    const id=otId();await otSave({['touches.'+id]:otDoc({kind:kind,tid:tid,name:name,step:step,date:date,note:note})});
+    toast('Added to the history.');
+  },
+  ohf(t){S.ohf=t.value;renderDrawer(true);},
+  async ohcopy(){
+    const f=S.ohf||'all',rows=otAll().filter(t=>f==='all'||(t.kind||'venue')===f).map(t=>[t.date,t.kind||'venue',t.name,t.channel==='instagram'?'Instagram':'Email',OT_STEP[t.step]||t.step,t.subject||t.note||''].join(' | '));
+    toast(await copy('DATE | TYPE | NAME | CHANNEL | WHAT | NOTE\n'+rows.join('\n'))?'History copied.':'Copy failed.',false);
+  },
+  async saveig(t){const inp=document.querySelector('[data-ig="'+t.dataset.id+'"]'),v=inp?inp.value.trim():'';if(!v){toast('Type their Instagram handle first.',true);return;}await col('agent_venues').doc(t.dataset.id).update({instagram:v});toast('Instagram saved.');},
+  async igfollow(t){
+    const v=S.venues.find(x=>x.id===t.dataset.id);if(!v)return;
+    await otSave({['touches.'+otId()]:otDoc({kind:'venue',tid:v.id,name:v.name,step:'ig-follow',note:'Followed and liked a couple of recent posts'})});toast('Logged.');
+  },
+  async vreplied(t){
+    const v=S.venues.find(x=>x.id===t.dataset.id);if(!v)return;
+    await col('agent_venues').doc(v.id).update({conversation:true,followUpOn:''});
+    await otSave({['touches.'+otId()]:otDoc({kind:'venue',tid:v.id,name:v.name,step:'reply',channel:'email'})});toast('Logged. The cold-outreach schedule is paused for this venue.');
+  },
+  async vresume(t){const v=S.venues.find(x=>x.id===t.dataset.id);if(!v)return;await col('agent_venues').doc(v.id).update({conversation:false,stage:'followup',followUpOn:'',notNowUntil:''});toast('Outreach resumed. The next touch follows the 4-month schedule.');},
+  async vno(t){
+    const v=S.venues.find(x=>x.id===t.dataset.id);if(!v||!confirm(v.name+' said no? Outreach to them stops.'))return;
+    const now=Date.now();await col('agent_venues').doc(v.id).update({stage:'no',declinedAt:now,noUntil:0,followUpOn:'',conversation:false});
+    await otSave({['touches.'+otId()]:otDoc({kind:'venue',tid:v.id,name:v.name,step:'no',channel:'email'})});toast('Noted. No more outreach to '+v.name+'.');
+  },
   async emailvenue(t){
     const v=S.venues.find(x=>x.id===t.dataset.id);if(!v)return;
-    const kind=t.dataset.kind==='email2'?'email2':'email';
-    let em=emailOf(v);
-    if(!em){
-      const inp=document.querySelector('[data-email="'+v.id+'"]'),val=inp?inp.value.trim():'';
-      if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)){toast('Type their email first.',true);return;}
-      em=val;v.contact=(v.contact?v.contact+' · ':'')+em;
-      await col('agent_venues').doc(v.id).update({contact:v.contact});
+    const kind=OT_KIND[t.dataset.kind]?t.dataset.kind:'email',isDm=kind==='dm'||kind==='colddm';
+    if(isDm){
+      const inp=document.querySelector('[data-ig="'+v.id+'"]'),val2=inp?inp.value.trim():'';
+      if(!v.instagram&&val2){v.instagram=val2;await col('agent_venues').doc(v.id).update({instagram:val2});}
+      if(!v.instagram){toast('Add their Instagram handle first.',true);return;}
+    }else{
+      let em=emailOf(v);
+      if(!em){
+        const inp=document.querySelector('[data-email="'+v.id+'"]'),val=inp?inp.value.trim():'';
+        if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)){toast('Type their email first.',true);return;}
+        em=val;v.contact=(v.contact?v.contact+' \u00b7 ':'')+em;
+        await col('agent_venues').doc(v.id).update({contact:v.contact});
+      }
     }
-    if(S.drafts.some(d=>d.venueId===v.id&&(d.kind==='email'||d.kind==='email2')&&d.status==='pending')){toast('There is already an email draft for this venue.',true);return;}
-    const body=(kind==='email'?coldEmailText(v):followEmailText(v));
-    await col('agent_drafts').add({leadId:null,venueId:v.id,agent:'raven',kind:kind,body:body,label:(kind==='email'?'Cold email: ':'Follow-up email: ')+v.name+' ('+em+')',status:'pending',createdAt:Date.now()});
+    if(S.drafts.some(d=>d.venueId===v.id&&OT_KIND[d.kind]&&d.status==='pending')){toast('There is already a draft waiting for this venue.',true);return;}
+    const TT=otTouches(v),today3=isoDay(Date.now());
+    if(kind==='dm'){
+      const x=otExtraDmDue(v);
+      if(!x){toast('The extra DM is only for a venue with an Instagram handle, an email touch 1 and no answer, and only once.',true);return;}
+      if(x>today3){toast('The extra DM is not due until '+fmtEv(x)+', one month after touch 1.',true);return;}
+    }else{
+      if(TT.length>=3){toast('That is 3 touches with no answer, so outreach stops.',true);return;}
+      if(TT.length&&!v.notNowUntil){const due=otPlusMonths(otMs(TT[TT.length-1].date),4);if(due>today3){toast('The next touch is not due until '+fmtEv(due)+'. One touch every 4 months.',true);return;}}
+    }
+    const body=kind==='email'?coldEmailText(v):(kind==='email2'||kind==='email3'||kind==='cold')?coldCheckText(v):dmText(v,kind);
+    const tag=isDm?' ('+v.instagram+')':' ('+emailOf(v)+')';
+    await col('agent_drafts').add({leadId:null,venueId:v.id,agent:'raven',kind:kind,body:body,label:OT_KIND[kind].label+v.name+tag,status:'pending',createdAt:Date.now()});
     toast('Draft is waiting in Needs you.');
   },
   async carecheckin(t){
@@ -9558,8 +9774,8 @@ const A={
     const u={['visits.'+now]:{at:now,who:who,said:said,outcome:out}};
     if(who)u.contactName=who;if(contact)u.contact=contact;
     if(out==='yes'){u.stage='yes';u.trialDate=trial;u.followUpOn=trial;}
-    else if(out==='later'){if(!back)back=isoDay(now+5*DAY);u.stage='followup';u.followUpOn=back;}
-    else{u.stage='no';u.noUntil=now+60*DAY;}
+    else if(out==='later'){if(!back)back=isoDay(now+5*DAY);u.stage='followup';u.followUpOn=back;u.notNowUntil=back;}
+    else{u.stage='no';u.declinedAt=now;u.noUntil=0;u.followUpOn='';}
     const b=fdb().batch();
     b.update(col('agent_venues').doc(v.id),u);
     b.set(col('agent_drafts').doc(),{leadId:null,venueId:v.id,agent:'raven',kind:'thanks',body:thanksText(v,out,who,trial,back),label:'Thank-you: '+v.name,status:'pending',createdAt:now});
@@ -9592,13 +9808,20 @@ const A={
       else if(dr.kind==='n1'||dr.kind==='n2')b.update(col('agent_leads').doc(l.id),{['nudges.'+dr.kind]:Date.now()});
     }
     if(dr.venueId&&dr.kind==='checkin'){if(String(dr.venueId).indexOf('hq_')===0)b.set(col('agent_config').doc('care'),{venues:{[String(dr.venueId).slice(3)]:{lastCheckinAt:Date.now()}}},{merge:true});else b.update(col('agent_venues').doc(dr.venueId),{lastCheckinAt:Date.now()});}
-    if(dr.venueId&&(dr.kind==='email'||dr.kind==='email2')){
-      const now2=Date.now();
-      if(dr.kind==='email')b.update(col('agent_venues').doc(dr.venueId),{stage:'followup',emailedAt:now2,followUpOn:isoDay(now2+5*DAY)});
-      else b.update(col('agent_venues').doc(dr.venueId),{stage:'no',emailed2At:now2,noUntil:now2+60*DAY});
+    if(dr.venueId&&OT_KIND[dr.kind]){
+      const now2=Date.now(),today2=isoDay(now2),stp=OT_KIND[dr.kind].step,vref=col('agent_venues').doc(dr.venueId);
+      const bad=otConflict(dr.venueId,stp,today2);if(bad){toast(bad,true);return;}
+      if(dr.kind==='dm')b.update(vref,{igDmAt:now2});
+      else{
+        const vx=(S.venues||[]).find(x=>x.id===dr.venueId),cnt=(vx?otTouches(vx).length:0)+1,u2={lastTouchAt:now2,notNowUntil:'',stage:cnt>=3?'closed':'followup',followUpOn:cnt>=3?'':otPlusMonths(now2,4)};
+        if(dr.kind==='email')u2.emailedAt=now2;else if(dr.kind==='email2')u2.emailed2At=now2;else if(dr.kind==='email3')u2.emailed3At=now2;
+        b.update(vref,u2);
+      }
+      const vv=(S.venues||[]).find(x=>x.id===dr.venueId),sm=String(body).match(/^\s*subject:\s*(.*)/i);
+      b.set(col('agent_config').doc('outreach'),{touches:{[otId()]:otDoc({kind:'venue',tid:dr.venueId,name:(vv&&vv.name)||String(dr.label||'').replace(/^[^:]*:\s*/,'').replace(/\s*\(.*$/,''),step:stp,subject:sm?sm[1].trim():''})}},{merge:true});
     }
     await b.commit();
-    toast(await copy(body)?(dr.venueId&&dr.kind==='email'?'Approved and copied. Paste it into your email. Check-back set for 5 days.':dr.venueId&&dr.kind==='email2'?'Approved and copied. No reply after this puts the venue on a 60-day hold.':dr.kind==='checkin'?'Approved and copied. Next check-in in 3 months.':'Approved and copied. Paste it into the site.'):'Approved. Copy failed, select the text and copy it yourself.',false);
+    toast(await copy(body)?(dr.venueId&&(dr.kind==='email'||dr.kind==='email2')?'Approved, copied and logged. The next touch is due in 4 months.':dr.venueId&&dr.kind==='email3'?'Approved, copied and logged. That was touch 3: if they never answer, outreach stops.':dr.venueId&&dr.kind==='colddm'?'Approved, copied and logged. Send it as an Instagram DM. The next touch is due in 4 months.':dr.venueId&&dr.kind==='dm'?'Approved, copied and logged. Send it as an Instagram DM. That was the one extra DM.':dr.kind==='checkin'?'Approved and copied. Next check-in in 3 months.':'Approved and copied. Paste it into the site.'):'Approved. Copy failed, select the text and copy it yourself.',false);
   },
   async skipdraft(t){await col('agent_drafts').doc(t.dataset.id).update({status:'skipped'});toast('Skipped.');},
   async nudged(t){await col('agent_leads').doc(t.dataset.id).update({['nudges.'+t.dataset.step]:Date.now()});toast('Logged.');},
