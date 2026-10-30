@@ -7727,6 +7727,9 @@ function draftMail(x){
   const name=(v&&v.name)||String(x.label||'').replace(/^(cold email|email|follow[- ]?up( email)?|intro)\s*[:\-\u2013]\s*/i,'').trim()||'venue';
   return {to:em?em[0]:'',subject:subj,body:body.trim(),venue:v,name:name};
 }
+const ADMIN_MAIL='admin@belladonnanights.com';
+// Opens a Gmail compose window signed in as the admin account, with the To address, subject and text filled in.
+function gmailHref(m){return 'https://mail.google.com/mail/?authuser='+encodeURIComponent(ADMIN_MAIL)+'&view=cm&fs=1&tf=1&to='+encodeURIComponent(m.to||'')+'&su='+encodeURIComponent(m.subject||'')+'&body='+encodeURIComponent(m.body||'');}
 function mailHref(m){return 'mailto:'+encodeURIComponent(m.to).replace(/%40/g,'@')+'?subject='+encodeURIComponent(m.subject)+'&body='+encodeURIComponent(m.body);}
 function briefData(){
   const d=D(),now=Date.now(),wk=now-7*DAY,today=isoDay(now);
@@ -7826,7 +7829,7 @@ function renderBrief(){
   const d0=new Date(),dt=d0.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
   const doy=Math.floor((d0-new Date(d0.getFullYear(),0,0))/DAY);
   const sec=t=>'<div class="np-sec">'+esc(t)+'</div>';
-  const art=n=>'<label class="np-item"><input type="checkbox" data-chg="bchk" data-key="'+esc(n.key)+'"'+(S.bchk[n.key]?' checked':'')+'><span><span class="np-hd">'+esc(n.text)+'</span>'+(n.body?'<span class="np-body">'+esc(n.body)+'</span>':'')+'<span class="np-by">'+esc(BY[n.a]||agent(n.a).name)+(n.rem?' &middot; your reminder':'')+' &middot; <a href="#" data-act="open" data-agent="'+esc(n.a)+'">open desk</a>'+(n.ig?' &middot; <a href="'+esc(n.ig)+'" target="_blank" rel="noopener">open Instagram</a>':'')+(n.mail?' &middot; <a href="'+esc(mailHref(n.mail))+'"'+(n.mail.to?'':' title="No email address on file for this venue. Add one in the To box."')+'>open email'+(n.mail.to?'':' (add address)')+'</a>':'')+'</span></span></label>';
+  const art=n=>'<label class="np-item"><input type="checkbox" data-chg="bchk" data-key="'+esc(n.key)+'"'+(S.bchk[n.key]?' checked':'')+'><span><span class="np-hd">'+esc(n.text)+'</span>'+(n.body?'<span class="np-body">'+esc(n.body)+'</span>':'')+'<span class="np-by">'+esc(BY[n.a]||agent(n.a).name)+(n.rem?' &middot; your reminder':'')+' &middot; <a href="#" data-act="open" data-agent="'+esc(n.a)+'">open desk</a>'+(n.ig?' &middot; <a href="'+esc(n.ig)+'" target="_blank" rel="noopener">open Instagram</a>':'')+(n.mail?' &middot; <a href="'+esc(gmailHref(n.mail))+'" target="_blank" rel="noopener"'+(n.mail.to?'':' title="No email address on file for this venue. Add one in the To box."')+'>open email'+(n.mail.to?'':' (add address)')+'</a>':'')+'</span></span></label>';
   const urgent=todo.filter(n=>n.u),rest=todo.filter(n=>!n.u);
   let h='<details class="tm-det tm-brief np" data-k="brief"'+(open?' open':'')+'><summary>The Belladonna Gazette · '+esc(b.date)+' · '+(todo.length?'<b style="color:var(--gold)">'+todo.length+' to do</b>':'all clear')+'</summary><div class="in"><div class="np-paper">';
   h+='<div class="np-top"><span>Auburn, Washington</span><span>'+esc(dt)+'</span><span>Vol. I &middot; No. '+doy+' &middot; Free with every gig</span></div>';
@@ -8100,6 +8103,7 @@ First read agent_config (voice, pricing, outreach) and follow it exactly. Never 
 const TASKS=[
  {name:'Lead run',who:'Raven and Quill',when:'Weekdays, 7:00 am',plain:'Looks for people and venues asking for karaoke, trivia or bingo, scores them hot / warm / cold, drafts cold emails and day-5 follow-ups for venues you have not heard back from, and drafts replies to the good leads.',ids:['raven','quill'],lib:true,
   body:`TASK: Lead run.
+0. Read agent_config outreach blocklist (each entry has a name and optional venueId). NEVER addVenue, draft, email or DM any venue on it, and skip it in every step below.
 1. Search the public web for people and venues in Seattle-Tacoma asking for or likely to need karaoke, trivia, music bingo or themed nights. Score each Hot / Warm / Cold with a one-line reason. Skip anything older than 3 days.
 2. addLead for each (max 8 per run, skip duplicates by link). addVenue for any new bar or venue worth cold-emailing.
 3. COLD OUTREACH RULES. Read agent_venues, agent_config outreach (touches: every email or Instagram contact, with date and channel) and agent_config curator research. Check agent_drafts first so you never write a draft that already exists, and write at most one draft per venue per run. A "touch" is one cold contact, an email or a DM. A venue gets ONE touch every 4 months and at most 3 touches in total. If they never answer, that is fine: after touch 3 the venue is closed and you write nothing more. Count the touches from agent_config outreach touches (steps email1, email2, email3, cold-email, cold-dm; also count emailedAt, emailed2At and emailed3At on the venue).
@@ -8281,7 +8285,12 @@ function draftCard(dr,withPrice){
     '<div class="t2">'+esc(dr.kind==='n1'?'First nudge':dr.kind==='n2'?'Final nudge':dr.kind==='review'?'Review reply':dr.kind==='thanks'?'Thank-you':dr.kind==='email'?'Cold email (touch 1)':dr.kind==='email2'?'Cold email (touch 2)':dr.kind==='email3'?'Cold email (touch 3)':dr.kind==='cold'?'Cold email':dr.kind==='dm'?'Extra Instagram DM':dr.kind==='colddm'?'Instagram message (touch)':dr.kind==='reviewask'?'Review request':dr.kind==='checkin'?'Venue check-in':dr.kind==='paperwork'?'Paperwork reminder':dr.kind==='seo'?'SEO fix':'Reply and quote')+' · drafted '+fmtDay(dr.createdAt)+'</div>'+
     '<textarea class="tm-ta" style="margin-top:.6rem" data-did="'+esc(dr.id)+'">'+esc(dr.body||'')+'</textarea>'+
     '<div class="tm-row">'+(withPrice?'<input class="tm-in s" data-pid="'+esc(dr.id)+'" placeholder="Quoted $" value="'+esc(l&&l.quotedPrice||'')+'">':'')+
-    '<button class="tm-b pri" data-act="approve" data-id="'+esc(dr.id)+'">Approve &amp; copy</button>'+
+    (OT_KIND[dr.kind]
+      ?'<button class="tm-b pri" data-act="approve" data-mode="sent" data-id="'+esc(dr.id)+'" title="Logs it in the outreach history. Raven picks it up on her next run.">&#10003; Sent</button>'+
+        '<button class="tm-b" data-act="copydraft" data-id="'+esc(dr.id)+'">Copy</button>'+
+        (dr.kind!=='dm'&&dr.kind!=='colddm'?'<button class="tm-b" data-act="opengmail" data-id="'+esc(dr.id)+'" title="Opens Gmail as '+ADMIN_MAIL+' with the address, subject and text filled in">Open in Gmail</button>':'')
+      :'<button class="tm-b pri" data-act="approve" data-id="'+esc(dr.id)+'">Approve &amp; copy</button>'+
+        ((l&&/[^\s@]+@[^\s@]+\.[^\s@]+/.test(String(l.contact||'')))?'<button class="tm-b" data-act="opengmail" data-id="'+esc(dr.id)+'" title="Opens Gmail as '+ADMIN_MAIL+' with the address, subject and text filled in">Open in Gmail</button>':''))+
     '<button class="tm-b dim" data-act="skipdraft" data-id="'+esc(dr.id)+'">Skip</button></div></div>';
 }
 function pasteBox(kind,leadId,label){
@@ -8313,6 +8322,9 @@ function termsShort(){return (S.cfg.outreach&&S.cfg.outreach.short)||TERMS_SHORT
 const TAGC={target:'new',followup:'quoted',cold:'quoted',closed:'lost',yes:'booked',no:'lost',onboarding:'booked'};
 const TAGL={target:'target',followup:'in progress',cold:'in progress',closed:'closed (no answer)',yes:'yes',no:'no',onboarding:'handed off'};
 function eligibleTrip(){
+  const _all=eligibleTripRaw();return _all.filter(v=>!isBlocked(v));
+}
+function eligibleTripRaw(){
   const now=Date.now(),today=isoDay(now);
   return S.venues.filter(v=>!v.verify&&(v.stage==='target'||!v.stage||(v.stage==='followup'&&v.followUpOn&&v.followUpOn<=today)||(v.stage==='no'&&v.noUntil&&v.noUntil<=now)));
 }
@@ -8394,8 +8406,12 @@ function otConflict(tid,step,date){
 }
 // A "touch" is one cold contact: an email or a DM. One every 4 months, three at most. The one extra DM (ig-dm) does not count.
 function otTouches(v){return otAll().filter(t=>t.tid===v.id&&OT_TOUCH.test(t.step)).sort((a,b)=>String(a.date).localeCompare(String(b.date)));}
+const blNorm=x=>String(x||'').toLowerCase().replace(/[^a-z0-9]/g,'');
+function blList(){return Object.entries((S.cfg.outreach&&S.cfg.outreach.blocklist)||{}).map(([id,b])=>Object.assign({id:id},b)).filter(b=>b&&b.name).sort((a,b)=>(b.at||0)-(a.at||0));}
+function isBlocked(v){if(!v)return false;const n=blNorm(v.name);return blList().some(b=>(b.venueId&&b.venueId===v.id)||(n&&blNorm(b.name)===n));}
 function otTouchDue(v){
   const today=isoDay(Date.now());
+  if(isBlocked(v))return false;
   if(v.conversation||v.declinedAt||v.stage==='yes'||v.stage==='onboarding'||v.stage==='closed')return false;
   if(v.notNowUntil)return v.notNowUntil<=today;
   const T=otTouches(v);if(T.length<1||T.length>=3)return false;
@@ -8443,6 +8459,12 @@ function outreachHistory(){
     h+='<div class="tm-item"><div class="t1"><span class="tm-tag">'+esc(g.kind)+'</span><b>'+esc(g.name)+'</b>'+(status?' <span class="tm-tag">'+esc(status)+'</span>':'')+' <span class="tm-tag">'+sent.length+(sent.length===1?' touch':' touches')+'</span></div>'+
       g.t.map(t=>'<div class="t2">'+esc(fmtDay(otMs(t.date)))+' &middot; '+esc(OT_STEP[t.step]||t.step)+' &middot; '+(t.channel==='instagram'?'Instagram':'Email')+(t.subject?' &middot; &ldquo;'+esc(t.subject)+'&rdquo;':'')+(t.note?' &middot; '+esc(t.note):'')+'</div>').join('')+'</div>';
   });
+  const sentD=(S.drafts||[]).filter(d=>d.status==='approved'&&d.venueId&&OT_KIND[d.kind]&&d.approvedAt&&Date.now()-d.approvedAt<45*864e5).sort((x,y)=>y.approvedAt-x.approvedAt);
+  if(sentD.length){
+    h+='<div class="tm-sec">Marked as sent ('+sentD.length+')</div><div class="tm-hint">Drafts you pressed Sent or Approve on. If you did not really send one, press Not sent and it goes back to the review list and comes off the history.</div>';
+    sentD.forEach(d=>{const vv=(S.venues||[]).find(x=>x.id===d.venueId);
+      h+='<div class="tm-item"><div class="t1"><span class="tm-tag">'+esc(OT_KIND[d.kind].step.replace(/-/g,' '))+'</span><b>'+esc((vv&&vv.name)||String(d.label||'').replace(/^[^:]*:\s*/,''))+'</b></div><div class="t2">Marked '+esc(new Date(d.approvedAt).toLocaleString([],{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}))+'</div><div class="tm-row"><button class="tm-b" data-act="undodraft" data-id="'+esc(d.id)+'">Not sent, put it back</button></div></div>';});
+  }
   h+=det('otlog','Log a touch by hand (hosts, sponsors, Instagram, older emails)','<div class="tm-fg"><div><label class="tm-lbl">Who is it</label><select class="tm-sel" id="ot-kind"><option value="venue">Venue</option><option value="sponsor">Sponsor</option><option value="host">Host</option></select></div><div><label class="tm-lbl">Name</label><input class="tm-in" id="ot-name"></div><div><label class="tm-lbl">What we did</label><select class="tm-sel" id="ot-step"><option value="email">Sent an email</option><option value="ig-dm">Sent an Instagram DM</option><option value="ig-follow">Followed + liked posts</option><option value="reply">They replied</option></select></div><div><label class="tm-lbl">Date</label><input class="tm-in" id="ot-date" type="date" value="'+isoDay(Date.now())+'"></div><div class="full"><label class="tm-lbl">Subject or note (optional)</label><input class="tm-in" id="ot-note"></div></div><div class="tm-row"><button class="tm-b pri" data-act="touchadd">Add to history</button></div>',false);
   return h;
 }
@@ -8461,6 +8483,7 @@ function venueCard(v){
   if(st==='no'&&v.noUntil)h+='<div class="t2">Hold until '+esc(fmtDay(v.noUntil))+(last&&last.said?'. Reason: '+esc(last.said):'')+'</div>';
   else if(last&&last.said)h+='<div class="t2">Last visit '+esc(fmtDay(last.at))+': '+esc(last.said)+'</div>';
   h+='<div class="tm-row">';
+  h+='<button class="tm-b dim" data-act="blockthis" data-id="'+esc(v.id)+'">Do not use</button>';
   if(v.verify)h+='<button class="tm-b" data-act="verified" data-id="'+esc(v.id)+'">Confirmed open</button>';
   if(st!=='onboarding'&&S.logFor!==v.id)h+='<button class="tm-b'+(st==='target'||st==='followup'?' pri':'')+'" data-act="openlog" data-id="'+esc(v.id)+'">Log visit</button>';
   if(st==='target'||st==='followup'||st==='cold'||!v.stage){
@@ -8487,6 +8510,15 @@ function vRaven(){
   const d=D(),o=d.venDue.length+d.venYes.length+d.rPending.length,i=d.missing.length;
   return '<div class="tm-row" style="margin:0 0 1rem"><button class="tm-b'+(S.rtab==='outreach'?' pri':'')+'" data-act="rtab" data-v="outreach">Venue outreach'+(o?' ('+o+')':'')+'</button><button class="tm-b'+(S.rtab==='inbound'?' pri':'')+'" data-act="rtab" data-v="inbound">Gig-site leads'+(i?' ('+i+')':'')+'</button></div>'+(S.rtab==='outreach'?vOutreach():vInbound());
 }
+function blockSection(){
+  const L=blList();
+  let h='<div class="tm-sec">Do not use ('+L.length+')</div><div class="tm-hint">Venues we never contact or visit. No cold emails, no DMs, no trip stops. A reason is optional.</div>';
+  if(!L.length)h+='<div class="tm-empty">Nobody on the list.</div>';
+  L.forEach(b=>{h+='<div class="tm-item"><div class="t1"><span class="tm-tag warn">do not use</span><b>'+esc(b.name)+'</b></div>'+(b.reason?'<div class="t2">'+esc(b.reason)+'</div>':'')+'<div class="tm-row"><button class="tm-b dim" data-act="unblock" data-id="'+esc(b.id)+'">Allow again</button></div></div>';});
+  const opts=(S.venues||[]).filter(v=>!isBlocked(v)).sort((a,b)=>String(a.name).localeCompare(String(b.name))).map(v=>'<option value="'+esc(v.id)+'">'+esc(v.name)+(v.city?' ('+esc(v.city)+')':'')+'</option>').join('');
+  h+=det('blockadd','Add a venue to the list','<div class="tm-fg"><div><label class="tm-lbl">Pick one of ours</label><select class="tm-sel" id="bl-pick"><option value="">&mdash;</option>'+opts+'</select></div><div><label class="tm-lbl">Or type a name</label><input class="tm-in" id="bl-name"></div><div class="full"><label class="tm-lbl">Reason (optional)</label><input class="tm-in" id="bl-why"></div></div><div class="tm-row"><button class="tm-b pri" data-act="blockvenue">Add to Do not use</button></div>');
+  return h;
+}
 function vOutreach(){
   const d=D();let h='';
   if(!terms())h+='<div class="tm-item"><div class="t1"><span class="tm-tag warn">open item</span>Trial-night terms are not set</div><div class="t2">Decide free or reduced, then add them in Setup before anyone goes out. Raven puts them in every trip brief.</div></div>';
@@ -8500,6 +8532,7 @@ function vOutreach(){
   d.rPending.forEach(x=>h+=draftCard(x,false));
   h+=sponsorSection();
   h+=outreachHistory();
+  h+=blockSection();
   const tp=tripPlan();
   h+='<div class="tm-sec">Next trip</div>';
   if(!tp.stops.length)h+='<div class="tm-empty">No venues are ready to visit. Add venues below, or wait for a hold to end.</div>';
@@ -8509,7 +8542,7 @@ function vOutreach(){
     tp.stops.forEach((v,i)=>h+='<div class="t2" style="margin-top:.5rem"><b style="color:var(--text)">'+(i+1)+'. '+esc(v.name)+'</b>'+(v.address?' · '+esc(v.address):'')+'<br>'+esc(v.pitch||'')+'</div>');
     h+='<div class="tm-row"><button class="tm-b pri" data-act="copytrip">Copy trip brief</button></div><div class="tm-hint" style="margin-top:.5rem">Go Tuesday through Thursday, mid-afternoon. Skip Friday and Saturday.</div></div>';
   }
-  const rest=S.venues.filter(v=>due.indexOf(v)<0).sort((a,b)=>String(a.city).localeCompare(String(b.city))||String(a.name).localeCompare(String(b.name)));
+  const rest=S.venues.filter(v=>due.indexOf(v)<0&&!isBlocked(v)).sort((a,b)=>String(a.city).localeCompare(String(b.city))||String(a.name).localeCompare(String(b.name)));
   h+='<div class="tm-sec">All venues ('+S.venues.length+')</div>';
   rest.forEach(v=>h+=venueCard(v));
   h+=det('addvenue','Add a venue','<div class="tm-fg"><div><label class="tm-lbl">Name</label><input class="tm-in" id="nv-name"></div><div><label class="tm-lbl">City</label><input class="tm-in" id="nv-city"></div><div class="full"><label class="tm-lbl">Address</label><input class="tm-in" id="nv-addr"></div><div class="full"><label class="tm-lbl">Why them (evidence)</label><input class="tm-in" id="nv-ev" placeholder="Hosts paint-and-sip on Wednesdays"></div><div class="full"><label class="tm-lbl">Pitch: format and night</label><input class="tm-in" id="nv-pitch" placeholder="Thursday music bingo"></div></div><div class="tm-row"><button class="tm-b pri" data-act="addvenue">Add venue</button></div>',false);
@@ -9637,7 +9670,30 @@ const A={
     await col('agent_venues').add({name:n,city:val('nv-city'),address:val('nv-addr'),evidence:val('nv-ev'),pitch:val('nv-pitch'),stage:'target',createdAt:Date.now()});toast('Venue added.');
   },
   async delvenue(t){if(!confirm('Delete this venue?'))return;await col('agent_venues').doc(t.dataset.id).delete();},
+  async blockvenue(t){
+    const pk=document.getElementById('bl-pick'),nm=document.getElementById('bl-name'),why=document.getElementById('bl-why');
+    const v=pk&&pk.value?S.venues.find(x=>x.id===pk.value):null,name=v?v.name:(nm?nm.value.trim():'');
+    if(!name){toast('Pick a venue or type a name.',true);return;}
+    const id='b'+Date.now().toString(36);
+    await col('agent_config').doc('outreach').set({blocklist:{[id]:{name:name,venueId:v?v.id:'',reason:why?why.value.trim():'',at:Date.now()}}},{merge:true});
+    toast(name+' is on the Do not use list.');
+  },
+  async unblock(t){await col('agent_config').doc('outreach').set({blocklist:{[t.dataset.id]:firebase.firestore.FieldValue.delete()}},{merge:true});toast('Allowed again.');},
+  async blockthis(t){const v=S.venues.find(x=>x.id===t.dataset.id);if(!v)return;const id='b'+Date.now().toString(36);await col('agent_config').doc('outreach').set({blocklist:{[id]:{name:v.name,venueId:v.id,reason:'',at:Date.now()}}},{merge:true});toast(v.name+' is on the Do not use list.');},
   async verified(t){await col('agent_venues').doc(t.dataset.id).update({verify:false});toast('Marked confirmed.');},
+  async copydraft(t){
+    const ta=document.querySelector('[data-did="'+t.dataset.id+'"]'),dr=S.drafts.find(x=>x.id===t.dataset.id),txt=ta?ta.value:(dr&&dr.body)||'';
+    toast(await copy(txt)?'Copied.':'Copy failed.',false);
+  },
+  opengmail(t){
+    const id=t.dataset.id,dr=S.drafts.find(x=>x.id===id);if(!dr)return;
+    const ta=document.querySelector('[data-did="'+id+'"]');
+    const m=draftMail(Object.assign({},dr,{body:ta?ta.value:(dr.body||'')}));
+    if(!m.to){const l=leadsById()[dr.leadId],em=l&&String(l.contact||'').match(/[^\s<>,;:]+@[^\s<>,;]+\.[^\s<>,;]+/);if(em)m.to=em[0];}
+    const w=window.open(gmailHref(m),'_blank','noopener');
+    if(!w){toast('Your browser blocked the pop-up. Allow pop-ups for this site and try again.',true);return;}
+    toast(m.to?'Opened in Gmail. Send it, then press Approve & copy here to log it.':'Opened in Gmail. No address is on file, so type it in the To box.',false);
+  },
   async touchadd(){
     const kind=val('ot-kind'),name=val('ot-name').trim(),step=val('ot-step'),date=val('ot-date')||isoDay(Date.now()),note=val('ot-note').trim();
     if(!name){toast('Type the name first.',true);return;}
@@ -9670,6 +9726,7 @@ const A={
   },
   async emailvenue(t){
     const v=S.venues.find(x=>x.id===t.dataset.id);if(!v)return;
+    if(isBlocked(v)){toast(v.name+' is on the Do not use list.',true);return;}
     const kind=OT_KIND[t.dataset.kind]?t.dataset.kind:'email',isDm=kind==='dm'||kind==='colddm';
     if(isDm){
       const inp=document.querySelector('[data-ig="'+v.id+'"]'),val2=inp?inp.value.trim():'';
@@ -9821,7 +9878,31 @@ const A={
       b.set(col('agent_config').doc('outreach'),{touches:{[otId()]:otDoc({kind:'venue',tid:dr.venueId,name:(vv&&vv.name)||String(dr.label||'').replace(/^[^:]*:\s*/,'').replace(/\s*\(.*$/,''),step:stp,subject:sm?sm[1].trim():''})}},{merge:true});
     }
     await b.commit();
+    if(t.dataset.mode==='sent'){
+      toast(dr.venueId&&(dr.kind==='email'||dr.kind==='email2')?'Marked sent and logged. The next touch is due in 4 months.':dr.venueId&&dr.kind==='email3'?'Marked sent and logged. That was touch 3: if they never answer, outreach stops.':dr.venueId&&dr.kind==='colddm'?'Marked sent and logged. The next touch is due in 4 months.':dr.venueId&&dr.kind==='dm'?'Marked sent and logged. That was the one extra DM.':'Marked sent and logged.',false);
+      return;
+    }
     toast(await copy(body)?(dr.venueId&&(dr.kind==='email'||dr.kind==='email2')?'Approved, copied and logged. The next touch is due in 4 months.':dr.venueId&&dr.kind==='email3'?'Approved, copied and logged. That was touch 3: if they never answer, outreach stops.':dr.venueId&&dr.kind==='colddm'?'Approved, copied and logged. Send it as an Instagram DM. The next touch is due in 4 months.':dr.venueId&&dr.kind==='dm'?'Approved, copied and logged. Send it as an Instagram DM. That was the one extra DM.':dr.kind==='checkin'?'Approved and copied. Next check-in in 3 months.':'Approved and copied. Paste it into the site.'):'Approved. Copy failed, select the text and copy it yourself.',false);
+  },
+  async undodraft(t){
+    const id=t.dataset.id,dr=S.drafts.find(x=>x.id===id);if(!dr)return;
+    const D=firebase.firestore.FieldValue.delete(),bt=fdb().batch();
+    bt.update(col('agent_drafts').doc(id),{status:'pending',approvedAt:D});
+    if(dr.venueId&&OT_KIND[dr.kind]){
+      const stp=OT_KIND[dr.kind].step,lo=(dr.approvedAt||0)-180000,gone={};
+      Object.entries((S.cfg.outreach&&S.cfg.outreach.touches)||{}).forEach(([k,x])=>{if(x&&x.tid===dr.venueId&&x.step===stp&&(x.at||0)>=lo)gone[k]=D;});
+      if(Object.keys(gone).length)bt.set(col('agent_config').doc('outreach'),{touches:gone},{merge:true});
+      const vx=(S.venues||[]).find(v=>v.id===dr.venueId),vref=col('agent_venues').doc(dr.venueId);
+      if(dr.kind==='dm')bt.update(vref,{igDmAt:D});
+      else{
+        const f={email:'emailedAt',email2:'emailed2At',email3:'emailed3At'}[dr.kind],u={};if(f)u[f]=D;
+        const rest=vx?otTouches(vx).filter(x=>!gone[x.id]&&!(x.legacy&&x.step===stp)):[];
+        const last=rest.length?rest.reduce((m,x)=>Math.max(m,x.at||otMs(x.date)||0),0):0;
+        u.lastTouchAt=last||D;u.stage=rest.length?'followup':'target';u.followUpOn=rest.length&&last?otPlusMonths(last,4):'';
+        bt.update(vref,u);
+      }
+    }
+    await bt.commit();toast('Put back in the review list and taken off the history.');
   },
   async skipdraft(t){await col('agent_drafts').doc(t.dataset.id).update({status:'skipped'});toast('Skipped.');},
   async nudged(t){await col('agent_leads').doc(t.dataset.id).update({['nudges.'+t.dataset.step]:Date.now()});toast('Logged.');},
