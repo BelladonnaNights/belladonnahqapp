@@ -7785,7 +7785,10 @@ function briefData(){
   d.cd.stuck.forEach(r=>need.push({a:'coach',text:(r.name||'A recruit')+' is stuck in onboarding',body:r.done+' of '+r.total+' steps done. Next: '+r.next+'. Nothing changed in '+r.idle+' days.'}));
   if(d.cd.flags.length)need.push({a:'coach',text:plural(d.cd.flags.length,'checkout flag','checkout flags'),body:d.cd.flags.slice(0,4).map(f=>f.host+' at '+f.venue+' ('+fmtEv(f.date)+'): '+f.what).join('; ')+(d.cd.flags.length>4?'; and '+(d.cd.flags.length-4)+' more':'')+'.'});
   add('vesper',d.vlDue.length,plural(d.vlDue.length,'venue lead needs','venue leads need')+' a follow-up',d.vlDue.slice(0,4).map(l=>l.name+' ('+l.why+')').join('; ')+(d.vlDue.length>4?'; and '+(d.vlDue.length-4)+' more':'')+'. They are in your Leads tab.');
-  add('mirror',d.mPending.length,plural(d.mPending.length,'review reply','review replies')+' to approve',d.mPending.map(x=>cut(x.label,60)).join('; ')+'.');
+  {const mp=d.mPending,rv=mp.filter(x=>x.kind==='review'||x.kind==='reviewask'),nl=mp.filter(x=>x.kind==='seo'&&/^new listing/i.test(String(x.label||''))),fx=mp.filter(x=>rv.indexOf(x)<0&&nl.indexOf(x)<0);
+    add('mirror',fx.length,plural(fx.length,'website or listing fix','website and listing fixes')+' to approve',fx.slice(0,6).map(x=>cut(x.label,50)).join('; ')+(fx.length>6?'; and '+(fx.length-6)+' more':'')+'. Each is inside its listing\'s box on Mirror\'s desk.');
+    add('mirror',nl.length,plural(nl.length,'new place to list the business','new places to list the business'),nl.map(x=>cut(String(x.label).replace(/^new listing:\s*/i,''),40)).join('; ')+'.');
+    add('mirror',rv.length,plural(rv.length,'review reply or request','review replies and requests')+' to approve',rv.map(x=>cut(x.label,60)).join('; ')+'.');}
   add('mirror',d.stale.length,plural(d.stale.length,'profile is','profiles are')+' stale',d.stale.slice(0,6).map(x=>x.name+(x.profileRefreshed?' ('+ago(x.profileRefreshed)+')':' (never refreshed)')).join('; ')+'. Open Mirror for what to change on each.');
   (S.notes||[]).filter(n=>n.status==='pending'&&/NEEDS YOU:/i.test(n.body||'')).forEach(n=>{
     const m=String(n.body).split(/NEEDS YOU:/i)[1]||'',ls=m.split('\n').map(x=>x.replace(/^\s*[-*\u2022]\s*/,'').trim()).filter(Boolean);
