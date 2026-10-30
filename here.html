@@ -119,6 +119,7 @@
     } else {
       h += '<div class="msg" style="margin:.4rem 0 1.2rem">Nothing is scheduled here tonight.</div>';
     }
+    h += '<button class="choice" onclick="location.href=\'shoutout.html?v=\'+encodeURIComponent(slug)"><div class="c-t">Shout-outs &amp; song requests <span>&rarr;</span></div><div class="c-s">Dedicate a message to the big screen, or request a song for the interim music.</div></button>';
     var more = (d.ahead||[]).length;
     h += '<button class="choice" onclick="go(\'upcoming\')"><div class="c-t">Upcoming events <span>&rarr;</span></div><div class="c-s">'+(more ? 'See what\'s coming up at '+esc(d.venue)+' &mdash; nights, themes and bingo categories.' : 'Nothing else is posted yet &mdash; check back soon.')+'</div></button>';
     return h + moreBlock();
