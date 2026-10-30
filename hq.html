@@ -1907,6 +1907,23 @@ match /agent_config/{id}  { allow read, write: if isAdmin(); }</pre>
       </div>
     </div>
 
+    <div class="vm-sec">
+      <div class="vm-sec-h">Contact &amp; Details</div>
+      <div class="vm-grid vm-g2">
+        <div class="form-group"><label class="form-label">Address</label><input class="form-input" id="vmAddress" placeholder="Street, city, state"></div>
+        <div class="form-group"><label class="form-label">City</label><input class="form-input" id="vmCity"></div>
+        <div class="form-group"><label class="form-label">Owner</label><input class="form-input" id="vmOwner" placeholder="Owner name(s)"></div>
+        <div class="form-group"><label class="form-label">Manager</label><input class="form-input" id="vmManager" placeholder="Manager name(s)"></div>
+        <div class="form-group"><label class="form-label">Main contact</label><input class="form-input" id="vmContactName" placeholder="Who we deal with"></div>
+        <div class="form-group"><label class="form-label">Phone</label><input class="form-input" id="vmPhone" type="tel"></div>
+        <div class="form-group"><label class="form-label">Email</label><input class="form-input" id="vmEmail" type="email"></div>
+        <div class="form-group"><label class="form-label">Website</label><input class="form-input" id="vmWebsite" placeholder="https://"></div>
+        <div class="form-group"><label class="form-label">Instagram</label><input class="form-input" id="vmInstagram" placeholder="@handle or link"></div>
+        <div class="form-group"><label class="form-label">Facebook</label><input class="form-input" id="vmFacebook" placeholder="Page link or name"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Other contacts (bartenders, bookers, anyone else)</label><textarea class="form-textarea" id="vmOtherContacts" placeholder="Name, role, phone/email. One per line." style="min-height:64px;"></textarea></div>
+    </div>
+
     <div class="vm-sec" id="vmOffers"></div>
 
     <div class="vm-sec" id="vmLeadInfo"></div>
@@ -4734,12 +4751,11 @@ function renderVenueLeadInfo(vid){
   const l0=leadForVenue(v),l=Object.assign({},l0||{},v.leadInfo||{});
   const has=!!(l0||v.leadInfo);
   const lab={email:'Email',instagram:'Instagram',facebook:'Facebook',in_person:'In Person',phone:'Phone',other:l.contactMethodOther||'Other'};
-  let h='<div class="vm-sec-h">From the lead (how they found us, contact info)</div>';
-  if(!has){h+='<div style="font-size:.8rem;opacity:.75">No lead info saved for this venue. Venues moved over with Transfer to Our Venues keep all of it here.</div>';}
+  let h='<div class="vm-sec-h">How they came to us</div>';
+  if(!has&&!v.noAgreement){h+='<div style="font-size:.8rem;opacity:.75">Nothing saved. Venues moved over with Transfer to Our Venues keep this here.</div>';}
   else{
     const row=(t,x)=>'<div style="font-size:.8rem;margin:.2rem 0"><b>'+t+':</b> '+(x?_lx(x):'—')+'</div>';
-    const wants=(Array.isArray(l.interests)?l.interests:[]).map(i=>typeof formatLeadInterest==='function'?formatLeadInterest(i):'').filter(Boolean).join('; ');
-    h+=row('Contact',l.contactName)+row('Phone',l.phone)+row('Email',l.email)+row('City',l.city)+row('Contacted us via',lab[l.contactMethod]||'')+row('Source',(l.source==='outbound'?'We found them':'They found us')+(l.foundBy?' · '+l.foundBy:''))+(wants?row('Wanted',wants):'')+(l.usingCompetitor?row('Was using a competitor','yes'):'')+(l.notes?row('Lead notes',l.notes):'')+(v.noAgreement?'<div style="font-size:.8rem;margin:.3rem 0;color:#5aa7c9"><b>Working with us, no signed agreement.</b></div>':'');
+    h+=row('Contacted us via',lab[l.contactMethod]||'')+row('Source',(l.source==='outbound'?'We found them':'They found us')+(l.foundBy?' · '+l.foundBy:''))+(v.noAgreement?'<div style="font-size:.8rem;margin:.3rem 0;color:#5aa7c9"><b>Working with us, no signed agreement.</b></div>':'');
   }
   el.innerHTML=h;
 }
@@ -4921,7 +4937,7 @@ function transferLeadToVenue(id){
   const scheduleNote=interests.length?('Wants: '+interests.map(formatLeadInterest).join('; ')):'';
   const newVid=Date.now().toString();
   venues.push({
-    id:newVid, leadId:l.id, noAgreement:(l.stage==='active'), leadInfo:{contactName:l.contactName||'',phone:l.phone||'',email:l.email||'',city:l.city||'',contactMethod:l.contactMethod||'',contactMethodOther:l.contactMethodOther||'',source:l.source||'',foundBy:l.foundBy||'',usingCompetitor:!!l.usingCompetitor,interests:Array.isArray(l.interests)?l.interests:[],notes:l.notes||'',createdAt:l.createdAt||'',signedStage:l.stage||''}, name:l.name, gigs,
+    id:newVid, leadId:l.id, city:l.city||'', contactName:l.contactName||'', phone:l.phone||'', email:l.email||'', noAgreement:(l.stage==='active'), leadInfo:{contactName:l.contactName||'',phone:l.phone||'',email:l.email||'',city:l.city||'',contactMethod:l.contactMethod||'',contactMethodOther:l.contactMethodOther||'',source:l.source||'',foundBy:l.foundBy||'',usingCompetitor:!!l.usingCompetitor,interests:Array.isArray(l.interests)?l.interests:[],notes:l.notes||'',createdAt:l.createdAt||'',signedStage:l.stage||''}, name:l.name, gigs,
     notes:[l.city?('City: '+l.city):'',l.contactName?('Contact: '+l.contactName+(l.phone?' · '+l.phone:'')+(l.email?' · '+l.email:'')):'',scheduleNote,l.notes||''].filter(Boolean).join('\n'),
     locationId:l.locationId
   });
@@ -6188,6 +6204,8 @@ function openVenueModal(id=null){
   renderVenueCategoryQueueStatus(venue);
   document.getElementById('vmNotes').value=venue?venue.notes||'':'';
   document.getElementById('vmPerks').value=venue?venue.perks||'':'';
+  try{const L=Object.assign({},(venue&&leadForVenue(venue))||{},(venue&&venue.leadInfo)||{});const sv=(i,x)=>{const e=document.getElementById(i);if(e)e.value=x||'';};
+    sv('vmAddress',venue&&venue.address);sv('vmCity',(venue&&venue.city)||L.city);sv('vmOwner',venue&&venue.owner);sv('vmManager',venue&&venue.manager);sv('vmContactName',(venue&&venue.contactName)||L.contactName);sv('vmPhone',(venue&&venue.phone)||L.phone);sv('vmEmail',(venue&&venue.email)||L.email);sv('vmWebsite',venue&&venue.website);sv('vmInstagram',venue&&venue.instagram);sv('vmFacebook',venue&&venue.facebook);sv('vmOtherContacts',venue&&venue.otherContacts);}catch(e){}
   try{renderVenueLeadInfo(id);}catch(e){}
   {const o=document.getElementById('vmOffers');if(o)o.innerHTML=(venue&&typeof offersBlock==='function')?offersBlock(venue.id,venue.name,'vm'):'<div style="font-size:.8rem;opacity:.7">Save the venue first, then reopen it to fill in what it offers.</div>';}
   document.getElementById('vmInactive').checked=!!(venue&&venue.inactive);document.getElementById('vmStatus').value=venue?(venue.inactive?'inactive':(venue.noRecurring?'norecurring':'active')):'active';
@@ -6317,6 +6335,8 @@ function saveVenue(){
   const startDate=document.getElementById('vmStartDate').value;
   const gigSlots=readVenueGigSlotRows();
   const host=document.getElementById('vmHost').value||null;
+  const gv=i=>{const e=document.getElementById(i);return e?e.value.trim():'';};
+  const det={address:gv('vmAddress'),city:gv('vmCity'),owner:gv('vmOwner'),manager:gv('vmManager'),contactName:gv('vmContactName'),phone:gv('vmPhone'),email:gv('vmEmail'),website:gv('vmWebsite'),instagram:gv('vmInstagram'),facebook:gv('vmFacebook'),otherContacts:gv('vmOtherContacts')};
   const today=new Date().toISOString().slice(0,10);
   if(editVenueId){
     const v=venues.find(x=>x.id===editVenueId);
@@ -6324,7 +6344,7 @@ function saveVenue(){
       const prev={payAmounts:Object.assign({},v.payAmounts||{}),payMethod:v.payMethod||'',startDate:v.startDate||''};
       v.name=name;v.gigs=gigs;v.notes=notes;v.perks=perks;v.locationId=locationId;v.inactive=inactive;v.noRecurring=noRecurring;
       v.payAmounts=payAmounts;v.payMethod=payMethod;v.startDate=startDate;v.gigSlots=gigSlots.filter(x=>x.status!=='finished');
-      v.venueId=venueId;v.gatewayEmail=gatewayEmail;v.host=host;
+      v.venueId=venueId;v.gatewayEmail=gatewayEmail;v.host=host;Object.assign(v,det);
       logVenueHistoryDiff(v,prev,{payAmounts,payMethod,startDate},today);
     }
   }else{
@@ -6334,7 +6354,7 @@ function saveVenue(){
       const amtText=VENUE_AMOUNT_KINDS.filter(k=>payAmounts[k]).map(k=>(k==='Events'?'Event':k)+' '+payAmounts[k]).join(', ');
       pushVenueHistory(v,{date:startDate||today,text:'Onboarded'+(startDate?' — start date '+formatDateShort(startDate):'')+(amtText?' — paying '+amtText:'')+(payMethod?' via '+payMethod:''),auto:true});
     }
-    venues.push(v);
+    Object.assign(v,det);venues.push(v);
   }
   persist('venues-list',venues,'venuesSave');
   const sv=editVenueId?venues.find(x=>x.id===editVenueId):venues[venues.length-1];
@@ -9826,7 +9846,13 @@ window.hqBadges=function(v){
     else b=bd('Signed','#3aaa6a',a.days+' days left');
   }else if(v.noAgreement||(l.signedStage==='active'))b=bd('No agreement','#5aa7c9','Working with us, nothing signed');
   else if(l.signedStage==='signed')b=bd('Signed','#3aaa6a','');
-  const info=[l.city,l.contactName,l.phone,l.email].filter(Boolean).map(esc).join(' &middot; ');
+  const U=(x,base)=>/^https?:\/\//i.test(x)?x:base+String(x).replace(/^@/,'');
+  const lk=(t,u)=>'<a href="'+esc(u)+'" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline">'+t+'</a>';
+  const parts=[v.address,v.city||l.city,v.owner?'Owner '+v.owner:'',v.manager?'Manager '+v.manager:'',v.contactName||l.contactName,v.phone||l.phone,v.email||l.email].filter(Boolean).map(esc);
+  if(v.instagram)parts.push(lk('Instagram',U(v.instagram,'https://instagram.com/')));
+  if(v.facebook)parts.push(lk('Facebook',U(v.facebook,'https://facebook.com/')));
+  if(v.website)parts.push(lk('Website',U(v.website,'https://')));
+  const info=parts.join(' &middot; ');
   if(!b&&!info)return '';
   return '<div style="margin-top:.4rem">'+b+'</div>'+(info?'<div style="font-size:0.68rem;color:var(--text3);margin-top:.3rem;">'+info+'</div>':'');
 };
