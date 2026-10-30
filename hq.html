@@ -359,6 +359,34 @@ html::-webkit-scrollbar-thumb:hover,.modal::-webkit-scrollbar-thumb:hover{backgr
 .signin-reviewed input{accent-color:var(--gold);width:14px;height:14px;cursor:pointer;}
 .signin-card-actions{display:flex;align-items:center;justify-content:space-between;gap:0.6rem;margin-top:0.7rem;padding-top:0.6rem;border-top:1px solid var(--border);}
 .signin-reviewed.is-reviewed{color:var(--teal2);}
+.sg-bar{display:flex;gap:.5rem;align-items:center;margin:0 0 .4rem;flex-wrap:wrap;}
+.sg-day{margin-top:1.6rem;}
+.sg-dayhead{display:flex;align-items:center;gap:.7rem;flex-wrap:wrap;padding-bottom:.5rem;margin-bottom:.6rem;border-bottom:1px solid var(--border);}
+.sg-date{font-family:'Bebas Neue',sans-serif;font-size:1.2rem;letter-spacing:.08em;color:var(--gold2);}
+.sg-count{font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:var(--text3);}
+.sg-dbtn{font-size:.58rem;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);background:transparent;border:1px solid var(--border-gold);border-radius:999px;padding:.28rem .75rem;cursor:pointer;}
+.sg-dbtn:hover{background:var(--gold-dim);}
+.sg-tag{font-size:.56rem;letter-spacing:.12em;text-transform:uppercase;padding:.18rem .55rem;border-radius:6px;white-space:nowrap;border:1px solid var(--border);color:var(--text3);}
+.sg-tag.warn{background:rgba(160,56,88,.12);color:var(--rose);border-color:rgba(160,56,88,.3);}
+.sg-tag.gold{background:var(--gold-dim);color:var(--gold);border-color:var(--border-gold);}
+.sg-tag.ok{background:rgba(58,160,138,.1);color:var(--teal2);border-color:rgba(58,160,138,.25);}
+.sg-list{border:1px solid var(--border);border-radius:10px;background:var(--surface);overflow:hidden;}
+.sg-row{border-bottom:1px solid var(--border);border-left:3px solid transparent;}
+.sg-row:last-child{border-bottom:none;}
+.sg-row.cancelled{border-left-color:var(--rose);opacity:.85;}
+.sg-row[open]{background:var(--surface2);}
+.sg-row>summary{display:grid;grid-template-columns:30px minmax(110px,1fr) minmax(120px,1.3fr) 118px 118px minmax(0,1.6fr) 16px;align-items:center;gap:.8rem;padding:.65rem 1rem;cursor:pointer;list-style:none;}
+.sg-row>summary::-webkit-details-marker{display:none;}
+.sg-row>summary:hover{background:rgba(201,169,110,.05);}
+.sg-av{width:28px;height:28px;border:1px solid var(--border-gold);display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;color:var(--gold);font-size:.9rem;}
+.sg-host{font-family:'Cormorant Garamond',serif;font-size:1.1rem;color:var(--gold);letter-spacing:.05em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sg-venue{font-size:.78rem;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sg-tags{display:flex;gap:.35rem;flex-wrap:wrap;}
+.sg-chev::before{content:'\25B8';color:var(--gold);font-size:.8rem;}
+.sg-row[open] .sg-chev::before{content:'\25BE';}
+.sg-body{padding:.2rem 1rem 1rem 3.7rem;}
+.sg-body .signin-card-actions{margin-top:.8rem;}
+@media(max-width:820px){.sg-row>summary{grid-template-columns:30px 1fr 16px;}.sg-row>summary .sg-venue,.sg-row>summary .sg-time,.sg-row>summary .sg-tags{grid-column:2 / 4;}.sg-body{padding-left:1rem;}}
 
 /* SCHEDULE */
 .sched-toolbar{display:flex;gap:0.5rem;margin-bottom:1rem;flex-wrap:wrap;align-items:center;}
@@ -2505,10 +2533,66 @@ function renderSigninLog(){
     if(!currentDay||currentDay.date!==g.date){currentDay={date:g.date,items:[]};days.push(currentDay);}
     currentDay.items.push(g);
   });
-  el.innerHTML=days.map(day=>`
-    <div class="signin-day-heading">${formatDateLong(day.date)}</div>
-    <div class="signin-day-group">${day.items.map(renderSigninCard).join('')}</div>
-  `).join('');
+  el.innerHTML=`<div class="sg-bar"><button class="sg-dbtn" onclick="sgAll(true)">Open all days</button><button class="sg-dbtn" onclick="sgAll(false)">Collapse all days</button></div>`+days.map(day=>{
+    const n=day.items.length,unpaid=day.items.filter(g=>g.notPaid&&!g.cancelled).length,noOut=day.items.filter(g=>!g.hasCheckout&&!g.cancelled).length,canc=day.items.filter(g=>g.cancelled).length;
+    return `<div class="sg-day">
+      <div class="sg-dayhead"><span class="sg-date">${formatDateLong(day.date)}</span><span class="sg-count">${n} ${n===1?'shift':'shifts'}</span>
+        <button class="sg-dbtn" onclick="sgDay(this,true)">Open all</button><button class="sg-dbtn" onclick="sgDay(this,false)">Collapse all</button>
+        ${noOut?`<span class="sg-tag warn">${noOut} no sign-out</span>`:''}${unpaid?`<span class="sg-tag warn">${unpaid} not paid</span>`:''}${canc?`<span class="sg-tag">${canc} cancelled</span>`:''}</div>
+      <div class="sg-list">${day.items.map(renderSigninRow).join('')}</div>
+    </div>`;}).join('');
+}
+const sgOpen=new Set();
+document.addEventListener('toggle',e=>{const d=e.target;if(d&&d.classList&&d.classList.contains('sg-row')){if(d.open)sgOpen.add(d.dataset.key);else sgOpen.delete(d.dataset.key);}},true);
+function sgDay(btn,open){const g=btn.closest('.sg-day');if(g)g.querySelectorAll('.sg-row').forEach(d=>{d.open=open;});}
+function sgAll(open){document.querySelectorAll('#signinResults .sg-row').forEach(d=>{d.open=open;});}
+function renderSigninRow(g){
+  const tags=[];
+  if(!g.hasCheckout&&!g.cancelled)tags.push('<span class="sg-tag warn">No sign-out</span>');
+  if(g.cancelled)tags.push('<span class="sg-tag warn">Cancelled</span>');
+  if(g.notPaid&&!g.cancelled)tags.push('<span class="sg-tag warn">Not paid</span>');
+  if(g.issues&&!g.cancelled)tags.push('<span class="sg-tag warn">Issue</span>');
+  if(g.photoUrl)tags.push('<span class="sg-tag gold">Photo</span>');
+  if(g.reviewed)tags.push('<span class="sg-tag ok">Reviewed</span>');
+  const inB=g.hasCheckin?`<span class="signin-badge checkin">In · ${g.checkinTime?formatTime12(g.checkinTime):'—'}</span>`:`<span class="signin-badge checkin" style="opacity:.4">In — none</span>`;
+  const outB=g.hasCheckout?`<span class="signin-badge checkout">Out · ${g.checkoutTime?formatTime12(g.checkoutTime):'—'}</span>`:`<span class="signin-badge checkout" style="opacity:.4">Out — none</span>`;
+  const detail=g.hasCheckout&&!g.cancelled?`<div class="signin-detail-grid">
+      <div class="signin-detail-item"><span class="signin-detail-label">Crowd</span><span class="signin-detail-value">${g.crowdSize||'—'}</span></div>
+      <div class="signin-detail-item"><span class="signin-detail-label">Singers</span><span class="signin-detail-value">${g.singers||'—'}</span></div>
+      <div class="signin-detail-item"><span class="signin-detail-label">Energy</span><span class="signin-detail-value">${g.energyLevel||'—'}</span></div>
+      <div class="signin-detail-item"><span class="signin-detail-label">Venue Busy</span><span class="signin-detail-value">${g.venueBusy||'—'}</span></div>
+      <div class="signin-detail-item"><span class="signin-detail-label">Paid</span><span class="signin-detail-value">${g.gotPaid||'—'}</span></div>
+      <div class="signin-detail-item"><span class="signin-detail-label">Tips</span><span class="signin-detail-value">${g.tipScale||'—'}</span></div>
+      <div class="signin-detail-item"><span class="signin-detail-label">Status</span><span class="signin-detail-value">${g.availability||'—'}</span></div>
+    </div>`:'';
+  return `<details class="sg-row${g.cancelled?' cancelled':''}" data-key="${g.key}"${sgOpen.has(g.key)?' open':''}>
+    <summary>
+      <span class="sg-av">${(g.host||'?').charAt(0).toUpperCase()}</span>
+      <span class="sg-host">${g.host||'—'}</span>
+      <span class="sg-venue">${g.venue||'—'}</span>
+      <span class="sg-time">${inB}</span><span class="sg-time">${outB}</span>
+      <span class="sg-tags">${tags.join('')}</span>
+      <span class="sg-chev"></span>
+    </summary>
+    <div class="sg-body">
+      ${detail}
+      ${g.issues&&!g.cancelled?`<div class="signin-notes" style="border-left-color:var(--rose);"><b style="color:var(--rose)">Issues: </b>${g.issues}</div>`:''}
+      ${g.checkinNotes?`<div class="signin-notes"><b style="color:var(--text3)">Check-in note: </b>${g.checkinNotes}</div>`:''}
+      ${g.cancelled?`<div class="signin-notes" style="border-left-color:var(--rose);"><b style="color:var(--rose)">Reason: </b>${g.cancelReason||''}</div>`:(g.checkoutNotes?`<div class="signin-notes"><b style="color:var(--text3)">Check-out note: </b>${g.checkoutNotes}</div>`:'')}
+      ${(g.photoUrl||'').startsWith('http')?`<img src="${g.photoUrl}" class="signin-photo" onclick="window.open('${g.photoUrl}','_blank')" alt="Shift photo">`:''}
+      <div class="signin-card-actions">
+        <label class="signin-reviewed${g.reviewed?' is-reviewed':''}">
+          <input type="checkbox" ${g.reviewed?'checked':''} onchange="setReviewed('${g.key}',this.checked);this.closest('.signin-reviewed').classList.toggle('is-reviewed',this.checked);this.nextElementSibling.textContent=this.checked?'Reviewed':'Mark Reviewed';">
+          <span>${g.reviewed?'Reviewed':'Mark Reviewed'}</span>
+        </label>
+        <div style="display:flex;gap:0.5rem;">
+          ${(!g.hasCheckout&&!g.cancelled)?`<button class="btn-sm" style="color:var(--gold);" onclick="manualSignOut('${g.key}')">Sign out</button>`:''}
+          <button class="btn-sm" onclick="openSigninEditModal('${g.key}')">Edit</button>
+          <button class="btn-sm" style="color:var(--rose);" onclick="deleteSigninEntry('${g.key}')">Delete</button>
+        </div>
+      </div>
+    </div>
+  </details>`;
 }
 function renderSigninSpreadsheet(entries){
   const el=document.getElementById('signinSheetWrap');
