@@ -370,7 +370,7 @@ html::-webkit-scrollbar-thumb:hover,.modal::-webkit-scrollbar-thumb:hover{backgr
 .sg-tag.warn{background:rgba(160,56,88,.12);color:var(--rose);border-color:rgba(160,56,88,.3);}
 .sg-tag.gold{background:var(--gold-dim);color:var(--gold);border-color:var(--border-gold);}
 .sg-tag.ok{background:rgba(58,160,138,.1);color:var(--teal2);border-color:rgba(58,160,138,.25);}
-.sg-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:.8rem;align-items:start;}
+.sg-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:.8rem;align-items:start;}
 .sg-row{background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--border2);border-radius:10px;}
 .sg-row.cancelled{border-left-color:var(--rose);opacity:.85;}
 .sg-row[open]{background:var(--surface2);border-color:var(--border-gold);}
@@ -381,8 +381,8 @@ html::-webkit-scrollbar-thumb:hover,.modal::-webkit-scrollbar-thumb:hover{backgr
 .sg-host{order:2;flex:1 1 0;min-width:0;font-family:'Cormorant Garamond',serif;font-size:1.2rem;color:var(--gold);letter-spacing:.05em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .sg-chev{order:3;flex:0 0 16px;text-align:right;}
 .sg-venue{order:4;flex:1 1 100%;font-size:.76rem;letter-spacing:.06em;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.sg-times{order:5;flex:1 1 100%;display:flex;gap:.5rem;}
-.sg-times .signin-badge{flex:1 1 0;white-space:nowrap;text-align:center;box-sizing:border-box;}
+.sg-times{order:5;flex:1 1 100%;display:flex;flex-wrap:wrap;gap:.5rem;min-width:0;}
+.sg-times .signin-badge{flex:1 1 130px;min-width:0;white-space:nowrap;text-align:center;box-sizing:border-box;letter-spacing:.07em;padding:.22rem .4rem;overflow:hidden;text-overflow:ellipsis;}
 .sg-tags{order:6;flex:1 1 100%;display:flex;gap:.35rem;flex-wrap:wrap;}
 .sg-tags:empty{display:none;}
 .sg-chev::before{content:'\25B8';color:var(--gold);font-size:.8rem;}
@@ -1142,6 +1142,7 @@ html::-webkit-scrollbar-thumb:hover,.modal::-webkit-scrollbar-thumb:hover{backgr
     <button class="subtab active" onclick="showSub('venues','manage',this)">Our Venues</button>
     <button class="subtab" onclick="showSub('venues','perf',this);loadVenueStats()">Performance</button>
     <button class="subtab" onclick="showSub('venues','leads',this);renderLeads()" id="leadsTabBtn" style="display:none;">Leads</button>
+    <button class="subtab" onclick="showSub('venues','prospects',this);renderProspects()">Prospects</button>
     <button class="subtab" onclick="showSub('venues','onboarding',this)">Onboarding</button>
     <button class="subtab" onclick="showSub('venues','stats',this);loadStats()">Stats</button>
     <a href="https://belladonnanights.github.io/belladonna-tools/index.html" class="subtab" target="_blank" style="text-decoration:underline !important;color:var(--text3);">Venue Menu</a>
@@ -1220,6 +1221,11 @@ html::-webkit-scrollbar-thumb:hover,.modal::-webkit-scrollbar-thumb:hover{backgr
     <div style="font-size:0.62rem;color:var(--text3);letter-spacing:0.04em;margin:-0.5rem 0 0.8rem;">Click a lead to see full details.</div>
     <div id="leadsList"></div>
   </div>
+  <div class="subpanel" id="sub-venues-prospects">
+    <div class="section-header"><div class="section-title">Prospects</div></div>
+    <div id="prospectsBody"></div>
+  </div>
+
   <div class="subpanel" id="sub-venues-onboarding">
     <div class="section-header">
       <div class="section-title">Venue Onboarding</div>
@@ -1338,6 +1344,7 @@ html::-webkit-scrollbar-thumb:hover,.modal::-webkit-scrollbar-thumb:hover{backgr
       <div class="form-group" style="flex:1;"><label style="display:flex;align-items:center;gap:0.4rem;cursor:pointer;font-size:0.75rem;color:var(--text2);"><input type="checkbox" id="leadCompetitor"> Currently using a competitor</label></div>
     </div>
     <div class="form-group"><label class="form-label">Notes</label><textarea class="form-input" id="leadNotes" rows="3"></textarea></div>
+    <div id="leadOffers"></div>
     <div class="modal-actions">
       <button class="btn-sm" id="leadDeleteBtn" onclick="deleteLead()" style="color:var(--rose);display:none;">Delete</button>
       <div style="flex:1;"></div>
@@ -1887,6 +1894,8 @@ match /agent_config/{id}  { allow read, write: if isAdmin(); }</pre>
         <div class="form-group"><label class="form-label">Notes</label><textarea class="form-textarea" id="vmNotes" placeholder="Anything worth remembering..." style="min-height:64px;"></textarea></div>
       </div>
     </div>
+
+    <div class="vm-sec" id="vmOffers"></div>
 
     <div class="vm-sec">
       <div class="vm-sec-h">Account Link</div>
@@ -4825,6 +4834,7 @@ function openLeadModal(id){
   document.getElementById('leadFollowUp').disabled=!!(l&&l.followUpNone);
   document.getElementById('leadCompetitor').checked=!!(l&&l.usingCompetitor);
   document.getElementById('leadNotes').value=l?l.notes||'':'';
+  {const o=document.getElementById('leadOffers');if(o)o.innerHTML=(l&&typeof offersBlock==='function')?offersBlock(l.id,l.name,'ld'):'<div style="font-size:.8rem;opacity:.7">Save the lead first, then reopen it to fill in what it offers.</div>';}
   document.getElementById('leadDeleteBtn').style.display=l?'':'none';
   document.getElementById('leadModal').classList.add('open');
 }
@@ -6131,6 +6141,7 @@ function openVenueModal(id=null){
   renderVenueCategoryQueueStatus(venue);
   document.getElementById('vmNotes').value=venue?venue.notes||'':'';
   document.getElementById('vmPerks').value=venue?venue.perks||'':'';
+  {const o=document.getElementById('vmOffers');if(o)o.innerHTML=(venue&&typeof offersBlock==='function')?offersBlock(venue.id,venue.name,'vm'):'<div style="font-size:.8rem;opacity:.7">Save the venue first, then reopen it to fill in what it offers.</div>';}
   document.getElementById('vmInactive').checked=!!(venue&&venue.inactive);document.getElementById('vmStatus').value=venue?(venue.inactive?'inactive':(venue.noRecurring?'norecurring':'active')):'active';
   const amounts=(venue&&venue.payAmounts)||{};
   VENUE_AMOUNT_KINDS.forEach(k=>{document.getElementById('vmAmount'+k).value=amounts[k]||'';});
@@ -7313,7 +7324,7 @@ Every Monday at 9 AM Pacific:
 4. Write 5 to 8 new ideas. Every public-domain find you confirm gets its own idea with kind "Public domain find", the pitch saying how we would use it, and the sourceUrl. Use setConfig doc "curator": ideas{newId:{title,kind ("Themed night","Event","Venue pitch","Build this" or "Public domain find"),pitch (2 to 4 sentences in the Belladonna voice),venues (an array of {name, kind ("have" for a venue we work with, "want" for one we are targeting, "suggest" for a venue nobody has listed yet), why (the real feature or fact that fits, one short line), best (true for the strongest fits)}: list EVERY venue that fits, with no limit, and include venues we do not work with yet; mark best true for the ones that are clearly the strongest suggestions; see VENUE MATCHING),uses (catalog items it uses, copied exactly),missing (the one thing still needed, empty if none),when,sourceUrl,status:"new",createdAt (ms)}}.
 5. Mix at least: one idea built only from existing catalog items put together in a new way, one idea tailored to a specific venue's feature, one that uses an upcoming Sable event, and one "Build this" where a small missing piece unlocks it.
 6. Skip any idea already in ideas, including skipped ones.
-7. VENUE MATCHING. For each idea list ALL venues that fit, in three groups: Our Venues and their profiles, every venue in agent_venues and the Leads tab (targets we want), and the dossiers in agent_config curator research (what each offers, past events, what they would like). A venue fits only when a dossier, profile or note states a real feature or past event the idea needs. Give each a one-line why from that fact, there is no limit on how many you list. Mark best:true on the strongest fits (HQ shows those under "Best at" and the rest under "Also a good fit"). Include venues we do not work with yet. If a promising venue has no dossier, add it with kind "suggest" and say what to check. Never invent a venue feature.
+7. VENUE MATCHING. For each idea list ALL venues that fit, in three groups: Our Venues, leads and prospects with their profiles (offers tags, capacity, notes in curator profiles), every venue in agent_venues and the Leads tab (targets we want), and the dossiers in agent_config curator research (what each offers, past events, what they would like). A venue fits only when a dossier, profile or note states a real feature or past event the idea needs. Give each a one-line why from that fact, there is no limit on how many you list. Mark best:true on the strongest fits (HQ shows those under "Best at" and the rest under "Also a good fit"). Include venues we do not work with yet. If a promising venue has no dossier, add it with kind "suggest" and say what to check. Never invent a venue feature.
 
 VENUE RESEARCH. A second job, every Tuesday at 9 AM, studies up to 6 venues from Our Venues, the Leads tab and agent_venues using the public web and social media. It writes dossiers to agent_config/curator research, including a bait line for every venue we do not work with yet. Use those dossiers when you write ideas.
 
@@ -8262,7 +8273,7 @@ Do not touch venues you did not just add except to draft.`},
 1. Read Our Venues: {"op":"readVenues"} (skip inactive). Read agent_config: curator (profiles, catalog.text, ideas) and sable (digest and decisions). Events Ahnna marked "pursue" (decisions.t0 is the first top5 item, t1 the second, and so on) get ideas first. Events marked "skip" get none. Read agent_leads and agent_venues for who is interested in what.
 2. Public domain: search the web for public-domain films, music, books, art and holidays that could anchor a night and that are not already in the catalog. Cite a source URL for each. If you cannot confirm something is public domain from a reliable source, leave it out.
 3. Write 5 to 8 new ideas. Every public-domain find you confirm gets its own idea with kind "Public domain find", the pitch saying how we would use it, and the sourceUrl. setConfig doc "curator" with ideas{newId:{title,kind ("Themed night", "Event", "Venue pitch", "Build this" or "Public domain find"),pitch (2 to 4 sentences, brand voice),venues (an array of {name, kind ("have" for a venue we work with, "want" for one we are targeting, "suggest" for a venue nobody has listed yet), why (the real feature or fact that fits, one short line), best (true for the strongest fits)}: list EVERY venue that fits, with no limit, and include venues we do not work with yet; mark best true for the ones that are clearly the strongest suggestions; see step 4b),uses (catalog items it uses, copied exactly),missing (the one thing still to make it work, empty if nothing),when (season or date window),sourceUrl,status:"new",createdAt (ms)}}.
-4b. VENUE MATCHING. For each idea decide ALL the venues to pitch it to. Check three groups: (1) Our Venues and their profiles, (2) every venue in agent_venues (targets we want) and in the Leads tab, (3) agent_config curator research, the dossiers for venues we have, want or Iris suggested (what they offer, past events, what they would like). A venue fits only if a dossier, profile or note states a real feature or past event that the idea needs (a stage, a screen, outdoor space, a big room, a history of themed nights). Give each one a one-line why using that fact. There is no limit on how many venues you list. Mark best:true on the strongest fits (HQ shows those under "Best at" and the rest under "Also a good fit"). Include venues we do not work with yet. If a promising venue has no dossier, add it with kind "suggest" and a why that says what to check, and add its name to the next Venue research run. Never invent a venue feature.
+4b. VENUE MATCHING. For each idea decide ALL the venues to pitch it to. Check three groups: (1) Our Venues, every lead and every prospect with their profiles (the offers tags, capacity and notes in agent_config curator profiles), (2) every venue in agent_venues (targets we want) and in the Leads tab, (3) agent_config curator research, the dossiers for venues we have, want or Iris suggested (what they offer, past events, what they would like). A venue fits only if a dossier, profile or note states a real feature or past event that the idea needs (a stage, a screen, outdoor space, a big room, a history of themed nights). Give each one a one-line why using that fact. There is no limit on how many venues you list. Mark best:true on the strongest fits (HQ shows those under "Best at" and the rest under "Also a good fit"). Include venues we do not work with yet. If a promising venue has no dossier, add it with kind "suggest" and a why that says what to check, and add its name to the next Venue research run. Never invent a venue feature.
 4. Combine things we already have that nobody put together. When only a small piece is missing (a category, a prop, a playlist), still write the idea and say what is missing so Ahnna can decide to build it.
 5. Venue pitches: write the idea so a venue owner would want it, based on that venue's real features. Never invent a venue feature. Never contact anyone.
 6. Skip any idea already in ideas with any status, including skipped.`},
@@ -8365,6 +8376,7 @@ function render(){
       '<button class="tm-go" data-act="open" data-agent="'+a.id+'">'+a.btn+'</button></div>';
   }).join('');
   renderBrief();renderTasks();
+  try{if(document.getElementById('sub-venues-prospects').classList.contains('active'))renderProspects();}catch(e){}
   const n=$('#tmNeed');n.innerHTML='<b>'+total+'</b> need you';n.className='tm-need'+(total?'':' zero');
   const b=$('#tmBanner');
   b.innerHTML=S.err?'<div class="tm-banner">Could not read the agent data: '+esc(S.err)+'. If this says permission denied, add the five <b>agent_</b> collections to your Firestore rules (see "How the agents plug in" below).</div>':'';
@@ -8412,7 +8424,7 @@ function foldSections(html){
   for(let i=1;i<parts.length;i++){
     const e=parts[i].indexOf('</div>'),title=parts[i].slice(0,e),rest=parts[i].slice(e+6);
     const key='f_'+S.cur+'_'+title.replace(/<[^>]*>/g,'').toLowerCase().replace(/\(.*?\)/g,'').replace(/[^a-z]+/g,'');
-    secs.push({key:key,html:'<details class="tm-fsec" data-k="'+key+'"'+(S.open[key]===false?'':' open')+'><summary class="tm-sec"><span class="tm-grip" draggable="true" title="Drag to move this section">&#9679;</span><span class="tm-arr"></span>'+title+'</summary>'+rest+'</details>'});
+    secs.push({key:key,html:'<details class="tm-fsec" data-k="'+key+'"'+(S.open[key]===true?' open':'')+'><summary class="tm-sec"><span class="tm-grip" draggable="true" title="Drag to move this section">&#9679;</span><span class="tm-arr"></span>'+title+'</summary>'+rest+'</details>'});
   }
   const ord=((S.cfg.layout||{})[S.cur])||[];
   if(ord.length)secs.sort((a,b)=>{const x=ord.indexOf(a.key),y=ord.indexOf(b.key);return (x<0?999:x)-(y<0?999:y);});
@@ -9335,6 +9347,48 @@ function hzBuild(){
 const CU_TAGS=[['outdoor','Outdoor space'],['screen','Screen or projector'],['stage','Stage'],['dance','Dance floor'],['big','Big room (100+)'],['private','Private room'],['kitchen','Full kitchen'],['parking','Good parking']];
 const CU_KIND=['Themed night','Event','Venue pitch','Build this','Public domain find'];
 function cuSave(patch){const ref=col('agent_config').doc('curator');return ref.update(patch).catch(()=>ref.set(expandPatch(patch),{merge:true}));}
+function offersBlock(id,name,ctx){
+  const c=(S&&S.cfg&&S.cfg.curator)||{},p=(c.profiles||{})[pfKey(id)]||{},tg=p.tags||[],x=ctx+'-'+id;
+  const r=(c.research||{})[pfKey(String(name||'').toLowerCase())];
+  const L=a=>[].concat(a||[]).filter(Boolean);
+  const ln=(t,v)=>v?'<div style="font-size:.8rem;margin:.2rem 0"><b>'+t+':</b> '+esc(v)+'</div>':'';
+  let h='<div class="offers-box" style="border:1px solid var(--border,#444);border-radius:8px;padding:.7rem .8rem;margin:.6rem 0"><div style="font-weight:600;margin-bottom:.4rem">What this place offers <span style="font-weight:400;font-size:.72rem;opacity:.7">(same info as on Iris\'s desk)</span></div><div>'+
+    CU_TAGS.map(t=>'<label style="display:inline-flex;gap:.3rem;align-items:center;margin:0 .8rem .3rem 0;font-size:.8rem"><input type="checkbox" data-ob="'+esc(x)+'" value="'+t[0]+'"'+(tg.indexOf(t[0])>=0?' checked':'')+'>'+t[1]+'</label>').join('')+'</div>'+
+    '<div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.3rem"><input class="form-input" style="width:8rem" id="ob-cap-'+esc(x)+'" placeholder="Capacity" value="'+esc(p.capacity||'')+'"><input class="form-input" style="flex:1;min-width:200px" id="ob-note-'+esc(x)+'" placeholder="e.g. Big covered patio, great for movie nights" value="'+esc(p.notes||'')+'"><button type="button" class="btn-sm" data-id="'+esc(id)+'" data-name="'+esc(name||'')+'" data-ctx="'+esc(ctx)+'" onclick="obSave(this)">Save</button></div>';
+  if(r){h+='<div style="margin-top:.5rem;padding-top:.4rem;border-top:1px dashed var(--border,#444)"><div style="font-size:.72rem;opacity:.7;margin-bottom:.2rem">From Iris\'s research</div>'+ln('What it is',r.summary)+ln('What people say online',r.social)+(L(r.pastEvents).length?ln('Events they have done',L(r.pastEvents).join('; ')):'')+ln('What Iris thinks they would like',r.likes)+ln('Bait for the pitch',r.bait)+ln('Watch out for',r.watch)+'</div>';}
+  return h+'</div>';
+}
+function obSave(b){
+  const id=b.dataset.id,x=b.dataset.ctx+'-'+id;
+  const tags=[...document.querySelectorAll('input[data-ob="'+x+'"]:checked')].map(e=>e.value);
+  const g=i=>{const e=document.getElementById(i);return e?e.value.trim():'';};
+  cuSave({['profiles.'+pfKey(id)]:{name:b.dataset.name||'',tags:tags,capacity:g('ob-cap-'+x),notes:g('ob-note-'+x)}}).then(()=>toast('Saved. Iris and every profile show this now.')).catch(e=>toast('Could not save: '+(e&&e.message||e),true));
+}
+const PR={q:'',stage:'',city:''};
+function renderProspects(){
+  const el=document.getElementById('prospectsBody');if(!el)return;
+  const all=(S.venues||[]).filter(v=>v&&v.name);
+  const cities=[...new Set(all.map(v=>v.city).filter(Boolean))].sort();
+  const q=PR.q.toLowerCase();
+  const list=all.filter(v=>(!PR.stage||(v.stage||'target')===PR.stage)&&(!PR.city||v.city===PR.city)&&(!q||[v.name,v.city,v.address,v.contact,v.contactName,v.pitch,v.evidence].join(' ').toLowerCase().indexOf(q)>=0)).sort((a,b)=>String(a.name).localeCompare(String(b.name)));
+  const keep=document.activeElement&&document.activeElement.id;
+  const stages=Object.keys(TAGL);
+  let h='<div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.8rem"><input class="form-input" id="prQ" style="flex:1;min-width:180px" placeholder="Search prospects" value="'+esc(PR.q)+'" oninput="PR.q=this.value;renderProspects()"><select class="form-input" style="width:auto" onchange="PR.stage=this.value;renderProspects()"><option value="">All stages</option>'+stages.map(k=>'<option value="'+k+'"'+(PR.stage===k?' selected':'')+'>'+TAGL[k]+'</option>').join('')+'</select><select class="form-input" style="width:auto" onchange="PR.city=this.value;renderProspects()"><option value="">All cities</option>'+cities.map(c=>'<option'+(PR.city===c?' selected':'')+'>'+esc(c)+'</option>').join('')+'</select></div>';
+  h+='<div style="font-size:.8rem;opacity:.7;margin-bottom:.6rem">'+list.length+' of '+all.length+' prospects. These are the venues Sable finds and Raven works. Do-not-use venues are hidden.</div>';
+  if(!all.length)h+='<div style="opacity:.7">'+(S.started?'No prospects yet. Sable adds them as she finds them.':'Loading...')+'</div>';
+  list.filter(v=>!isBlocked(v)).forEach(v=>{
+    const st=v.stage||'target',T=otTouches(v),em=emailOf(v);
+    const line=(t,x)=>x?'<div style="margin:.25rem 0;font-size:.85rem"><b>'+t+':</b> '+esc(x)+'</div>':'';
+    h+='<details data-pk="'+esc(v.id)+'"'+(S.open['pr_'+v.id]?' open':'')+' style="border:1px solid var(--border,#444);border-radius:10px;padding:.55rem .8rem;margin-bottom:.5rem"><summary style="cursor:pointer;display:flex;gap:.5rem;align-items:center;flex-wrap:wrap"><span class="tm-tag '+(TAGC[st]||'')+'">'+esc(TAGL[st]||st)+'</span><b>'+esc(v.name)+'</b><span style="opacity:.7;font-size:.8rem">'+esc(v.city||'')+'</span>'+(T.length?'<span style="opacity:.7;font-size:.75rem">'+T.length+' email'+(T.length>1?'s':'')+' sent</span>':'')+(v.followUpOn?'<span style="opacity:.7;font-size:.75rem">check back '+esc(v.followUpOn)+'</span>':'')+'</summary><div style="margin-top:.5rem">'+
+      line('Address',v.address)+line('Contact',[v.contactName,v.contact].filter(Boolean).join(' · '))+(em?'':line('Email','not found yet'))+line('Why them',v.evidence)+line('Pitch',v.pitch)+line("Iris's idea to open with",baitFor(v.name))+
+      (T.length?line('Emails sent',T.map(t=>(t.date||'')+' ('+(t.step||'')+')').join(', ')):'')+
+      offersBlock(v.id,v.name,'pr')+'<div style="font-size:.75rem;opacity:.7">Work this one on Raven\'s desk in My Team.</div></div></details>';
+  });
+  el.innerHTML=h;
+  if(keep==='prQ'){const i=document.getElementById('prQ');if(i){i.focus();const n=i.value.length;i.setSelectionRange(n,n);}}
+}
+window.offersBlock=offersBlock;window.obSave=obSave;window.renderProspects=renderProspects;window.PR=PR;
+document.addEventListener('toggle',e=>{const d=e.target;if(d&&d.dataset&&d.dataset.pk){S.open['pr_'+d.dataset.pk]=d.open;}},true);
 function curatorState(){
   const c=S.cfg.curator||{};
   const ideas=Object.entries(c.ideas||{}).filter(([k,v])=>v&&v.title).map(([k,v])=>Object.assign({id:k},v)).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
@@ -9398,12 +9452,17 @@ function vIris(){
   if(!rs.done.length)h+='<div class="tm-empty">Nothing researched yet. The Venue research task fills this in.</div>';
   rs.done.forEach(d=>h+=dossierCard(d));
   if(rs.waiting.length)h+=det('rswait','Waiting to be researched ('+rs.waiting.length+')',rs.waiting.map(n=>'<div class="t2">'+esc(n.name)+' <span class="tm-tag">'+(n.kind==='have'?'we work here':'want')+'</span></div>').join(''),false);
-  h+='<div class="tm-sec">What each venue offers ('+vl.length+')</div><div class="tm-hint">Tick what each venue has and add a note. Iris matches ideas to venues from this. Click a name to open it.</div>';
-  if(!vl.length)h+='<div class="tm-empty">No venues in Our Venues yet.</div>';
-  vl.forEach(v=>{const k=pfKey(v.id),p=c.profiles[k]||{},tg=p.tags||[];
+  const lsA=(typeof leads!=='undefined'&&Array.isArray(leads)?leads:[]).filter(l=>l&&l.name).map(l=>({id:l.id,name:l.name,g:'Leads'}));
+  const prA=(S.venues||[]).filter(l=>l&&l.name&&!isBlocked(l)).map(l=>({id:l.id,name:l.name,g:'Prospects'}));
+  const items=vl.map(v=>({id:v.id,name:v.name,g:'Our Venues'})).concat(lsA,prA);
+  h+='<div class="tm-sec">What each venue offers ('+items.length+')</div><div class="tm-hint">Tick what each place has and add a note. Iris matches ideas from this. The same boxes are on the venue profile (Venues page), the lead profile and the Prospects page, so fill it in anywhere and it shows everywhere. Click a name to open it.</div>';
+  if(!items.length)h+='<div class="tm-empty">No venues, leads or prospects yet.</div>';
+  let lastG='';
+  items.forEach(v=>{if(v.g!==lastG){lastG=v.g;h+='<div class="tm-hint" style="margin-top:.6rem"><b>'+v.g+'</b></div>';}
+    const k=pfKey(v.id),p=c.profiles[k]||{},tg=p.tags||[];
     h+='<div class="tm-item'+(S.open['c_'+v.id]?'':' folded')+'"><div class="t1 fold" data-act="fold" data-id="'+esc(v.id)+'"><b>'+esc(v.name)+'</b>'+(tg.length||p.notes?' <span class="tm-tag booked">filled in</span>':' <span class="tm-tag">empty</span>')+'</div>'+
       '<div class="t2" style="margin-top:.4rem">'+CU_TAGS.map(t=>'<label style="display:inline-flex;gap:.3rem;align-items:center;margin:0 .8rem .3rem 0;font-size:.8rem"><input type="checkbox" data-pt="'+esc(v.id)+'" value="'+t[0]+'"'+(tg.indexOf(t[0])>=0?' checked':'')+'>'+t[1]+'</label>').join('')+'</div>'+
-      '<div class="tm-row"><input class="tm-in s" id="iv-cap-'+esc(v.id)+'" placeholder="Capacity" value="'+esc(p.capacity||'')+'"><input class="tm-in" style="flex:1;min-width:200px" id="iv-note-'+esc(v.id)+'" placeholder="e.g. Big covered patio, great for summer movie nights" value="'+esc(p.notes||'')+'"><button class="tm-b pri" data-act="ivsave" data-id="'+esc(v.id)+'">Save</button></div></div>';});
+      '<div class="tm-row"><input class="tm-in s" id="iv-cap-'+esc(v.id)+'" placeholder="Capacity" value="'+esc(p.capacity||'')+'"><input class="tm-in" style="flex:1;min-width:200px" id="iv-note-'+esc(v.id)+'" placeholder="e.g. Big covered patio, great for summer movie nights" value="'+esc(p.notes||'')+'"><button class="tm-b pri" data-act="ivsave" data-id="'+esc(v.id)+'" data-name="'+esc(v.name)+'">Save</button></div></div>';});
   h+='<div class="tm-sec">Our catalog</div><div class="tm-hint">Paste what we can offer: the movies in the Venue Menu, bingo categories, trivia categories, games, props, themed-night kits. One item per line. Iris never invents catalog items, she only uses these.</div><textarea class="tm-ta" id="cu-cat" style="min-height:160px" placeholder="Movies: ...\nBingo categories: ...\nTrivia categories: ...\nGames: ...">'+esc(c.catalog)+'</textarea><div class="tm-row"><button class="tm-b pri" data-act="cucat">Save catalog</button></div>';
   return h;
 }
@@ -9954,7 +10013,7 @@ const A={
   async ideadel(t){if(!confirm('Remove this idea?'))return;await cuSave({['ideas.'+t.dataset.id]:null});},
   async ideacopy(t){const x=curatorState().ideas.find(i=>i.id===t.dataset.id);if(x)toast(await copy(ideaPrompt(x))?'Brief copied. Paste it into Claude.':'Copy failed.',false);},
   async ideaadd(){const ti=val('id-title');if(!ti){toast('Give it a title.',true);return;}await cuSave({['ideas.i'+Date.now().toString(36)]:{title:ti,kind:$('#id-kind').value,pitch:val('id-pitch'),venues:val('id-venues').split(',').map(x=>x.trim()).filter(Boolean),status:'new',source:'hand',createdAt:Date.now()}});toast('Added.');},
-  async ivsave(t){const id=t.dataset.id,tags=[...document.querySelectorAll('input[data-pt="'+id+'"]:checked')].map(e=>e.value);const vn=(venues||[]).find(v=>v.id===id);await cuSave({['profiles.'+pfKey(id)]:{name:vn?vn.name:'',tags:tags,capacity:val('iv-cap-'+id),notes:val('iv-note-'+id)}});toast('Saved.');},
+  async ivsave(t){const id=t.dataset.id,tags=[...document.querySelectorAll('input[data-pt="'+id+'"]:checked')].map(e=>e.value);const vn=(venues||[]).find(v=>v.id===id);await cuSave({['profiles.'+pfKey(id)]:{name:vn?vn.name:(t.dataset.name||''),tags:tags,capacity:val('iv-cap-'+id),notes:val('iv-note-'+id)}});toast('Saved.');},
   async cucat(){await cuSave({'catalog.text':($('#cu-cat')||{}).value||'','catalog.savedAt':Date.now()});toast('Catalog saved.');},
   async sgaddstd(){const p={};const have=new Set(sigilState().items.map(x=>x.name));SG_STD.filter(n=>!have.has(n)).forEach((n,k)=>{p['items.s'+Date.now().toString(36)+k]={name:n,due:''};});await sgSave(p);toast('List added. Set a date on each.');},
   async sgadditem(){const n=val('sg-name');if(!n){toast('Type what to track.',true);return;}await sgSave({['items.s'+Date.now().toString(36)]:{name:n,due:val('sg-due')}});toast('Added.');},
