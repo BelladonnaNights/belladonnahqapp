@@ -9675,7 +9675,7 @@ function sponsorGazette(){
 function sponsorCard(x){
   const st=x.status||'new',b=(v,l,c)=>'<button class="tm-b'+(c?' '+c:'')+'" data-act="sponsorset" data-id="'+esc(x.id)+'" data-v="'+v+'">'+l+'</button>';
   const LBL={new:'new',pitched:'pitched',signed:'signed',skipped:'hidden',archived:'archived'};
-  return '<div class="tm-item"><div class="t1"><span class="tm-tag">'+esc(LBL[st]||st)+'</span><b>'+esc(x.business)+'</b></div>'+sponsorCardBody(x,false)+
+  return '<div class="tm-item'+(S.open['c_'+x.id]?'':' folded')+'"><div class="t1 fold" data-act="fold" data-id="'+esc(x.id)+'"><span class="tm-tag">'+esc(LBL[st]||st)+'</span><b>'+esc(x.business)+'</b>'+(x.city?' <span class="tm-tag">'+esc(x.city)+'</span>':'')+'</div>'+sponsorCardBody(x,false)+
     '<div class="tm-row">'+(st==='new'?b('pitched','Pitched','pri'):'')+((st==='new'||st==='pitched')?b('signed','Signed','pri')+b('skipped','Hide','dim'):'')+((st==='signed'||st==='skipped'||st==='archived')?b('new','Put back'):'')+(st!=='archived'?b('archived','Archive','dim'):'')+'</div></div>';
 }
 function sponsorSection(){
