@@ -1897,6 +1897,8 @@ match /agent_config/{id}  { allow read, write: if isAdmin(); }</pre>
 
     <div class="vm-sec" id="vmOffers"></div>
 
+    <div class="vm-sec" id="vmLeadInfo"></div>
+
     <div class="vm-sec">
       <div class="vm-sec-h">Account Link</div>
       <div class="vm-grid vm-g2">
@@ -4699,6 +4701,36 @@ function loadLeads(){
     renderLeads();
   }).catch(()=>{leads=[];renderLeads();});
 }
+const _lx=x=>String(x==null?'':x).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const _ln=x=>String(x||'').toLowerCase().replace(/[^a-z0-9]/g,'');
+function venueForLead(l){if(!l)return null;const n=_ln(l.name);return (venues||[]).find(v=>(l.venueId&&v.id===l.venueId)||v.leadId===l.id||(n&&_ln(v.name)===n))||null;}
+function leadForVenue(v){if(!v)return null;const n=_ln(v.name);return (leads||[]).find(l=>(v.leadId&&l.id===v.leadId)||l.venueId===v.id||(n&&_ln(l.name)===n))||null;}
+function vmSetLeadStage(lid,stage){
+  const l=leads.find(x=>x.id===lid);if(!l)return;const prev=l.stage;l.stage=stage;
+  db.collection('leads').doc(lid).set({stage:stage,updatedAt:new Date().toISOString()},{merge:true}).then(()=>{try{renderLeads();}catch(e){}if(typeof hqToast==='function')hqToast('Saved.');renderVenueLeadInfo(editVenueId);}).catch(e=>{l.stage=prev;alert('Failed to update stage: '+e.message);renderVenueLeadInfo(editVenueId);});
+}
+function vmLinkLead(vid){
+  const sel=document.getElementById('vmLinkLeadSel');if(!sel||!sel.value)return;
+  const v=venues.find(x=>x.id===vid),l=leads.find(x=>x.id===sel.value);if(!v||!l)return;
+  v.leadId=l.id;persist('venues-list',venues,'venuesSave');
+  db.collection('leads').doc(l.id).set({venueId:v.id},{merge:true}).then(()=>{l.venueId=v.id;renderVenueLeadInfo(vid);try{renderLeads();}catch(e){}});
+}
+function renderVenueLeadInfo(vid){
+  const el=document.getElementById('vmLeadInfo');if(!el)return;
+  const v=vid?venues.find(x=>x.id===vid):null;
+  if(!v){el.innerHTML='';return;}
+  const l0=leadForVenue(v),l=Object.assign({},l0||{},v.leadInfo||{});
+  const has=!!(l0||v.leadInfo);
+  const lab={email:'Email',instagram:'Instagram',facebook:'Facebook',in_person:'In Person',phone:'Phone',other:l.contactMethodOther||'Other'};
+  let h='<div class="vm-sec-h">From the lead (how they found us, contact info)</div>';
+  if(!has){h+='<div style="font-size:.8rem;opacity:.75">No lead info saved for this venue. Venues moved over with Transfer to Our Venues keep all of it here.</div>';}
+  else{
+    const row=(t,x)=>'<div style="font-size:.8rem;margin:.2rem 0"><b>'+t+':</b> '+(x?_lx(x):'—')+'</div>';
+    const wants=(Array.isArray(l.interests)?l.interests:[]).map(i=>typeof formatLeadInterest==='function'?formatLeadInterest(i):'').filter(Boolean).join('; ');
+    h+=row('Contact',l.contactName)+row('Phone',l.phone)+row('Email',l.email)+row('City',l.city)+row('Contacted us via',lab[l.contactMethod]||'')+row('Source',(l.source==='outbound'?'We found them':'They found us')+(l.foundBy?' · '+l.foundBy:''))+(wants?row('Wanted',wants):'')+(l.usingCompetitor?row('Was using a competitor','yes'):'')+(l.notes?row('Lead notes',l.notes):'')+(v.noAgreement?'<div style="font-size:.8rem;margin:.3rem 0;color:#5aa7c9"><b>Working with us, no signed agreement.</b></div>':'');
+  }
+  el.innerHTML=h;
+}
 function setLeadStage(id,stageKey,evt){
   if(evt)evt.stopPropagation();
   const l=leads.find(x=>x.id===id);if(!l)return;
@@ -4716,7 +4748,7 @@ function renderLeads(){
   const stageF=document.getElementById('leadStageFilter').value;
   let shown=leads.filter(l=>{
     if(stageF)return (l.stage||'new')===stageF;
-    return (l.stage||'new')!=='transferred'; // default view hides the archive
+    return (l.stage||'new')!=='transferred'; // transferred leads live in Our Venues now
   });
   const sortBy=document.getElementById('leadSortBy').value;
   const stageOrder=LEAD_STAGES.map(s=>s.key);
@@ -4738,7 +4770,7 @@ function renderLeads(){
   el.innerHTML=shown.map(l=>{
     const expanded=expandedLeadId===l.id;
     const overdue=l.nextFollowUp&&l.nextFollowUp<today&&l.stage!=='signed'&&l.stage!=='active'&&l.stage!=='transferred';
-    const curStage=l.stage||'new';
+    const curStage=(l.stage==='transferred')?'signed':(l.stage||'new');const lv=venueForLead(l);
     const interests=Array.isArray(l.interests)?l.interests.map(formatLeadInterest).join(', '):
       [l.interestedIn&&l.interestedIn.includes('trivia')?'Trivia':null,l.interestedIn&&l.interestedIn.includes('bingo')?'Bingo':null,l.interestedIn&&l.interestedIn.includes('karaoke')?'Karaoke':null].filter(Boolean).join(', ');
     const contactMethodLabel={email:'Email',instagram:'Instagram',facebook:'Facebook',in_person:'In Person',phone:'Phone',other:l.contactMethodOther||'Other'}[l.contactMethod]||'';
@@ -4749,7 +4781,7 @@ function renderLeads(){
           <div class="acct-meta">${l.city?l.city+' · ':''}${l.contactName||''}</div>
         </div>
         <div class="acct-badges">
-          ${(l.stage==='signed'||l.stage==='active')?'<span class="acct-status-badge" style="border-color:#3aaa6a;color:#3aaa6a;">Venue</span>':''}${l.nextFollowUp?`<span class="acct-status-badge${overdue?' banned':''}">${overdue?'Overdue: ':'Follow up: '}${formatDateShort(l.nextFollowUp)}</span>`:''}
+          ${(lv||l.stage==='signed'||l.stage==='active'||l.stage==='transferred')?'<span class="acct-status-badge" style="border-color:#3aaa6a;color:#3aaa6a;">Our venue</span>':''}${(lv&&l.stage==='active')?'<span class="acct-status-badge" style="border-color:#5aa7c9;color:#5aa7c9;">No agreement</span>':''}${l.nextFollowUp?`<span class="acct-status-badge${overdue?' banned':''}">${overdue?'Overdue: ':'Follow up: '}${formatDateShort(l.nextFollowUp)}</span>`:''}
         </div>
       </div>
       <div style="display:flex;gap:0.35rem;flex-wrap:wrap;margin-top:0.6rem;" onclick="event.stopPropagation();">
@@ -4764,7 +4796,7 @@ function renderLeads(){
         ${l.notes?`<div><b>Notes:</b> ${l.notes}</div>`:''}
         <div style="display:flex;gap:0.5rem;margin-top:0.4rem;">
           <button class="btn-sm" onclick="openLeadModal('${l.id}')">Edit</button>
-          ${l.stage==='signed'?`<button class="btn-sm btn-gold" onclick="transferLeadToVenue('${l.id}')">Transfer to Our Venues →</button>`:''}
+          ${(!lv&&(l.stage==='signed'||l.stage==='active'))?`<button class="btn-sm btn-gold" onclick="transferLeadToVenue('${l.id}')">Transfer to Our Venues →</button>`:''}${(lv&&(curStage==='contract'))?`<button class="btn-sm btn-gold" onclick="setLeadStage('${l.id}','active',event)">They won't sign: working anyway</button>`:''}${lv?`<button class="btn-sm" onclick="openVenueModal('${lv.id}')">Open in Our Venues</button>`:''}
         </div>
       </div>`:''}
     </div>`;
@@ -4870,17 +4902,19 @@ function deleteLead(){
 function transferLeadToVenue(id){
   const l=leads.find(x=>x.id===id);
   if(!l)return;
-  if(!confirm(`Move "${l.name}" to Our Venues? The lead stays here too, marked Transferred, for your records.`))return;
+  if(!confirm(`Move "${l.name}" to Our Venues? All of its info is copied onto the venue, and the lead leaves this list (it stays in the archive filter).`))return;
   const interests=Array.isArray(l.interests)?l.interests:[];
   const gigs=[...new Set(interests.map(i=>i.type).filter(Boolean))];
   const scheduleNote=interests.length?('Wants: '+interests.map(formatLeadInterest).join('; ')):'';
+  const newVid=Date.now().toString();
   venues.push({
-    id:Date.now().toString(), name:l.name, gigs,
+    id:newVid, leadId:l.id, noAgreement:(l.stage==='active'), leadInfo:{contactName:l.contactName||'',phone:l.phone||'',email:l.email||'',city:l.city||'',contactMethod:l.contactMethod||'',contactMethodOther:l.contactMethodOther||'',source:l.source||'',foundBy:l.foundBy||'',usingCompetitor:!!l.usingCompetitor,interests:Array.isArray(l.interests)?l.interests:[],notes:l.notes||'',createdAt:l.createdAt||'',signedStage:l.stage||''}, name:l.name, gigs,
     notes:[l.city?('City: '+l.city):'',l.contactName?('Contact: '+l.contactName+(l.phone?' · '+l.phone:'')+(l.email?' · '+l.email:'')):'',scheduleNote,l.notes||''].filter(Boolean).join('\n'),
     locationId:l.locationId
   });
   persist('venues-list',venues,'venuesSave');
-  db.collection('leads').doc(id).set({stage:'transferred',updatedAt:new Date().toISOString()},{merge:true}).then(()=>{
+  l.venueId=newVid;
+  db.collection('leads').doc(id).set({venueId:newVid,stage:'transferred',updatedAt:new Date().toISOString()},{merge:true}).then(()=>{
     renderVenueManage();populateRosterFilters();loadLeads();
   }).catch(e=>alert('Venue was added, but updating the lead failed: '+e.message));
 }
@@ -6141,6 +6175,7 @@ function openVenueModal(id=null){
   renderVenueCategoryQueueStatus(venue);
   document.getElementById('vmNotes').value=venue?venue.notes||'':'';
   document.getElementById('vmPerks').value=venue?venue.perks||'':'';
+  try{renderVenueLeadInfo(id);}catch(e){}
   {const o=document.getElementById('vmOffers');if(o)o.innerHTML=(venue&&typeof offersBlock==='function')?offersBlock(venue.id,venue.name,'vm'):'<div style="font-size:.8rem;opacity:.7">Save the venue first, then reopen it to fill in what it offers.</div>';}
   document.getElementById('vmInactive').checked=!!(venue&&venue.inactive);document.getElementById('vmStatus').value=venue?(venue.inactive?'inactive':(venue.noRecurring?'norecurring':'active')):'active';
   const amounts=(venue&&venue.payAmounts)||{};
