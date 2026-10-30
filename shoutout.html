@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Shout-Out — Belladonna</title>
+<title>Shout-Outs & Song Requests — Belladonna</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Josefin+Sans:wght@200;300;400;600&family=Bebas+Neue&display=swap');
   *{margin:0;padding:0;box-sizing:border-box;}
@@ -82,7 +82,7 @@
   // ---- venue header ----
   function head(){ return '<div class="venue">'+esc(VENUE)+'</div><button class="chg" onclick="pickVenueView()">change venue</button>'; }
   function pickVenueView(){
-    $('main').innerHTML = '<button class="back" onclick="home()">&larr; Back</button><div class="venue">Choose a venue</div><div style="height:1rem"></div><input class="srch" id="vs" type="search" autocomplete="off" placeholder="Search venues&hellip;" oninput="filt()"><div id="vl"><div class="msg">Loading venues&hellip;</div></div>';
+    $('main').innerHTML = '<button class="back" onclick="home()">&larr; Back</button><div class="venue">Choose A Venue</div><div style="height:1rem"></div><input class="srch" id="vs" type="search" autocomplete="off" placeholder="Search venues&hellip;" oninput="filt()"><div id="vl"><div class="msg">Loading venues&hellip;</div></div>';
     loadVenues(filt);
   }
   var VENUES = null;
@@ -110,13 +110,13 @@
     KIND = '';
     if(!S.enabled){ $('main').innerHTML = head() + '<div class="msg">Shout-outs and requests are turned off right now.</div>'; return; }
     $('main').innerHTML = head()
-      + '<button class="choice primary" onclick="form(\'dedication\')"><div class="c-t">Send a dedication <b>'+money(S.dedicationPriceCents)+'</b></div><div class="c-s">Your message on the big screen for '+S.dedicationSeconds+' seconds. Birthdays, anniversaries, shout-outs to a table.</div></button>'
-      + '<button class="choice" onclick="form(\'song\')"><div class="c-t">Request a song <b>'+money(S.songPriceCents)+'</b></div><div class="c-s">Ask your host to play it in the interim music between karaoke singers.</div></button>'
+      + '<button class="choice primary" onclick="showForm(\'dedication\')"><div class="c-t">Send A Dedication <b>'+money(S.dedicationPriceCents)+'</b></div><div class="c-s">Your message on the big screen for '+S.dedicationSeconds+' seconds. Birthdays, anniversaries, shout-outs to a table.</div></button>'
+      + '<button class="choice" onclick="showForm(\'song\')"><div class="c-t">Request A Song <b>'+money(S.songPriceCents)+'</b></div><div class="c-s">Ask your host to play it in the interim music between karaoke singers.</div></button>'
       + '<div class="note">You\'re only charged if your host approves it.</div>';
   }
 
   // ---- form ----
-  function form(kind){
+  function showForm(kind){
     KIND = kind; var ded = kind==='dedication', max = ded ? S.dedicationMaxChars : S.songMaxChars;
     $('main').innerHTML = '<button class="back" onclick="home()">&larr; Back</button>' + head()
       + (ded
@@ -125,7 +125,7 @@
           + '<div class="prevh">Preview</div><div class="prev" id="prev"><div class="pt" id="pt"></div><div class="pf" id="pf"></div></div>'
         : '<label for="txt">Song and artist</label><input class="in" id="txt" maxlength="'+max+'" placeholder="Don\'t Stop Believin\' — Journey" oninput="upd()"><div class="cnt" id="cnt"></div>'
           + '<label for="frm">Your name (optional)</label><input class="in" id="frm" maxlength="'+S.fromMaxChars+'" placeholder="So the host can shout you out">')
-      + '<button class="btn" id="go" onclick="submit()">Pay '+money(ded ? S.dedicationPriceCents : S.songPriceCents)+' &amp; send</button>'
+      + '<button class="btn" id="go" onclick="sendReq()">Pay '+money(ded ? S.dedicationPriceCents : S.songPriceCents)+' &amp; Send</button>'
       + '<div class="err" id="err"></div>'
       + '<div class="note">Your card is only held now and charged if the host approves. If they pass, nothing is charged. One request per '+S.rateLimitMinutes+' minutes.</div>';
     upd();
@@ -143,7 +143,7 @@
     c.textContent = n+'/'+max; c.className = 'cnt'+(n>=max?' warn':'');
     if(KIND==='dedication') fit();
   }
-  function submit(){
+  function sendReq(){
     var txt = ($('txt').value||'').trim(), frm = ($('frm').value||'').trim(), err = $('err'), b = $('go');
     err.textContent = '';
     if(!txt){ err.textContent = 'Please type your message first.'; return; }
@@ -156,7 +156,7 @@
   // ---- after paying ----
   var POLL = null;
   function statusView(rid, canceled){
-    $('main').innerHTML = head().replace(/<button class="chg".*?<\/button>/,'') + '<div class="status" id="st"></div><button class="btn" onclick="location.href=location.pathname+\'?v=\'+encodeURIComponent(slug)">Back to start</button>';
+    $('main').innerHTML = head().replace(/<button class="chg".*?<\/button>/,'') + '<div class="status" id="st"></div><button class="btn" onclick="location.href=location.pathname+\'?v=\'+encodeURIComponent(slug)">Back To Start</button>';
     if(canceled){ show('No problem', 'Checkout was canceled and you were not charged.'); return; }
     var tries = 0;
     function poll(){
@@ -180,7 +180,7 @@
 
   // ---- start ----
   if(!slug){
-    $('main').innerHTML = '<div class="msg">This link is missing its venue.<br>Scan the QR code at your table again, or choose a venue.</div><button class="choice primary" onclick="pickVenueView()"><div class="c-t">Choose a venue <span>&rarr;</span></div></button>';
+    $('main').innerHTML = '<div class="msg">This link is missing its venue.<br>Scan the QR code at your table again, or choose a venue.</div><button class="choice primary" onclick="pickVenueView()"><div class="c-t">Choose A Venue <span>&rarr;</span></div></button>';
   } else {
     Promise.all([
       fetch(API+'?v='+encodeURIComponent(slug)).then(function(r){ return r.ok ? r.json() : null; }).catch(function(){ return null; }),
