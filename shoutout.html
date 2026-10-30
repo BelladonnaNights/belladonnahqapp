@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shout-Out — Belladonna</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Josefin+Sans:wght@200;300;400;600&family=Bebas+Neue&display=swap');
+  *{margin:0;padding:0;box-sizing:border-box;}
+  :root{--bg:#000;--surface:#0d0d0d;--surface2:#141414;--border:rgba(201,169,110,0.2);--border2:rgba(201,169,110,0.4);--gold:#c9a96e;--text:#f0ece0;--text2:#b0a890;--text3:#8a8272;--red:#e0705f;--green:#6fcf97;}
+  body{background:var(--bg);color:var(--text);font-family:'Josefin Sans',sans-serif;font-weight:300;min-height:100vh;letter-spacing:0.04em;}
+  .page{max-width:520px;margin:0 auto;padding:2.4rem 1.3rem 3rem;}
+  .hub-brand{font-family:'Playfair Display',serif;font-size:1.7rem;font-weight:700;color:var(--gold);letter-spacing:0.18em;text-transform:uppercase;text-align:center;}
+  .hub-sub{font-size:0.68rem;letter-spacing:0.45em;text-transform:uppercase;color:var(--text3);margin-top:0.2rem;text-align:center;}
+  .hub-ornament{color:#3a3428;font-family:'Cormorant Garamond',serif;font-size:1.05rem;letter-spacing:0.4em;margin:0.7rem 0 1.5rem;text-align:center;}
+  .venue{font-family:'Playfair Display',serif;font-size:1.7rem;color:var(--text);text-align:center;margin-bottom:0.2rem;}
+  .chg{display:block;margin:0 auto 1.6rem;background:none;border:none;color:var(--text3);font-family:'Cormorant Garamond',serif;font-style:italic;font-size:.95rem;letter-spacing:.04em;cursor:pointer;text-decoration:underline;text-decoration-color:rgba(138,130,114,.4);text-underline-offset:3px}
+  .msg{text-align:center;color:var(--text2);line-height:1.7;font-size:.9rem;margin:2rem 0}
+  .choice{display:block;width:100%;text-align:left;cursor:pointer;background:var(--surface);border:1px solid var(--border2);border-radius:14px;padding:1.2rem 1.2rem;margin-bottom:1rem;color:var(--text);font-family:inherit;letter-spacing:inherit}
+  .choice:active,.choice:hover{background:rgba(201,169,110,.10)}
+  .choice .c-t{font-family:'Playfair Display',serif;font-size:1.3rem;color:var(--gold);letter-spacing:.05em;display:flex;justify-content:space-between;align-items:center}
+  .choice .c-t b{font-family:'Josefin Sans',sans-serif;font-weight:600;font-size:.95rem;letter-spacing:.08em}
+  .choice .c-s{font-size:.8rem;color:var(--text2);margin-top:.35rem;line-height:1.5}
+  .choice.primary{border-color:var(--gold);background:rgba(201,169,110,.08)}
+  .back{background:none;border:none;color:var(--text3);font-family:inherit;letter-spacing:.14em;text-transform:uppercase;font-size:.68rem;cursor:pointer;margin-bottom:1rem;padding:.2rem 0}
+  label{display:block;font-size:.66rem;letter-spacing:.18em;text-transform:uppercase;color:var(--text3);margin:1rem 0 .4rem}
+  .in{width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:.8rem 1rem;color:var(--text);font-family:inherit;font-size:1rem;letter-spacing:.03em;outline:none}
+  .in:focus{border-color:var(--gold)}
+  textarea.in{resize:none;min-height:5.5rem;line-height:1.4}
+  .cnt{text-align:right;font-size:.66rem;letter-spacing:.14em;color:var(--text3);margin-top:.3rem}
+  .cnt.warn{color:var(--red)}
+  .btn{display:block;width:100%;text-align:center;background:rgba(201,169,110,.14);color:var(--gold);border:1px solid var(--gold);border-radius:10px;padding:1rem;margin-top:1.4rem;font-family:'Josefin Sans',sans-serif;font-size:.82rem;letter-spacing:.2em;text-transform:uppercase;font-weight:600;cursor:pointer}
+  .btn:disabled{opacity:.45;cursor:default}
+  .note{font-size:.78rem;color:var(--text3);line-height:1.6;margin-top:.9rem;text-align:center}
+  .err{font-size:.85rem;color:var(--red);line-height:1.5;margin-top:1rem;text-align:center}
+  .prev{margin-top:.4rem;border:1px solid var(--border);border-radius:12px;background:#050505;aspect-ratio:16/9;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:6% 7%;overflow:hidden;text-align:center}
+  .prev .pt{font-family:'Bebas Neue',sans-serif;line-height:1.02;letter-spacing:.03em;background:linear-gradient(180deg,#f3dc9a 0%,#c9a96e 50%,#9c7a38 100%);-webkit-background-clip:text;background-clip:text;color:transparent;word-break:break-word;width:100%}
+  .prev .pf{font-family:'Bebas Neue',sans-serif;letter-spacing:.08em;color:var(--gold);opacity:.85;margin-top:.5em;font-size:1.1rem}
+  .prevh{font-size:.6rem;letter-spacing:.2em;text-transform:uppercase;color:var(--text3);margin-top:1.2rem}
+  .status{text-align:center;margin:1.5rem 0}
+  .status .big{font-family:'Playfair Display',serif;font-size:1.5rem;color:var(--gold);margin-bottom:.6rem}
+  .status .sm{font-size:.88rem;color:var(--text2);line-height:1.7}
+  .srch{width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:.8rem 1rem;color:var(--text);font-family:inherit;font-size:.9rem;margin-bottom:.9rem;outline:none}
+  .vrow{display:flex;justify-content:space-between;align-items:center;width:100%;text-align:left;cursor:pointer;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:.9rem 1rem;margin-bottom:.55rem;color:var(--text);font-family:'Playfair Display',serif;font-size:1.05rem}
+  .vrow.cur{border-color:var(--gold);color:var(--gold)}
+  .foot{margin-top:2rem;text-align:center;font-size:.6rem;letter-spacing:.2em;text-transform:uppercase;color:var(--text3)}
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="hub-brand">Belladonna</div>
+  <div class="hub-sub">Audio Alchemies</div>
+  <div class="hub-ornament">&#10022; &#10022; &#10022;</div>
+  <div id="main"><div class="msg">One moment&hellip;</div></div>
+  <div class="foot">belladonnanights.com</div>
+</div>
+<script>
+  var FN = 'https://us-central1-belladonna-hq.cloudfunctions.net/';
+  var API = FN + 'venueTonight';
+  var FS = 'https://firestore.googleapis.com/v1/projects/belladonna-hq/databases/(default)/documents/reqSettings/';
+  var RTDB = 'https://belladonna-hq-default-rtdb.firebaseio.com/';
+  var DEF = {enabled:true, songPriceCents:300, dedicationPriceCents:500, dedicationSeconds:10, dedicationMaxChars:100, songMaxChars:80, fromMaxChars:20, rateLimitMinutes:60};
+  var P = new URLSearchParams(location.search);
+  var slug = (P.get('v')||'').toLowerCase().replace(/[^a-z0-9-]/g,'').slice(0,40);
+  var S = Object.assign({}, DEF), VENUE = '', KIND = '';
+  var $ = function(id){ return document.getElementById(id); };
+  function esc(s){ var d=document.createElement('div'); d.textContent=s==null?'':String(s); return d.innerHTML; }
+  function money(c){ return '$' + (c/100).toFixed(c%100 ? 2 : 0); }
+  function slugOf(name){ return String(name||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,''); }
+  function deviceId(){
+    try{ var d = localStorage.getItem('bn_dev'); if(!d || d.length<8){ d = 'd'+Math.random().toString(36).slice(2)+Math.random().toString(36).slice(2); localStorage.setItem('bn_dev', d); } return d; }
+    catch(e){ return window.__dev || (window.__dev = 'd'+Math.random().toString(36).slice(2)+Math.random().toString(36).slice(2)); }
+  }
+  function fsVal(v){ if(!v) return undefined; if('integerValue' in v) return Number(v.integerValue); if('doubleValue' in v) return v.doubleValue; if('booleanValue' in v) return v.booleanValue; if('stringValue' in v) return v.stringValue; }
+  function fsDoc(id){ return fetch(FS+encodeURIComponent(id)).then(function(r){ return r.ok ? r.json() : null; }).then(function(j){ var o={}; if(j && j.fields) Object.keys(j.fields).forEach(function(k){ var x=fsVal(j.fields[k]); if(x!==undefined) o[k]=x; }); return o; }).catch(function(){ return {}; }); }
+  function call(name, data){
+    return fetch(FN+name, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({data:data})})
+      .then(function(r){ return r.json(); })
+      .then(function(j){ if(j.error) throw new Error(j.error.message || 'Something went wrong.'); return j.result; });
+  }
+
+  // ---- venue header ----
+  function head(){ return '<div class="venue">'+esc(VENUE)+'</div><button class="chg" onclick="pickVenueView()">change venue</button>'; }
+  function pickVenueView(){
+    $('main').innerHTML = '<button class="back" onclick="home()">&larr; Back</button><div class="venue">Choose a venue</div><div style="height:1rem"></div><input class="srch" id="vs" type="search" autocomplete="off" placeholder="Search venues&hellip;" oninput="filt()"><div id="vl"><div class="msg">Loading venues&hellip;</div></div>';
+    loadVenues(filt);
+  }
+  var VENUES = null;
+  function loadVenues(cb){
+    if(VENUES) return cb();
+    try{ var c = sessionStorage.getItem('bn_venues'); if(c){ VENUES = JSON.parse(c); return cb(); } }catch(e){}
+    var paths = ['trivia/planner/venues','bingo/landing/venues','trivia/planner/karaokeVenues'], seen = {}, list = [], left = paths.length;
+    function done(){ if(--left) return; list.sort(function(a,b){ return a.name.localeCompare(b.name); }); VENUES = list; try{ sessionStorage.setItem('bn_venues', JSON.stringify(list)); }catch(e){} cb(); }
+    paths.forEach(function(p){
+      fetch(RTDB+p+'.json').then(function(r){ if(!r.ok) throw 0; return r.json(); }).then(function(o){
+        Object.keys(o||{}).forEach(function(k){ var v=o[k]; if(!v||!v.name||v.inactive) return; var sl=slugOf(v.name); if(sl && !seen[sl]){ seen[sl]=1; list.push({name:String(v.name).trim(), slug:sl}); } });
+      }).catch(function(){}).then(done);
+    });
+  }
+  function filt(){
+    var box = $('vl'); if(!box || !VENUES) return;
+    var q = (($('vs')||{}).value||'').toLowerCase().trim();
+    var l = VENUES.filter(function(v){ return !q || v.name.toLowerCase().indexOf(q)>=0; });
+    box.innerHTML = l.length ? l.map(function(v){ return '<button class="vrow'+(v.slug===slug?' cur':'')+'" onclick="chooseVenue(\''+v.slug.replace(/'/g,"\\'")+'\')">'+esc(v.name)+'</button>'; }).join('') : '<div class="msg">No venues match.</div>';
+  }
+  function chooseVenue(s){ location.href = location.pathname + '?v=' + encodeURIComponent(s); }
+
+  // ---- home: pick song or dedication ----
+  function home(){
+    KIND = '';
+    if(!S.enabled){ $('main').innerHTML = head() + '<div class="msg">Shout-outs and requests are turned off right now.</div>'; return; }
+    $('main').innerHTML = head()
+      + '<button class="choice primary" onclick="form(\'dedication\')"><div class="c-t">Send a dedication <b>'+money(S.dedicationPriceCents)+'</b></div><div class="c-s">Your message on the big screen for '+S.dedicationSeconds+' seconds. Birthdays, anniversaries, shout-outs to a table.</div></button>'
+      + '<button class="choice" onclick="form(\'song\')"><div class="c-t">Request a song <b>'+money(S.songPriceCents)+'</b></div><div class="c-s">Ask your host to play it in the interim music between karaoke singers.</div></button>'
+      + '<div class="note">You\'re only charged if your host approves it.</div>';
+  }
+
+  // ---- form ----
+  function form(kind){
+    KIND = kind; var ded = kind==='dedication', max = ded ? S.dedicationMaxChars : S.songMaxChars;
+    $('main').innerHTML = '<button class="back" onclick="home()">&larr; Back</button>' + head()
+      + (ded
+        ? '<label for="txt">Your message</label><textarea class="in" id="txt" maxlength="'+max+'" placeholder="Happy 30th birthday, Sarah!" oninput="upd()"></textarea><div class="cnt" id="cnt"></div>'
+          + '<label for="frm">From (optional)</label><input class="in" id="frm" maxlength="'+S.fromMaxChars+'" placeholder="Your name" oninput="upd()">'
+          + '<div class="prevh">Preview</div><div class="prev" id="prev"><div class="pt" id="pt"></div><div class="pf" id="pf"></div></div>'
+        : '<label for="txt">Song and artist</label><input class="in" id="txt" maxlength="'+max+'" placeholder="Don\'t Stop Believin\' — Journey" oninput="upd()"><div class="cnt" id="cnt"></div>'
+          + '<label for="frm">Your name (optional)</label><input class="in" id="frm" maxlength="'+S.fromMaxChars+'" placeholder="So the host can shout you out">')
+      + '<button class="btn" id="go" onclick="submit()">Pay '+money(ded ? S.dedicationPriceCents : S.songPriceCents)+' &amp; send</button>'
+      + '<div class="err" id="err"></div>'
+      + '<div class="note">Your card is only held now and charged if the host approves. If they pass, nothing is charged. One request per '+S.rateLimitMinutes+' minutes.</div>';
+    upd();
+  }
+  function fit(){
+    var box = $('prev'), pt = $('pt'), pf = $('pf'); if(!box||!pt) return;
+    var t = ($('txt').value||'').trim() || 'Your message here', f = ($('frm').value||'').trim();
+    pt.textContent = t.toUpperCase(); pf.textContent = f ? '\u2014 '+f.toUpperCase() : ''; pf.style.display = f ? 'block' : 'none';
+    var avail = box.clientHeight - box.clientHeight*0.12, size = Math.min(box.clientHeight*0.8, 120);
+    pt.style.fontSize = size+'px';
+    var guard = 0; while((pt.scrollHeight + (f ? pf.offsetHeight : 0) > avail || pt.scrollWidth > pt.clientWidth+1) && size > 8 && guard++ < 80){ size -= 2; pt.style.fontSize = size+'px'; }
+  }
+  function upd(){
+    var t = $('txt'); if(!t) return; var max = KIND==='dedication' ? S.dedicationMaxChars : S.songMaxChars, n = t.value.length, c = $('cnt');
+    c.textContent = n+'/'+max; c.className = 'cnt'+(n>=max?' warn':'');
+    if(KIND==='dedication') fit();
+  }
+  function submit(){
+    var txt = ($('txt').value||'').trim(), frm = ($('frm').value||'').trim(), err = $('err'), b = $('go');
+    err.textContent = '';
+    if(!txt){ err.textContent = 'Please type your message first.'; return; }
+    b.disabled = true; b.textContent = 'One moment\u2026';
+    call('createRequest', {type:KIND, locationId:slug, venueId:slug, text:txt, from:frm, deviceId:deviceId(), returnUrl: location.origin + location.pathname + '?v=' + encodeURIComponent(slug)})
+      .then(function(r){ location.href = r.url; })
+      .catch(function(e){ err.textContent = e.message; b.disabled = false; b.textContent = 'Try again'; });
+  }
+
+  // ---- after paying ----
+  var POLL = null;
+  function statusView(rid, canceled){
+    $('main').innerHTML = head().replace(/<button class="chg".*?<\/button>/,'') + '<div class="status" id="st"></div><button class="btn" onclick="location.href=location.pathname+\'?v=\'+encodeURIComponent(slug)">Back to start</button>';
+    if(canceled){ show('No problem', 'Checkout was canceled and you were not charged.'); return; }
+    var tries = 0;
+    function poll(){
+      call('requestStatus', {requestId: rid}).then(function(r){
+        var m = {
+          pending_payment:['Finishing up\u2026','Waiting for your payment to go through.'],
+          authorized:['Sent to your host!','They\'ll take a look shortly. Your card is only charged if they approve it, so keep an eye out.'],
+          approved:['Approved! \ud83c\udf89','Your host said yes. '+(r.type==='dedication'?'Watch the big screen.':'Listen for it in the interim music.')],
+          done:[r.type==='dedication'?'It\'s on the big screen!':'Your song was played!','Thanks for being part of tonight.'],
+          rejected:['Your host passed on this one','You were not charged. Feel free to try something else.'],
+          expired:['This one timed out','You were not charged.'],
+          canceled:['This one was canceled','You were not charged.']
+        }[r.status] || ['Hang tight\u2026',''];
+        show(m[0], m[1]);
+        if(['authorized','pending_payment','approved'].indexOf(r.status)>=0 && tries++ < 240) POLL = setTimeout(poll, 5000);
+      }).catch(function(){ POLL = setTimeout(poll, 8000); });
+    }
+    poll();
+  }
+  function show(a,b){ var s=$('st'); if(s) s.innerHTML = '<div class="big">'+esc(a)+'</div><div class="sm">'+esc(b)+'</div>'; }
+
+  // ---- start ----
+  if(!slug){
+    $('main').innerHTML = '<div class="msg">This link is missing its venue.<br>Scan the QR code at your table again, or choose a venue.</div><button class="choice primary" onclick="pickVenueView()"><div class="c-t">Choose a venue <span>&rarr;</span></div></button>';
+  } else {
+    Promise.all([
+      fetch(API+'?v='+encodeURIComponent(slug)).then(function(r){ return r.ok ? r.json() : null; }).catch(function(){ return null; }),
+      fsDoc('default'), fsDoc(slug)
+    ]).then(function(a){
+      VENUE = (a[0] && a[0].found && a[0].venue) ? a[0].venue : slug.replace(/-/g,' ').replace(/\b\w/g,function(c){ return c.toUpperCase(); });
+      S = Object.assign({}, DEF, a[1], a[2]);
+      var rid = P.get('rid');
+      if(rid && P.get('paid')) statusView(rid, false);
+      else if(rid && P.get('canceled')) statusView(rid, true);
+      else home();
+    });
+  }
+</script>
+</body>
+</html>
