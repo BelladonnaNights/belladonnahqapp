@@ -211,7 +211,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
 .modal-bg.open{display:flex;}
 .modal{background:var(--surface);border:1px solid var(--border2);border-top:3px solid var(--gold);padding:1.6rem;width:100%;max-width:480px;position:relative;max-height:92vh;overflow-y:auto;}
 /* thin gold scrollbars everywhere (page + pop-ups) */
-html,.modal,.modal-bg{scrollbar-width:thin;scrollbar-color:#c9a96e transparent;}
+
 html::-webkit-scrollbar,.modal::-webkit-scrollbar{width:5px;height:5px;}
 html::-webkit-scrollbar-track,.modal::-webkit-scrollbar-track{background:transparent;}
 html::-webkit-scrollbar-thumb,.modal::-webkit-scrollbar-thumb{background:linear-gradient(180deg,#e0bc7e,#c9a96e);border-radius:10px;}
@@ -669,7 +669,16 @@ html::-webkit-scrollbar-thumb:hover,.modal::-webkit-scrollbar-thumb:hover{backgr
 .tm-grip{position:absolute;left:-4px;top:0;bottom:0;width:10px;cursor:ew-resize;z-index:5;}
 .tm-grip::after{content:"";position:absolute;left:3px;top:50%;height:48px;width:4px;margin-top:-24px;border-radius:2px;background:#c9a96e;opacity:.45;}
 .tm-grip:hover::after{opacity:1;}
-#panel-team *,.tm-dr,.tm-dr *{scrollbar-width:thin;scrollbar-color:#c9a96e transparent;}
+*::-webkit-scrollbar{width:6px;height:6px;}
+*::-webkit-scrollbar-track{background:transparent;}
+*::-webkit-scrollbar-thumb{background:linear-gradient(180deg,#e0bc7e,#c9a96e);border-radius:10px;}
+*::-webkit-scrollbar-thumb:hover{background:#e0bc7e;}
+*::-webkit-scrollbar-corner{background:transparent;}
+@supports (-moz-appearance:none){*{scrollbar-width:thin;scrollbar-color:#c9a96e transparent;}}
+.pk-plus{min-width:2.2rem;font-size:1.15rem;line-height:1;opacity:.5;}
+.pk-plus.on{opacity:1;border-color:var(--ac,#c9a96e);color:var(--ac,#c9a96e);}
+.pk-count{font-size:.8rem;opacity:.8;margin:0 .6rem;}
+.pk-chip{cursor:default;max-width:100%;}
 .tm-dr ::-webkit-scrollbar,.tm-dr::-webkit-scrollbar,#panel-team ::-webkit-scrollbar{width:6px;height:6px;}
 .tm-dr ::-webkit-scrollbar-track,#panel-team ::-webkit-scrollbar-track{background:transparent;}
 .tm-dr ::-webkit-scrollbar-thumb,#panel-team ::-webkit-scrollbar-thumb{background:#c9a96e;border-radius:3px;}
@@ -7182,6 +7191,8 @@ const PRE=`You are {NAME}, the {ROLE} for Belladonna Audio Alchemies, a live ent
 You work inside Belladonna HQ, on its My Team page. Your data lives in Firebase project belladonna-hq (Firestore). HQ reads what you write and shows it on your card.
 
 HARD RULES
+- FIVE OPTIONS: every draft you write holds FIVE different versions of the same message in its body, separated by a line containing exactly ---OPTION--- (nothing else on that line). Vary the angle and opening, keep every fact identical, and follow the voice guide in all five. Never use that separator anywhere else. A run note is the one exception and stays a single version. HQ lets Ahnna flip through the five and keep the parts she likes.
+- REDRAFTS: each run, read agent_drafts for your drafts that have a redraft field (parts Ahnna highlighted) and no newer draft whose label ends with [redraft of <that draft's id>]. For each, write ONE new draft with the same agent, kind, venueId and leadId, a label equal to the old label plus " [redraft of <old id>]", and a body of five new versions built around her parts, using the parts word for word, then the usual ---OPTION--- separators. HQ then hides the old one.
 - Nothing you write is ever sent to a client or venue. Everything goes into HQ as a draft or a record for Ahnna to approve.
 - Never invent prices, dates, availability or facts. If something is missing, say exactly what is missing.
 - Never log into a gig site or any account with a bot. Work only from emails, HQ data and public web pages.
@@ -7609,7 +7620,7 @@ Every morning at 7:15 AM Pacific:
 1a. Each post's imageText is what Ahnna typed or picked as the exact words or a description of its image. Write to fit it, and treat it as the truth about the image. If a post has no imageText and no bankRef, write from the title, type and notes, and say in note that the image text was missing.
 1b. Read the content bank ({"op":"read","collection":"socialLibrary"}, document id "bank"). A post's bankRef is "<category id>|<item id>": the item's t is the exact text printed on the image and the category name is the kind of image. Write the caption to fit that image and add to it, never repeat it word for word. No bankRef means use the title, type and notes.
 2. Read agent_config social. guide.text is what Ahnna looks for in a caption. Follow it exactly. Also read voice, pricing, sable and curator.
-3. Write each missing caption in the Belladonna voice using only facts from the post and the venue list. Never invent a prize, price, time or guest. Give a second version with a different angle, and hashtags for Instagram only.
+3. Write each missing caption in the Belladonna voice using only facts from the post and the venue list. Never invent a prize, price, time or guest. Put FIVE different versions in the caption field, each with a different angle, separated by a line containing exactly ---OPTION---, and hashtags for Instagram only. REDRAFTS: for any caption in social.captions that has a redraft field with parts and no done flag, rewrite its caption field as five new versions built around those parts (the parts word for word) and write redraft:{done:true,at:<ms>} and picks:[] on it.
 4. Write them with setConfig doc "social": captions{<post id>:{title,date,platform,caption,alt,hashtags,note,status:"new",createdAt}}.
 5. Build event kits (Facebook event title, description, caption, hashtags, banner prompt) for kitreq entries and for special nights in the next 21 days.
 6. Never repeat last week's caption. Mention any gap in a note.
@@ -8006,7 +8017,7 @@ function start(){
   const onErr=e=>{S.err=(e&&(e.code||e.message))||String(e);render();};
   const list=(name,key)=>d.collection(name).onSnapshot(s=>{S[key]=s.docs.map(x=>Object.assign({id:x.id},x.data()));S.err=null;render();},onErr);
   list('agent_leads','leads');
-  d.collection('agent_drafts').onSnapshot(sn=>{const all=sn.docs.map(x=>Object.assign({id:x.id},x.data()));const isN=x=>x.kind==='note'||/^run note/i.test(String(x.label||''));S.drafts=all.filter(x=>!isN(x));S.notes=all.filter(isN).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));S.err=null;render();},onErr);
+  d.collection('agent_drafts').onSnapshot(sn=>{const all=sn.docs.map(x=>Object.assign({id:x.id},x.data()));const rdm={};all.forEach(x=>{const m=String(x.label||'').match(/\s*\[redraft of ([A-Za-z0-9]+)\]/);if(m){x.redraftOf=m[1];x.label=String(x.label).replace(m[0],'');if(x.status==='pending')rdm[m[1]]=1;}});all.forEach(x=>{if(rdm[x.id]&&x.status==='pending')x.status='replaced';});const isN=x=>x.kind==='note'||/^run note/i.test(String(x.label||''));S.drafts=all.filter(x=>!isN(x));S.notes=all.filter(isN).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));S.err=null;render();},onErr);
   list('agent_sites','sites');
   list('agent_venues','venues');
   try{d.collection('socialPosts').where('date','>=',isoDay(Date.now()-DAY)).onSnapshot(s=>{S.posts=s.docs.map(x=>Object.assign({id:x.id},x.data()));render();},e=>{S.posts=null;});}catch(e){S.posts=null;}
@@ -8657,15 +8668,28 @@ function openAgent(id){
 function closeDrawer(){S.cur=null;$('#tmDr').classList.remove('open');$('#tmOv').classList.remove('open');}
 
 /* ── shared card pieces ── */
+const optsOf=t=>{const a=String(t||'').split(/\r?\n[ \t]*-{3,}[ \t]*OPTION[ \t]*-{3,}[ \t]*\r?\n/i).map(x=>x.trim()).filter(Boolean);return a.length?a.slice(0,5):[String(t||'')];};
+function optState(key,body){const o=optsOf(body);S.oi=S.oi||{};S.oe=S.oe||{};const i=Math.min(Math.max(+S.oi[key]||0,0),o.length-1);const e=S.oe[key+':'+i];return {n:o.length,i:i,text:e!==undefined?e:o[i],all:o};}
+function optBar(key,n,i){if(n<2)return '';return '<div class="tm-row" style="margin-top:.5rem;align-items:center"><button class="tm-b" data-act="optnav" data-k="'+esc(key)+'" data-d="-1" aria-label="Previous option">&#8249;</button><span class="pk-count">Option '+(i+1)+' of '+n+'</span><button class="tm-b" data-act="optnav" data-k="'+esc(key)+'" data-d="1" aria-label="Next option">&#8250;</button></div>';}
+function pickBar(key,picks,rd){const P=Array.isArray(picks)?picks:[];const cutp=t=>{t=String(t).replace(/\s+/g,' ');return t.length>70?t.slice(0,69)+'…':t;};
+  return '<div class="tm-row pk-row" style="align-items:center;flex-wrap:wrap"><button class="tm-b pk-plus" type="button" data-act="pickadd" data-k="'+esc(key)+'" title="Highlight words in the text above, then press +" aria-label="Keep the highlighted part">+</button>'+
+    (P.length?P.map((p,i)=>'<span class="tm-tag pk-chip" title="'+esc(p)+'">'+esc(cutp(p))+' <b data-act="pickdel" data-k="'+esc(key)+'" data-i="'+i+'" style="cursor:pointer" title="Remove">&times;</b></span>').join('')+'<button class="tm-b pri" data-act="redraft" data-k="'+esc(key)+'">Redraft from '+P.length+' part'+(P.length>1?'s':'')+'</button><button class="tm-b dim" data-act="pickclear" data-k="'+esc(key)+'">Clear</button>':'<span style="font-size:.75rem;opacity:.65">Highlight words you like, then press +</span>')+
+    '</div>'+((rd&&rd.parts&&!rd.done)?'<div class="t2" style="font-size:.75rem;opacity:.8">Redraft requested. The new version shows up after the agent\'s next run, and the prompt was copied if you want it sooner.</div>':'');}
+function getPicks(k){const id=k.slice(1);if(k[0]==='d'){const d=S.drafts.find(x=>x.id===id);return (d&&d.picks)||[];}const c=((S.cfg.social||{}).captions||{})[id];return (c&&c.picks)||[];}
+function savePicks(k,arr){const id=k.slice(1);if(k[0]==='d')return col('agent_drafts').doc(id).update({picks:arr});return emSave({['captions.'+id+'.picks']:arr});}
+function keepEdit(k){if(k[0]!=='d')return;const ta=document.querySelector('[data-did="'+k.slice(1)+'"]');if(!ta)return;S.oi=S.oi||{};S.oe=S.oe||{};S.oe[k+':'+(Math.max(+S.oi[k]||0,0))]=ta.value;}
+function selText(k){const id=k.slice(1);if(k[0]==='d'){const ta=document.querySelector('[data-did="'+id+'"]');if(ta&&ta.selectionEnd>ta.selectionStart)return ta.value.slice(ta.selectionStart,ta.selectionEnd).trim();}
+  const sel=window.getSelection(),el=document.querySelector('[data-ck="'+k+'"]');if(sel&&el&&sel.toString().trim()&&sel.anchorNode&&el.contains(sel.anchorNode))return sel.toString().trim();return '';}
+function redraftPrompt(isD,label,current,parts){return 'Redraft this '+(isD?'message':'social caption')+' for Belladonna. Build it around the parts I kept below: use my parts word for word, and write everything around them in our voice. Give me FIVE different versions, separated by a line containing exactly ---OPTION---. No commentary.\n\nPARTS I WANT KEPT\n'+parts.map((p,i)=>(i+1)+'. '+p).join('\n')+'\n\nTHE CURRENT DRAFT ('+label+')\n'+current+'\n\nOUR VOICE\n'+(isD?emailVoice():emGuide()+'\n\n'+voiceFull());}
 function draftCard(dr,withPrice){
-  const l=leadsById()[dr.leadId];
+  const l=leadsById()[dr.leadId];const OP=optState('d'+dr.id,dr.body);
   const head=l?leadLine(l):'<b>'+esc(dr.label||'Draft')+'</b>';
   return '<div class="tm-item"><div class="t1">'+head+'</div>'+
     '<div class="t2">'+esc(dr.kind==='n1'?'First nudge':dr.kind==='n2'?'Final nudge':dr.kind==='review'?'Review reply':dr.kind==='thanks'?'Thank-you':dr.kind==='email'?'Cold email (touch 1)':dr.kind==='email2'?'Cold email (touch 2)':dr.kind==='email3'?'Cold email (touch 3)':dr.kind==='cold'?'Cold email':dr.kind==='dm'?'Extra Instagram DM':dr.kind==='colddm'?'Instagram message (touch)':dr.kind==='reviewask'?'Review request':dr.kind==='checkin'?'Venue check-in':dr.kind==='paperwork'?'Paperwork reminder':dr.kind==='seo'?'SEO fix':'Reply and quote')+' · drafted '+fmtDay(dr.createdAt)+'</div>'+
-    '<textarea class="tm-ta" style="margin-top:.6rem" data-did="'+esc(dr.id)+'">'+esc(dr.body||'')+'</textarea>'+
+    optBar('d'+dr.id,OP.n,OP.i)+'<textarea class="tm-ta" style="margin-top:.6rem" data-did="'+esc(dr.id)+'">'+esc(OP.text||'')+'</textarea>'+pickBar('d'+dr.id,dr.picks,dr.redraft)+
     '<div class="tm-row">'+(withPrice?'<input class="tm-in s" data-pid="'+esc(dr.id)+'" placeholder="Quoted $" value="'+esc(l&&l.quotedPrice||'')+'">':'')+
     (OT_KIND[dr.kind]
-      ?'<button class="tm-b pri" data-act="approve" data-mode="sent" data-id="'+esc(dr.id)+'" title="Logs it in the outreach history. Raven picks it up on her next run.">&#10003; Sent</button>'+
+      ?'<button class="tm-b pri" data-act="approve" data-mode="sent" data-id="'+esc(dr.id)+'" title="Mark as sent. Logs it in the outreach history. Raven picks it up on her next run." aria-label="Mark as sent">&#10003;</button>'+
         '<button class="tm-b" data-act="copydraft" data-id="'+esc(dr.id)+'">Copy</button>'+
         (dr.kind!=='dm'&&dr.kind!=='colddm'?'<button class="tm-b" data-act="opengmail" data-id="'+esc(dr.id)+'" title="Opens Gmail as '+ADMIN_MAIL+' with the address, subject and text filled in">Open in Gmail</button>':'')
       :'<button class="tm-b pri" data-act="approve" data-id="'+esc(dr.id)+'">Approve &amp; copy</button>'+
@@ -9744,9 +9768,10 @@ function emKitPrompt(k){
   return 'You are Sabine, the social media caption writer for Belladonna Audio Alchemies. Build an EVENT KIT for a special night.\n\n'+emGuide()+'\n\nFULL VOICE GUIDE\n'+voiceFull()+'\n\nTHE NIGHT\nName: '+k.title+'\nDate: '+(k.date?fmtEv(k.date):'to be set')+'\nVenue: '+(k.venue||'')+(k.note?'\nDetails: '+k.note:'')+'\n\nGive me, each labeled:\n1) FACEBOOK EVENT TITLE (short, clear)\n2) FACEBOOK EVENT DESCRIPTION (what it is, when, where, what to bring or wear, what you win, how to join; 4 to 8 short lines)\n3) POST CAPTION for Instagram and Facebook\n4) HASHTAGS (Instagram only)\n5) BANNER PROMPT: a one-paragraph image prompt for a 1920x1005 Facebook event banner in the Belladonna look (dark, gothic, gold). Leave the text on the banner to the title and date only.\nDo not post or create anything.';
 }
 function capCard(x){
+  const OP=optState('c'+x.id,x.caption);
   const b=(a,l,c,f)=>'<button class="tm-b'+(c?' '+c:'')+'" data-act="'+a+'" data-id="'+esc(x.id)+'"'+(f?' data-f="'+f+'"':'')+(a==='emstat'?' data-v="'+(c==='dim'?'skip':'used')+'"':'')+'>'+l+'</button>';
   return '<div class="tm-item'+(S.open['c_cap'+x.id]===false?' folded':'')+'"><div class="t1 fold" data-act="fold2" data-id="cap'+esc(x.id)+'"><b>'+esc(x.title||'Post')+'</b> <span class="tm-tag">'+esc(fmtEv(x.date)||'')+'</span>'+(x.platform?'<span class="tm-tag">'+esc(x.platform)+'</span>':'')+'</div>'+
-    '<div class="t2" style="white-space:pre-wrap;font-size:.92rem;line-height:1.5">'+esc(x.caption)+'</div>'+
+    optBar('c'+x.id,OP.n,OP.i)+'<div class="t2" data-ck="c'+esc(x.id)+'" style="white-space:pre-wrap;font-size:.92rem;line-height:1.5">'+esc(OP.text)+'</div>'+pickBar('c'+x.id,x.picks,x.redraft)+
     (x.hashtags?'<div class="t2" style="color:var(--text3);word-break:break-word">'+esc(x.hashtags)+'</div>':'')+
     (x.alt?'<div class="t2"><b>Another version:</b></div><div class="t2" style="white-space:pre-wrap;line-height:1.5">'+esc(x.alt)+'</div>':'')+
     (x.note?'<div class="t2"><b>Sabine says:</b> '+esc(x.note)+'</div>':'')+
@@ -10084,7 +10109,18 @@ const A={
   async remdone(t){await remSave({['items.'+t.dataset.id+'.done']:true,['items.'+t.dataset.id+'.doneAt']:Date.now()});},
   async remdel(t){if(!confirm('Delete this reminder?'))return;await remSave({['items.'+t.dataset.id]:null});},
 
-  async emcopy(t){const x=((S.cfg.social||{}).captions||{})[t.dataset.id];if(!x)return;const f=t.dataset.f,txt=f==='hash'?x.hashtags:f==='alt'?x.alt:x.caption;toast(await copy(txt||'')?'Copied. Paste it into Buffer.':'Copy failed.',false);},
+  optnav(t){const k=t.dataset.k,d=+t.dataset.d;S.oi=S.oi||{};S.oe=S.oe||{};keepEdit(k);const cur=Math.max(+S.oi[k]||0,0);
+    const src=k[0]==='d'?(S.drafts.find(x=>x.id===k.slice(1))||{}).body:((((S.cfg.social||{}).captions||{})[k.slice(1)])||{}).caption;
+    const n=optsOf(src).length;S.oi[k]=(cur+d+n)%n;renderDrawer(true);},
+  async pickadd(t){const k=t.dataset.k,txt=selText(k);if(!txt){toast('Highlight some words in the text first, then press +.',true);return;}const cur=getPicks(k);if(cur.indexOf(txt)>=0){toast('Already kept.',false);return;}keepEdit(k);await savePicks(k,cur.concat([txt]));toast('Kept.',false);},
+  async pickdel(t){const k=t.dataset.k,a=getPicks(k).slice();a.splice(+t.dataset.i,1);keepEdit(k);await savePicks(k,a);},
+  async pickclear(t){keepEdit(t.dataset.k);await savePicks(t.dataset.k,[]);},
+  async redraft(t){const k=t.dataset.k,id=k.slice(1),P=getPicks(k);if(!P.length)return;keepEdit(k);const isD=k[0]==='d';
+    let label,current;
+    if(isD){const dr=S.drafts.find(x=>x.id===id);if(!dr)return;label=dr.label||dr.kind||'draft';current=optState(k,dr.body).text;await col('agent_drafts').doc(id).update({redraft:{parts:P,at:Date.now()}});}
+    else{const c=((S.cfg.social||{}).captions||{})[id]||{};label=c.title||'caption';current=optState(k,c.caption).text;await emSave({['captions.'+id+'.redraft']:{parts:P,at:Date.now()}});}
+    const ok=await copy(redraftPrompt(isD,label,current,P));toast('Saved. The agent redrafts it on the next run.'+(ok?' The prompt is copied too if you want it now in your own chat.':''),false);},
+  async emcopy(t){const x=((S.cfg.social||{}).captions||{})[t.dataset.id];if(!x)return;const f=t.dataset.f,txt=f==='hash'?x.hashtags:f==='alt'?x.alt:optState('c'+t.dataset.id,x.caption).text;toast(await copy(txt||'')?'Copied. Paste it into Buffer.':'Copy failed.',false);},
   async emstat(t){await emSave({['captions.'+t.dataset.id+'.status']:t.dataset.v});toast(t.dataset.v==='skip'?'Skipped.':'Marked as used.');},
   async emask(t){const p=(S.posts||[]).find(x=>x.id===t.dataset.id);if(!p)return;toast(await copy(emCaptionPrompt(p))?'Request copied. Paste it into a Claude or ChatGPT chat.':'Copy failed.',false);},
   async emguide(){await emSave({'guide.text':val('em-guide'),'guide.updatedAt':Date.now()});toast('Saved. Sabine follows this from now on.');},
@@ -10502,6 +10538,8 @@ function wire(){
     root.addEventListener('dragend',()=>{dk=null;clr();});
   })();
   root.addEventListener('toggle',e=>{const k=e.target&&e.target.dataset&&e.target.dataset.k;if(k)S.open[k]=e.target.open;},true);
+  root.addEventListener('mousedown',e=>{if(e.target.closest&&e.target.closest('.pk-plus'))e.preventDefault();});
+  document.addEventListener('selectionchange',()=>{try{const a=document.activeElement;let has=false;if(a&&a.tagName==='TEXTAREA'&&a.dataset.did)has=a.selectionEnd>a.selectionStart;else{const sl=window.getSelection();has=!!(sl&&sl.toString().trim()&&sl.anchorNode&&sl.anchorNode.parentElement&&sl.anchorNode.parentElement.closest('[data-ck]'));}document.querySelectorAll('.pk-plus').forEach(b=>b.classList.toggle('on',has));}catch(e){}});
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>{wire();render();});else{wire();render();}
 })();
