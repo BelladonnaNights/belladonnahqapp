@@ -1896,7 +1896,8 @@ match /agent_config/{id}  { allow read, write: if isAdmin(); }</pre>
         <div class="form-group"><label class="form-label">Start date</label><input type="date" class="form-input" id="vmStartDate"></div>
       </div>
       <div class="vm-grid vm-g3" style="margin-top:.6rem">
-        <div class="form-group"><label class="form-label" title="Sigil reminds you a couple of days before this day each month">Bill on day of month</label><select class="form-input" id="vmBillDay"><option value="">1st (default)</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option><option value="11">11</option><option value="12">12</option><option value="13">13</option><option value="14">14</option><option value="15">15</option><option value="16">16</option><option value="17">17</option><option value="18">18</option><option value="19">19</option><option value="20">20</option><option value="21">21</option><option value="22">22</option><option value="23">23</option><option value="24">24</option><option value="25">25</option><option value="26">26</option><option value="27">27</option><option value="28">28</option><option value="last">Last day</option></select></div>
+        <div class="form-group"><label class="form-label">Billing</label><select class="form-input" id="vmBillFreq" onchange="document.getElementById('vmBillDayWrap').style.display=this.value==='gig'?'none':''"><option value="">Monthly</option><option value="gig">Per gig</option></select></div>
+        <div class="form-group" id="vmBillDayWrap"><label class="form-label" title="Sigil reminds you a couple of days before this day each month">Bill on day of month</label><select class="form-input" id="vmBillDay"><option value="">1st (default)</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option><option value="11">11</option><option value="12">12</option><option value="13">13</option><option value="14">14</option><option value="15">15</option><option value="16">16</option><option value="17">17</option><option value="18">18</option><option value="19">19</option><option value="20">20</option><option value="21">21</option><option value="22">22</option><option value="23">23</option><option value="24">24</option><option value="25">25</option><option value="26">26</option><option value="27">27</option><option value="28">28</option><option value="last">Last day</option></select></div>
         <div class="form-group"><label class="form-label">Monthly amount (optional)</label><input type="text" class="form-input" id="vmBillAmount" placeholder="$ total per invoice"></div>
         <div class="form-group"><label class="form-label">Billing notes</label><input type="text" class="form-input" id="vmBillNote" placeholder="e.g. QuickBooks, email to owner, collect cash on the 1st"></div>
       </div>
@@ -6228,7 +6229,7 @@ function openVenueModal(id=null){
   const amounts=(venue&&venue.payAmounts)||{};
   VENUE_AMOUNT_KINDS.forEach(k=>{document.getElementById('vmAmount'+k).value=amounts[k]||'';});
   document.getElementById('vmPayMethod').value=venue?venue.payMethod||'':'';
-  document.getElementById('vmBillDay').value=venue?String(venue.billDay||''):'';document.getElementById('vmBillAmount').value=venue?venue.billAmount||'':'';document.getElementById('vmBillNote').value=venue?venue.billNote||'':'';
+  document.getElementById('vmBillDay').value=venue?String(venue.billDay||''):'';document.getElementById('vmBillFreq').value=venue?venue.billFreq||'':'';document.getElementById('vmBillDayWrap').style.display=(venue&&venue.billFreq==='gig')?'none':'';document.getElementById('vmBillAmount').value=venue?venue.billAmount||'':'';document.getElementById('vmBillNote').value=venue?venue.billNote||'':'';
   document.getElementById('vmStartDate').value=venue?venue.startDate||'':'';
   document.getElementById('vmHistoryBtn').style.display=id?'':'none';
   renderVenueGigSlotRows(venue?fillSlotTimes(venueEditorSlots(venue),venue.name):[]);
@@ -6353,7 +6354,7 @@ function saveVenue(){
   const gigSlots=readVenueGigSlotRows();
   const host=document.getElementById('vmHost').value||null;
   const gv=i=>{const e=document.getElementById(i);return e?e.value.trim():'';};
-  const det={address:gv('vmAddress'),city:gv('vmCity'),owner:gv('vmOwner'),manager:gv('vmManager'),contactName:gv('vmContactName'),phone:gv('vmPhone'),email:gv('vmEmail'),website:gv('vmWebsite'),instagram:gv('vmInstagram'),facebook:gv('vmFacebook'),otherContacts:gv('vmOtherContacts'),billDay:gv('vmBillDay'),billAmount:gv('vmBillAmount'),billNote:gv('vmBillNote')};
+  const det={address:gv('vmAddress'),city:gv('vmCity'),owner:gv('vmOwner'),manager:gv('vmManager'),contactName:gv('vmContactName'),phone:gv('vmPhone'),email:gv('vmEmail'),website:gv('vmWebsite'),instagram:gv('vmInstagram'),facebook:gv('vmFacebook'),otherContacts:gv('vmOtherContacts'),billDay:gv('vmBillFreq')==='gig'?'':gv('vmBillDay'),billFreq:gv('vmBillFreq'),billAmount:gv('vmBillAmount'),billNote:gv('vmBillNote')};
   const today=new Date().toISOString().slice(0,10);
   if(editVenueId){
     const v=venues.find(x=>x.id===editVenueId);
@@ -8139,7 +8140,7 @@ function briefData(){
   add('mirror',d.stale.length,plural(d.stale.length,'profile is','profiles are')+' stale',d.stale.slice(0,6).map(x=>x.name+(x.profileRefreshed?' ('+ago(x.profileRefreshed)+')':' (never refreshed)')).join('; ')+'. Open Mirror for what to change on each.');
   allNotes().filter(n=>n.status==='pending'&&/NEEDS YOU:/i.test(n.body||'')).forEach(n=>{
     const m=String(n.body).split(/NEEDS YOU:/i)[1]||'',ls=m.split('\n').map(x=>x.replace(/^\s*[-*\u2022]\s*/,'').trim()).filter(Boolean);
-    ls.forEach(l=>need.push({a:n.agent,text:l,body:agent(n.agent)?agent(n.agent).name+' left this in her run note '+ago(n.createdAt)+'.':'',note:n.id}));
+    ls.forEach(l=>need.push({a:n.agent,text:l,body:agent(n.agent)?agent(n.agent).name+' left this in '+(n.agent==='warden'?'his':'her')+' run note '+ago(n.createdAt)+'.':'',note:n.id}));
   });
   {/* say each thing once: a due-soon item, a draft waiting to approve and a run-note line about the same thing collapse into one */
     const STOP=new Set(['that','this','with','your','from','they','them','there','their','sigil','today','before','about','have','will','needs','need']);
@@ -8477,7 +8478,7 @@ RUN NOTE (LAST STEP OF EVERY RUN, even a quiet one, even if something blocked yo
 const TASKS=[
  {name:'Lead run',who:'Raven and Quill',when:'Weekdays, 7:00 am',plain:'Looks for people and venues asking for karaoke, trivia or bingo, scores them hot / warm / cold, drafts cold emails and day-5 follow-ups for venues you have not heard back from, and drafts replies to the good leads.',ids:['raven','quill'],lib:true,
   body:`TASK: Lead run.
-0. Read agent_config outreach blocklist (each entry has a name and optional venueId). NEVER addVenue, draft, email or DM any venue on it, and skip it in every step below.
+0. Read agent_config outreach blocklist (each entry has a name and optional venueId). NEVER addVenue, addLead, draft, email or DM any venue, client or business on it (match the name ignoring capitals, spaces and punctuation), and skip it in every step below. A lead with stage "skipped" is never worked again. A lead with a skippedAt date was only skipped for now: do not redraft it for 30 days after skippedAt, then it may be offered again.
 1. Search the public web for people and venues in Seattle-Tacoma asking for or likely to need karaoke, trivia, music bingo or themed nights. Score each Hot / Warm / Cold with a one-line reason. Skip anything older than 3 days.
 2. addLead for each (max 8 per run, skip duplicates by link). addVenue for any new bar or venue worth cold-emailing, but FIRST read agent_venues (every stage, including ones Ahnna added by hand), Our Venues (readVenues) and the outreach blocklist, and skip any venue whose name matches one of them when you ignore capitals, spaces, punctuation and "and" versus "&". Never addVenue a duplicate and never overwrite or delete an existing prospect; to add a fact to one, use updateVenue on that id and change only the empty fields.
 3. COLD OUTREACH RULES. Read agent_venues, agent_config outreach (touches: every email or Instagram contact, with date and channel) and agent_config curator research. Check agent_drafts first so you never write a draft that already exists, and write at most one draft per venue per run. A "touch" is one cold contact, an email or a DM. A venue gets ONE touch every 4 months and at most 3 touches in total. If they never answer, that is fine: after touch 3 the venue is closed and you write nothing more. Count the touches from agent_config outreach touches (steps email1, email2, email3, cold-email, cold-dm; also count emailedAt, emailed2At and emailed3At on the venue).
@@ -8523,7 +8524,8 @@ Do not touch venues you did not just add except to draft.`},
 1. Read Our Venues ({"op":"readVenues"}, skip inactive), the Leads tab ({"op":"read","collection":"leads"}; skip transferred and paused) and agent_venues (skip stage "no"). Read agent_config curator: research (existing dossiers) and profiles.
 2. Pick up to 6 venues: never researched first, then oldest researchedAt (and only if older than 60 days). Venues we work with come before venues we want.
 3. For each, search the web and public social pages (their website, Facebook, Instagram, Google and Yelp listings, local news, event listings). Find: what the place is and its vibe and crowd, what customers and the press say, events and gigs they have hosted (including other karaoke, trivia, bingo or music hosts and nights), outdoor or special spaces, and anything useful for us.
-4. Write setConfig doc "curator" with research{<key>:{name,kind ("have" if in Our Venues, otherwise "want"),city,summary (2 to 3 sentences),social (what people say, in your own words with the overall feeling, never long quotes),pastEvents (list, include who ran it if known),likes (what you think this venue would like, and why),ideas (list of 2 to 4 concrete things Belladonna could do there, each one sentence),bait (for venues we do not work with yet: the single most tempting idea for this venue, written as one or two sentences Ahnna can say or email to win them, using only their real features),watch (a competing night on the same day, a bad reputation, or anything risky, empty if none),sources (URLs),researchedAt (ms)}}. The key is the venue name lowercased with every character that is not a letter or number replaced by an underscore, with a p in front, for example "Post & Pour" becomes "ppost___pour".
+3b. FEATURES. Work out what the place physically has, from its website, its photo galleries, Google and Yelp photos, Facebook and Instagram posts and photos, and photos other people tagged there. Look at the images, not only the text. Check for: number and size of TVs, outdoor area or patio, stage, dance floor, room capacity (small, medium, large, a number if stated), private room, full kitchen or restaurant, coffee bar, pour-your-own beer taps, arcade or games, pool tables, parking, sound system, karaoke already running. Only list what you actually saw or read, and say how you know it in a few words, for example "stage (photo on Facebook)". If a page or its photos could not be opened (blocked, login wall, empty), do NOT guess: put that item in needsLook, for example "Instagram photos, could not open". Never log in.
+4. Write setConfig doc "curator" with research{<key>:{name,features (list of short strings like "large patio (website photo)"),needsLook (list of things you could not confirm or open),kind ("have" if in Our Venues, otherwise "want"),city,summary (2 to 3 sentences),social (what people say, in your own words with the overall feeling, never long quotes),pastEvents (list, include who ran it if known),likes (what you think this venue would like, and why),ideas (list of 2 to 4 concrete things Belladonna could do there, each one sentence),bait (for venues we do not work with yet: the single most tempting idea for this venue, written as one or two sentences Ahnna can say or email to win them, using only their real features),watch (a competing night on the same day, a bad reputation, or anything risky, empty if none),sources (URLs),researchedAt (ms)}}. The key is the venue name lowercased with every character that is not a letter or number replaced by an underscore, with a p in front, for example "Post & Pour" becomes "ppost___pour".
 5. Up to 3 times a week you may add a venue we do not have and do not track but think we SHOULD try for, with kind "suggest". Say why in summary.
 6. Mark anything you could not confirm as not verified. Never repeat rumors about named private people. Business information only. Never copy reviews at length.`},
  {name:'Social captions',who:'Sabine',when:'Daily, 7:15 am',plain:'Writes captions in your voice for every Clio post in the next two weeks that has none, and builds Facebook event kits for special nights. They show up in Clio and on Sabine\'s desk for you to copy into Buffer.',ids:['ember'],
@@ -8547,7 +8549,7 @@ Do not touch venues you did not just add except to draft.`},
 
  {name:'Sponsor hunt',who:'Raven and Quill',when:'Mondays, 11:00 am',plain:'Finds local businesses that could sponsor your nights (screensaver slide, shout-outs, a winners\' prize) and writes the pitch email for each. You send it yourself.',ids:['raven','quill'],
   body:`TASK: Sponsor hunt. Public web only. Never email or message anyone, never log in, never post.
-1. Read agent_config ads: settings (sponsorOffer, area) and sponsors (every business already there, with any status). Read Our Venues ({"op":"readVenues"}, skip inactive) and agent_leads.
+1. Read agent_config ads: settings (sponsorOffer, area) and sponsors (every business already there, with any status). A sponsor with status skipped and a skippedAt date was only skipped for now: do not list it again for 30 days after skippedAt, then you may offer it again if it still fits. Status archived or anything on the blocklist is never offered again. Also read agent_config outreach blocklist: never add, pitch or list any business on it. Read Our Venues ({"op":"readVenues"}, skip inactive) and agent_leads.
 2. What a sponsor gets: use settings.sponsorOffer. If it is empty use this: a slide on our gig screensavers (it plays between our trivia and bingo games and between karaoke singers), shout-outs during those nights, and the chance to give a prize to the winners as free marketing.
 3. Search the web for up to 6 NEW local businesses likely to want to reach our crowd (adults who go out for karaoke, trivia and bingo): restaurants, breweries and distilleries, auto shops, gyms, salons, realtors, insurance, local services, within the area and near the venues we work with. Prefer ones near a venue we work with and ones that already advertise locally. Skip national chains with no local decision-maker, other karaoke, trivia or bingo hosts, and any business already in sponsors.
 4. For each, confirm on its own website that it exists and find a public contact: an email address or its contact page link. Never guess an email.
@@ -8557,7 +8559,8 @@ Do not touch venues you did not just add except to draft.`},
   body:`TASK: Presence check. Read agent_sites and agent_config mirror. Skip sites where silencedAt is set or active is false.
 YOUR JOB: look over Belladonna's whole online image (website, Google Business Profile, Facebook, Instagram, Yelp, Nextdoor, gig sites, directories) and tell Ahnna what to change to be found more, chosen more, and booked more.
 LABELS: every draft label and every NEEDS YOU line must START with the listing it is about, named as in agent_sites (for the website start with "Website:"; for Google start with "Google Business Profile:"; for Facebook "Facebook Page:"; and so on). HQ files each one inside that listing's box on your desk. Only things that belong to no listing go without a prefix.
-0. PAGE TEXT. If a public page cannot be fetched, do not stop. Each agent_sites doc may also have snapshot (pasted text of that listing) and snapshotAt. Audit from those only if a page cannot be fetched. Never log in to anything.
+0. REACH. Try every public page: website, Google listing, Facebook, Instagram, Yelp, directories. Look at the photos and posts too, not only the text. Anything you cannot open (blocked, login wall, empty) goes on a NEEDS YOU line starting "- Needs a look:" with the listing name and what you could not see. Never guess what is on a page you could not open.
+0b. PAGE TEXT. If a public page cannot be fetched, do not stop. Each agent_sites doc may also have snapshot (pasted text of that listing) and snapshotAt. Audit from those only if a page cannot be fetched. Never log in to anything.
 1. For each active site, if profileRefreshed is missing or 90 or more days old, set auditNotes to the exact steps to fix it and addDraft kind "seo". If profileRefreshed is missing, add "- Set the Last refreshed date on SITE in Mirror's desk" to NEEDS YOU.
 2. SEO AND DISCOVERY: from the snapshots, check titles, meta descriptions, headings, service and city wording, hours, phone, name consistency across sites. addDraft kind "seo", one fix per draft, with the exact new text.
 3. WORDING: write the best wording for the business description, headline, services list and calls to action on each site, in Belladonna's voice, so the right people choose us. Only claim what is true.
@@ -8618,6 +8621,7 @@ function render(){
   }).join('');
   renderBrief();renderTasks();
   try{if(document.getElementById('sub-venues-prospects').classList.contains('active'))renderProspects();}catch(e){}
+  try{if(S.started&&!window._trSeed){window._trSeed=1;col('agent_config').doc('outreach').get().then(d=>{const x=d.exists?d.data():{},u={};if(!String(x.short||'').trim())u.short=TERMS_SHORT;if(!String(x.terms||'').trim())u.terms=TERMS_FULL;if(Object.keys(u).length)col('agent_config').doc('outreach').set(u,{merge:true});}).catch(()=>{});}}catch(e){}
   try{if(S.started&&!window._emSeed){window._emSeed=1;col('agent_config').doc('voice').get().then(d=>{const x=d.exists?d.data():{};if(!x.email||(x.emailEdited!==true&&x.emailVer!==EMAIL_VER))col('agent_config').doc('voice').set({email:EMAIL_GUIDE,emailVer:EMAIL_VER,emailEdited:false,emailAt:Date.now()},{merge:true});}).catch(()=>{});}}catch(e){}
   try{const sg=window.hqBadgeSig();if(sg!==window._bdSig){const first=window._bdSig===undefined;window._bdSig=sg;if(!first&&typeof renderVenueManage==='function')renderVenueManage();}}catch(e){}
   const n=$('#tmNeed');n.innerHTML='<b>'+total+'</b> need you';n.className='tm-need'+(total?'':' zero');
@@ -8644,8 +8648,9 @@ function renderDrawer(force){
   $('#tmDrOne').textContent=(INFO[S.cur]&&INFO[S.cur].one)||'';
   const _fold=!(S.view==='info'||S.cur==='setup'||S.cur==='huddle');
   const _pre=_fold?'<div class="tm-row" style="margin:0 0 .8rem"><button class="tm-b dim" data-act="foldall" data-v="0">Collapse all</button><button class="tm-b dim" data-act="foldall" data-v="1">Open all</button></div>':'';
-  const _main=((S.view==='info'||S.cur==='setup'||S.cur==='huddle')?'':notesBlock(S.cur)+remBox(S.cur))+((S.view==='info'&&INFO[S.cur])?vInfo(S.cur):({raven:vRaven,quill:vQuill,vesper:vVesper,ledger:vLedger,sable:vSable,mirror:vMirror,herald:vIris,ember:vSabine,marquee:vRen,coach:vWren,huddle:vHuddle,sigil:vSigil,warden:vThorne,setup:vSetup})[S.cur]());
-  body.innerHTML=_pre+(_fold?foldSections(_main):_main);
+  const _main=((S.view==='info'&&INFO[S.cur])?vInfo(S.cur):({raven:vRaven,quill:vQuill,vesper:vVesper,ledger:vLedger,sable:vSable,mirror:vMirror,herald:vIris,ember:vSabine,marquee:vRen,coach:vWren,huddle:vHuddle,sigil:vSigil,warden:vThorne,setup:vSetup})[S.cur]());
+  const _top=_fold?remFold(S.cur):'',_bot=_fold?notesFold(S.cur):'';
+  body.innerHTML=_pre+_top+(_fold?foldSections(_main):_main)+_bot;
   body.scrollTop=top;
 }
 const NOTE_DOC={sable:'sable',sigil:'sigil',warden:'warden',coach:'coach',vesper:'care',herald:'curator',ember:'social',marquee:'ads'};
@@ -8654,6 +8659,13 @@ function allNotes(){
   Object.keys(NOTE_DOC).forEach(a=>{const rn=(S.cfg[NOTE_DOC[a]]||{}).runNote;if(rn&&rn.body)out.push({id:'cfg:'+NOTE_DOC[a],agent:a,body:rn.body,createdAt:rn.at||0,status:(rn.doneAt&&rn.doneAt>=(rn.at||0))?'done':'pending'});});
   return out.sort((x,y)=>(y.createdAt||0)-(x.createdAt||0));
 }
+function remFold(id){const key='rem_'+id,n=remState().open.filter(x=>x.agent===id).length;
+  return '<details class="tm-fsec" data-k="'+key+'"'+(S.open[key]===true?' open':'')+'><summary class="tm-sec"><span class="tm-arr"></span>Remind me ('+n+' open)</summary>'+remBox(id)+'</details>';}
+function notesFold(id){const key='notes_'+id,L=allNotes().filter(n=>n.agent===id&&n.status==='pending').slice(0,5);
+  let h='<details class="tm-fsec" data-k="'+key+'"'+(S.open[key]===true?' open':'')+'><summary class="tm-sec"><span class="tm-arr"></span>Run notes ('+L.length+')</summary>';
+  if(!L.length)h+='<div class="tm-empty">No notes. After each run a short note shows up here.</div>';
+  L.forEach(n=>{h+='<div class="tm-item"><div class="t2" style="white-space:pre-wrap;color:var(--text)">'+esc(n.body||'')+'</div><div class="tm-row"><span class="tm-tag">'+esc(fmtDay(n.createdAt))+'</span><button class="tm-b" data-act="notedone" data-id="'+esc(n.id)+'">Got it</button></div></div>';});
+  return h+'</details>';}
 function notesBlock(id){
   const L=allNotes().filter(n=>n.agent===id&&n.status==='pending').slice(0,5);
   let h='<div class="tm-sec">Run notes ('+L.length+')</div>';
@@ -8707,7 +8719,7 @@ function draftCard(dr,withPrice){
         (dr.kind!=='dm'&&dr.kind!=='colddm'?'<button class="tm-b" data-act="opengmail" data-id="'+esc(dr.id)+'" title="Opens Gmail as '+ADMIN_MAIL+' with the address, subject and text filled in">Open in Gmail</button>':'')
       :'<button class="tm-b pri" data-act="approve" data-id="'+esc(dr.id)+'">Approve &amp; copy</button>'+
         ((l&&/[^\s@]+@[^\s@]+\.[^\s@]+/.test(String(l.contact||'')))?'<button class="tm-b" data-act="opengmail" data-id="'+esc(dr.id)+'" title="Opens Gmail as '+ADMIN_MAIL+' with the address, subject and text filled in">Open in Gmail</button>':''))+
-    '<button class="tm-b dim" data-act="skipdraft" data-id="'+esc(dr.id)+'">Skip</button></div></div>';
+    '<button class="tm-b dim" data-act="skipdraft" data-id="'+esc(dr.id)+'" title="Not right now. It can come back later">Skip</button>'+(dr.leadId?'<button class="tm-b dim" data-act="blockdraft" data-id="'+esc(dr.id)+'" title="Never work this one again">Do not use</button>':'')+'</div></div>';
 }
 function pasteBox(kind,leadId,label){
   return '<textarea class="tm-ta" style="min-height:80px;margin-top:.5rem" data-paste="'+esc(leadId||'')+'|'+kind+'" placeholder="Paste the draft here"></textarea>'+
@@ -9144,7 +9156,7 @@ function sgTag(x){if(x.days==null)return '<span class="tm-tag warn">set a date</
 function invoiceState(){
   const c=((S.cfg.sigil||{}).invoices)||{},now=new Date(),today=isoDay(now.getTime()),ym=today.slice(0,7),y=now.getFullYear(),m=now.getMonth();
   const last=new Date(y,m+1,0).getDate(),k='m'+ym.replace('-','_');
-  const vs=(typeof venues!=='undefined'&&Array.isArray(venues)?venues:[]).filter(v=>v&&v.name&&!v.inactive&&!v.noRecurring&&/invoice|quickbooks/i.test(v.payMethod||''));
+  const vs=(typeof venues!=='undefined'&&Array.isArray(venues)?venues:[]).filter(v=>v&&v.name&&!v.inactive&&!v.noRecurring&&v.billFreq!=='gig'&&/invoice|quickbooks/i.test(v.payMethod||''));
   const all=vs.map(v=>{const day=v.billDay==='last'?last:Math.min(Math.max(+v.billDay||1,1),last);const due=ym+'-'+String(day).padStart(2,'0');
     const days=Math.round((new Date(due+'T12:00:00').getTime()-new Date(today+'T12:00:00').getTime())/DAY);const sent=((c['v'+v.id])||{})[k]||0;
     return {id:v.id,name:v.name,method:v.payMethod,amount:v.billAmount||'',note:v.billNote||'',nights:Object.entries(v.payAmounts||{}).filter(e=>e[1]).map(e=>e[0]+' '+e[1]).join(', '),due:due,days:days,sent:sent,k:k,ym:ym,remind:!sent&&days<=2};}).sort((a,b)=>a.days-b.days);
@@ -9152,7 +9164,7 @@ function invoiceState(){
 }
 function invoicesHtml(){
   const g=invoiceState();
-  let h='<div class="tm-sec">Invoices to send ('+g.due.length+' due)</div><div class="tm-hint">Venues that pay by invoice (set "Paid by" and the billing day on the venue, in the Venues tab). Sigil reminds you 2 days before the billing day. Tick the check when the invoice is sent. Cash and other payment types are in each venue\'s info.</div>';
+  let h='<div class="tm-sec">Invoices to send ('+g.due.length+' due)</div><div class="tm-hint">Venues that pay by invoice (set "Paid by" and the billing day on the venue, in the Venues tab). Sigil reminds you 2 days before the billing day. Venues set to Per gig are left out, since they have no billing day. Tick the check when the invoice is sent. Cash and other payment types are in each venue\'s info.</div>';
   if(!g.all.length)h+='<div class="tm-empty">No venues are set to pay by invoice yet. Set "Paid by" to QuickBooks invoice on a venue.</div>';
   g.all.forEach(x=>{
     const tag=x.sent?'<span class="tm-tag booked">sent '+esc(fmtDay(x.sent))+'</span>':(x.days<0?'<span class="tm-tag lost">overdue '+(-x.days)+' day'+(x.days===-1?'':'s')+'</span>':x.days<=2?'<span class="tm-tag warn">'+(x.days===0?'send today':'send '+(x.days===1?'tomorrow':'in 2 days'))+'</span>':'<span class="tm-tag">due '+esc(fmtEv(x.due))+'</span>');
@@ -9635,14 +9647,14 @@ function offersBlock(id,name,ctx){
   let h='<div class="offers-box" style="border:1px solid var(--border,#444);border-radius:8px;padding:.7rem .8rem;margin:.6rem 0"><div style="font-weight:600;margin-bottom:.4rem">What this place offers <span style="font-weight:400;font-size:.72rem;opacity:.7">(same info as on Iris\'s desk)</span></div><div>'+
     CU_TAGS.map(t=>'<label style="display:inline-flex;gap:.3rem;align-items:center;margin:0 .8rem .3rem 0;font-size:.8rem"><input type="checkbox" data-ob="'+esc(x)+'" value="'+t[0]+'"'+(tg.indexOf(t[0])>=0?' checked':'')+'>'+t[1]+'</label>').join('')+'</div>'+
     '<div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.3rem"><input class="form-input" style="width:8rem" id="ob-cap-'+esc(x)+'" placeholder="Capacity" value="'+esc(p.capacity||'')+'"><input class="form-input" style="flex:1;min-width:200px" id="ob-note-'+esc(x)+'" placeholder="e.g. Big covered patio, great for movie nights" value="'+esc(p.notes||'')+'"><button type="button" class="btn-sm" data-id="'+esc(id)+'" data-name="'+esc(name||'')+'" data-ctx="'+esc(ctx)+'" onclick="obSave(this)">Save</button></div>';
-  if(r){h+='<div style="margin-top:.5rem;padding-top:.4rem;border-top:1px dashed var(--border,#444)"><div style="font-size:.72rem;opacity:.7;margin-bottom:.2rem">From Iris\'s research</div>'+ln('What it is',r.summary)+ln('What people say online',r.social)+(L(r.pastEvents).length?ln('Events they have done',L(r.pastEvents).join('; ')):'')+ln('What Iris thinks they would like',r.likes)+ln('Bait for the pitch',r.bait)+ln('Watch out for',r.watch)+'</div>';}
+  if(r){h+='<div style="margin-top:.5rem;padding-top:.4rem;border-top:1px dashed var(--border,#444)"><div style="font-size:.72rem;opacity:.7;margin-bottom:.2rem">From Iris\'s research</div>'+ln('What it is',r.summary)+ln('What people say online',r.social)+(L(r.pastEvents).length?ln('Events they have done',L(r.pastEvents).join('; ')):'')+(L(r.features).length?ln('What the place has',L(r.features).join('; ')):'')+(L(r.needsLook).length?ln('Needs a look from you',L(r.needsLook).join('; ')):'')+ln('What Iris thinks they would like',r.likes)+ln('Bait for the pitch',r.bait)+ln('Watch out for',r.watch)+'</div>';}
   return h+'</div>';
 }
-function obSave(b){
+function obSave(b,quiet){
   const id=b.dataset.id,x=b.dataset.ctx+'-'+id;
   const tags=[...document.querySelectorAll('input[data-ob="'+x+'"]:checked')].map(e=>e.value);
   const g=i=>{const e=document.getElementById(i);return e?e.value.trim():'';};
-  cuSave({['profiles.'+pfKey(id)]:{name:b.dataset.name||'',tags:tags,capacity:g('ob-cap-'+x),notes:g('ob-note-'+x)}}).then(()=>toast('Saved. Iris and every profile show this now.')).catch(e=>toast('Could not save: '+(e&&e.message||e),true));
+  cuSave({['profiles.'+pfKey(id)]:{name:b.dataset.name||'',tags:tags,capacity:g('ob-cap-'+x),notes:g('ob-note-'+x)}}).then(()=>{if(!quiet)toast('Saved. Iris and every profile show this now.');else{b.textContent='Saved';setTimeout(()=>{b.textContent='Save';},1500);}}).catch(e=>toast('Could not save: '+(e&&e.message||e),true));
 }
 function prospectExists(name){const n=blNorm(name);return !!n&&(S.venues||[]).some(v=>blNorm(v.name)===n);}
 async function addProspectDoc(o){
@@ -9684,6 +9696,7 @@ function renderProspects(){
   el.innerHTML=h;
   if(keep==='prQ'){const i=document.getElementById('prQ');if(i){i.focus();const n=i.value.length;i.setSelectionRange(n,n);}}
 }
+document.addEventListener('change',function(e){const bx=e.target&&e.target.closest&&e.target.closest('.offers-box');if(!bx)return;const bt=bx.querySelector('button[data-ctx]');if(bt)obSave(bt,true);});
 window.offersBlock=offersBlock;window.obSave=obSave;window.renderProspects=renderProspects;window.PR=PR;window.addProspect=addProspect;
 document.addEventListener('toggle',e=>{const d=e.target;if(d&&d.dataset&&d.dataset.pk){S.open['pr_'+d.dataset.pk]=d.open;}},true);
 function curatorState(){
@@ -9728,7 +9741,7 @@ function dossierCard(d){
   const list=(t,a)=>L(a).length?'<div class="t2"><b>'+t+':</b></div>'+L(a).map(x=>'<div class="t2">&bull; '+esc(x)+'</div>').join(''):'';
   const tag={have:'<span class="tm-tag booked">we work here</span>',want:'<span class="tm-tag quoted">want</span>',suggest:'<span class="tm-tag new">Iris suggests</span>'}[d.kind]||'';
   return '<div class="tm-item'+(S.open['c_'+d.id]?'':' folded')+'"><div class="t1 fold" data-act="fold" data-id="'+esc(d.id)+'"><b>'+esc(d.name)+'</b> '+tag+(d.city?'<span class="tm-tag">'+esc(d.city)+'</span>':'')+'</div>'+
-    sec('What it is',d.summary)+sec('What people say online',d.social)+list('Events and gigs they have done',d.pastEvents)+sec('What Iris thinks they would like',d.likes)+
+    sec('What it is',d.summary)+sec('What people say online',d.social)+list('Events and gigs they have done',d.pastEvents)+list('What the place has',d.features)+list('Needs a look from you',d.needsLook)+sec('What Iris thinks they would like',d.likes)+
     (L(d.ideas).length?'<div class="t2"><b>What we could do there:</b></div>'+L(d.ideas).map((x,i)=>'<div class="t2">&bull; '+esc(x)+' <button class="tm-b dim" data-act="dossidea" data-id="'+esc(d.id)+'" data-i="'+i+'">Save as idea</button></div>').join(''):'')+
     sec('Bait for the pitch (Raven and Quill use this)',d.bait)+sec('Watch out for',d.watch)+
     (L(d.sources).length?'<div class="t2">'+L(d.sources).filter(u=>safeUrl(u)).slice(0,6).map((u,i)=>'<a href="'+esc(safeUrl(u))+'" target="_blank" rel="noopener">source '+(i+1)+'</a>').join(' &middot; ')+'</div>':'')+
@@ -9908,7 +9921,7 @@ function sponsorCard(x){
   const st=x.status||'new',b=(v,l,c)=>'<button class="tm-b'+(c?' '+c:'')+'" data-act="sponsorset" data-id="'+esc(x.id)+'" data-v="'+v+'">'+l+'</button>';
   const LBL={new:'new',pitched:'pitched',signed:'signed',skipped:'hidden',archived:'archived'};
   return '<div class="tm-item'+(S.open['c_'+x.id]?'':' folded')+'"><div class="t1 fold" data-act="fold" data-id="'+esc(x.id)+'"><span class="tm-tag">'+esc(LBL[st]||st)+'</span><b>'+esc(x.business)+'</b>'+(x.city?' <span class="tm-tag">'+esc(x.city)+'</span>':'')+'</div>'+sponsorCardBody(x,false)+
-    '<div class="tm-row">'+(st==='new'?b('pitched','Pitched','pri'):'')+((st==='new'||st==='pitched')?b('signed','Signed','pri')+b('skipped','Hide','dim'):'')+((st==='signed'||st==='skipped'||st==='archived')?b('new','Put back'):'')+(st!=='archived'?b('archived','Archive','dim'):'')+'</div></div>';
+    '<div class="tm-row">'+(st==='new'?b('pitched','Pitched','pri'):'')+((st==='new'||st==='pitched')?b('signed','Signed','pri')+b('skipped','Skip','dim')+'<button class="tm-b dim" data-act="blocksp" data-id="'+esc(x.id)+'" title="Never suggest this business again">Do not use</button>':'')+((st==='signed'||st==='skipped'||st==='archived')?b('new','Put back'):'')+(st!=='archived'?b('archived','Archive','dim'):'')+'</div></div>';
 }
 function sponsorSection(){
   const sp=adsState().sponsors,live=sp.filter(x=>['skipped','archived'].indexOf(x.status)<0);
@@ -10057,7 +10070,7 @@ window.hqBadges=function(v){
   if(v.website)parts.push(lk('Website',U(v.website,'https://')));
   const info=parts.join(' &middot; ');
   const ord=n=>{n=+n;const t=n%100;return n+((t>10&&t<14)?'th':({1:'st',2:'nd',3:'rd'}[n%10]||'th'));};
-  const bill=v.payMethod?[v.payMethod,(v.billDay==='last'?'last day':ord(v.billDay||1))+' of the month',v.billAmount,v.billNote].filter(Boolean).map(esc).join(' &middot; '):'';
+  const bill=v.payMethod?[v.payMethod,v.billFreq==='gig'?'per gig':(v.billDay==='last'?'last day':ord(v.billDay||1))+' of the month',v.billAmount,v.billNote].filter(Boolean).map(esc).join(' &middot; '):'';
   if(!b&&!info&&!bill)return '';
   return '<div style="margin-top:.4rem">'+b+'</div>'+(bill?'<div style="font-size:0.68rem;color:var(--text3);margin-top:.3rem;"><b>Bills:</b> '+bill+'</div>':'')+(info?'<div style="font-size:0.68rem;color:var(--text3);margin-top:.3rem;">'+info+'</div>':'');
 };
@@ -10178,6 +10191,7 @@ const A={
   async mqplandel(t){if(!confirm('Delete this plan?'))return;await mqSave({['plans.'+t.dataset.id]:null});},
   async mqidea(t){await mqSave({['ideas.'+t.dataset.id+'.status']:t.dataset.v,['ideas.'+t.dataset.id+'.updatedAt']:Date.now()});},
   async sponsorset(t){
+    if(t.dataset.v==='skipped'){await mqSave({['sponsors.'+t.dataset.id+'.skippedAt']:Date.now()});toast('Skipped for now. It can come back later.',false);}
     await mqSave({['sponsors.'+t.dataset.id+'.status']:t.dataset.v,['sponsors.'+t.dataset.id+'.updatedAt']:Date.now()});
     const x=adsState().sponsors.find(i=>i.id===t.dataset.id);
     if(x&&t.dataset.v==='pitched'&&!otAll().some(o=>o.tid===x.id&&o.step==='pitch')){const sm=String(x.pitch||'').match(/^\s*subject:\s*(.*)/i);await otSave({['touches.'+otId()]:otDoc({kind:'sponsor',tid:x.id,name:x.business,step:'pitch',subject:sm?sm[1].trim():''})});}
@@ -10474,7 +10488,12 @@ const A={
     }
     await bt.commit();toast('Put back in the review list and taken off the history.');
   },
-  async skipdraft(t){await col('agent_drafts').doc(t.dataset.id).update({status:'skipped'});toast('Skipped.');},
+  async blocksp(t){const sx=adsState().sponsors.find(i=>i.id===t.dataset.id);if(!sx)return;await col('agent_config').doc('outreach').set({blocklist:{['b'+Date.now().toString(36)]:{name:sx.business,reason:'Sponsor, do not use',at:Date.now()}}},{merge:true});await mqSave({['sponsors.'+sx.id+'.status']:'archived',['sponsors.'+sx.id+'.updatedAt']:Date.now()});toast(sx.business+' is on the Do not use list. It will not come back.',false);},
+  async blockdraft(t){const dr=S.drafts.find(x=>x.id===t.dataset.id);if(!dr)return;const l=dr.leadId?leadsById()[dr.leadId]:null;const nm=l?(l.client||l.site):'';await col('agent_drafts').doc(dr.id).update({status:'skipped'});if(l)await col('agent_leads').doc(l.id).update({stage:'skipped',updatedAt:Date.now()});if(nm)await col('agent_config').doc('outreach').set({blocklist:{['b'+Date.now().toString(36)]:{name:nm,reason:'Lead, do not use',at:Date.now()}}},{merge:true});toast((nm||'That lead')+' is on the Do not use list. It will not come back.',false);},
+  async skipdraft(t){const dr=S.drafts.find(x=>x.id===t.dataset.id);await col('agent_drafts').doc(t.dataset.id).update({status:'skipped'});
+    const l=dr&&dr.leadId?leadsById()[dr.leadId]:null;
+    if(l){await col('agent_leads').doc(l.id).update({skippedAt:Date.now(),updatedAt:Date.now()});toast('Skipped for now. It can come back later.',false);return;}
+    toast('Skipped.');},
   async nudged(t){await col('agent_leads').doc(t.dataset.id).update({['nudges.'+t.dataset.step]:Date.now()});toast('Logged.');},
   async replied(t){await col('agent_leads').doc(t.dataset.id).update({repliedAt:Date.now()});toast('Marked as replied. Vesper stops nudging.');},
   async markcold(t){await col('agent_leads').doc(t.dataset.id).update({stage:'lost',lostReason:'Went cold',lostAt:Date.now()});toast('Marked lost.');},
