@@ -43,6 +43,10 @@
   .srch{width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:.8rem 1rem;color:var(--text);font-family:inherit;font-size:.9rem;margin-bottom:.9rem;outline:none}
   .vrow{display:flex;justify-content:space-between;align-items:center;width:100%;text-align:left;cursor:pointer;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:.9rem 1rem;margin-bottom:.55rem;color:var(--text);font-family:'Playfair Display',serif;font-size:1.05rem}
   .vrow.cur{border-color:var(--gold);color:var(--gold)}
+  .occ{display:flex;flex-wrap:wrap;gap:.5rem}
+  .occ label{display:flex;align-items:center;gap:.5rem;margin:0;padding:.55rem .8rem;border:1px solid var(--border2);border-radius:999px;background:var(--surface2);font-size:.78rem;letter-spacing:.08em;text-transform:none;color:var(--text2);cursor:pointer}
+  .occ input{accent-color:#c9a96e;width:1rem;height:1rem}
+  .occ label.on{border-color:var(--gold);color:var(--gold);background:rgba(201,169,110,.1)}
   .foot{margin-top:2rem;text-align:center;font-size:.6rem;letter-spacing:.2em;text-transform:uppercase;color:var(--text3)}
 </style>
 </head>
@@ -117,11 +121,12 @@
 
   // ---- form ----
   function showForm(kind){
-    KIND = kind; var ded = kind==='dedication', max = ded ? S.dedicationMaxChars : S.songMaxChars;
+    KIND = kind; OCCV = ''; var ded = kind==='dedication', max = ded ? S.dedicationMaxChars : S.songMaxChars;
     $('main').innerHTML = '<button class="back" onclick="home()">&larr; Back</button>' + head()
       + (ded
         ? '<label for="txt">Your message</label><textarea class="in" id="txt" maxlength="'+max+'" placeholder="Happy 30th birthday, Sarah!" oninput="upd()"></textarea><div class="cnt" id="cnt"></div>'
           + '<label for="frm">From (optional)</label><input class="in" id="frm" maxlength="'+S.fromMaxChars+'" placeholder="Your name" oninput="upd()">'
+          + '<label>Occasion (optional)</label><div class="occ" id="occ">'+OCC.map(function(o){ return '<label id="oc_'+o[0]+'"><input type="checkbox" value="'+o[0]+'" onchange="pickOcc(this)">'+o[1]+'</label>'; }).join('')+'</div>'
           + '<div class="prevh">Preview</div><div class="prev" id="prev"><div class="pt" id="pt"></div><div class="pf" id="pf"></div></div>'
         : '<label for="txt">Song and artist</label><input class="in" id="txt" maxlength="'+max+'" placeholder="Don\'t Stop Believin\' — Journey" oninput="upd()"><div class="cnt" id="cnt"></div>'
           + '<label for="frm">Your name (optional)</label><input class="in" id="frm" maxlength="'+S.fromMaxChars+'" placeholder="So the host can shout you out">')
@@ -129,6 +134,11 @@
       + '<div class="err" id="err"></div>'
       + '<div class="note">Your card is only held now and charged if the host approves. If they pass, nothing is charged. One request per '+S.rateLimitMinutes+' minutes.</div>';
     upd();
+  }
+  var OCC = [['birthday','Birthday'],['anniversary','Anniversary'],['congrats','Congrats'],['bachelorette','Bachelorette'],['other','Other']], OCCV = '';
+  function pickOcc(cb){
+    OCCV = cb.checked ? cb.value : '';
+    OCC.forEach(function(o){ var el = $('oc_'+o[0]); if(!el) return; var i = el.querySelector('input'); if(i.value !== OCCV) i.checked = false; el.className = (i.value === OCCV) ? 'on' : ''; });
   }
   function fit(){
     var box = $('prev'), pt = $('pt'), pf = $('pf'); if(!box||!pt) return;
@@ -148,7 +158,7 @@
     err.textContent = '';
     if(!txt){ err.textContent = 'Please type your message first.'; return; }
     b.disabled = true; b.textContent = 'One moment\u2026';
-    call('createRequest', {type:KIND, locationId:slug, venueId:slug, text:txt, from:frm, deviceId:deviceId(), returnUrl: location.origin + location.pathname + '?v=' + encodeURIComponent(slug)})
+    call('createRequest', {type:KIND, locationId:slug, venueId:slug, text:txt, from:frm, occasion:(KIND==='dedication'?OCCV:''), deviceId:deviceId(), returnUrl: location.origin + location.pathname + '?v=' + encodeURIComponent(slug)})
       .then(function(r){ location.href = r.url; })
       .catch(function(e){ err.textContent = e.message; b.disabled = false; b.textContent = 'Try again'; });
   }
