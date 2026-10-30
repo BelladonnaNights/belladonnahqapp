@@ -531,8 +531,13 @@ html::-webkit-scrollbar-thumb:hover,.modal::-webkit-scrollbar-thumb:hover{backgr
 .tm-lbl{display:block;font-size:.58rem;letter-spacing:.16em;text-transform:uppercase;color:var(--text3);margin-bottom:.25rem;}
 .tm-fsec>summary{cursor:pointer;list-style:none;}
 .tm-fsec>summary::-webkit-details-marker{display:none;}
-.tm-fsec>summary::before{content:'\25BE';margin-right:.5rem;}
-.tm-fsec:not([open])>summary::before{content:'\25B8';}
+.tm-fsec>summary::before{content:none!important;}
+.tm-arr::before{content:'\25BE';margin-right:.5rem;}
+.tm-fsec:not([open])>summary .tm-arr::before{content:'\25B8';}
+.tm-grip{cursor:grab;color:var(--ac);font-size:.55rem;margin-right:.55rem;padding:.3rem .25rem;vertical-align:middle;opacity:.8;}
+.tm-grip:hover{opacity:1;}
+.tm-fsec.drop-above{box-shadow:0 -3px 0 var(--ac);}
+.tm-fsec.drop-below{box-shadow:0 3px 0 var(--ac);}
 .tm-det{border:1px solid var(--border);border-radius:10px;background:var(--surface);margin-bottom:.8rem;}
 .tm-det>summary{cursor:pointer;padding:.7rem .9rem;font-size:.82rem;color:var(--text2);letter-spacing:.04em;list-style:none;font-weight:500;}
 .tm-det>summary::-webkit-details-marker{display:none;}
@@ -7580,9 +7585,9 @@ function D(){
 function cardInfo(id,d){
   const L=S.leads;
   if(id==='raven'){
-    const n=d.newLeads.length,m=d.missing.length,fu=d.venDue.length,y=d.venYes.length,t=d.rPending.length;
-    const parts=[n?plural(n,'new lead','new leads'):'',m?m+' missing info':'',fu?plural(fu,'venue follow-up','venue follow-ups')+' due':'',y?plural(y,'venue yes','venue yeses')+' to hand off':'',t?plural(t,'thank-you','thank-yous')+' to send':''].filter(Boolean);
-    return {need:m+fu+y+t,line:parts.length?parts.join(' · '):(S.venues.length?'All quiet':'All quiet · no venues loaded')};
+    const n=d.newLeads.length,m=d.missing.length,fu=d.venDue.length,y=d.venYes.length,cd=d.rPending.filter(x=>OT_KIND[x.kind]).length,t=d.rPending.length-cd;
+    const parts=[n?plural(n,'new lead','new leads'):'',m?m+' missing info':'',fu?plural(fu,'venue follow-up','venue follow-ups')+' due':'',y?plural(y,'venue yes','venue yeses')+' to hand off':'',cd?plural(cd,'cold email','cold emails')+' to review':'',t?plural(t,'thank-you','thank-yous')+' to send':''].filter(Boolean);
+    return {need:m+fu+y+cd+t,line:parts.length?parts.join(' · '):(S.venues.length?'All quiet':'All quiet · no venues loaded')};
   }
   if(id==='quill'){
     const q=d.qPending.length,n=d.needDraft.length;
@@ -8297,13 +8302,15 @@ function notesBlock(id){
 }
 function foldSections(html){
   const parts=html.split('<div class="tm-sec">');if(parts.length<2)return html;
-  let out=parts[0];
+  const pre=parts[0],secs=[];
   for(let i=1;i<parts.length;i++){
     const e=parts[i].indexOf('</div>'),title=parts[i].slice(0,e),rest=parts[i].slice(e+6);
     const key='f_'+S.cur+'_'+title.replace(/<[^>]*>/g,'').toLowerCase().replace(/\(.*?\)/g,'').replace(/[^a-z]+/g,'');
-    out+='<details class="tm-fsec" data-k="'+key+'"'+(S.open[key]===false?'':' open')+'><summary class="tm-sec">'+title+'</summary>'+rest+'</details>';
+    secs.push({key:key,html:'<details class="tm-fsec" data-k="'+key+'"'+(S.open[key]===false?'':' open')+'><summary class="tm-sec"><span class="tm-grip" draggable="true" title="Drag to move this section">&#9679;</span><span class="tm-arr"></span>'+title+'</summary>'+rest+'</details>'});
   }
-  return out;
+  const ord=((S.cfg.layout||{})[S.cur])||[];
+  if(ord.length)secs.sort((a,b)=>{const x=ord.indexOf(a.key),y=ord.indexOf(b.key);return (x<0?999:x)-(y<0?999:y);});
+  return pre+secs.map(x=>x.html).join('');
 }
 function openAgent(id){
   S.cur=id;S.view='work';renderDrawer(true);
@@ -8503,10 +8510,10 @@ function outreachHistory(){
   h+=det('otlog','Log a touch by hand (hosts, sponsors, Instagram, older emails)','<div class="tm-fg"><div><label class="tm-lbl">Who is it</label><select class="tm-sel" id="ot-kind"><option value="venue">Venue</option><option value="sponsor">Sponsor</option><option value="host">Host</option></select></div><div><label class="tm-lbl">Name</label><input class="tm-in" id="ot-name"></div><div><label class="tm-lbl">What we did</label><select class="tm-sel" id="ot-step"><option value="email">Sent an email</option><option value="ig-dm">Sent an Instagram DM</option><option value="ig-follow">Followed + liked posts</option><option value="reply">They replied</option></select></div><div><label class="tm-lbl">Date</label><input class="tm-in" id="ot-date" type="date" value="'+isoDay(Date.now())+'"></div><div class="full"><label class="tm-lbl">Subject or note (optional)</label><input class="tm-in" id="ot-note"></div></div><div class="tm-row"><button class="tm-b pri" data-act="touchadd">Add to history</button></div>',false);
   return h;
 }
-function venueCard(v){
+function venueCard(v,fold){
   const st=v.stage||'target',now=Date.now();
   const last=v.visits?Object.values(v.visits).sort((a,b)=>b.at-a.at)[0]:null;
-  let h='<div class="tm-item"><div class="t1"><span class="tm-tag '+TAGC[st]+'">'+TAGL[st]+'</span><b>'+esc(v.name)+'</b> · '+esc(v.city||'')+(v.address?' · '+esc(v.address):'')+'</div>';
+  let h='<div class="tm-item'+(fold&&!S.open['c_'+v.id]?' folded':'')+'"><div class="t1'+(fold?' fold':'')+'"'+(fold?' data-act="fold" data-id="'+esc(v.id)+'"':'')+'><span class="tm-tag '+TAGC[st]+'">'+TAGL[st]+'</span><b>'+esc(v.name)+'</b> · '+esc(v.city||'')+(v.address?' · '+esc(v.address):'')+'</div>';
   if(v.verify)h+='<div class="t2"><span class="tm-tag warn">confirm it is open first</span>Check the venue\'s own page, then mark it confirmed.</div>';
   if(v.evidence)h+='<div class="t2">'+esc(v.evidence)+'</div>';
   if(v.pitch)h+='<div class="t2"><b>Pitch:</b> '+esc(v.pitch)+'</div>';
@@ -8561,9 +8568,9 @@ function vOutreach(){
     h+='<div class="tm-sec">Targets</div><div class="tm-empty">No venues loaded yet.</div><div class="tm-row"><button class="tm-b pri" data-act="loadstarter">Load my 8 target venues</button></div>';
   }
   const due=d.venDue.concat(d.venYes);
-  h+='<div class="tm-sec">Needs you ('+(due.length+d.rPending.length)+')</div>';
-  if(!due.length&&!d.rPending.length)h+='<div class="tm-empty">No follow-ups due, nothing to hand off, no thank-yous waiting.</div>';
   const coldP=d.rPending.filter(x=>OT_KIND[x.kind]),otherP=d.rPending.filter(x=>!OT_KIND[x.kind]);
+  h+='<div class="tm-sec">Needs you ('+(due.length+otherP.length)+')</div>';
+  if(!due.length&&!otherP.length)h+='<div class="tm-empty">No follow-ups due, nothing to hand off, no thank-yous waiting.</div>';
   due.forEach(v=>h+=venueCard(v));
   otherP.forEach(x=>h+=draftCard(x,false));
   h+='<div class="tm-sec">Cold emails ('+coldP.length+')</div>';
@@ -8582,8 +8589,8 @@ function vOutreach(){
     h+='<div class="tm-row"><button class="tm-b pri" data-act="copytrip">Copy trip brief</button></div><div class="tm-hint" style="margin-top:.5rem">Go Tuesday through Thursday, mid-afternoon. Skip Friday and Saturday.</div></div>';
   }
   const rest=S.venues.filter(v=>due.indexOf(v)<0&&!isBlocked(v)).sort((a,b)=>String(a.city).localeCompare(String(b.city))||String(a.name).localeCompare(String(b.name)));
-  h+='<div class="tm-sec">All venues ('+S.venues.length+')</div>';
-  rest.forEach(v=>h+=venueCard(v));
+  h+='<div class="tm-sec">All Prospects ('+S.venues.length+')</div>';
+  rest.forEach(v=>h+=venueCard(v,true));
   h+=det('addvenue','Add a venue','<div class="tm-fg"><div><label class="tm-lbl">Name</label><input class="tm-in" id="nv-name"></div><div><label class="tm-lbl">City</label><input class="tm-in" id="nv-city"></div><div class="full"><label class="tm-lbl">Address</label><input class="tm-in" id="nv-addr"></div><div class="full"><label class="tm-lbl">Why them (evidence)</label><input class="tm-in" id="nv-ev" placeholder="Hosts paint-and-sip on Wednesdays"></div><div class="full"><label class="tm-lbl">Pitch: format and night</label><input class="tm-in" id="nv-pitch" placeholder="Thursday music bingo"></div></div><div class="tm-row"><button class="tm-b pri" data-act="addvenue">Add venue</button></div>',false);
   h+=det('fieldsheet','Field sheet checklist','<div class="tm-hint"><b>Before you go:</b> pick 3 close together. Check each one\'s own page for current event nights. Pitch a night they do not already fill. Know the trial terms cold.<br><br><b>Bring:</b> a stack of cards, the one-page format menu, a phone with a clip of a real night, the trial-night offer sheet, a sample bingo card or trivia round to leave on the bar.<br><br><b>After:</b> log it before you drive away, send the thank-you the same day, put the follow-up on the calendar, hand a yes to onboarding. A no holds for 60 days.</div>',false);
   return h;
@@ -10053,6 +10060,17 @@ function wire(){
   });
   root.addEventListener('change',e=>{const t=e.target.closest('[data-chg]');if(!t)return;const f=A[t.dataset.chg];if(f)run(()=>f(t));});
   document.addEventListener('keydown',e=>{if(e.key==='Escape'&&S.cur)closeDrawer();});
+  (function(){
+    let dk=null;const clr=()=>document.querySelectorAll('#tmDrB .tm-fsec').forEach(x=>x.classList.remove('drop-above','drop-below'));
+    root.addEventListener('click',e=>{if(e.target.closest&&e.target.closest('.tm-grip'))e.preventDefault();},true);
+    root.addEventListener('dragstart',e=>{const g=e.target.closest&&e.target.closest('.tm-grip');if(!g){return;}const sec=g.closest('.tm-fsec');dk=sec.dataset.k;try{e.dataTransfer.setData('text/plain',dk);e.dataTransfer.effectAllowed='move';e.dataTransfer.setDragImage(sec,12,12);}catch(x){}});
+    root.addEventListener('dragover',e=>{if(!dk)return;const sec=e.target.closest&&e.target.closest('.tm-fsec');if(!sec||sec.dataset.k===dk)return;e.preventDefault();clr();const r=sec.getBoundingClientRect();sec.classList.add(e.clientY<r.top+r.height/2?'drop-above':'drop-below');});
+    root.addEventListener('drop',e=>{if(!dk)return;const sec=e.target.closest&&e.target.closest('.tm-fsec');if(!sec||sec.dataset.k===dk){dk=null;clr();return;}e.preventDefault();
+      const r=sec.getBoundingClientRect(),after=e.clientY>=r.top+r.height/2,keys=[...document.querySelectorAll('#tmDrB .tm-fsec')].map(x=>x.dataset.k).filter(k=>k!==dk);
+      let at=keys.indexOf(sec.dataset.k);if(after)at++;keys.splice(at,0,dk);dk=null;clr();
+      const agentId=S.cur;col('agent_config').doc('layout').set({[agentId]:keys},{merge:true}).then(()=>renderDrawer(true)).catch(()=>toast('Could not save the order.',true));});
+    root.addEventListener('dragend',()=>{dk=null;clr();});
+  })();
   root.addEventListener('toggle',e=>{const k=e.target&&e.target.dataset&&e.target.dataset.k;if(k)S.open[k]=e.target.open;},true);
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>{wire();render();});else{wire();render();}
