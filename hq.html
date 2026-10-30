@@ -1170,7 +1170,8 @@ html::-webkit-scrollbar-thumb:hover,.modal::-webkit-scrollbar-thumb:hover{backgr
         <option value="Check">Check</option>
         <option value="Venmo/CashApp/Zelle">Venmo / CashApp / Zelle</option>
         <option value="ACH/Direct Deposit">ACH / Direct Deposit</option>
-        <option value="Invoice">Invoice</option>
+        <option value="QuickBooks invoice">QuickBooks invoice</option>
+        <option value="Invoice">Invoice (other)</option>
         <option value="Other">Other</option>
         <option value="__unset">Not Set</option>
       </select>
@@ -1887,11 +1888,17 @@ match /agent_config/{id}  { allow read, write: if isAdmin(); }</pre>
             <option value="Check">Check</option>
             <option value="Venmo/CashApp/Zelle">Venmo / CashApp / Zelle</option>
             <option value="ACH/Direct Deposit">ACH / Direct Deposit</option>
-            <option value="Invoice">Invoice</option>
+            <option value="QuickBooks invoice">QuickBooks invoice</option>
+            <option value="Invoice">Invoice (other)</option>
             <option value="Other">Other</option>
           </select>
         </div>
         <div class="form-group"><label class="form-label">Start date</label><input type="date" class="form-input" id="vmStartDate"></div>
+      </div>
+      <div class="vm-grid vm-g3" style="margin-top:.6rem">
+        <div class="form-group"><label class="form-label" title="Sigil reminds you a couple of days before this day each month">Bill on day of month</label><select class="form-input" id="vmBillDay"><option value="">1st (default)</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option><option value="11">11</option><option value="12">12</option><option value="13">13</option><option value="14">14</option><option value="15">15</option><option value="16">16</option><option value="17">17</option><option value="18">18</option><option value="19">19</option><option value="20">20</option><option value="21">21</option><option value="22">22</option><option value="23">23</option><option value="24">24</option><option value="25">25</option><option value="26">26</option><option value="27">27</option><option value="28">28</option><option value="last">Last day</option></select></div>
+        <div class="form-group"><label class="form-label">Monthly amount (optional)</label><input type="text" class="form-input" id="vmBillAmount" placeholder="$ total per invoice"></div>
+        <div class="form-group"><label class="form-label">Billing notes</label><input type="text" class="form-input" id="vmBillNote" placeholder="e.g. QuickBooks, email to owner, collect cash on the 1st"></div>
       </div>
     </div>
 
@@ -6221,6 +6228,7 @@ function openVenueModal(id=null){
   const amounts=(venue&&venue.payAmounts)||{};
   VENUE_AMOUNT_KINDS.forEach(k=>{document.getElementById('vmAmount'+k).value=amounts[k]||'';});
   document.getElementById('vmPayMethod').value=venue?venue.payMethod||'':'';
+  document.getElementById('vmBillDay').value=venue?String(venue.billDay||''):'';document.getElementById('vmBillAmount').value=venue?venue.billAmount||'':'';document.getElementById('vmBillNote').value=venue?venue.billNote||'':'';
   document.getElementById('vmStartDate').value=venue?venue.startDate||'':'';
   document.getElementById('vmHistoryBtn').style.display=id?'':'none';
   renderVenueGigSlotRows(venue?fillSlotTimes(venueEditorSlots(venue),venue.name):[]);
@@ -6345,7 +6353,7 @@ function saveVenue(){
   const gigSlots=readVenueGigSlotRows();
   const host=document.getElementById('vmHost').value||null;
   const gv=i=>{const e=document.getElementById(i);return e?e.value.trim():'';};
-  const det={address:gv('vmAddress'),city:gv('vmCity'),owner:gv('vmOwner'),manager:gv('vmManager'),contactName:gv('vmContactName'),phone:gv('vmPhone'),email:gv('vmEmail'),website:gv('vmWebsite'),instagram:gv('vmInstagram'),facebook:gv('vmFacebook'),otherContacts:gv('vmOtherContacts')};
+  const det={address:gv('vmAddress'),city:gv('vmCity'),owner:gv('vmOwner'),manager:gv('vmManager'),contactName:gv('vmContactName'),phone:gv('vmPhone'),email:gv('vmEmail'),website:gv('vmWebsite'),instagram:gv('vmInstagram'),facebook:gv('vmFacebook'),otherContacts:gv('vmOtherContacts'),billDay:gv('vmBillDay'),billAmount:gv('vmBillAmount'),billNote:gv('vmBillNote')};
   const today=new Date().toISOString().slice(0,10);
   if(editVenueId){
     const v=venues.find(x=>x.id===editVenueId);
@@ -7323,8 +7331,8 @@ HOW TO WRITE A NUDGE
 - Final nudge: a little more direct, say you will release the date soon, no pressure.
 - Two to four sentences. One clear next step. Never send a third nudge.
 
-VENUE CARE (every 3 months)
-Also read Our Venues (the HQ ingest door op "readVenues"; skip any venue marked inactive). These are the venues Belladonna works with. Read agent_config/care for each venue's saved lastCheckinAt. A venue is due when lastCheckinAt is empty or older than 90 days. Use venueId "hq_" plus the venue id. For each due venue without a pending draft, write one document to agent_drafts: leadId (empty), venueId, agent "vesper", kind "checkin", body, label ("Check-in: " plus the venue name), status "pending", createdAt (ms).
+VENUE CARE (every 3 months) is now SIGIL's job. Do NOT write venue check-in drafts. Leave this section alone.
+(Old instructions, ignore:) Also read Our Venues (the HQ ingest door op "readVenues"; skip any venue marked inactive). These are the venues Belladonna works with. Read agent_config/care for each venue's saved lastCheckinAt. A venue is due when lastCheckinAt is empty or older than 90 days. Use venueId "hq_" plus the venue id. For each due venue without a pending draft, write one document to agent_drafts: leadId (empty), venueId, agent "vesper", kind "checkin", body, label ("Check-in: " plus the venue name), status "pending", createdAt (ms).
 - Warm and short, from Ahnna. Ask how the nights are going, whether anything about the night, music, host or crowd should change, and whether we can help bring more people in.
 - If the checkouts show a good trend (growing crowd, more singers, high energy), mention one real number in the message and ask for an introduction to one other owner or manager.
 - If health is "risk" or "watch", ask what would make it better and offer a quick call. Never mention the health flag.
@@ -7562,9 +7570,12 @@ Every Monday at 8 AM Pacific:
    - Host reminder: friendly and specific. Name each missing item (signed contract, signed agreement, W-9), ask for it back this week, offer help.
    - Venue reminder: ask for the signed contract and agreement. Nothing else.
 5. INBOX. Search the business email inbox for the last 7 days for renewal notices, expiring policies or licenses, signature requests (DocuSign and similar), W-9 or tax-form requests, and forms that need to be filled out again. For each, add or update an item in agent_config/sigil items (name, due as YYYY-MM-DD from the email, fromEmail true). If an email asks for something with no clear date, add it with no date and say so in the output. Never reply to, forward or delete an email.
-6. Never mark anything complete. Ahnna ticks items herself.
+6. VENUE CHECK-INS (every 3 months). Read Our Venues ({"op":"readVenues"}, skip inactive) and agent_config/care for each venue's saved lastCheckinAt. A venue is due when lastCheckinAt is empty or older than 90 days. Use venueId "hq_" plus the venue id. For each due venue without a pending draft, write one document to agent_drafts: leadId (empty), venueId, agent "sigil", kind "checkin", body, label ("Check-in: " plus the venue name), status "pending", createdAt (ms). Follow the EMAIL VOICE. Ask one specific question about how the nights are going and whether anything about the night, music, host or crowd should change. If the checkouts show a good trend, mention one real number and ask for an introduction. If health is "risk" or "watch", ask what would make it better and offer a quick call, and never mention the flag.
+7. AGREEMENT RENEWALS. Read agent_config/sigil agreements (status active, with signedOn, endsOn and termMonths). A 3-month agreement is due a check-in at 2 months. Other agreements are due for renewal when endsOn is within 30 days (3 months), 45 days (6 months) or 60 days (1 year). For each due agreement without a pending draft write kind "paperwork", label ("Renewal: " plus the venue), a short renewal note in the EMAIL VOICE, status "pending".
+8. INVOICES. Read Our Venues (readVenues). For every active venue whose payMethod contains "invoice" or "QuickBooks", the invoice is due on billDay of each month (empty means the 1st, "last" means the last day). Read agent_config/sigil invoices (invoices.v<venue id>.m<YYYY_MM> holds the time it was marked sent). From 2 days before the billing day until it is marked sent, include the venue in your run note under NEEDS YOU as "Send <venue> its invoice (<amount or per-night amounts>, due <date>)". Never send an invoice yourself.
+9. Never mark anything complete. Ahnna ticks items herself.
 
-OUTPUT: one line per run: renewals due soon, overdue items, people missing paperwork, reminders drafted.`
+OUTPUT: one line per run: renewals due soon, overdue items, people missing paperwork, venue check-ins and renewal reminders drafted, invoices due.`
 },
 warden:{
  one:'Tracks everything each gig needs: sheets, prizes, custom trivia, and problems from checkouts.',
@@ -7763,6 +7774,7 @@ function D(){
     vlDue:venueLeadsDue(),
     sPending:dr.filter(d=>d.agent==='sigil'&&d.status==='pending'),
     sg:sigilState(),
+    inv:invoiceState(),
     wd:wardenState(),
     cd:coachState(),
     waiting:L.filter(l=>l.stage==='quoted'&&!l.repliedAt).length,
@@ -7784,8 +7796,8 @@ function cardInfo(id,d){
     return {need:q+n,line:q?plural(q,'draft','drafts')+' waiting'+(n?' · '+n+' to write':''):(n?plural(n,'lead needs','leads need')+' a draft':'Nothing to draft')};
   }
   if(id==='vesper'){
-    const p=d.vPending.length,u=d.vDue.length,c=d.careDue.length,w=d.vlDue.length;
-    const parts=[p?plural(p,'draft','drafts')+' to approve':'',u?u+' nudge'+(u===1?'':'s')+' due':'',c?plural(c,'venue check-in','venue check-ins')+' due':'',w?plural(w,'venue lead','venue leads')+' to follow up':'',d.careRisk.length?d.careRisk.length+' at risk':''].filter(Boolean);
+    const p=d.vPending.length,u=d.vDue.length,c=0,w=d.vlDue.length;
+    const parts=[p?plural(p,'draft','drafts')+' to approve':'',u?u+' nudge'+(u===1?'':'s')+' due':'',w?plural(w,'venue lead','venue leads')+' to follow up':'',d.careRisk.length?d.careRisk.length+' at risk':''].filter(Boolean);
     return {need:p+u+c+w,line:parts.length?parts.join(' · '):(d.waiting?plural(d.waiting,'quote','quotes')+' waiting, none due':'No quotes out')};
   }
   if(id==='warden'){
@@ -7794,8 +7806,8 @@ function cardInfo(id,d){
     return {need:n,line:parts.length?parts.join(' · '):(w.tasks.length||w.restocks.length?'All handled':'Nothing tracked yet')};
   }
   if(id==='sigil'){
-    const s=d.sg,n=s.dueSoon.length+s.incomplete.length+d.sPending.length;
-    const parts=[s.dueSoon.length?plural(s.dueSoon.length,'renewal','renewals')+' due soon':'',s.incomplete.length?plural(s.incomplete.length,'person','people')+' missing paperwork':'',d.sPending.length?plural(d.sPending.length,'reminder','reminders')+' to approve':''].filter(Boolean);
+    const s=d.sg,ag=agrState(),n=s.dueSoon.length+s.incomplete.length+d.sPending.length+d.inv.due.length+ag.due.length+ag.found.length+d.careDue.length;
+    const parts=[d.inv.due.length?plural(d.inv.due.length,'invoice','invoices')+' to send':'',(ag.due.length+ag.found.length)?plural(ag.due.length+ag.found.length,'agreement item','agreement items'):'',d.careDue.length?plural(d.careDue.length,'venue check-in','venue check-ins')+' due':'',s.dueSoon.length?plural(s.dueSoon.length,'renewal','renewals')+' due soon':'',s.incomplete.length?plural(s.incomplete.length,'person','people')+' missing paperwork':'',d.sPending.length?plural(d.sPending.length,'reminder','reminders')+' to approve':''].filter(Boolean);
     return {need:n,line:parts.length?parts.join(' · '):(s.items.length||s.people.length?'All current':'Nothing tracked yet')};
   }
   if(id==='ledger'){
@@ -8098,14 +8110,15 @@ function briefData(){
   });
   add('vesper',d.vPending.length,plural(d.vPending.length,'nudge','nudges')+' to approve',d.vPending.map(x=>cut(x.label||x.kind,60)).join('; ')+'.');
   add('vesper',d.vDue.length,plural(d.vDue.length,'quote is','quotes are')+' due a nudge',d.vDue.slice(0,4).map(x=>{const l=x.lead||x;return (l.client||l.site||'A lead')+(l.quotedPrice?' ('+l.quotedPrice+')':'')+', quoted '+ago(l.quotedAt);}).join('; ')+'.');
-  add('vesper',d.careDue.length,plural(d.careDue.length,'venue check-in is','venue check-ins are')+' due',d.careDue.slice(0,5).map(v=>v.name+(v.lastCheckinAt?' (last check-in '+ago(v.lastCheckinAt)+')':' (never checked in)')).join('; ')+'. Check-ins are due every 3 months.');
+  add('sigil',d.careDue.length,plural(d.careDue.length,'venue check-in is','venue check-ins are')+' due',d.careDue.slice(0,5).map(v=>v.name+(v.lastCheckinAt?' (last check-in '+ago(v.lastCheckinAt)+')':' (never checked in)')).join('; ')+'. Check-ins are due every 3 months.');
   d.careRisk.forEach(v=>need.push({a:'vesper',text:v.name+' is marked at risk',body:cut(v.healthWhy||'No reason logged yet. Check recent host checkouts.',200)}));
   const ag=agrState();ag.due.forEach(x=>{const nm=x.venue,t=TERM_LBL(x.termMonths);
-    if(x.phase==='checkin')need.push({a:'vesper',text:'Time for '+nm+'\'s 2-month check-in',body:'3-month agreement, signed '+fmtEv(x.signedOn)+', ends '+fmtEv(x.endsOn)+'. Vesper can draft the check-in.'});
-    else if(x.phase==='reply')need.push({a:'vesper',text:'Waiting on '+nm+'\'s check-in reply',body:'Mark it went well or not good once they answer.'});
-    else if(x.phase==='talk')need.push({a:'vesper',u:true,text:'Talk to '+nm+' before any renewal goes out',body:'Their check-in did not go well. Call them first. The renewal waits until you say it is sorted.'});
-    else need.push({a:'vesper',u:x.days<0,text:nm+' renewal '+(x.phase==='renewwait'?'goes out '+fmtEv(x.renewAfter):x.days<0?'is overdue ('+(-x.days)+' days past the end)':'is due (ends in '+x.days+' days)'),body:t+' agreement ends '+fmtEv(x.endsOn)+'.'+(x.termMonths===3?' It becomes a 1-year agreement.':'')+' Vesper can draft the note.'});});
-  if(ag.found.length)need.push({a:'vesper',text:plural(ag.found.length,'signed agreement','signed agreements')+' found in your email',body:ag.found.map(x=>x.venue).join(', ')+'. Check the date and pick the term (3 months, 6 months or 1 year).'});
+    if(x.phase==='checkin')need.push({a:'sigil',text:'Time for '+nm+'\'s 2-month check-in',body:'3-month agreement, signed '+fmtEv(x.signedOn)+', ends '+fmtEv(x.endsOn)+'. Vesper can draft the check-in.'});
+    else if(x.phase==='reply')need.push({a:'sigil',text:'Waiting on '+nm+'\'s check-in reply',body:'Mark it went well or not good once they answer.'});
+    else if(x.phase==='talk')need.push({a:'sigil',u:true,text:'Talk to '+nm+' before any renewal goes out',body:'Their check-in did not go well. Call them first. The renewal waits until you say it is sorted.'});
+    else need.push({a:'sigil',u:x.days<0,text:nm+' renewal '+(x.phase==='renewwait'?'goes out '+fmtEv(x.renewAfter):x.days<0?'is overdue ('+(-x.days)+' days past the end)':'is due (ends in '+x.days+' days)'),body:t+' agreement ends '+fmtEv(x.endsOn)+'.'+(x.termMonths===3?' It becomes a 1-year agreement.':'')+' Vesper can draft the note.'});});
+  if(ag.found.length)need.push({a:'sigil',text:plural(ag.found.length,'signed agreement','signed agreements')+' found in your email',body:ag.found.map(x=>x.venue).join(', ')+'. Check the date and pick the term (3 months, 6 months or 1 year).'});
+  d.inv.due.forEach(x=>need.push({a:'sigil',u:x.days<0,text:'Send '+x.name+' its invoice'+(x.days<0?' (overdue)':x.days===0?' today':' by '+fmtEv(x.due)),body:x.method+(x.amount?' · '+x.amount:'')+'. Tick it off on Sigil\'s desk once sent.'}));
   d.sg.dueSoon.forEach(x=>need.push({a:'sigil',text:x.name+(x.days<0?' is overdue':' is due in '+x.days+' days'),body:(x.due?'Due '+fmtEv(x.due)+'. ':'')+(x.fromEmail?'Pulled from email, so confirm the date. ':'')+'Sigil can draft the reminder.'}));
   add('sigil',d.sg.incomplete.length,plural(d.sg.incomplete.length,'person is','people are')+' missing paperwork',d.sg.incomplete.slice(0,5).map(p=>p.name+' needs '+p.miss.join(', ')).join('; ')+'.');
   add('sigil',d.sPending.length,plural(d.sPending.length,'paperwork reminder','paperwork reminders')+' to approve',d.sPending.map(x=>cut(x.label,60)).join('; ')+'.');
@@ -9051,18 +9064,7 @@ function vVesper(){
   h+='<div class="tm-sec">Waiting to approve ('+d.vPending.length+')</div>';
   if(!d.vPending.length)h+='<div class="tm-empty">No nudges or check-ins waiting.</div>';
   d.vPending.forEach(x=>h+=draftCard(x,false));
-  h+=agreementsHtml();
-  h+='<div class="tm-sec">Venue care: check in every 3 months ('+d.careDue.length+' due)</div>';
-  if(!d.care.length)h+='<div class="tm-empty">No current venues yet. Add the venues you already work with below, or hand a yes to onboarding from Raven.</div>';
-  d.care.slice().sort((a,b)=>(a.lastCheckinAt||0)-(b.lastCheckinAt||0)).forEach(v=>{
-    const due=Date.now()-(v.lastCheckinAt||0)>=CARE,has=S.drafts.some(x=>x.venueId===v.id&&x.kind==='checkin'&&x.status==='pending');
-    const H=v.health||'good';
-    h+='<div class="tm-item'+(S.open['c_'+v.id]?'':' folded')+'"><div class="t1 fold" data-act="fold" data-id="'+esc(v.id)+'"><b>'+esc(v.name)+'</b> '+(due?'<span class="tm-tag warn">check-in due</span>':'<span class="tm-tag booked">next '+esc(fmtDay((v.lastCheckinAt||0)+CARE))+'</span>')+(H==='risk'?'<span class="tm-tag lost">at risk</span>':H==='watch'?'<span class="tm-tag warn">watch</span>':'')+'</div>'+
-      (v.healthWhy?'<div class="t2"><b>Vesper\'s read:</b> '+esc(v.healthWhy)+'</div>':'')+checksHtml(v)+
-      '<div class="t2">'+(v.lastCheckinAt?'Last check-in '+esc(fmtDay(v.lastCheckinAt)):'Never checked in')+(v.contactName||v.contact?' · '+esc([v.contactName,v.contact].filter(Boolean).join(' · ')):'')+'</div>'+
-      '<div class="tm-row"><select class="tm-sel" style="width:auto" data-chg="venuehealth" data-id="'+esc(v.id)+'"><option value="good"'+(H==='good'?' selected':'')+'>Health: good</option><option value="watch"'+(H==='watch'?' selected':'')+'>Health: watch</option><option value="risk"'+(H==='risk'?' selected':'')+'>Health: at risk</option></select>'+
-      (due&&!has?'<button class="tm-b pri" data-act="carecheckin" data-id="'+esc(v.id)+'">Draft check-in</button>':'')+(has?'<span class="tm-tag">draft waiting</span>':'')+'<button class="tm-b dim" data-act="vtl" data-id="'+esc(v.id)+'">'+(S.open['tl_'+v.id]?'Hide timeline':'Timeline')+'</button></div>'+(S.open['tl_'+v.id]?timelineHtml(v):'')+'</div>';
-  });
+  h+='<div class="tm-hint">Venue agreements, 3-month check-ins, renewals and invoices are on Sigil\'s desk now.</div>';
   h+=pipelineHtml();
   h+='<div class="tm-hint" style="margin-top:.8rem">Venues come from <b>Our Venues</b> in the Venues tab. Add or retire one there and it shows here.</div>';
   h+='<div class="tm-sec">Venue leads to follow up ('+d.vlDue.length+')</div><div class="tm-hint">From the Leads tab: follow-up dates that are due, or leads with no activity in 14 days. Signed, transferred and paused leads are left alone.</div>';
@@ -9139,9 +9141,44 @@ function sigilState(){
 const expandPatch=o=>{const r={};Object.keys(o).forEach(k=>{const p=k.split('.');let t=r;p.forEach((s,n)=>{if(n===p.length-1)t[s]=o[k];else t=t[s]=t[s]||{};});});return r;};
 async function sgSave(patch){const ref=col('agent_config').doc('sigil');try{await ref.update(patch);}catch(e){await ref.set(expandPatch(patch),{merge:true});}}
 function sgTag(x){if(x.days==null)return '<span class="tm-tag warn">set a date</span>';if(x.days<0)return '<span class="tm-tag lost">overdue '+(-x.days)+' days</span>';if(x.days<=30)return '<span class="tm-tag warn">due in '+x.days+' days</span>';return '<span class="tm-tag booked">'+x.days+' days</span>';}
+function invoiceState(){
+  const c=((S.cfg.sigil||{}).invoices)||{},now=new Date(),today=isoDay(now.getTime()),ym=today.slice(0,7),y=now.getFullYear(),m=now.getMonth();
+  const last=new Date(y,m+1,0).getDate(),k='m'+ym.replace('-','_');
+  const vs=(typeof venues!=='undefined'&&Array.isArray(venues)?venues:[]).filter(v=>v&&v.name&&!v.inactive&&!v.noRecurring&&/invoice|quickbooks/i.test(v.payMethod||''));
+  const all=vs.map(v=>{const day=v.billDay==='last'?last:Math.min(Math.max(+v.billDay||1,1),last);const due=ym+'-'+String(day).padStart(2,'0');
+    const days=Math.round((new Date(due+'T12:00:00').getTime()-new Date(today+'T12:00:00').getTime())/DAY);const sent=((c['v'+v.id])||{})[k]||0;
+    return {id:v.id,name:v.name,method:v.payMethod,amount:v.billAmount||'',note:v.billNote||'',nights:Object.entries(v.payAmounts||{}).filter(e=>e[1]).map(e=>e[0]+' '+e[1]).join(', '),due:due,days:days,sent:sent,k:k,ym:ym,remind:!sent&&days<=2};}).sort((a,b)=>a.days-b.days);
+  return {all:all,due:all.filter(x=>x.remind)};
+}
+function invoicesHtml(){
+  const g=invoiceState();
+  let h='<div class="tm-sec">Invoices to send ('+g.due.length+' due)</div><div class="tm-hint">Venues that pay by invoice (set "Paid by" and the billing day on the venue, in the Venues tab). Sigil reminds you 2 days before the billing day. Tick the check when the invoice is sent. Cash and other payment types are in each venue\'s info.</div>';
+  if(!g.all.length)h+='<div class="tm-empty">No venues are set to pay by invoice yet. Set "Paid by" to QuickBooks invoice on a venue.</div>';
+  g.all.forEach(x=>{
+    const tag=x.sent?'<span class="tm-tag booked">sent '+esc(fmtDay(x.sent))+'</span>':(x.days<0?'<span class="tm-tag lost">overdue '+(-x.days)+' day'+(x.days===-1?'':'s')+'</span>':x.days<=2?'<span class="tm-tag warn">'+(x.days===0?'send today':'send '+(x.days===1?'tomorrow':'in 2 days'))+'</span>':'<span class="tm-tag">due '+esc(fmtEv(x.due))+'</span>');
+    h+='<div class="tm-item"><div class="t1"><b>'+esc(x.name)+'</b> '+tag+'</div><div class="t2">'+esc(x.method)+' &middot; bills '+esc(fmtEv(x.due))+(x.amount?' &middot; '+esc(x.amount):(x.nights?' &middot; per night: '+esc(x.nights):''))+(x.note?' &middot; '+esc(x.note):'')+'</div>'+
+      '<div class="tm-row">'+(x.sent?'<button class="tm-b dim" data-act="invundo" data-id="'+esc(x.id)+'">Undo</button>':'<button class="tm-b pri" data-act="invsent" data-id="'+esc(x.id)+'" title="Mark this month\'s invoice as sent" aria-label="Mark invoice sent">&#10003;</button>')+'<button class="tm-b" data-act="invcopy" data-id="'+esc(x.id)+'">Copy details</button></div></div>';
+  });
+  return h;
+}
+function careHtml(){
+  const d=D();let h='';
+  h+='<div class="tm-sec">Venue care: check in every 3 months ('+d.careDue.length+' due)</div>';
+  if(!d.care.length)h+='<div class="tm-empty">No current venues yet. Add the venues you already work with below, or hand a yes to onboarding from Raven.</div>';
+  d.care.slice().sort((a,b)=>(a.lastCheckinAt||0)-(b.lastCheckinAt||0)).forEach(v=>{
+    const due=Date.now()-(v.lastCheckinAt||0)>=CARE,has=S.drafts.some(x=>x.venueId===v.id&&x.kind==='checkin'&&x.status==='pending');
+    const H=v.health||'good';
+    h+='<div class="tm-item'+(S.open['c_'+v.id]?'':' folded')+'"><div class="t1 fold" data-act="fold" data-id="'+esc(v.id)+'"><b>'+esc(v.name)+'</b> '+(due?'<span class="tm-tag warn">check-in due</span>':'<span class="tm-tag booked">next '+esc(fmtDay((v.lastCheckinAt||0)+CARE))+'</span>')+(H==='risk'?'<span class="tm-tag lost">at risk</span>':H==='watch'?'<span class="tm-tag warn">watch</span>':'')+'</div>'+
+      (v.healthWhy?'<div class="t2"><b>Vesper\'s read:</b> '+esc(v.healthWhy)+'</div>':'')+checksHtml(v)+
+      '<div class="t2">'+(v.lastCheckinAt?'Last check-in '+esc(fmtDay(v.lastCheckinAt)):'Never checked in')+(v.contactName||v.contact?' · '+esc([v.contactName,v.contact].filter(Boolean).join(' · ')):'')+'</div>'+
+      '<div class="tm-row"><select class="tm-sel" style="width:auto" data-chg="venuehealth" data-id="'+esc(v.id)+'"><option value="good"'+(H==='good'?' selected':'')+'>Health: good</option><option value="watch"'+(H==='watch'?' selected':'')+'>Health: watch</option><option value="risk"'+(H==='risk'?' selected':'')+'>Health: at risk</option></select>'+
+      (due&&!has?'<button class="tm-b pri" data-act="carecheckin" data-id="'+esc(v.id)+'">Draft check-in</button>':'')+(has?'<span class="tm-tag">draft waiting</span>':'')+'<button class="tm-b dim" data-act="vtl" data-id="'+esc(v.id)+'">'+(S.open['tl_'+v.id]?'Hide timeline':'Timeline')+'</button></div>'+(S.open['tl_'+v.id]?timelineHtml(v):'')+'</div>';
+  });
+  return h;
+}
 function vSigil(){
   const d=D(),sg=d.sg;
-  let h='<div class="tm-hint">Venue agreements, check-ins and renewals now live on Vesper\'s desk.</div><div class="tm-sec">Renewals and filings ('+sg.items.length+')</div>';
+  let h=invoicesHtml()+agreementsHtml()+careHtml()+'<div class="tm-sec">Renewals and filings ('+sg.items.length+')</div>';
   if(!sg.items.length)h+='<div class="tm-empty">Nothing tracked yet.</div><div class="tm-row"><button class="tm-b pri" data-act="sgaddstd">Add the standard list</button></div>';
   sg.items.forEach(x=>{
     h+='<div class="tm-item"><div class="t1"><b>'+esc(x.name)+'</b> '+sgTag(x)+(x.fromEmail?'<span class="tm-tag">from email, confirm the date</span>':'')+'</div><div class="tm-row"><label class="tm-lbl" style="margin:0">Next due</label><input class="tm-in s" type="date" data-chg="sgdue" data-id="'+esc(x.id)+'" value="'+esc(x.due||'')+'"><button class="tm-b dim red" data-act="sgdelitem" data-id="'+esc(x.id)+'">Remove</button></div></div>';
@@ -10019,8 +10056,10 @@ window.hqBadges=function(v){
   if(v.facebook)parts.push(lk('Facebook',U(v.facebook,'https://facebook.com/')));
   if(v.website)parts.push(lk('Website',U(v.website,'https://')));
   const info=parts.join(' &middot; ');
-  if(!b&&!info)return '';
-  return '<div style="margin-top:.4rem">'+b+'</div>'+(info?'<div style="font-size:0.68rem;color:var(--text3);margin-top:.3rem;">'+info+'</div>':'');
+  const ord=n=>{n=+n;const t=n%100;return n+((t>10&&t<14)?'th':({1:'st',2:'nd',3:'rd'}[n%10]||'th'));};
+  const bill=v.payMethod?[v.payMethod,(v.billDay==='last'?'last day':ord(v.billDay||1))+' of the month',v.billAmount,v.billNote].filter(Boolean).map(esc).join(' &middot; '):'';
+  if(!b&&!info&&!bill)return '';
+  return '<div style="margin-top:.4rem">'+b+'</div>'+(bill?'<div style="font-size:0.68rem;color:var(--text3);margin-top:.3rem;"><b>Bills:</b> '+bill+'</div>':'')+(info?'<div style="font-size:0.68rem;color:var(--text3);margin-top:.3rem;">'+info+'</div>':'');
 };
 window.hqAgr=function(v){
   const c=(S.cfg.sigil||{}).agreements||{},n=vnorm(v.name);
@@ -10283,9 +10322,12 @@ const A={
     await col('agent_drafts').add({leadId:null,venueId:v.id,agent:'raven',kind:kind,body:body,label:OT_KIND[kind].label+v.name+tag,status:'pending',createdAt:Date.now()});
     toast('Draft is waiting in Needs you.');
   },
+  async invsent(t){const g=invoiceState().all.find(x=>x.id===t.dataset.id);if(!g)return;await sgSave({['invoices.v'+g.id+'.'+g.k]:Date.now()});toast('Marked sent for '+g.name+'.',false);},
+  async invundo(t){const g=invoiceState().all.find(x=>x.id===t.dataset.id);if(!g)return;await sgSave({['invoices.v'+g.id+'.'+g.k]:0});toast('Undone.',false);},
+  async invcopy(t){const g=invoiceState().all.find(x=>x.id===t.dataset.id);if(!g)return;const mo=new Date(g.due+'T12:00:00').toLocaleDateString('en-US',{month:'long',year:'numeric'});toast(await copy('Invoice for '+g.name+', '+mo+'\nPayment: '+g.method+'\nBilling date: '+fmtEv(g.due)+'\n'+(g.amount?'Amount: '+g.amount+'\n':(g.nights?'Per night: '+g.nights+'\n':''))+(g.note?'Notes: '+g.note+'\n':''))?'Copied.':'Copy failed.',false);},
   async carecheckin(t){
     const v=careVenues().find(x=>x.id===t.dataset.id);if(!v)return;
-    await col('agent_drafts').add({leadId:null,venueId:v.id,agent:'vesper',kind:'checkin',body:careText(v),label:'Check-in: '+v.name,status:'pending',createdAt:Date.now()});
+    await col('agent_drafts').add({leadId:null,venueId:v.id,agent:'sigil',kind:'checkin',body:careText(v),label:'Check-in: '+v.name,status:'pending',createdAt:Date.now()});
     toast('Draft is waiting above.');
   },
   async venuehealth(t){const id=t.dataset.id;if(id.indexOf('hq_')===0)await careSave({['venues.'+id.slice(3)+'.health']:t.value});else await col('agent_venues').doc(id).update({health:t.value});},
@@ -10299,11 +10341,11 @@ const A={
   async agradd(){const v=val('agr-v'),d=val('agr-d'),t=+val('agr-t');if(!v||!d){toast('Add the venue and the date signed.',true);return;}await sgSave({['agreements.a'+Date.now().toString(36)]:{venue:v,signedOn:d,termMonths:t,endsOn:addMonths(d,t),status:'active',source:'hand'}});vhLog(v,'Agreement signed: '+TERM_LBL(t)+', ends '+niceDay(addMonths(d,t)),d);toast('Added.');},
   async agrconfirm(t){const x=agrState().found.find(a=>a.id===t.dataset.id);if(!x)return;const n=+(document.getElementById('agt-'+x.id)||{}).value||12,d=(document.getElementById('agd-'+x.id)||{}).value||x.signedOn;if(!d){toast('Pick the date it was signed.',true);return;}await sgSave({['agreements.'+x.id+'.signedOn']:d,['agreements.'+x.id+'.termMonths']:n,['agreements.'+x.id+'.endsOn']:addMonths(d,n),['agreements.'+x.id+'.status']:'active'});vhLog(x.venue,'Agreement signed: '+TERM_LBL(n)+', ends '+niceDay(addMonths(d,n)),d);toast('Confirmed. Ends '+fmtEv(addMonths(d,n))+'.');},
   async agrrenew(t){const x=agrState().active.find(a=>a.id===t.dataset.id);if(!x)return;const n=x.termMonths===3?12:(x.termMonths||12),start=x.days<0?isoDay(Date.now()):x.endsOn;await sgSave({['agreements.'+x.id+'.status']:'renewed',['agreements.a'+Date.now().toString(36)]:{venue:x.venue,signedOn:start,termMonths:n,endsOn:addMonths(start,n),status:'active',source:'hand'}});vhLog(x.venue,'Agreement renewed: '+TERM_LBL(n)+', ends '+niceDay(addMonths(start,n)),start);toast('Renewed for '+TERM_LBL(n)+'.');},
-  async agrcheckin(t){const x=agrState().active.find(a=>a.id===t.dataset.id);if(!x)return;await col('agent_drafts').add({leadId:null,agent:'vesper',kind:'checkin',body:agrCheckin(x),label:'Check-in (2 months): '+x.venue,status:'pending',createdAt:Date.now()});await sgSave({['agreements.'+x.id+'.checkinDraftAt']:Date.now()});toast('Draft is in Waiting to approve.');},
+  async agrcheckin(t){const x=agrState().active.find(a=>a.id===t.dataset.id);if(!x)return;await col('agent_drafts').add({leadId:null,agent:'sigil',kind:'checkin',body:agrCheckin(x),label:'Check-in (2 months): '+x.venue,status:'pending',createdAt:Date.now()});await sgSave({['agreements.'+x.id+'.checkinDraftAt']:Date.now()});toast('Draft is in Waiting to approve.');},
   async agrsent(t){await sgSave({['agreements.'+t.dataset.id+'.checkinAt']:Date.now()});vhLog(agrVenueOf(t.dataset.id),'2-month check-in sent');toast('Check-in marked sent.');},
   async agrgood(t){await sgSave({['agreements.'+t.dataset.id+'.checkinOutcome']:'good',['agreements.'+t.dataset.id+'.renewAfter']:isoDay(Date.now()+2*DAY)});vhLog(agrVenueOf(t.dataset.id),'Check-in went well; renewal to follow');toast('Renewal can go out in 2 days.');},
   async agrbad(t){await sgSave({['agreements.'+t.dataset.id+'.checkinOutcome']:'bad'});vhLog(agrVenueOf(t.dataset.id),'Check-in did not go well; talk to them first');toast('Held. It is on your Gazette to talk to them.');},
-  async agrnote(t){const x=agrState().active.find(a=>a.id===t.dataset.id);if(!x)return;await col('agent_drafts').add({leadId:null,agent:'vesper',kind:'paperwork',body:agrNote(x),label:'Renewal: '+x.venue,status:'pending',createdAt:Date.now()});toast('Draft is in Waiting to approve.');},
+  async agrnote(t){const x=agrState().active.find(a=>a.id===t.dataset.id);if(!x)return;await col('agent_drafts').add({leadId:null,agent:'sigil',kind:'paperwork',body:agrNote(x),label:'Renewal: '+x.venue,status:'pending',createdAt:Date.now()});toast('Draft is in Waiting to approve.');},
   async agrend(t){if(!confirm('Mark this venue as gone?'))return;const vn=agrVenueOf(t.dataset.id);await sgSave({['agreements.'+t.dataset.id+'.status']:'ended'});vhLog(vn,'Agreement ended: venue left');},
   async agrdel(t){if(!confirm('Remove this?'))return;await sgSave({['agreements.'+t.dataset.id]:null});},
   async addprospect(t){await addProspectDoc({name:t.dataset.name,city:t.dataset.city||'',evidence:t.dataset.why||'',pitch:t.dataset.pitch||''});},
