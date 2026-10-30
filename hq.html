@@ -7002,7 +7002,7 @@ HARD RULES
 - Never invent prices, dates, availability or facts. If something is missing, say exactly what is missing.
 - Never log into a gig site or any account with a bot. Work only from emails, HQ data and public web pages.
 - Voice: gothic and regal but warm, confident, blunt, brief. No filler, no hedging.
-- LAST STEP OF EVERY RUN, even a quiet one or one that was blocked: addDraft {agent: your lowercase name, kind:"note", label:"Run note", body}. Body line 1: one plain sentence of what you did or what blocked you. If you need something from Ahnna add "NEEDS YOU:" then one "- " line per ask saying exactly what to do and where. HQ shows it on your desk and on the Gazette.
+- LAST STEP OF EVERY RUN, even a quiet one or one that was blocked: addDraft {agent: your lowercase name, kind: the SAME kind you already use for your other drafts (the door rejects unknown kinds; Mirror uses "seo"), label:"Run note", body}. Body line 1: one plain sentence of what you did or what blocked you. If you need something from Ahnna add "NEEDS YOU:" then one "- " line per ask saying exactly what to do and where. HQ shows it on your desk and on the Gazette.
 `;
 const INFO={
 raven:{
@@ -7302,7 +7302,7 @@ YOUR JOB: make sure Belladonna is found everywhere people look, set up completel
 
 RULES: never log in to a site. Never buy or fake reviews. Never keyword-stuff. Keep name, address, phone and hours identical everywhere. Only claim what is true.
 
-7. PAGE TEXT. If a public page cannot be fetched, do not stop. agent_config mirror has snapshot{text,at} (pasted text of belladonnanights.com) and each agent_sites doc may have snapshot and snapshotAt (pasted text of that listing). Audit from those. If one you need is missing or older than 60 days, put it in NEEDS YOU in your run note. If profileRefreshed is missing, ask for it there too.
+7. PAGE TEXT. If a public page cannot be fetched, do not stop. Each agent_sites doc may have snapshot and snapshotAt (pasted text of that listing). Use those only if a page cannot be fetched. If profileRefreshed is missing, ask for it there too.
 
 8. WORDING AND NEW PLACES: write the best wording for the business description, headline, services and calls to action on each site (kind "seo", exact text). Recommend up to 3 new listings or directories that would bring bookings, each as kind "seo" labelled "New listing: NAME".
 
@@ -7683,7 +7683,7 @@ function start(){
   const onErr=e=>{S.err=(e&&(e.code||e.message))||String(e);render();};
   const list=(name,key)=>d.collection(name).onSnapshot(s=>{S[key]=s.docs.map(x=>Object.assign({id:x.id},x.data()));S.err=null;render();},onErr);
   list('agent_leads','leads');
-  d.collection('agent_drafts').onSnapshot(sn=>{const all=sn.docs.map(x=>Object.assign({id:x.id},x.data()));S.drafts=all.filter(x=>x.kind!=='note');S.notes=all.filter(x=>x.kind==='note').sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));S.err=null;render();},onErr);
+  d.collection('agent_drafts').onSnapshot(sn=>{const all=sn.docs.map(x=>Object.assign({id:x.id},x.data()));const isN=x=>x.kind==='note'||/^run note/i.test(String(x.label||''));S.drafts=all.filter(x=>!isN(x));S.notes=all.filter(isN).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));S.err=null;render();},onErr);
   list('agent_sites','sites');
   list('agent_venues','venues');
   try{d.collection('socialPosts').where('date','>=',isoDay(Date.now()-DAY)).onSnapshot(s=>{S.posts=s.docs.map(x=>Object.assign({id:x.id},x.data()));render();},e=>{S.posts=null;});}catch(e){S.posts=null;}
@@ -8113,7 +8113,7 @@ Ops:
  {"op":"setConfig","doc":"sable|sigil|warden|coach|care|curator|social|ads","data":{...}}
 
 First read agent_config (voice, pricing, outreach) and follow it exactly. Never invent prices, dates, or facts. Check agent_drafts first so you never write a draft that already exists. If nothing needs doing, write nothing else.
-RUN NOTE (LAST STEP OF EVERY RUN, even a quiet one, even if something blocked you): addDraft {agent: your lowercase name, kind:"note", label:"Run note", body}. The body's first line is one plain sentence: what you did, what you wrote, and anything that blocked you. If you need something from Ahnna, add a line "NEEDS YOU:" and then one line per ask, each starting with "- ", saying exactly what to do and where. Do not repeat an identical note. HQ shows the note on your desk and puts every NEEDS YOU line on the Gazette.`;
+RUN NOTE (LAST STEP OF EVERY RUN, even a quiet one, even if something blocked you): addDraft {agent: your lowercase name, kind: the SAME kind you already use for your other drafts (the door rejects unknown kinds; Mirror uses "seo"), label:"Run note", body}. The body's first line is one plain sentence: what you did, what you wrote, and anything that blocked you. If you need something from Ahnna, add a line "NEEDS YOU:" and then one line per ask, each starting with "- ", saying exactly what to do and where. Do not repeat an identical note. HQ shows the note on your desk and puts every NEEDS YOU line on the Gazette.`;
 const TASKS=[
  {name:'Lead run',who:'Raven and Quill',when:'Weekdays, 7:00 am',plain:'Looks for people and venues asking for karaoke, trivia or bingo, scores them hot / warm / cold, drafts cold emails and day-5 follow-ups for venues you have not heard back from, and drafts replies to the good leads.',ids:['raven','quill'],lib:true,
   body:`TASK: Lead run.
@@ -8203,7 +8203,7 @@ Do not touch venues you did not just add except to draft.`},
  {name:'Presence check',who:'Mirror',when:'Mondays, 8:00 am',plain:'Checks your listings and website, flags profiles that have gone 90 days without a refresh with exact steps, and drafts review replies and review asks.',ids:['mirror'],
   body:`TASK: Presence check. Read agent_sites and agent_config mirror. Skip sites where silencedAt is set or active is false.
 YOUR JOB: look over Belladonna's whole online image (website, Google Business Profile, Facebook, Instagram, Yelp, Nextdoor, gig sites, directories) and tell Ahnna what to change to be found more, chosen more, and booked more.
-0. PAGE TEXT. If a public page cannot be fetched, do not stop. agent_config mirror has snapshot{text,at}: the pasted text of belladonnanights.com (title, meta description, page text). Each agent_sites doc may also have snapshot (pasted text of that listing) and snapshotAt. Audit from those. If a snapshot you need is missing or older than 60 days, add it to NEEDS YOU in your run note ("- Paste the text of belladonnanights.com into Mirror's desk, Website box"). Never log in to anything.
+0. PAGE TEXT. If a public page cannot be fetched, do not stop. Each agent_sites doc may also have snapshot (pasted text of that listing) and snapshotAt. Audit from those only if a page cannot be fetched. Never log in to anything.
 1. For each active site, if profileRefreshed is missing or 90 or more days old, set auditNotes to the exact steps to fix it and addDraft kind "seo". If profileRefreshed is missing, add "- Set the Last refreshed date on SITE in Mirror's desk" to NEEDS YOU.
 2. SEO AND DISCOVERY: from the snapshots, check titles, meta descriptions, headings, service and city wording, hours, phone, name consistency across sites. addDraft kind "seo", one fix per draft, with the exact new text.
 3. WORDING: write the best wording for the business description, headline, services list and calls to action on each site, in Belladonna's voice, so the right people choose us. Only claim what is true.
@@ -9105,8 +9105,6 @@ function siteSpec(name){return SITE_SPECS.find(x=>x.m.test(String(name||'')))||{
 
 function vMirror(){
   const d=D();let h='';
-  const ws=(S.cfg.mirror&&S.cfg.mirror.snapshot)||{};
-  h+=det('wsnap','Website text for Mirror (belladonnanights.com)'+(ws.at?' &middot; saved '+esc(fmtDay(ws.at)):' &middot; not saved yet'),'<div class="tm-hint">Mirror cannot open your website, so she reads what you paste here. Open belladonnanights.com, press Ctrl+A then Ctrl+C to copy the page text, and paste it below. Add the page title and meta description if you know them (right-click the page, View page source, search for &lt;title&gt; and name=&quot;description&quot;).</div><textarea class="tm-ta" id="ws-text" style="min-height:120px">'+esc(ws.text||'')+'</textarea><div class="tm-row"><button class="tm-b pri" data-act="savewsnap">Save for Mirror</button></div>',!ws.at);
   h+='<div class="tm-sec">Listings</div>';
   const have=new Set(S.sites.map(s=>s.name)),miss=PRESENCE.filter(n=>!have.has(n));
   if(miss.length)h+='<div class="tm-item"><div class="t1">'+(d.sites.length?'Listings not set up here yet':'Add the places you need to show up')+'</div><div class="t2">'+miss.map(esc).join(', ')+'</div><div class="tm-row"><button class="tm-b pri" data-act="addpresence">Add these listings</button></div></div>';
@@ -9716,7 +9714,6 @@ const A={
     await col('agent_venues').add({name:n,city:val('nv-city'),address:val('nv-addr'),evidence:val('nv-ev'),pitch:val('nv-pitch'),stage:'target',createdAt:Date.now()});toast('Venue added.');
   },
   async delvenue(t){if(!confirm('Delete this venue?'))return;await col('agent_venues').doc(t.dataset.id).delete();},
-  async savewsnap(t){const e=document.getElementById('ws-text'),v=e?e.value.trim():'';if(!v){toast('Paste the page text first.',true);return;}await col('agent_config').doc('mirror').set({snapshot:{text:v,at:Date.now()}},{merge:true});toast('Saved. Mirror reads it on her next run.');},
   async savesnap(t){const e=document.querySelector('[data-snap="'+t.dataset.id+'"]'),v=e?e.value.trim():'';await col('agent_sites').doc(t.dataset.id).update({snapshot:v,snapshotAt:Date.now()});toast('Saved for Mirror.');},
   async setrefreshed(t){const v=t.value;if(!v)return;const ms=new Date(v+'T12:00:00').getTime();if(isNaN(ms))return;await col('agent_sites').doc(t.dataset.id).update({profileRefreshed:ms});toast('Refresh date saved.');},
   async notedone(t){await col('agent_drafts').doc(t.dataset.id).update({status:'done',doneAt:Date.now()});},
