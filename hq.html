@@ -2300,7 +2300,7 @@ async function fetchSheetData(){
     const snap=await db.collection('shifts').get();
     const all=snap.docs.map(d=>({id:d.id,...d.data()})).filter(s=>locationScopeMatches(s.locationId));
     shiftsData=all; // keep the shared cache fresh too
-    const hosts=all.map(s=>({name:s.hostName||'',status:s.status||'OFF',signIn:s.date&&s.checkinTime?(s.date+' '+formatTime12(s.checkinTime)):(s.checkinTime?formatTime12(s.checkinTime):''),paid:s.gotPaid==='Yes'?'TRUE':(s.status==='OFF'?'FALSE':'')}));
+    const hosts=all.map(s=>({id:s.id,name:s.hostName||'',status:s.status||'OFF',signIn:s.date&&s.checkinTime?(s.date+' '+formatTime12(s.checkinTime)):(s.checkinTime?formatTime12(s.checkinTime):''),paid:s.gotPaid==='Yes'?'TRUE':(s.status==='OFF'?'FALSE':'')}));
     renderHosts(hosts);
     document.getElementById('homeError').style.display='none';
   }catch(e){
@@ -2319,7 +2319,7 @@ function renderHosts(hosts){
   document.getElementById('statUnpaid').textContent=hosts.filter(h=>h.paid==='FALSE'&&h.status==='OFF').length;
   const list=document.getElementById('hostList');
   if(!on.length){list.innerHTML='<div class="empty-state">No hosts currently on shift.</div>';return;}
-  list.innerHTML=on.map(h=>`<div class="host-row"><div class="host-info"><div class="host-avatar">${h.name.charAt(0).toUpperCase()}</div><div><div class="host-name-text">${h.name}</div><div class="host-time">${h.signIn?'Since '+h.signIn:'—'}</div></div></div><div class="status-pill">On Shift</div></div>`).join('');
+  list.innerHTML=on.map(h=>`<div class="host-row"><div class="host-info"><div class="host-avatar">${h.name.charAt(0).toUpperCase()}</div><div><div class="host-name-text">${h.name}</div><div class="host-time">${h.signIn?'Since '+h.signIn:'—'}</div></div></div><div style="display:flex;align-items:center;gap:0.6rem;"><div class="status-pill">On Shift</div><button class="btn-sm" onclick="manualSignOut('${h.id}')">Sign out</button></div></div>`).join('');
 }
 
 // ── SIGN-IN LOG + GIG SCHEDULE ──
@@ -2419,6 +2419,19 @@ function setSigninView(v){
   document.getElementById('signinResults').style.display=v==='cards'?'':'none';
   document.getElementById('signinSheetWrap').style.display=v==='sheet'?'':'none';
   renderSigninLog();
+}
+function manualSignOut(id){
+  const s=shiftsData.find(x=>x.id===id);
+  if(!s)return;
+  const d=new Date(),def=String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
+  const t=prompt('Sign out '+(s.hostName||'this host')+(s.venue?' at '+s.venue:'')+'.\n\nSign-out time (24-hour, like 22:30). Press OK to use right now:',s.checkoutTime||def);
+  if(t===null)return;
+  const m=String(t).trim().match(/^(\d{1,2}):(\d{2})$/);
+  if(!m||+m[1]>23||+m[2]>59){alert('Enter the time like 22:30.');return;}
+  const hhmm=String(+m[1]).padStart(2,'0')+':'+m[2];
+  db.collection('shifts').doc(id).set({status:'OFF',checkoutTime:hhmm,checkoutManual:true,checkoutManualAt:firebase.firestore.FieldValue.serverTimestamp(),updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true}).then(()=>{
+    loadShiftsData().then(()=>{renderSigninLog();try{fetchSheetData();}catch(e){}});
+  }).catch(e=>alert('Failed to sign out: '+e.message));
 }
 function deleteSigninEntry(id){
   const s=shiftsData.find(x=>x.id===id);
@@ -2561,6 +2574,7 @@ function renderSigninCard(g){
         <span>${g.reviewed?'Reviewed':'Mark Reviewed'}</span>
       </label>
       <div style="display:flex;gap:0.5rem;">
+        ${(!g.hasCheckout&&!g.cancelled)?`<button class="btn-sm" style="color:var(--gold);" onclick="manualSignOut('${g.key}')">Sign out</button>`:''}
         <button class="btn-sm" onclick="openSigninEditModal('${g.key}')">Edit</button>
         <button class="btn-sm" style="color:var(--rose);" onclick="deleteSigninEntry('${g.key}')">Delete</button>
       </div>
