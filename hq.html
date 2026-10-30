@@ -7958,6 +7958,16 @@ function briefData(){
     const m=String(n.body).split(/NEEDS YOU:/i)[1]||'',ls=m.split('\n').map(x=>x.replace(/^\s*[-*\u2022]\s*/,'').trim()).filter(Boolean);
     ls.forEach(l=>need.push({a:n.agent,text:l,body:agent(n.agent)?agent(n.agent).name+' left this in her run note '+ago(n.createdAt)+'.':'',note:n.id}));
   });
+  {/* say each thing once: a due-soon item, a draft waiting to approve and a run-note line about the same thing collapse into one */
+    const STOP=new Set(['that','this','with','your','from','they','them','there','their','sigil','today','before','about','have','will','needs','need']);
+    const W=t=>{const o=new Set();String(t||'').toLowerCase().replace(/[^a-z0-9 ]/g,' ').split(/\s+/).forEach(w=>{if(w.length>3&&!STOP.has(w))o.add(w);});return o;};
+    const ov=(x,y)=>{let k=0;x.forEach(w=>{if(y.has(w))k++;});return k;};
+    for(let i=need.length-1;i>=0;i--){const n=need[i];
+      if(n.a==='sigil'&&!n.note&&/Sigil can draft the reminder\.$/.test(n.body||'')&&(d.sPending||[]).some(x=>ov(W(n.text),W(x.label))>=2))need.splice(i,1);}
+    for(let i=need.length-1;i>=0;i--){const n=need[i];
+      if(!n.note)continue;const wn=W(n.text);
+      if(need.some((o,j)=>j!==i&&!o.note&&!o.rem&&o.a===n.a&&ov(wn,W(o.text+' '+o.body))>=3)||(n.a==='sigil'&&(d.sPending||[]).some(x=>ov(wn,W(x.label))>=3)))need.splice(i,1);}
+  }
   const RM=remState();
   RM.due.forEach(r=>need.push({a:r.agent,rem:true,rid:r.id,text:'Reminder: '+r.text,body:(r.date?(r.date<isoDay(now)?'Was due '+fmtEv(r.date)+'. ':r.date===isoDay(now)?'Due today. ':''):'')+'You asked '+(agent(r.agent)?agent(r.agent).name:'a desk')+' to remind you.'}));
   const hsh=s=>{let h=5381;for(let k=0;k<s.length;k++)h=((h<<5)+h+s.charCodeAt(k))|0;return Math.abs(h).toString(36);};
