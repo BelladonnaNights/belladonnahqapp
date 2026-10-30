@@ -7296,7 +7296,7 @@ YOUR JOB: make sure Belladonna is found everywhere people look, set up completel
 - Review requests: after each private event or good venue night, write one short, warm message asking for a review, with the link for the best site for that client (Google first). Ask everyone, not only happy customers. Never offer a reward. Write each as a document in agent_drafts: leadId (empty), agent "mirror", kind "reviewask", body, label (client or venue and "review request"), status "pending", createdAt (ms).
 - Review replies: look in the lead inbox for review notification emails. For each review without a draft write kind "review". Two to four sentences. Gracious and specific: mention one real detail. Positive: thank them, name the night, invite them back. Negative: own what is fair, stay professional, offer a way to make it right. Never argue, never reveal private details.
 
-5. FIX LIST. Write each fix from steps 1 to 3 as a document in agent_drafts with kind "seo", label (the page or listing), body (what is wrong and the exact fix), status "pending".
+5. FIX LIST. Write each fix from steps 1 to 3 as a document in agent_drafts with kind "seo", label (START with the listing name as in agent_sites, e.g. "Google Business Profile: add services"; for the website start with "Website:"), body (what is wrong and the exact fix), status "pending".
 
 6. PROFILE FRESHNESS. Collection agent_sites has profileRefreshed (ms). Flag any listing not refreshed in 90 days.
 
@@ -8203,6 +8203,7 @@ Do not touch venues you did not just add except to draft.`},
  {name:'Presence check',who:'Mirror',when:'Mondays, 8:00 am',plain:'Checks your listings and website, flags profiles that have gone 90 days without a refresh with exact steps, and drafts review replies and review asks.',ids:['mirror'],
   body:`TASK: Presence check. Read agent_sites and agent_config mirror. Skip sites where silencedAt is set or active is false.
 YOUR JOB: look over Belladonna's whole online image (website, Google Business Profile, Facebook, Instagram, Yelp, Nextdoor, gig sites, directories) and tell Ahnna what to change to be found more, chosen more, and booked more.
+LABELS: every draft label and every NEEDS YOU line must START with the listing it is about, named as in agent_sites (for the website start with "Website:"; for Google start with "Google Business Profile:"; for Facebook "Facebook Page:"; and so on). HQ files each one inside that listing's box on your desk. Only things that belong to no listing go without a prefix.
 0. PAGE TEXT. If a public page cannot be fetched, do not stop. Each agent_sites doc may also have snapshot (pasted text of that listing) and snapshotAt. Audit from those only if a page cannot be fetched. Never log in to anything.
 1. For each active site, if profileRefreshed is missing or 90 or more days old, set auditNotes to the exact steps to fix it and addDraft kind "seo". If profileRefreshed is missing, add "- Set the Last refreshed date on SITE in Mirror's desk" to NEEDS YOU.
 2. SEO AND DISCOVERY: from the snapshots, check titles, meta descriptions, headings, service and city wording, hours, phone, name consistency across sites. addDraft kind "seo", one fix per draft, with the exact new text.
@@ -9106,17 +9107,26 @@ function siteSpec(name){return SITE_SPECS.find(x=>x.m.test(String(name||'')))||{
 function vMirror(){
   const d=D();let h='';
   h+='<div class="tm-sec">Listings</div>';
+  const SK=x=>{const n=String(x.name||'').toLowerCase(),k=[n.replace(/\(.*?\)/g,'').trim()];if(/website/.test(n))k.push('website','belladonnanights.com');if(/google/.test(n))k.push('google','gbp');if(/facebook/.test(n))k.push('facebook');if(/instagram/.test(n))k.push('instagram');if(/nextdoor/.test(n))k.push('nextdoor');if(/yelp/.test(n))k.push('yelp');if(/bing/.test(n))k.push('bing');if(/apple/.test(n))k.push('apple');return k.filter(Boolean);};
+  const hit=(t,x)=>{t=String(t||'').toLowerCase();return SK(x).some(k=>t.indexOf(k)>=0);};
+  const mine={},todo={},used=new Set();
+  d.mPending.forEach(dr=>{const st=d.sites.find(x=>hit(dr.label,x));if(st){(mine[st.id]=mine[st.id]||[]).push(dr);used.add(dr.id);}});
+  (S.notes||[]).filter(n=>n.agent==='mirror'&&n.status==='pending'&&/NEEDS YOU:/i.test(n.body||'')).slice(0,1).forEach(n=>{
+    String(n.body).split(/NEEDS YOU:/i)[1].split('\n').map(x=>x.replace(/^\s*[-*\u2022]\s*/,'').trim()).filter(Boolean).forEach(l=>{const st=d.sites.find(x=>hit(l,x));if(st)(todo[st.id]=todo[st.id]||[]).push(l);});
+  });
   const have=new Set(S.sites.map(s=>s.name)),miss=PRESENCE.filter(n=>!have.has(n));
   if(miss.length)h+='<div class="tm-item"><div class="t1">'+(d.sites.length?'Listings not set up here yet':'Add the places you need to show up')+'</div><div class="t2">'+miss.map(esc).join(', ')+'</div><div class="tm-row"><button class="tm-b pri" data-act="addpresence">Add these listings</button></div></div>';
   if(!d.sites.length)h+='<div class="tm-empty">No listings yet.</div>';
   d.sites.forEach(s=>{
     const stale=!s.profileRefreshed||Date.now()-s.profileRefreshed>STALE,sp=siteSpec(s.name),done=S.mchk[s.id]||{},nDone=sp.tasks.filter((_,k)=>done[k]).length;
     const days=s.profileRefreshed?Math.floor((Date.now()-s.profileRefreshed)/DAY):null;
-    h+='<div class="tm-item'+(S.open['c_'+s.id]?'':' folded')+'"><div class="t1 fold" data-act="fold" data-id="'+esc(s.id)+'"><b>'+esc(s.name)+'</b> '+(stale?'<span class="tm-tag warn">stale</span>':'<span class="tm-tag booked">fresh</span>')+((s.url||sp.url)?' <a href="'+esc(s.url||sp.url)+'" target="_blank" rel="noopener" style="font-size:.76rem">open the site</a>':'')+'</div>'+
+    h+='<div class="tm-item'+(S.open['c_'+s.id]?'':' folded')+'"><div class="t1 fold" data-act="fold" data-id="'+esc(s.id)+'"><b>'+esc(s.name)+'</b> '+(stale?'<span class="tm-tag warn">stale</span>':'<span class="tm-tag booked">fresh</span>')+((mine[s.id]||[]).length+(todo[s.id]||[]).length?' <span class="tm-tag warn">'+((mine[s.id]||[]).length+(todo[s.id]||[]).length)+' waiting</span>':'')+((s.url||sp.url)?' <a href="'+esc(s.url||sp.url)+'" target="_blank" rel="noopener" style="font-size:.76rem">open the site</a>':'')+'</div>'+
       '<div class="t2">'+(s.profileRefreshed?'Last refreshed '+days+' day'+(days===1?'':'s')+' ago ('+esc(fmtDay(s.profileRefreshed))+').':'Never marked refreshed.')+' Refresh it at least every 90 days.</div>'+
       '<details class="tm-det" data-k="m_'+esc(s.id)+'"'+(S.open['m_'+s.id]?' open':'')+' style="margin:.6rem 0 0"><summary>What to do on '+esc(s.name)+' ('+nDone+' of '+sp.tasks.length+' ticked)</summary><div class="in"><label class="tm-lbl">Link to your public page on this site (so Mirror can read it)</label><div class="tm-row" style="margin-top:.2rem"><input class="tm-in" style="flex:1;min-width:12rem" data-url="'+esc(s.id)+'" placeholder="https://" value="'+esc(s.url||'')+'"><button class="tm-b" data-act="savesiteurl" data-id="'+esc(s.id)+'">Save link</button></div>'+
       sp.tasks.map((t,k)=>'<label style="display:flex;gap:.55rem;align-items:flex-start;margin:.45rem 0;font-size:.84rem;color:var(--text2);line-height:1.45;cursor:pointer"><input type="checkbox" data-chg="mchk" data-id="'+esc(s.id)+'" data-k="'+k+'"'+(done[k]?' checked':'')+' style="margin-top:.2rem"><span>'+esc(t)+'</span></label>').join('')+
       (sp.note?'<div class="tm-hint" style="margin-top:.5rem">'+esc(sp.note)+'</div>':'')+'</div></details>'+
+      ((todo[s.id]||[]).length?'<div class="t2"><b style="color:var(--ac)">To do:</b></div>'+todo[s.id].map(l=>'<div class="t2">&bull; '+esc(l)+'</div>').join(''):'')+
+      ((mine[s.id]||[]).length?'<div class="t2" style="margin-top:.5rem"><b style="color:var(--ac)">Fixes and drafts for '+esc(s.name)+' ('+mine[s.id].length+'):</b></div>'+mine[s.id].map(x=>draftCard(x,false)).join(''):'')+
       '<details class="tm-det" data-k="sn_'+esc(s.id)+'"'+(S.open['sn_'+s.id]?' open':'')+' style="margin:.6rem 0 0"><summary>Page text and refresh date for Mirror'+(s.snapshotAt?' (saved '+esc(fmtDay(s.snapshotAt))+')':'')+'</summary><div class="in"><label class="tm-lbl">Last refreshed on</label><input class="tm-in" type="date" style="width:auto" data-chg="setrefreshed" data-id="'+esc(s.id)+'" value="'+(s.profileRefreshed?esc(isoDay(s.profileRefreshed)):'')+'"><label class="tm-lbl" style="margin-top:.6rem">What this page says now (copy and paste it)</label><textarea class="tm-ta" data-snap="'+esc(s.id)+'" style="min-height:90px">'+esc(s.snapshot||'')+'</textarea><div class="tm-row"><button class="tm-b pri" data-act="savesnap" data-id="'+esc(s.id)+'">Save for Mirror</button></div></div></details>'+
       '<div class="tm-row"><button class="tm-b pri" data-act="refreshed" data-id="'+esc(s.id)+'">Refreshed today</button><button class="tm-b dim" data-act="silencesite" data-id="'+esc(s.id)+'" title="Not working with this site right now. No reminders until you resume it.">Silence</button><button class="tm-b dim red" data-act="delsite" data-id="'+esc(s.id)+'">Delete</button></div></div>';
   });
@@ -9128,9 +9138,10 @@ function vMirror(){
   const opts=d.sites.map(s=>'<option>'+esc(s.name)+'</option>').join('');
   h+=det('rev','Draft a review reply','<div class="tm-fg"><div><label class="tm-lbl">Site</label><select class="tm-sel" id="rv-site">'+(opts||'<option>Listing</option>')+'</select></div><div><label class="tm-lbl">Stars</label><input class="tm-in" id="rv-stars" inputmode="numeric" placeholder="5"></div><div class="full"><label class="tm-lbl">Review text</label><textarea class="tm-ta" id="rv-text" style="min-height:80px"></textarea></div></div><div class="tm-row"><button class="tm-b" data-act="copyreview">Copy Mirror prompt</button></div>'+
     '<textarea class="tm-ta" id="rv-draft" style="min-height:80px;margin-top:.6rem" placeholder="Paste the draft reply here"></textarea><div class="tm-row"><button class="tm-b pri" data-act="addreview">Add to queue</button></div>',false);
-  h+='<div class="tm-sec">Waiting for you ('+d.mPending.length+')</div>';
-  if(!d.mPending.length)h+='<div class="tm-empty">Nothing waiting: no review replies, review requests or SEO fixes.</div>';
-  d.mPending.forEach(x=>h+=draftCard(x,false));
+  const gen=d.mPending.filter(x=>!used.has(x.id));
+  h+='<div class="tm-sec">Waiting for you ('+gen.length+')</div>';
+  if(!gen.length)h+='<div class="tm-empty">Nothing else waiting. Anything for a listing is inside that listing\'s box above.</div>';
+  gen.forEach(x=>h+=draftCard(x,false));
   return h;
 }
 
