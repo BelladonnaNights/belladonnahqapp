@@ -66,7 +66,8 @@
   var DEF = {enabled:true, songPriceCents:300, dedicationPriceCents:500, dedicationSeconds:10, dedicationMaxChars:100, songMaxChars:80, fromMaxChars:20, rateLimitMinutes:60};
   var P = new URLSearchParams(location.search);
   var slug = (P.get('v')||'').toLowerCase().replace(/[^a-z0-9-]/g,'').slice(0,40);
-  var S = Object.assign({}, DEF), VENUE = '', KIND = '';
+  var S = Object.assign({}, DEF), VENUE = '', KIND = '', FREE = false;
+  function pr(c){ return FREE ? 'FREE' : money(c); }
   var $ = function(id){ return document.getElementById(id); };
   function esc(s){ var d=document.createElement('div'); d.textContent=s==null?'':String(s); return d.innerHTML; }
   function money(c){ return '$' + (c/100).toFixed(c%100 ? 2 : 0); }
@@ -114,9 +115,9 @@
     KIND = '';
     if(!S.enabled){ $('main').innerHTML = head() + '<div class="msg">Shout-outs and requests are turned off right now.</div>'; return; }
     $('main').innerHTML = head()
-      + '<button class="choice primary" onclick="showForm(\'dedication\')"><div class="c-t">Send A Dedication <b>'+money(S.dedicationPriceCents)+'</b></div><div class="c-s">Your message on the big screen for '+S.dedicationSeconds+' seconds. Birthdays, anniversaries, shout-outs to a table.</div></button>'
-      + '<button class="choice" onclick="showForm(\'song\')"><div class="c-t">Request A Song <b>'+money(S.songPriceCents)+'</b></div><div class="c-s">Ask your host to play it in the interim music between karaoke singers.</div></button>'
-      + '<div class="note">You\'re only charged if your host approves it.</div>';
+      + '<button class="choice primary" onclick="showForm(\'dedication\')"><div class="c-t">Send A Dedication <b>'+pr(S.dedicationPriceCents)+'</b></div><div class="c-s">Your message on the big screen for '+S.dedicationSeconds+' seconds. Birthdays, anniversaries, shout-outs to a table.</div></button>'
+      + '<button class="choice" onclick="showForm(\'song\')"><div class="c-t">Request A Song <b>'+pr(S.songPriceCents)+'</b></div><div class="c-s">Ask your host to play it in the interim music between karaoke singers.</div></button>'
+      + '<div class="note">'+(FREE ? 'Free tonight, courtesy of your host! Your host approves each one.' : 'You\'re only charged if your host approves it.')+'</div>';
   }
 
   // ---- form ----
@@ -130,9 +131,9 @@
           + '<div class="prevh">Preview</div><div class="prev" id="prev"><div class="pt" id="pt"></div><div class="pf" id="pf"></div></div>'
         : '<label for="txt">Song and artist</label><input class="in" id="txt" maxlength="'+max+'" placeholder="Don\'t Stop Believin\' — Journey" oninput="upd()"><div class="cnt" id="cnt"></div>'
           + '<label for="frm">Your name (optional)</label><input class="in" id="frm" maxlength="'+S.fromMaxChars+'" placeholder="So the host can shout you out">')
-      + '<button class="btn" id="go" onclick="sendReq()">Pay '+money(ded ? S.dedicationPriceCents : S.songPriceCents)+' &amp; Send</button>'
+      + '<button class="btn" id="go" onclick="sendReq()">'+(FREE ? 'Send It' : 'Pay '+money(ded ? S.dedicationPriceCents : S.songPriceCents)+' &amp; Send')+'</button>'
       + '<div class="err" id="err"></div>'
-      + '<div class="note">Your card is only held now and charged if the host approves. If they pass, nothing is charged. One request per '+S.rateLimitMinutes+' minutes.</div>';
+      + '<div class="note">'+(FREE ? 'No payment needed tonight. ' : 'Your card is only held now and charged if the host approves. If they pass, nothing is charged. ')+'One request per '+S.rateLimitMinutes+' minutes.</div>';
     upd();
   }
   var OCC = [['birthday','Birthday'],['anniversary','Anniversary'],['congrats','Congrats'],['bachelorette','Bachelorette'],['other','Other']], OCCV = '';
@@ -159,7 +160,7 @@
     if(!txt){ err.textContent = 'Please type your message first.'; return; }
     b.disabled = true; b.textContent = 'One moment\u2026';
     call('createRequest', {type:KIND, locationId:slug, venueId:slug, text:txt, from:frm, occasion:(KIND==='dedication'?OCCV:''), deviceId:deviceId(), returnUrl: location.origin + location.pathname + '?v=' + encodeURIComponent(slug)})
-      .then(function(r){ location.href = r.url; })
+      .then(function(r){ if(r.free){ statusView(r.requestId, false); } else location.href = r.url; })
       .catch(function(e){ err.textContent = e.message; b.disabled = false; b.textContent = 'Try again'; });
   }
 
@@ -173,7 +174,7 @@
       call('requestStatus', {requestId: rid}).then(function(r){
         var m = {
           pending_payment:['Finishing up\u2026','Waiting for your payment to go through.'],
-          authorized:['Sent to your host!','They\'ll take a look shortly. Your card is only charged if they approve it, so keep an eye out.'],
+          authorized:['Sent to your host!', FREE ? 'They\'ll take a look shortly.' : 'They\'ll take a look shortly. Your card is only charged if they approve it, so keep an eye out.'],
           approved:['Approved! \ud83c\udf89','Your host said yes. '+(r.type==='dedication'?'Watch the big screen.':'Listen for it in the interim music.')],
           done:[r.type==='dedication'?'It\'s on the big screen!':'Your song was played!','Thanks for being part of tonight.'],
           rejected:['Your host passed on this one','You were not charged. Feel free to try something else.'],
@@ -194,8 +195,10 @@
   } else {
     Promise.all([
       fetch(API+'?v='+encodeURIComponent(slug)).then(function(r){ return r.ok ? r.json() : null; }).catch(function(){ return null; }),
-      fsDoc('default'), fsDoc(slug)
+      fsDoc('default'), fsDoc(slug),
+      call('freeStatus', {locationId: slug}).catch(function(){ return {free:false}; })
     ]).then(function(a){
+      FREE = !!(a[3] && a[3].free);
       VENUE = (a[0] && a[0].found && a[0].venue) ? a[0].venue : slug.replace(/-/g,' ').replace(/\b\w/g,function(c){ return c.toUpperCase(); });
       S = Object.assign({}, DEF, a[1], a[2]);
       var rid = P.get('rid');
