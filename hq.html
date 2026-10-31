@@ -1870,7 +1870,7 @@ match /agent_config/{id}  { allow read, write: if isAdmin(); }</pre>
       <div class="vm-grid vm-g3">
         <div class="form-group"><label class="form-label">Venue Name</label><input type="text" class="form-input" id="vmName" placeholder="Venue name"></div>
         <div class="form-group"><label class="form-label">Location</label><select class="form-input" id="vmLocation"></select></div>
-        <div class="form-group"><label class="form-label">Status</label><select class="form-input" id="vmStatus"><option value="active">Active (recurring gig)</option><option value="norecurring">One-offs only</option><option value="inactive">Inactive</option></select></div>
+        <div class="form-group"><label class="form-label">Status</label><select class="form-input" id="vmStatus"><option value="active">Active</option><option value="recurring">Active (recurring gig)</option><option value="norecurring">One-off only</option><option value="inactive">Inactive</option></select></div>
       </div>
     </div>
 
@@ -3184,13 +3184,29 @@ function venueSlug(name){return String(name||'').toLowerCase().replace(/[^a-z0-9
 function venueQrUrl(name){return HERE_BASE+'?v='+encodeURIComponent(venueSlug(name));}
 function venueQrSvg(url,cell){const q=qrcode(0,'M');q.addData(url);q.make();return q.createSvgTag({cellSize:cell||6,margin:0,scalable:true});}
 function openVenueQrModal(){document.getElementById('vqSearch').value='';renderVenueQrList();document.getElementById('venueQrModal').classList.add('open');}
-function venueQrVenues(){const q=(document.getElementById('vqSearch').value||'').toLowerCase().trim();return (venues||[]).filter(v=>v&&v.name&&!v.inactive&&(!q||v.name.toLowerCase().includes(q))).sort((a,b)=>a.name.localeCompare(b.name));}
+function venueQrVenues(){const q=(document.getElementById('vqSearch').value||'').toLowerCase().trim();return (venues||[]).filter(v=>v&&v.name&&(!q||v.name.toLowerCase().includes(q))).sort((a,b)=>a.name.localeCompare(b.name));}
 function renderVenueQrList(){
   const list=venueQrVenues();
   document.getElementById('vqList').innerHTML=list.length?list.map(v=>{const u=venueQrUrl(v.name);return `<div style="display:flex;align-items:center;gap:0.9rem;padding:0.6rem 0;border-bottom:1px solid var(--border);">
     <div style="width:78px;height:78px;background:#fff;padding:5px;border-radius:6px;flex:none;">${venueQrSvg(u,4)}</div>
-    <div style="flex:1;min-width:0;"><div style="font-size:0.85rem;color:var(--text);">${esc(v.name)}</div><div style="font-size:0.6rem;color:var(--text3);word-break:break-all;margin-top:0.2rem;">${esc(u)}</div></div>
-    <div style="display:flex;flex-direction:column;gap:0.3rem;"><button class="btn-sm" onclick="printVenueQr('${escAttr(v.name).replace(/'/g,"\\'")}')">Print</button><button class="btn-sm" onclick="copyVenueQr('${escAttr(v.name).replace(/'/g,"\\'")}',this)">Copy link</button></div></div>`;}).join(''):'<div class="empty-state">No venues match.</div>';
+    <div style="flex:1;min-width:0;"><div style="font-size:0.85rem;color:var(--text);">${esc(v.name)}${v.inactive?' <span style="font-size:.62rem;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;">&middot; Inactive</span>':''}</div><div style="font-size:0.6rem;color:var(--text3);word-break:break-all;margin-top:0.2rem;">${esc(u)}</div></div>
+    <div style="display:flex;flex-direction:column;gap:0.3rem;"><button class="btn-sm" title="Opens a small floating window you can drag to another screen" onclick="popVenueQr('${escAttr(v.name).replace(/'/g,"\\'")}')">Pop out</button><button class="btn-sm" onclick="printVenueQr('${escAttr(v.name).replace(/'/g,"\\'")}')">Print</button><button class="btn-sm" onclick="copyVenueQr('${escAttr(v.name).replace(/'/g,"\\'")}',this)">Copy link</button></div></div>`;}).join(''):'<div class="empty-state">No venues match.</div>';
+}
+async function popVenueQr(name){
+  const u=venueQrUrl(name);
+  const css='html,body{margin:0;height:100%;background:#fff;font-family:Georgia,serif;color:#111}body{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:14px;box-sizing:border-box;cursor:default}.b{letter-spacing:.35em;text-transform:uppercase;font-size:13px;font-weight:bold}.s{letter-spacing:.4em;text-transform:uppercase;font-size:8px;color:#777;margin-top:3px}h1{font-size:19px;margin:12px 0 10px;font-weight:normal}.qr{width:min(78vw,62vh);aspect-ratio:1/1}.qr svg{width:100%;height:100%;display:block}.c{margin-top:10px;font-size:12px;letter-spacing:.08em;line-height:1.5}';
+  const body='<div class="b">Belladonna</div><div class="s">Audio Alchemies</div><h1>'+esc(name)+'</h1><div class="qr">'+venueQrSvg(u,10)+'</div><div class="c">Scan to join in<br>Music Bingo &middot; Karaoke &middot; Trivia</div>';
+  try{
+    if(window.documentPictureInPicture){
+      const pip=await window.documentPictureInPicture.requestWindow({width:420,height:560});
+      const st=pip.document.createElement('style');st.textContent=css;pip.document.head.appendChild(st);
+      pip.document.title=name+' QR';pip.document.body.innerHTML=body;return;
+    }
+  }catch(e){}
+  const w=window.open('','vqpop_'+Date.now(),'popup=yes,width=420,height=560,menubar=no,toolbar=no,location=no,status=no,scrollbars=no,resizable=yes');
+  if(!w)return alert('Allow pop-ups for this site to use Pop out.');
+  w.document.write('<!doctype html><title>'+esc(name)+' QR</title><style>'+css+'</style>'+body+'<script>document.body.addEventListener("dblclick",function(){if(document.fullscreenElement)document.exitFullscreen();else document.documentElement.requestFullscreen&&document.documentElement.requestFullscreen();});<\/script>');
+  w.document.close();
 }
 function copyVenueQr(name,btn){const u=venueQrUrl(name);(navigator.clipboard?navigator.clipboard.writeText(u):Promise.reject()).then(()=>{btn.textContent='Copied ✓';setTimeout(()=>btn.textContent='Copy link',1500);}).catch(()=>prompt('Copy this link:',u));}
 function printVenueQr(onlyName){
@@ -6143,7 +6159,7 @@ function renderVenueManage(){
     // each with a dropdown that changes the PERMANENT host (a one-off fill-in is done from the
     // This Week dashboard or the Planner). Venues with no Planner night keep the old default host.
     const hostLine=v.host?`<div style="font-size:0.68rem;color:var(--gold);margin-top:0.4rem;">Default host: ${esc(v.host)}</div>`:'';
-    return `<div class="venue-manage-card"${v.inactive?' style="opacity:0.55;"':(v.noRecurring?' style="opacity:0.8;"':'')}><div class="venue-manage-header"><div class="venue-manage-name">${v.name}${v.inactive?' <span style="font-size:0.62rem;color:var(--text4);font-weight:400;text-transform:uppercase;letter-spacing:0.08em;">· Inactive</span>':(v.noRecurring?' <span style="font-size:0.62rem;color:var(--text3);font-weight:400;text-transform:uppercase;letter-spacing:0.08em;">· No recurring gig</span>':'')}${v.locationId?` <span style="font-size:0.65rem;color:var(--text3);font-weight:400;">· ${locationLabel(v.locationId)}</span>`:''}</div><div style="display:flex;gap:0.4rem;align-items:center;"><button class="btn-sm modal-history-btn" style="padding:0.3rem 0.6rem;font-size:0.6rem;" onclick="openVenueHistoryModal('${v.id}')">History</button><button class="action-btn edit" onclick="openVenueModal('${v.id}')">✎</button><button class="action-btn delete" onclick="deleteVenue('${v.id}')">✕</button></div></div><div class="venue-gig-tags">${(v.gigs||[]).map(g=>`<span class="venue-gig-tag ${gigClass(g)}">${g}</span>`).join('')}</div>${v.venueId?`<div style="font-size:0.6rem;color:var(--text4);margin-top:0.3rem;">Venue ID: ${esc(v.venueId)}</div>`:''}${payLine}${slotsLine}${hostLine}${window.hqBadges?window.hqBadges(v):''}${window.hqAgr?window.hqAgr(v):''}${v.notes?`<div style="font-size:0.81rem;color:var(--text3);margin-top:0.5rem;">${v.notes}</div>`:''}</div>`;
+    return `<div class="venue-manage-card"${v.inactive?' style="opacity:0.55;"':(v.noRecurring?' style="opacity:0.8;"':'')}><div class="venue-manage-header"><div class="venue-manage-name">${v.name}${v.inactive?' <span style="font-size:0.62rem;color:var(--text4);font-weight:400;text-transform:uppercase;letter-spacing:0.08em;">· Inactive</span>':(v.noRecurring?' <span style="font-size:0.62rem;color:var(--text3);font-weight:400;text-transform:uppercase;letter-spacing:0.08em;">· One-off only</span>':(v.recurring?' <span style="font-size:0.62rem;color:var(--text3);font-weight:400;text-transform:uppercase;letter-spacing:0.08em;">· Recurring gig</span>':''))}${v.locationId?` <span style="font-size:0.65rem;color:var(--text3);font-weight:400;">· ${locationLabel(v.locationId)}</span>`:''}</div><div style="display:flex;gap:0.4rem;align-items:center;"><button class="btn-sm modal-history-btn" style="padding:0.3rem 0.6rem;font-size:0.6rem;" onclick="openVenueHistoryModal('${v.id}')">History</button><button class="action-btn edit" onclick="openVenueModal('${v.id}')">✎</button><button class="action-btn delete" onclick="deleteVenue('${v.id}')">✕</button></div></div><div class="venue-gig-tags">${(v.gigs||[]).map(g=>`<span class="venue-gig-tag ${gigClass(g)}">${g}</span>`).join('')}</div>${v.venueId?`<div style="font-size:0.6rem;color:var(--text4);margin-top:0.3rem;">Venue ID: ${esc(v.venueId)}</div>`:''}${payLine}${slotsLine}${hostLine}${window.hqBadges?window.hqBadges(v):''}${window.hqAgr?window.hqAgr(v):''}${v.notes?`<div style="font-size:0.81rem;color:var(--text3);margin-top:0.5rem;">${v.notes}</div>`:''}</div>`;
   }).join('');
 }
 const VENUE_GIG_SLOT_DAYS=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
@@ -6230,7 +6246,7 @@ function openVenueModal(id=null){
   try{renderVenueLeadInfo(id);}catch(e){}
   {const o=document.getElementById('vmAll');if(o){o.innerHTML=(venue&&window.hqVenueAll)?window.hqVenueAll(venue):'';o.dataset.vid=venue?venue.id:'';}}
   {const o=document.getElementById('vmOffers');if(o)o.innerHTML=(venue&&typeof offersBlock==='function')?offersBlock(venue.id,venue.name,'vm'):'<div style="font-size:.8rem;opacity:.7">Save the venue first, then reopen it to fill in what it offers.</div>';}
-  document.getElementById('vmInactive').checked=!!(venue&&venue.inactive);document.getElementById('vmStatus').value=venue?(venue.inactive?'inactive':(venue.noRecurring?'norecurring':'active')):'active';
+  document.getElementById('vmInactive').checked=!!(venue&&venue.inactive);document.getElementById('vmStatus').value=venue?(venue.inactive?'inactive':(venue.noRecurring?'norecurring':(venue.recurring?'recurring':'active'))):'active';
   const amounts=(venue&&venue.payAmounts)||{};
   VENUE_AMOUNT_KINDS.forEach(k=>{document.getElementById('vmAmount'+k).value=amounts[k]||'';});
   document.getElementById('vmPayMethod').value=venue?venue.payMethod||'':'';
@@ -6353,7 +6369,7 @@ function saveVenue(){
   const notes=document.getElementById('vmNotes').value.trim();
   const perks=document.getElementById('vmPerks').value.trim();
   const locationId=document.getElementById('vmLocation').value;
-  const stat=document.getElementById('vmStatus').value;const inactive=stat==='inactive';const noRecurring=stat==='norecurring';
+  const stat=document.getElementById('vmStatus').value;const inactive=stat==='inactive';const noRecurring=stat==='norecurring';const recurring=stat==='recurring';
   const payAmounts=readVenueAmounts();
   const payMethod=document.getElementById('vmPayMethod').value;
   const startDate=document.getElementById('vmStartDate').value;
@@ -6366,13 +6382,13 @@ function saveVenue(){
     const v=venues.find(x=>x.id===editVenueId);
     if(v){
       const prev={payAmounts:Object.assign({},v.payAmounts||{}),payMethod:v.payMethod||'',startDate:v.startDate||''};
-      v.name=name;v.gigs=gigs;v.notes=notes;v.perks=perks;v.locationId=locationId;v.inactive=inactive;v.noRecurring=noRecurring;
+      v.name=name;v.gigs=gigs;v.notes=notes;v.perks=perks;v.locationId=locationId;v.inactive=inactive;v.noRecurring=noRecurring;v.recurring=recurring;
       v.payAmounts=payAmounts;v.payMethod=payMethod;v.startDate=startDate;v.gigSlots=gigSlots.filter(x=>x.status!=='finished');
       v.venueId=venueId;v.gatewayEmail=gatewayEmail;v.host=host;Object.assign(v,det);
       logVenueHistoryDiff(v,prev,{payAmounts,payMethod,startDate},today);
     }
   }else{
-    const v={id:Date.now().toString(),name,gigs,notes,perks,locationId,inactive,noRecurring,payAmounts,payMethod,startDate,gigSlots:gigSlots.filter(x=>x.status!=='finished'),venueId,gatewayEmail,host,history:[]};
+    const v={id:Date.now().toString(),name,gigs,notes,perks,locationId,inactive,noRecurring,recurring,payAmounts,payMethod,startDate,gigSlots:gigSlots.filter(x=>x.status!=='finished'),venueId,gatewayEmail,host,history:[]};
     const anyAmount=VENUE_AMOUNT_KINDS.some(k=>payAmounts[k]);
     if(startDate||anyAmount||payMethod){
       const amtText=VENUE_AMOUNT_KINDS.filter(k=>payAmounts[k]).map(k=>(k==='Events'?'Event':k)+' '+payAmounts[k]).join(', ');
