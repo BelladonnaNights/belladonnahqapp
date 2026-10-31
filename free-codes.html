@@ -100,10 +100,13 @@
   }
   function venueName(slug){ if(slug==='*') return 'ALL venues (free-for-all)'; for(var i=0;i<VENUES.length;i++) if(VENUES[i].slug===slug) return VENUES[i].name; return slug; }
   function nice(d){ var p=d.split('-'); return new Date(+p[0],+p[1]-1,+p[2]).toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric',year:'numeric'}); }
+  var WORDS = ['NOIR','VIBE','LUSH','DUSK','ROOK','CROW','SING','PLAY','KEY','HEX','JINX','ASH','SPIN','LINK','GLOW','BONE','RISK','COIN','SEEK','VEIL','INK','WING','LOST','MUTE','GRIT','VOID','DARK','PURE','RARE','VAMP'];
   function gen(){
-    var al = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789', r = ''; for(var i=0;i<4;i++) r += al[Math.floor(Math.random()*al.length)];
-    var d = ($('dt').value||todayStr()).split('-'); var mon = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'][+d[1]-1];
-    $('cd').value = mon + d[2] + '-' + r;
+    var d = ($('dt').value||todayStr()).split('-'), day = String(+d[2]);
+    var used = {}; CODES.forEach(function(c){ used[String(c.code).toUpperCase()] = 1; });
+    var pool = WORDS.slice().sort(function(){ return Math.random()-.5; });
+    for(var i=0;i<pool.length;i++){ var c = pool[i]+'-'+day; if(!used[c]){ $('cd').value = c; return; } }
+    $('cd').value = pool[0]+Math.floor(Math.random()*90+10)+'-'+day;
   }
   function view(){
     var opts = '<option value="">Choose a venue&hellip;</option><option value="*">ALL venues (free-for-all day)</option>' + VENUES.map(function(v){ return '<option value="'+esc(v.slug)+'">'+esc(v.name)+'</option>'; }).join('');
@@ -121,7 +124,7 @@
     $('main').innerHTML =
       '<label for="vn">Venue</label><select class="in" id="vn">'+opts+'</select>'
       + '<label for="dt">Night</label><input class="in" type="date" id="dt" value="'+todayStr()+'">'
-      + '<label for="cd">Code</label><div class="row2"><input class="in" id="cd" maxlength="30" placeholder="e.g. NOV07-K7XQ" autocapitalize="characters" style="text-transform:uppercase"><button class="btn gen" onclick="gen()">Make One</button></div>'
+      + '<label for="cd">Code</label><div class="row2"><input class="in" id="cd" maxlength="30" placeholder="e.g. INK-30 (word + the day)" autocapitalize="characters" style="text-transform:uppercase"><button class="btn gen" onclick="gen()">Make One</button></div>'
       + '<button class="btn" id="go" onclick="addCode()">Add Code</button><div class="err" id="err"></div><div class="ok" id="okm"></div>'
       + '<div class="note">Give the code to your host. They type it into Belladonna Signal &rarr; Shout &rarr; More Settings &rarr; Free Night Code. Free for that venue until 3 AM after the night you pick.</div>'
       + '<div class="codes">'
