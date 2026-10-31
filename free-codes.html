@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Free Night Codes — Belladonna</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Josefin+Sans:wght@200;300;400;600&family=Bebas+Neue&display=swap');
+  *{margin:0;padding:0;box-sizing:border-box;}
+  :root{--bg:#000;--surface:#0d0d0d;--surface2:#141414;--border:rgba(201,169,110,0.2);--border2:rgba(201,169,110,0.4);--gold:#c9a96e;--text:#f0ece0;--text2:#b0a890;--text3:#8a8272;--red:#e0705f;--green:#6fcf97;}
+  body{background:var(--bg);color:var(--text);font-family:'Josefin Sans',sans-serif;font-weight:300;min-height:100vh;letter-spacing:0.04em;}
+  .page{max-width:520px;margin:0 auto;padding:2.4rem 1.3rem 3rem;}
+  .hub-brand{font-family:'Playfair Display',serif;font-size:1.7rem;font-weight:700;color:var(--gold);letter-spacing:0.18em;text-transform:uppercase;text-align:center;}
+  .hub-sub{font-size:0.68rem;letter-spacing:0.45em;text-transform:uppercase;color:var(--text3);margin-top:0.2rem;text-align:center;}
+  .hub-ornament{color:#3a3428;font-family:'Cormorant Garamond',serif;font-size:1.05rem;letter-spacing:0.4em;margin:0.7rem 0 1.5rem;text-align:center;}
+  .venue{font-family:'Playfair Display',serif;font-size:1.7rem;color:var(--text);text-align:center;margin-bottom:0.2rem;}
+  .chg{display:block;margin:0 auto 1.6rem;background:none;border:none;color:var(--text3);font-family:'Cormorant Garamond',serif;font-style:italic;font-size:.95rem;letter-spacing:.04em;cursor:pointer;text-decoration:underline;text-decoration-color:rgba(138,130,114,.4);text-underline-offset:3px}
+  .msg{text-align:center;color:var(--text2);line-height:1.7;font-size:.9rem;margin:2rem 0}
+  .choice{display:block;width:100%;text-align:left;cursor:pointer;background:var(--surface);border:1px solid var(--border2);border-radius:14px;padding:1.2rem 1.2rem;margin-bottom:1rem;color:var(--text);font-family:inherit;letter-spacing:inherit}
+  .choice:active,.choice:hover{background:rgba(201,169,110,.10)}
+  .choice .c-t{font-family:'Playfair Display',serif;font-size:1.3rem;color:var(--gold);letter-spacing:.05em;display:flex;justify-content:space-between;align-items:center}
+  .choice .c-t b{font-family:'Josefin Sans',sans-serif;font-weight:600;font-size:.95rem;letter-spacing:.08em}
+  .choice .c-s{font-size:.8rem;color:var(--text2);margin-top:.35rem;line-height:1.5}
+  .choice.primary{border-color:var(--gold);background:rgba(201,169,110,.08)}
+  .back{background:none;border:none;color:var(--text3);font-family:inherit;letter-spacing:.14em;text-transform:uppercase;font-size:.68rem;cursor:pointer;margin-bottom:1rem;padding:.2rem 0}
+  label{display:block;font-size:.66rem;letter-spacing:.18em;text-transform:uppercase;color:var(--text3);margin:1rem 0 .4rem}
+  .in{width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:.8rem 1rem;color:var(--text);font-family:inherit;font-size:1rem;letter-spacing:.03em;outline:none}
+  .in:focus{border-color:var(--gold)}
+  textarea.in{resize:none;min-height:5.5rem;line-height:1.4}
+  .cnt{text-align:right;font-size:.66rem;letter-spacing:.14em;color:var(--text3);margin-top:.3rem}
+  .cnt.warn{color:var(--red)}
+  .btn{display:block;width:100%;text-align:center;background:rgba(201,169,110,.14);color:var(--gold);border:1px solid var(--gold);border-radius:10px;padding:1rem;margin-top:1.4rem;font-family:'Josefin Sans',sans-serif;font-size:.82rem;letter-spacing:.2em;text-transform:uppercase;font-weight:600;cursor:pointer}
+  .btn:disabled{opacity:.45;cursor:default}
+  .note{font-size:.78rem;color:var(--text3);line-height:1.6;margin-top:.9rem;text-align:center}
+  .err{font-size:.85rem;color:var(--red);line-height:1.5;margin-top:1rem;text-align:center}
+  .prev{margin-top:.4rem;border:1px solid var(--border);border-radius:12px;background:#050505;aspect-ratio:16/9;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:6% 7%;overflow:hidden;text-align:center}
+  .prev .pt{font-family:'Bebas Neue',sans-serif;line-height:1.02;letter-spacing:.03em;background:linear-gradient(180deg,#f3dc9a 0%,#c9a96e 50%,#9c7a38 100%);-webkit-background-clip:text;background-clip:text;color:transparent;word-break:break-word;width:100%}
+  .prev .pf{font-family:'Bebas Neue',sans-serif;letter-spacing:.08em;color:var(--gold);opacity:.85;margin-top:.5em;font-size:1.1rem}
+  .prevh{font-size:.6rem;letter-spacing:.2em;text-transform:uppercase;color:var(--text3);margin-top:1.2rem}
+  .status{text-align:center;margin:1.5rem 0}
+  .status .big{font-family:'Playfair Display',serif;font-size:1.5rem;color:var(--gold);margin-bottom:.6rem}
+  .status .sm{font-size:.88rem;color:var(--text2);line-height:1.7}
+  .srch{width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:.8rem 1rem;color:var(--text);font-family:inherit;font-size:.9rem;margin-bottom:.9rem;outline:none}
+  .vrow{display:flex;justify-content:space-between;align-items:center;width:100%;text-align:left;cursor:pointer;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:.9rem 1rem;margin-bottom:.55rem;color:var(--text);font-family:'Playfair Display',serif;font-size:1.05rem}
+  .vrow.cur{border-color:var(--gold);color:var(--gold)}
+  .occ{display:flex;flex-wrap:wrap;gap:.5rem}
+  .occ label{display:flex;align-items:center;gap:.5rem;margin:0;padding:.55rem .8rem;border:1px solid var(--border2);border-radius:999px;background:var(--surface2);font-size:.78rem;letter-spacing:.08em;text-transform:none;color:var(--text2);cursor:pointer}
+  .occ input{accent-color:#c9a96e;width:1rem;height:1rem}
+  .occ label.on{border-color:var(--gold);color:var(--gold);background:rgba(201,169,110,.1)}
+  .foot{margin-top:2rem;text-align:center;font-size:.6rem;letter-spacing:.2em;text-transform:uppercase;color:var(--text3)}
+  .page{max-width:620px}
+  select.in{appearance:none;-webkit-appearance:none;background-image:linear-gradient(45deg,transparent 50%,#c9a96e 50%),linear-gradient(135deg,#c9a96e 50%,transparent 50%);background-position:calc(100% - 18px) 1.2em,calc(100% - 13px) 1.2em;background-size:5px 5px;background-repeat:no-repeat}
+  .row2{display:flex;gap:.6rem}.row2>*{flex:1}
+  .gen{flex:0 0 auto;width:auto;margin-top:0;padding:.8rem 1rem;font-size:.7rem}
+  .codes{margin-top:2rem}
+  .ch{font-family:'Playfair Display',serif;font-size:1.1rem;color:var(--gold);letter-spacing:.12em;text-transform:uppercase;margin-bottom:.8rem}
+  .crow{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:.9rem 1rem;margin-bottom:.7rem}
+  .crow.live{border-color:var(--gold);background:rgba(201,169,110,.07)}
+  .crow.old{opacity:.5}
+  .crow .cd{font-family:'Josefin Sans',sans-serif;font-weight:600;font-size:1.15rem;letter-spacing:.14em;color:var(--text)}
+  .crow .cm{font-size:.78rem;color:var(--text2);margin-top:.25rem;line-height:1.5}
+  .crow .tag{display:inline-block;font-size:.6rem;letter-spacing:.16em;text-transform:uppercase;border:1px solid var(--border2);border-radius:999px;padding:.12rem .55rem;margin-left:.5rem;color:var(--text3);vertical-align:middle}
+  .crow.live .tag{color:var(--gold);border-color:var(--gold)}
+  .acts{display:flex;gap:.5rem;margin-top:.7rem}
+  .sm2{flex:0 0 auto;width:auto;margin:0;padding:.5rem .9rem;font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;background:none;color:var(--text2);border:1px solid var(--border2);border-radius:8px;cursor:pointer;font-family:inherit}
+  .sm2.del{color:var(--red);border-color:rgba(224,112,95,.5)}
+  .ok{font-size:.85rem;color:#7fcf8f;line-height:1.5;margin-top:1rem;text-align:center}
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="hub-brand">Belladonna</div>
+  <div class="hub-sub">Free Night Codes</div>
+  <div class="hub-ornament">&#10022; &#10022; &#10022;</div>
+  <div id="main"><div class="msg">Checking your sign-in&hellip;</div></div>
+  <div class="foot" id="who">belladonnanights.com</div>
+</div>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-functions-compat.js"></script>
+<script>
+  var GATEWAY = 'https://belladonnanights.github.io/belladonna-gateway/accounts.html', APPKEY = 'hq', SESSION_MS = 6*60*60*1000;
+  var RTDB = 'https://belladonna-hq-default-rtdb.firebaseio.com/';
+  function $(i){ return document.getElementById(i); }
+  function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+  function slugOf(name){ return String(name||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,''); }
+  function toGateway(){ location.href = GATEWAY + '?return=' + encodeURIComponent(location.href) + '&app=' + APPKEY; }
+  function hasSession(){ try{ var s = JSON.parse(localStorage.getItem('gatewaySession_'+APPKEY)||'null'); return !!s && (Date.now()-s.ts) < SESSION_MS; }catch(e){ return false; } }
+  var VENUES = [], CODES = [], NOW = Date.now(), fn = null;
+
+  function todayStr(){ var d = new Date(); return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2); }
+  function loadVenues(cb){
+    var paths = ['trivia/planner/venues','bingo/landing/venues','trivia/planner/karaokeVenues'], seen = {}, left = paths.length;
+    function done(){ if(--left) return; VENUES.sort(function(a,b){ return a.name.localeCompare(b.name); }); cb(); }
+    paths.forEach(function(p){
+      fetch(RTDB+p+'.json').then(function(r){ if(!r.ok) throw 0; return r.json(); }).then(function(o){
+        Object.keys(o||{}).forEach(function(k){ var v=o[k]; if(!v||!v.name||v.inactive) return; var sl=slugOf(v.name); if(sl && !seen[sl]){ seen[sl]=1; VENUES.push({name:String(v.name).trim(), slug:sl}); } });
+      }).catch(function(){}).then(done);
+    });
+  }
+  function venueName(slug){ if(slug==='*') return 'ALL venues (free-for-all)'; for(var i=0;i<VENUES.length;i++) if(VENUES[i].slug===slug) return VENUES[i].name; return slug; }
+  function nice(d){ var p=d.split('-'); return new Date(+p[0],+p[1]-1,+p[2]).toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric',year:'numeric'}); }
+  function gen(){
+    var al = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789', r = ''; for(var i=0;i<4;i++) r += al[Math.floor(Math.random()*al.length)];
+    var d = ($('dt').value||todayStr()).split('-'); var mon = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'][+d[1]-1];
+    $('cd').value = mon + d[2] + '-' + r;
+  }
+  function view(){
+    var opts = '<option value="">Choose a venue&hellip;</option><option value="*">ALL venues (free-for-all day)</option>' + VENUES.map(function(v){ return '<option value="'+esc(v.slug)+'">'+esc(v.name)+'</option>'; }).join('');
+    var live = [], up = [], old = [];
+    CODES.forEach(function(c){
+      var start = new Date(c.date+'T00:00:00').getTime();
+      if(c.untilMs <= NOW) old.push(c); else if(NOW >= start) live.push(c); else up.push(c);
+    });
+    function row(c, kind){
+      var tag = kind==='live' ? 'Good tonight' : kind==='up' ? 'Upcoming' : 'Expired';
+      return '<div class="crow '+(kind==='live'?'live':kind==='old'?'old':'')+'"><div class="cd">'+esc(c.code)+'<span class="tag">'+tag+'</span></div>'
+        + '<div class="cm">'+esc(venueName(c.locationId))+' &middot; '+esc(nice(c.date))+' (works until 3 AM after)</div>'
+        + '<div class="acts"><button class="sm2" onclick="copyCode(\''+esc(c.code)+'\')">Copy</button><button class="sm2 del" onclick="delCode(\''+esc(c.code)+'\')">Delete</button></div></div>';
+    }
+    $('main').innerHTML =
+      '<label for="vn">Venue</label><select class="in" id="vn">'+opts+'</select>'
+      + '<label for="dt">Night</label><input class="in" type="date" id="dt" value="'+todayStr()+'">'
+      + '<label for="cd">Code</label><div class="row2"><input class="in" id="cd" maxlength="30" placeholder="e.g. NOV07-K7XQ" autocapitalize="characters" style="text-transform:uppercase"><button class="btn gen" onclick="gen()">Make One</button></div>'
+      + '<button class="btn" id="go" onclick="addCode()">Add Code</button><div class="err" id="err"></div><div class="ok" id="okm"></div>'
+      + '<div class="note">Give the code to your host. They type it into Belladonna Signal &rarr; Shout &rarr; More Settings &rarr; Free Night Code. Free for that venue until 3 AM after the night you pick.</div>'
+      + '<div class="codes">'
+      + (live.length ? '<div class="ch">Good tonight</div>'+live.map(function(c){ return row(c,'live'); }).join('') : '')
+      + (up.length ? '<div class="ch">Upcoming</div>'+up.map(function(c){ return row(c,'up'); }).join('') : '')
+      + (old.length ? '<div class="ch">Expired</div>'+old.map(function(c){ return row(c,'old'); }).join('')+'<button class="sm2" onclick="clearOld()">Clear Expired</button>' : '')
+      + (!CODES.length ? '<div class="msg">No codes yet.</div>' : '') + '</div>';
+  }
+  function apply(r){ CODES = r.codes || []; NOW = r.now || Date.now(); view(); }
+  function run(data, okMsg){
+    var err = $('err'), ok = $('okm'); if(err) err.textContent = ''; if(ok) ok.textContent = '';
+    return fn(data).then(function(res){ apply(res.data); if(okMsg){ $('okm').textContent = okMsg; } }).catch(function(e){ var el=$('err'); if(el) el.textContent = e.message || 'Something went wrong.'; });
+  }
+  function addCode(){
+    var v = $('vn').value, d = $('dt').value, c = ($('cd').value||'').trim();
+    if(!v){ $('err').textContent = 'Choose a venue (or ALL venues).'; return; }
+    if(!c){ $('err').textContent = 'Type a code, or press Make One.'; return; }
+    var b = $('go'); b.disabled = true;
+    run({action:'add', locationId:v, date:d, code:c}, 'Added. Tell your host: '+c.toUpperCase()).then(function(){ var g=$('go'); if(g) g.disabled=false; });
+  }
+  function delCode(c){ if(confirm('Delete '+c+'? It stops working right away.')) run({action:'delete', code:c}); }
+  function clearOld(){ run({action:'clearExpired'}); }
+  function copyCode(c){ try{ navigator.clipboard.writeText(c); }catch(e){} var ok=$('okm'); if(ok) ok.textContent = 'Copied '+c; }
+
+  // ---- start (same Gateway sign-in as HQ) ----
+  if(!hasSession()) toGateway();
+  else {
+    firebase.initializeApp({apiKey:"AIzaSyCIfAE1JGHsUGzzVH2pz1Vyj5b5OhA0tDQ",authDomain:"belladonna-hq.firebaseapp.com",projectId:"belladonna-hq",appId:"1:1021873183587:web:def283bb7b5ca48e4f9156"});
+    fn = firebase.functions().httpsCallable('manageFreeCodes');
+    firebase.auth().onAuthStateChanged(function(u){
+      if(!u){ toGateway(); return; }
+      $('who').textContent = 'Signed in as ' + (u.email||'account');
+      loadVenues(function(){ view(); run({action:'list'}); });
+    });
+  }
+</script>
+</body>
+</html>
