@@ -86,7 +86,7 @@
   function slugOf(name){ return String(name||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,''); }
   function toGateway(){ location.href = GATEWAY + '?return=' + encodeURIComponent(location.href) + '&app=' + APPKEY; }
   function hasSession(){ try{ var s = JSON.parse(localStorage.getItem('gatewaySession_'+APPKEY)||'null'); return !!s && (Date.now()-s.ts) < SESSION_MS; }catch(e){ return false; } }
-  var VENUES = [], CODES = [], NOW = Date.now(), fn = null;
+  var VENUES = [], CODES = [], REQS = [], NOW = Date.now(), fn = null;
 
   function todayStr(){ var d = new Date(); return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2); }
   function loadVenues(cb){
@@ -108,6 +108,27 @@
     for(var i=0;i<pool.length;i++){ var c = pool[i]+'-'+day; if(!used[c]){ $('cd').value = c; return; } }
     $('cd').value = pool[0]+Math.floor(Math.random()*90+10)+'-'+day;
   }
+  function genCode(dateStr){
+    var day = String(+String(dateStr).split('-')[2]), used = {}; CODES.forEach(function(c){ used[String(c.code).toUpperCase()] = 1; });
+    var pool = WORDS.slice().sort(function(){ return Math.random()-.5; });
+    for(var i=0;i<pool.length;i++){ var c = pool[i]+'-'+day; if(!used[c]) return c; }
+    return pool[0]+Math.floor(Math.random()*90+10)+'-'+day;
+  }
+  function reqHtml(){
+    if(!REQS.length) return '';
+    return '<div class="ch">Hosts asking for a free night ('+REQS.length+')</div>' + REQS.map(function(r){
+      var nm = r.venueName || venueName(r.locationId);
+      return '<div class="crow live"><div class="cd">'+esc(nm)+'<span class="tag">Waiting</span></div>'
+        + '<div class="cm">'+esc(nice(r.date))+(r.note?' &middot; '+esc(r.note):'')+'</div>'
+        + '<div class="acts"><button class="sm2" onclick="approveReq(\''+esc(r.id)+'\')">Approve</button><button class="sm2 del" onclick="denyReq(\''+esc(r.id)+'\')">Deny</button></div></div>';
+    }).join('') + '<div class="note" style="margin-bottom:1.6rem">Approving makes a code for that venue and night and turns the free night on by itself. Your host does not have to type anything.</div>';
+  }
+  function approveReq(id){
+    var r = REQS.filter(function(x){ return x.id===id; })[0]; if(!r) return;
+    var code = genCode(r.date);
+    run({action:'approveRequest', id:id, code:code}, 'Approved '+(r.venueName||venueName(r.locationId))+' for '+nice(r.date)+'. It switches on by itself (code '+code+').');
+  }
+  function denyReq(id){ if(confirm('Turn this request down?')) run({action:'denyRequest', id:id}); }
   function view(){
     var opts = '<option value="">Choose a venue&hellip;</option><option value="*">ALL venues (free-for-all day)</option>' + VENUES.map(function(v){ return '<option value="'+esc(v.slug)+'">'+esc(v.name)+'</option>'; }).join('');
     var live = [], up = [], old = [];
@@ -121,7 +142,7 @@
         + '<div class="cm">'+esc(venueName(c.locationId))+' &middot; '+esc(nice(c.date))+' (works until 3 AM after)</div>'
         + '<div class="acts"><button class="sm2" onclick="copyCode(\''+esc(c.code)+'\')">Copy</button><button class="sm2 del" onclick="delCode(\''+esc(c.code)+'\')">Delete</button></div></div>';
     }
-    $('main').innerHTML =
+    $('main').innerHTML = reqHtml() +
       '<label for="vn">Venue</label><select class="in" id="vn">'+opts+'</select>'
       + '<label for="dt">Night</label><input class="in" type="date" id="dt" value="'+todayStr()+'">'
       + '<label for="cd">Code</label><div class="row2"><input class="in" id="cd" maxlength="30" placeholder="e.g. INK-30 (word + the day)" autocapitalize="characters" style="text-transform:uppercase"><button class="btn gen" onclick="gen()">Make One</button></div>'
@@ -133,7 +154,7 @@
       + (old.length ? '<div class="ch">Expired</div>'+old.map(function(c){ return row(c,'old'); }).join('')+'<button class="sm2" onclick="clearOld()">Clear Expired</button>' : '')
       + (!CODES.length ? '<div class="msg">No codes yet.</div>' : '') + '</div>';
   }
-  function apply(r){ CODES = r.codes || []; NOW = r.now || Date.now(); view(); }
+  function apply(r){ REQS = r.requests || []; CODES = r.codes || []; NOW = r.now || Date.now(); view(); }
   function run(data, okMsg){
     var err = $('err'), ok = $('okm'); if(err) err.textContent = ''; if(ok) ok.textContent = '';
     return fn(data).then(function(res){ apply(res.data); if(okMsg){ $('okm').textContent = okMsg; } }).catch(function(e){ var el=$('err'); if(el) el.textContent = e.message || 'Something went wrong.'; });
