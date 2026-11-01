@@ -90,11 +90,11 @@
 
   function todayStr(){ var d = new Date(); return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2); }
   function loadVenues(cb){
-    var paths = ['trivia/planner/venues','bingo/landing/venues','trivia/planner/karaokeVenues'], seen = {}, left = paths.length;
+    var paths = ['venues'], seen = {}, left = paths.length;
     function done(){ if(--left) return; VENUES.sort(function(a,b){ return a.name.localeCompare(b.name); }); cb(); }
     paths.forEach(function(p){
       fetch(RTDB+p+'.json').then(function(r){ if(!r.ok) throw 0; return r.json(); }).then(function(o){
-        Object.keys(o||{}).forEach(function(k){ var v=o[k]; if(!v||!v.name||v.inactive) return; var sl=slugOf(v.name); if(sl && !seen[sl]){ seen[sl]=1; VENUES.push({name:String(v.name).trim(), slug:sl}); } });
+        Object.keys(o||{}).forEach(function(k){ var v=o[k]; if(!v||!v.name||v.inactive||v.active===false) return; var sl=slugOf(v.name); if(sl && !seen[sl]){ seen[sl]=1; VENUES.push({name:String(v.name).trim(), slug:sl}); } });
       }).catch(function(){}).then(done);
     });
   }
