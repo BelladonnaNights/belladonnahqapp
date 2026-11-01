@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#000000">
+<title>Leadnote — Belladonna</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Josefin+Sans:wght@200;300;400;600&display=swap');
+  *{margin:0;padding:0;box-sizing:border-box;}
+  :root{--bg:#000;--surface:#0d0d0d;--surface2:#141414;--border:rgba(201,169,110,0.2);--border2:rgba(201,169,110,0.4);--gold:#c9a96e;--text:#f0ece0;--text2:#b0a890;--text3:#8a8272;--red:#e0705f;--green:#6fcf97;}
+  body{background:var(--bg);color:var(--text);font-family:'Josefin Sans',sans-serif;font-weight:300;min-height:100vh;letter-spacing:0.04em;}
+  .page{max-width:560px;margin:0 auto;padding:2rem 1.2rem 3rem;}
+  .brand{font-family:'Playfair Display',serif;font-size:1.7rem;font-weight:700;color:var(--gold);letter-spacing:0.18em;text-transform:uppercase;text-align:center;}
+  .sub{font-size:0.68rem;letter-spacing:0.45em;text-transform:uppercase;color:var(--text3);margin-top:0.2rem;text-align:center;}
+  .orn{color:#3a3428;font-family:'Cormorant Garamond',serif;font-size:1.05rem;letter-spacing:0.4em;margin:0.7rem 0 1.2rem;text-align:center;}
+  h1{font-family:'Playfair Display',serif;font-weight:600;font-size:1.5rem;color:var(--text);text-align:center;margin-bottom:.4rem}
+  .hint{font-size:.82rem;color:var(--text2);line-height:1.6;text-align:center;margin-bottom:1.1rem}
+  textarea{width:100%;min-height:15rem;background:var(--surface2);border:1px solid var(--border2);border-radius:12px;padding:1rem;color:var(--text);font-family:inherit;font-size:1.05rem;line-height:1.5;letter-spacing:.02em;outline:none;resize:vertical}
+  textarea:focus{border-color:var(--gold)}
+  .btn{display:block;width:100%;text-align:center;background:rgba(201,169,110,.14);color:var(--gold);border:1px solid var(--gold);border-radius:10px;padding:1rem;margin-top:1rem;font-family:inherit;font-size:.82rem;letter-spacing:.2em;text-transform:uppercase;font-weight:600;cursor:pointer}
+  .btn:disabled{opacity:.45;cursor:default}
+  .msg{text-align:center;color:var(--text2);line-height:1.7;font-size:.9rem;margin:1rem 0}
+  .ok{color:var(--green)} .err{color:var(--red)}
+  .h2{font-size:.66rem;letter-spacing:.22em;text-transform:uppercase;color:var(--text3);margin:2rem 0 .7rem}
+  .note{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:.8rem .95rem;margin-bottom:.6rem}
+  .note .t{font-size:.9rem;color:var(--text);line-height:1.5;white-space:pre-wrap;word-break:break-word}
+  .note .m{display:flex;justify-content:space-between;gap:.6rem;margin-top:.5rem;font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;color:var(--text3)}
+  .tag{color:var(--gold)} .tag.q{color:var(--red)} .tag.s{color:var(--green)}
+  .qa{margin-top:.5rem;font-size:.82rem;color:var(--red);line-height:1.5}
+  .foot{margin-top:2rem;text-align:center;font-size:.6rem;letter-spacing:.2em;text-transform:uppercase;color:var(--text3)}
+  a{color:var(--gold)}
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="brand">Belladonna</div>
+  <div class="sub">Entertainment</div>
+  <div class="orn">&#10022; &#10022; &#10022;</div>
+  <div id="main"><div class="msg">One moment&hellip;</div></div>
+  <div class="foot">belladonnanights.com</div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+<script>
+  firebase.initializeApp({apiKey:"AIzaSyCIfAE1JGHsUGzzVH2pz1Vyj5b5OhA0tDQ",authDomain:"belladonna-hq.firebaseapp.com",databaseURL:"https://belladonna-hq-default-rtdb.firebaseio.com",projectId:"belladonna-hq",storageBucket:"belladonna-hq.firebasestorage.app",messagingSenderId:"1021873183587",appId:"1:1021873183587:web:def283bb7b5ca48e4f9156"});
+  var db = firebase.firestore();
+  try{ db.enablePersistence({synchronizeTabs:true}).catch(function(){}); }catch(e){}
+  var $ = function(id){ return document.getElementById(id); };
+  function esc(s){ var d=document.createElement('div'); d.textContent=s==null?'':String(s); return d.innerHTML; }
+  var ME = null, MYNAME = '', MYNOTES = [], unsub = null;
+
+  function when(ms){ try{ return new Date(ms).toLocaleString('en-US',{weekday:'short',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}); }catch(e){ return ''; } }
+
+  function signedOut(){
+    $('main').innerHTML = '<h1>Leadnote</h1><div class="msg">Please sign in on the Host Hub first, then open this page again.</div>'
+      + '<a class="btn" style="text-decoration:none" href="./">Open the Host Hub</a>';
+  }
+
+  function paintForm(){
+    $('main').innerHTML = '<h1>Leadnote</h1>'
+      + '<div class="hint">Met someone? Heard an idea? Just type it like you would tell a friend. Who, where, what they said, anything you remember. HQ sorts it out.</div>'
+      + '<textarea id="txt" maxlength="4000" placeholder="Met this girl, Alyssa, at The Coaster. She runs a bowling alley in Tacoma and said she\'ll get in touch. Had her follow us on Instagram."></textarea>'
+      + '<button class="btn" id="send" onclick="sendNote()">Send To HQ</button>'
+      + '<div class="msg" id="st"></div>'
+      + '<div class="h2">Your recent notes</div><div id="mine"><div class="msg">Loading&hellip;</div></div>';
+    paintMine();
+  }
+
+  function paintMine(){
+    var box = $('mine'); if(!box) return;
+    if(!MYNOTES.length){ box.innerHTML = '<div class="msg" style="margin:0">Nothing sent yet.</div>'; return; }
+    box.innerHTML = MYNOTES.slice(0,15).map(function(n){
+      var st = n.status || 'new', lab = st==='sorted' ? 'Sorted' : st==='question' ? 'HQ has a question' : st==='quick' ? 'Filed' : 'Sent';
+      var cls = st==='sorted' ? 's' : st==='question' ? 'q' : '';
+      return '<div class="note"><div class="t">'+esc(n.text)+'</div>'
+        + (st==='question' && n.question ? '<div class="qa">'+esc(n.question)+'</div>' : '')
+        + '<div class="m"><span>'+esc(when(n.createdMs))+'</span><span class="tag '+cls+'">'+lab+'</span></div></div>';
+    }).join('');
+  }
+
+  function sendNote(){
+    var t = ($('txt').value||'').trim(), st = $('st'), b = $('send');
+    if(!t){ st.className='msg err'; st.textContent='Type something first.'; return; }
+    b.disabled = true; st.className='msg'; st.textContent = 'Sending…';
+    var slow = setTimeout(function(){ st.className='msg'; st.textContent='No signal right now. Your note is saved on this phone and will go to HQ by itself when you are back online. Keep this page open.'; }, 8000);
+    var ms = Date.now();
+    db.collection('agent_leadnotes').add({
+      text: t, hostUid: ME.uid, hostName: MYNAME, hostEmail: ME.email || '',
+      createdMs: ms, createdAt: firebase.firestore.FieldValue.serverTimestamp(), status: 'new'
+    }).then(function(){
+      clearTimeout(slow);
+      $('txt').value = ''; st.className='msg ok'; st.textContent = 'Sent. Thank you!'; b.disabled = false;
+      setTimeout(function(){ if(st.textContent==='Sent. Thank you!') st.textContent=''; }, 4000);
+    }).catch(function(e){
+      clearTimeout(slow); b.disabled = false; st.className='msg err'; st.textContent = 'Could not send: '+(e && e.message || e)+'. Your words are still in the box.';
+    });
+  }
+
+  function listen(){
+    if(unsub) unsub();
+    unsub = db.collection('agent_leadnotes').where('hostUid','==',ME.uid).onSnapshot(function(sn){
+      MYNOTES = sn.docs.map(function(d){ return Object.assign({id:d.id}, d.data()); }).sort(function(a,b){ return (b.createdMs||0)-(a.createdMs||0); });
+      paintMine();
+    }, function(){ var box=$('mine'); if(box) box.innerHTML='<div class="msg" style="margin:0">Could not load your notes. You can still send new ones.</div>'; });
+  }
+
+  firebase.auth().onAuthStateChanged(function(u){
+    if(!u){ ME = null; signedOut(); return; }
+    ME = u; MYNAME = u.displayName || (u.email ? u.email.split('@')[0] : '');
+    paintForm(); listen();
+    db.collection('users').doc(u.uid).get().then(function(d){
+      var x = d.exists ? d.data() : {}; var n = x.name || x.displayName || x.firstName || '';
+      if(n) MYNAME = String(n);
+    }).catch(function(){});
+  });
+</script>
+</body>
+</html>
