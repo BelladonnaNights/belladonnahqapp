@@ -256,6 +256,60 @@ html::-webkit-scrollbar-thumb:hover,.modal::-webkit-scrollbar-thumb:hover{backgr
   #onboardChecklist-venueModal{grid-template-columns:1fr;}
   .vm-actions{margin:0 -1rem;padding:0.8rem 1rem;}
 }
+
+/* ── Edit Venue pop-up: full-page card look ── */
+#venueModal{padding:0;align-items:stretch;justify-content:center;background:#030303}
+#venueModal .modal.vm-wide{max-width:960px;max-height:100vh;height:100%;background:transparent;border:none;padding:1.2rem 1.4rem 0}
+.vm-top{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;margin-bottom:1.1rem}
+.vm-back{justify-self:start;background:none;border:none;color:var(--text2);font-family:inherit;font-size:.66rem;letter-spacing:.24em;text-transform:uppercase;cursor:pointer;padding:.3rem 0}
+.vm-back:hover{color:var(--gold)}
+.vm-ttl{display:flex;align-items:center;gap:1.1rem}
+.vm-ttl span{font-size:1.5rem;letter-spacing:.34em;text-transform:uppercase;color:var(--gold);font-weight:300;white-space:nowrap}
+.vm-ttl i{display:block;width:70px;height:1px;background:linear-gradient(90deg,transparent,var(--gold))}
+.vm-ttl i.r{background:linear-gradient(270deg,transparent,var(--gold))}
+#venueModal .vm-sec{border:1px solid rgba(201,169,110,.55);border-radius:12px;padding:.9rem 1.2rem 1.1rem;margin-bottom:1rem;background:linear-gradient(180deg,rgba(201,169,110,.04),rgba(201,169,110,0))}
+#venueModal .vm-sec:first-of-type{padding-top:.9rem}
+#venueModal .vm-sec-h{font-size:.8rem;letter-spacing:.34em;font-weight:600;gap:.9rem;margin-bottom:.8rem;color:var(--gold)}
+#venueModal .vm-sec-h svg,#venueModal .form-label svg{stroke:var(--gold);flex:none}
+#venueModal .vm-sec-h svg{width:24px;height:24px}
+#venueModal .form-label{display:flex;align-items:center;gap:.55rem;font-size:.62rem;letter-spacing:.26em;color:var(--text2)}
+#venueModal .form-label svg{width:16px;height:16px}
+#venueModal .form-input,#venueModal .form-textarea{background:linear-gradient(180deg,#171717,#0b0b0b);border:1px solid rgba(201,169,110,.26);border-radius:4px;box-shadow:inset 0 1px 4px rgba(0,0,0,.75);color-scheme:dark}
+#venueModal select.form-input{-webkit-appearance:none;appearance:none;border-radius:8px;border-color:rgba(201,169,110,.32);background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 14'%3E%3Cpath d='M2 5l3-3 3 3M2 9l3 3 3-3' fill='none' stroke='%23f0ece0' stroke-width='1.5'/%3E%3C/svg%3E") no-repeat right .8rem center/9px,linear-gradient(180deg,#3b3b3b,#141414);padding-right:2rem;cursor:pointer}
+.vm-g4{grid-template-columns:1.2fr 1.1fr 1.1fr .9fr}
+#venueModal .vm-g6{grid-template-columns:repeat(4,1fr) 1.6fr}
+.vm-bill{grid-template-columns:repeat(6,1fr)}
+.vm-bill>:nth-child(-n+3){grid-column:span 2}
+.vm-bill>:nth-child(4){grid-column:span 4}
+.vm-bill>:nth-child(5){grid-column:span 2}
+.vm-bill>:nth-child(6){grid-column:1/-1}
+#gigChips .chip{border-radius:6px;padding:.5rem 1.1rem;border:1px solid rgba(201,169,110,.3);background:#0c0c0c;color:var(--text2);letter-spacing:.1em}
+#gigChips .chip.selected-skill{background:var(--gold);border-color:var(--gold2);color:#000;font-weight:600}
+#venueModal .tip-pay-row.vm-slot{border-radius:6px;border-color:rgba(201,169,110,.3);background:rgba(255,255,255,.015)}
+#vmOffers .offers-box{border:none!important;padding:0!important;margin:0!important}
+#vmOffers .offers-box>div:first-child{display:flex;align-items:center;gap:.9rem;font-size:.8rem!important;letter-spacing:.34em;text-transform:uppercase;color:var(--gold);font-weight:600!important;margin-bottom:.8rem!important}
+#vmOffers .offers-box>div:first-child::before{content:'';width:24px;height:24px;flex:none;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23c9a96e' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 3l9 5-9 5-9-5 9-5zM3 13l9 5 9-5M3 17.500l9 5 9-5'/%3E%3C/svg%3E") no-repeat center/contain}
+#vmOffers .offers-box>div:first-child span{letter-spacing:.04em;text-transform:none;color:var(--text3);font-size:.72rem!important;font-weight:400}
+#vmOffers .offers-box>div:nth-child(2){display:grid;grid-template-columns:repeat(4,1fr);gap:.6rem}
+#vmOffers .offers-box>div:nth-child(2) label{display:flex!important;margin:0!important;gap:.6rem!important;align-items:center;border:1px solid rgba(201,169,110,.3);border-radius:4px;padding:.55rem .7rem;background:#0c0c0c;font-size:.82rem!important}
+#vmOffers:empty{display:none}
+#vmOffers .offers-box{margin:0}
+#vmOtherContactsWrap{margin-top:.8rem}
+#vmLead:has(#vmLeadInfo:empty):has(#vmAll:empty){display:none}
+#vmAll details{border:1px solid rgba(201,169,110,.4)!important;border-radius:6px!important;margin:.8rem 0 0!important;background:#0a0a0a;padding:.55rem .9rem!important}
+.vm-admin-wrap{margin-top:1rem;padding-top:1rem;border-top:1px solid rgba(201,169,110,.3)}
+#venueModal .vm-admin-btn{border:1px solid rgba(201,169,110,.5);border-radius:4px;background:#0a0a0a;font-size:.7rem;letter-spacing:.3em;padding:.75rem 1rem}
+#venueModal .vm-actions{margin:0 -1.4rem;padding:.9rem 1.4rem;background:#050505;border-top:1px solid rgba(201,169,110,.3);gap:.8rem}
+#venueModal .modal-cancel{border-radius:3px;border-color:rgba(201,169,110,.35);color:var(--text2);padding:.85rem 1.4rem;letter-spacing:.28em}
+#venueModal .modal-save{border-radius:6px;background:linear-gradient(180deg,rgba(201,169,110,.22),rgba(201,169,110,.06));border:1px solid var(--gold);color:var(--gold2);letter-spacing:.4em;font-weight:600;padding:.85rem}
+@media(max-width:760px){
+  #venueModal .modal.vm-wide{padding:1rem 1rem 0}
+  .vm-ttl span{font-size:1.1rem;letter-spacing:.2em}.vm-ttl i{width:24px}
+  .vm-g4,#venueModal .vm-g6,.vm-bill{grid-template-columns:1fr 1fr}
+  .vm-bill>*{grid-column:auto!important}.vm-bill>:nth-child(4),.vm-bill>:nth-child(6){grid-column:1/-1!important}
+  #vmOffers .offers-box>div:nth-child(2){grid-template-columns:1fr 1fr}
+  #venueModal .vm-actions{margin:0 -1rem;padding:.8rem 1rem}
+}
 .modal-title{font-size:0.65rem;letter-spacing:0.32em;text-transform:uppercase;color:var(--text3);margin-bottom:1.1rem;font-weight:400;}
 .form-group{margin-bottom:0.9rem;}
 .form-label{font-size:0.6rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--text3);display:block;margin-bottom:0.4rem;font-weight:400;}
@@ -1868,19 +1922,20 @@ match /agent_config/{id}  { allow read, write: if isAdmin(); }</pre>
 <!-- VENUE MODAL -->
 <div class="modal-bg" id="venueModal">
   <div class="modal vm-wide">
-    <div class="modal-title"><span id="venueModalTitle">Add Venue</span><small>Click outside to close</small></div>
+    <div class="vm-top"><button type="button" class="vm-back" onclick="closeVenueModal()">&larr; Venues</button><div class="vm-ttl"><i></i><span id="venueModalTitle">Add Venue</span><i class="r"></i></div><span></span></div>
     <input type="checkbox" id="vmInactive" style="display:none">
 
     <div class="vm-sec">
-      <div class="vm-grid vm-g3">
-        <div class="form-group"><label class="form-label">Venue Name</label><input type="text" class="form-input" id="vmName" placeholder="Venue name"></div>
-        <div class="form-group"><label class="form-label">Location</label><select class="form-input" id="vmLocation"></select></div>
-        <div class="form-group"><label class="form-label">Status</label><select class="form-input" id="vmStatus"><option value="active">Active</option><option value="recurring">Active (recurring gig)</option><option value="norecurring">One-off only</option><option value="inactive">Inactive</option></select></div>
+      <div class="vm-grid vm-g4">
+        <div class="form-group"><label class="form-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9l1.5-5h13L20 9M4 9v11h16V9M4 9h16M9 20v-6h6v6"/></svg>Venue Name</label><input type="text" class="form-input" id="vmName" placeholder="Venue name"></div>
+        <div class="form-group"><label class="form-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0114 0C19 14.800 12 21 12 21z"/><circle cx="12" cy="9.500" r="2.500"/></svg>Location</label><select class="form-input" id="vmLocation"></select></div>
+        <div class="form-group"><label class="form-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l2.500-6 4 12 2.500-6H21"/></svg>Status</label><select class="form-input" id="vmStatus"><option value="active">Active</option><option value="recurring">Active (recurring gig)</option><option value="norecurring">One-off only</option><option value="inactive">Inactive</option></select></div>
+        <div class="form-group"><label class="form-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="15" rx="1.500"/><path d="M4 10h16M9 3v4M15 3v4"/></svg>Start Date</label><input type="date" class="form-input" id="vmStartDate"></div>
       </div>
     </div>
 
     <div class="vm-sec">
-      <div class="vm-sec-h">Pay</div>
+      <div class="vm-sec-h"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="9" cy="7" rx="6" ry="2.500"/><path d="M3 7v5c0 1.400 2.700 2.500 6 2.500s6-1.100 6-2.500V7M3 12v5c0 1.400 2.700 2.500 6 2.500s6-1.100 6-2.500v-5M15 10.500c3.300 0 6 1 6 2.500v5c0 1.400-2.700 2.500-6 2.500"/></svg>Pay &amp; Billing</div>
       <div class="vm-grid vm-g6">
         <div class="form-group"><label class="form-label">Karaoke</label><input type="text" class="form-input" id="vmAmountKaraoke" placeholder="$"></div>
         <div class="form-group"><label class="form-label">Bingo</label><input type="text" class="form-input" id="vmAmountBingo" placeholder="$"></div>
@@ -1898,9 +1953,8 @@ match /agent_config/{id}  { allow read, write: if isAdmin(); }</pre>
             <option value="Other">Other</option>
           </select>
         </div>
-        <div class="form-group"><label class="form-label">Start date</label><input type="date" class="form-input" id="vmStartDate"></div>
       </div>
-      <div class="vm-grid vm-g3" style="margin-top:.6rem">
+      <div class="vm-grid vm-bill" style="margin-top:.6rem">
         <div class="form-group"><label class="form-label">Billing</label><select class="form-input" id="vmBillFreq" onchange="document.getElementById('vmBillDayWrap').style.display=this.value==='gig'?'none':''"><option value="">Monthly</option><option value="gig">Per gig</option></select></div>
         <div class="form-group" id="vmBillDayWrap"><label class="form-label" title="Sigil reminds you a couple of days before this day each month">Bill on day of month</label><select class="form-input" id="vmBillDay"><option value="">1st (default)</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option><option value="11">11</option><option value="12">12</option><option value="13">13</option><option value="14">14</option><option value="15">15</option><option value="16">16</option><option value="17">17</option><option value="18">18</option><option value="19">19</option><option value="20">20</option><option value="21">21</option><option value="22">22</option><option value="23">23</option><option value="24">24</option><option value="25">25</option><option value="26">26</option><option value="27">27</option><option value="28">28</option><option value="last">Last day</option></select></div>
         <div class="form-group"><label class="form-label">Monthly amount (optional)</label><input type="text" class="form-input" id="vmBillAmount" placeholder="$ total per invoice"></div>
@@ -1911,7 +1965,7 @@ match /agent_config/{id}  { allow read, write: if isAdmin(); }</pre>
     </div>
 
     <div class="vm-sec">
-      <div class="vm-sec-h">Nights &amp; Hosts</div>
+      <div class="vm-sec-h"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="15" rx="1.500"/><path d="M4 10h16M9 3v4M15 3v4"/></svg>Nights &amp; Hosts</div>
       <div class="vm-grid vm-g2" style="margin-bottom:0.8rem;">
         <div class="form-group"><label class="form-label">What we do here</label><div class="chip-grid" id="gigChips"></div></div>
         <div class="form-group"><label class="form-label" title="A specific date's assignment in Host Roster or the Planner overrides this for that date only.">Default host</label><select class="form-input" id="vmHost"></select></div>
@@ -1925,14 +1979,7 @@ match /agent_config/{id}  { allow read, write: if isAdmin(); }</pre>
     </div>
 
     <div class="vm-sec">
-      <div class="vm-grid vm-g2">
-        <div class="form-group"><label class="form-label" title="Shown to hosts on Venue Perks">Host perks</label><textarea class="form-textarea" id="vmPerks" placeholder="e.g. 50% off food, one free drink" style="min-height:64px;"></textarea></div>
-        <div class="form-group"><label class="form-label">Notes</label><textarea class="form-textarea" id="vmNotes" placeholder="Anything worth remembering..." style="min-height:64px;"></textarea></div>
-      </div>
-    </div>
-
-    <div class="vm-sec">
-      <div class="vm-sec-h">Contact &amp; Details</div>
+      <div class="vm-sec-h"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.500"/><path d="M2.500 20c0-3.600 2.900-6 6.500-6s6.500 2.400 6.500 6M16 5a3.500 3.500 0 010 7M18 14.500c2.200.7 3.500 2.500 3.500 5.500"/></svg>Contact &amp; Details</div>
       <div class="vm-grid vm-g2">
         <div class="form-group"><label class="form-label">Address</label><input class="form-input" id="vmAddress" placeholder="Street, city, state"></div>
         <div class="form-group"><label class="form-label">City</label><input class="form-input" id="vmCity"></div>
@@ -1945,16 +1992,15 @@ match /agent_config/{id}  { allow read, write: if isAdmin(); }</pre>
         <div class="form-group"><label class="form-label">Instagram</label><input class="form-input" id="vmInstagram" placeholder="@handle or link"></div>
         <div class="form-group"><label class="form-label">Facebook</label><input class="form-input" id="vmFacebook" placeholder="Page link or name"></div>
       </div>
-      <div class="form-group"><label class="form-label">Other contacts (bartenders, bookers, anyone else)</label><textarea class="form-textarea" id="vmOtherContacts" placeholder="Name, role, phone/email. One per line." style="min-height:64px;"></textarea></div>
+      <div class="form-group" id="vmOtherContactsWrap"><label class="form-label">Other contacts (bartenders, bookers, anyone else)</label><textarea class="form-textarea" id="vmOtherContacts" placeholder="Name, role, phone/email. One per line." style="min-height:64px;"></textarea></div>
     </div>
 
     <div class="vm-sec" id="vmOffers"></div>
 
-    <div class="vm-sec" id="vmLeadInfo"></div>
-    <div class="vm-sec" id="vmAll"></div>
+    <div class="vm-sec" id="vmLead"><div id="vmLeadInfo"></div><div id="vmAll"></div></div>
 
     <div class="vm-sec">
-      <div class="vm-sec-h">Account Link</div>
+      <div class="vm-sec-h"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 14a4.500 4.500 0 006.400 0l3-3a4.500 4.500 0 00-6.400-6.400l-1 1M14 10a4.500 4.500 0 00-6.400 0l-3 3a4.500 4.500 0 006.400 6.400l1-1"/></svg>Account Link</div>
       <div class="vm-grid vm-g2">
         <div class="form-group"><label class="form-label" title="Matched to the Venue ID on their Gateway account. Takes priority over the email.">Venue ID</label><div style="display:flex;gap:0.4rem;align-items:center;"><input type="text" class="form-input" id="vmVenueId" placeholder="assigned automatically" readonly style="color:var(--text3);" onblur="lockVmVenueId()"><button type="button" class="hq-btn-ghost" style="padding:0.45rem 0.8rem;" onclick="unlockVmVenueId()">Edit</button></div><div class="vm-hint">Every app finds this venue by its ID. Changing it re-links all apps.</div></div>
         <div class="form-group"><label class="form-label" title="Backup link to their Belladonna account when no Venue ID is set.">Gateway email</label><input type="text" class="form-input" id="vmGatewayEmail" placeholder="email they signed up with"></div>
@@ -1963,14 +2009,19 @@ match /agent_config/{id}  { allow read, write: if isAdmin(); }</pre>
         <div class="form-group" id="vmGatewayStatusWrap" style="display:none;"><label class="form-label">Gateway account</label><span id="vmGatewayStatus" style="font-size:0.76rem;color:var(--text2);"></span></div>
         <div class="form-group" id="vmCategoryQueueWrap" style="display:none;"><label class="form-label">Category queue</label><div id="vmCategoryQueueStatus" style="font-size:0.76rem;color:var(--text2);line-height:1.5;"></div></div>
       </div>
-    </div>
-
-    <div class="vm-sec" style="padding-bottom:1.1rem;">
+      <div class="vm-admin-wrap">
       <button type="button" class="vm-admin-btn" id="vmAdminBtn" onclick="toggleVmAdmin()"><span>Backend Admin<span class="vm-count" id="vmAdminCount"></span></span><span id="vmAdminArrow">▾</span></button>
       <div class="vm-admin-body" id="vmAdminBody">
         <div id="onboardChecklist-venueModal"></div>
         <a href="https://qbo.intuit.com" target="_blank" class="admin-add-btn" style="display:inline-block;text-decoration:none;text-align:center;margin-top:0.5rem;">Open QuickBooks</a>
       </div>
+      </div>
+    </div>
+
+    <div class="vm-sec">
+      <div class="vm-sec-h"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h9l4 4v14H6zM14 3v5h5M9 12h7M9 16h7"/></svg>Notes &amp; Support</div>
+      <div class="form-group"><textarea class="form-textarea" id="vmNotes" placeholder="Anything worth remembering, internal notes, or support info..." style="min-height:72px;"></textarea></div>
+      <div class="form-group" style="margin-top:.7rem"><label class="form-label" title="Shown to hosts on Venue Perks">Host perks</label><textarea class="form-textarea" id="vmPerks" placeholder="e.g. 50% off food, one free drink" style="min-height:56px;"></textarea></div>
     </div>
 
     <div class="modal-actions vm-actions">
@@ -4809,7 +4860,7 @@ function renderVenueLeadInfo(vid){
   const l0=leadForVenue(v),l=Object.assign({},l0||{},v.leadInfo||{});
   const has=!!(l0||v.leadInfo);
   const lab={email:'Email',instagram:'Instagram',facebook:'Facebook',in_person:'In Person',phone:'Phone',other:l.contactMethodOther||'Other'};
-  let h='<div class="vm-sec-h">How they came to us</div>';
+  let h='<div class="vm-sec-h">'+'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M5 6h11l3 2.500-3 2.500H5zM19 14H8l-3 2.500L8 19h11z"/></svg>'+'How they came to us</div>';
   if(!has&&!v.noAgreement){h+='<div style="font-size:.8rem;opacity:.75">Nothing saved. Venues moved over with Transfer to Our Venues keep this here.</div>';}
   else{
     const row=(t,x)=>'<div style="font-size:.8rem;margin:.2rem 0"><b>'+t+':</b> '+(x?_lx(x):'—')+'</div>';
