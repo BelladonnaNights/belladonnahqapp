@@ -160,10 +160,18 @@
   // same as screen.html/karaoke-list.html) — but loadTonight() itself waits
   // on authReady below before touching RTDB, which is what actually needs
   // the signed-in session.
-  db.collection('hq_data').doc('venues-list').get().then(snap=>{
-    try{venues=(snap.exists&&snap.data().value)?JSON.parse(snap.data().value):[];}catch(e){venues=[];}
+  // The master venues list (RTDB venues/) is the one list of who our venues are; HQ's older Firestore list is only a fallback.
+  function loadVenuesFallback(){
+    db.collection('hq_data').doc('venues-list').get().then(snap=>{
+      try{venues=(snap.exists&&snap.data().value)?JSON.parse(snap.data().value):[];}catch(e){venues=[];}
+      renderVenueOptions();
+    }).catch(()=>{renderVenueOptions();});
+  }
+  fetch('https://belladonna-hq-default-rtdb.firebaseio.com/venues.json').then(r=>{if(!r.ok)throw 0;return r.json();}).then(o=>{
+    venues=Object.entries(o||{}).filter(([id,m])=>id[0]!=='_'&&m&&m.name&&!m.inactive&&m.active!==false).map(([id,m])=>({id,name:String(m.name).trim()})).sort((a,b)=>a.name.localeCompare(b.name));
+    if(!venues.length)return loadVenuesFallback();
     renderVenueOptions();
-  }).catch(()=>{renderVenueOptions();});
+  }).catch(loadVenuesFallback);
 
   // Don't query RTDB until Firebase confirms the signed-in session (the gate
   // above only checked a local flag), and force a fresh ID token first —
@@ -212,6 +220,8 @@
   updateDateDisplay();
 
   function venueById(id){return venues.find(v=>v.id===id);}
+  // A night record belongs to this venue if it carries the venue's ID, or (older records) has the same name.
+  function isThisVenue(rec,venue){ if(!rec)return false; if(venue.id&&rec.venueId&&String(rec.venueId)===String(venue.id))return true; return normVenueName(rec.name)===normVenueName(venue.name); }
 
   // ── TRIVIA ROUND AUTO-LAUNCH ──────────────────────────────────────────
   // Mirrors admin.html's own launchTrivia(): each category record under
@@ -322,7 +332,7 @@
     try{
       const pvSnap=await rtdb.ref('trivia/planner/venues').once('value');
       const pv=pvSnap.val()||{};
-      const match=Object.entries(pv).find(([id,v])=>normVenueName(v.name)===vName);
+      const match=Object.entries(pv).find(([id,v])=>isThisVenue(v,venue));
       if(match){
         const [venueId,v]=match;
         const gSnap=await rtdb.ref('trivia/planner/gigs/'+venueId+'/'+dk).once('value');
@@ -393,7 +403,7 @@
     try{
       const bvSnap=await rtdb.ref('bingo/landing/venues').once('value');
       const bv=bvSnap.val()||{};
-      const match=Object.entries(bv).find(([id,v])=>normVenueName(v.name)===vName);
+      const match=Object.entries(bv).find(([id,v])=>isThisVenue(v,venue));
       if(match){
         const [venueId]=match;
         const schedSnap=await rtdb.ref('bingo/landing/schedule').once('value');
@@ -441,7 +451,8 @@
     try{
       const kvSnap=await rtdb.ref('trivia/planner/karaokeVenues').once('value');
       const kv=kvSnap.val()||{};
-      const kMatch=Object.entries(kv).find(([id,v])=>normVenueName(v.name)===vName);
+      const kAll=Object.entries(kv).filter(([id,v])=>isThisVenue(v,venue));
+      const kMatch=kAll.find(([id,v])=>(v.status==='active'||v.status==='seasonal')&&PLANNER_DAY_MAP[v.day]===dow)||kAll.find(([id,v])=>v.status==='active'||v.status==='seasonal')||kAll[0];
       if(kMatch){
         const [kVenueId,v]=kMatch;
         const kgSnap=await rtdb.ref('trivia/planner/karaokeGigs/'+kVenueId+'/'+dk).once('value');
