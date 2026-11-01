@@ -1159,9 +1159,10 @@ html::-webkit-scrollbar-thumb:hover,.modal::-webkit-scrollbar-thumb:hover{backgr
   <div class="subpanel active" id="sub-venues-manage">
     <div class="section-header">
       <div class="section-title">Venues <span class="save-dot" id="venuesSave">Saved ✓</span></div>
-      <button class="btn-sm" onclick="openVenueMaster()" title="One master record per venue (by Venue ID) that every app reads from">Venue Master Records</button>
-      <button class="btn-sm" onclick="openVenueQrModal()" title="One permanent QR code per venue — shows whatever is on there tonight">Venue QR Codes</button>
-      <button class="btn-sm btn-gold" onclick="openVenueModal()">+ Add Venue</button>
+      <div style="display:flex;gap:0.5rem;align-items:center;">
+        <button class="btn-sm" onclick="openVenueQrModal()" title="One permanent QR code per venue — shows whatever is on there tonight">Venue QR Codes</button>
+        <button class="btn-sm btn-gold" onclick="openVenueModal()">+ Add Venue</button>
+      </div>
     </div>
     <div class="sched-toolbar">
       <select class="roster-filter-select" id="venueFilterPayMethod" onchange="renderVenueManage()">
@@ -1177,7 +1178,11 @@ html::-webkit-scrollbar-thumb:hover,.modal::-webkit-scrollbar-thumb:hover{backgr
       </select>
       <input type="date" class="roster-search-input" id="venueFilterStartFrom" onchange="renderVenueManage()" style="min-width:130px;flex:none;" title="Start date from">
       <input type="date" class="roster-search-input" id="venueFilterStartTo" onchange="renderVenueManage()" style="min-width:130px;flex:none;" title="Start date to">
-      <button class="btn-sm" onclick="document.getElementById('venueFilterPayMethod').value='';document.getElementById('venueFilterStartFrom').value='';document.getElementById('venueFilterStartTo').value='';renderVenueManage();">Clear Filters</button>
+      <button class="btn-sm" onclick="document.getElementById('venueFilterPayMethod').value='';document.getElementById('venueFilterStartFrom').value='';document.getElementById('venueFilterStartTo').value='';setVenueActiveFilter(true);">Clear Filters</button>
+      <span style="display:inline-flex;gap:0.4rem;align-items:center;margin-left:0.3rem;">
+        <button class="btn-sm" id="venuePillAll" onclick="setVenueActiveFilter(false)">All</button>
+        <button class="btn-sm btn-gold" id="venuePillActive" onclick="setVenueActiveFilter(true)">Active</button>
+      </span>
     </div>
     <div id="venueManageList"></div>
   </div>
@@ -3820,7 +3825,7 @@ async function vmxPushTimesToGigs(v,rows,oldSlots){
   return {n,moved,removed};
 }
 let _vmxStarted=false;
-function vmxStartOnce(){if(_vmxStarted||!rtdb)return;_vmxStarted=true;vmxListen(()=>{try{renderVenueManage();renderDashboardWeek();}catch(e){}},()=>{ensureVenueIds();try{renderVenueManage();}catch(e){}});}
+function vmxStartOnce(){if(_vmxStarted||!rtdb)return;_vmxStarted=true;vmxListen(()=>{try{renderVenueManage();renderDashboardWeek();}catch(e){}},()=>{ensureVenueIds();importMasterOnlyVenues();try{renderVenueManage();}catch(e){}});}
 // every venue gets a Venue ID (and a master record) automatically
 let _idsEnsured=false;
 async function ensureVenueIds(){
@@ -3834,6 +3839,22 @@ async function ensureVenueIds(){
     try{await vmxFindOrCreate(v.name,id,v.locationId);}catch(e){}
   }
   if(changed)persist('venues-list',venues);
+}
+// Venues that exist only in the master list (added in the Planner, say) are added to Our Venues automatically,
+// so there is one list of venues everywhere. Only ADDS; nothing already here is changed.
+let _mImported=false;
+function importMasterOnlyVenues(){
+  if(_mImported||!venuesLoadedFromServer||!window.__vmxMaster||!venues)return;_mImported=true;
+  const have=new Set(venues.map(v=>vmxKey(v.name)).filter(Boolean)),haveIds=new Set(venues.map(v=>v.venueId).filter(Boolean));
+  const MK={Trivia:'Trivia',Karaoke:'Karaoke',Bingo:'Bingo',Events:'Events','Private Events':'Private Events'};
+  let n=0;
+  Object.entries(window.__vmxMaster).forEach(([id,r])=>{
+    if(id[0]==='_'||!r||!r.name||haveIds.has(id)||have.has(vmxKey(r.name)))return;
+    const kinds=[...new Set(Object.values(r.slots||{}).map(sl=>sl&&MK[sl.kind]).filter(Boolean))];
+    venues.push({id:Date.now().toString()+(n++),name:r.name,gigs:kinds,notes:r.notes||'',perks:r.perks||'',locationId:r.locationId||null,inactive:r.active===false,noRecurring:!!r.noRecurring,payAmounts:null,payMethod:'',startDate:'',gigSlots:[],venueId:id,gatewayEmail:'',host:r.host||'',history:[]});
+    have.add(vmxKey(r.name));haveIds.add(id);
+  });
+  if(n){persist('venues-list',venues,'venuesSave');try{renderVenueManage();populateRosterFilters();}catch(e){}hqToast('Added '+n+' venue'+(n===1?'':'s')+' from the master list');}
 }
 async function vmxSetSync(on){
   try{await rtdb.ref('venues/_sync').set({on:!!on,at:Date.now()});vmxRenderSyncBar();hqToast(on?'✓ Two-way venue sync is ON':'Venue sync is OFF');}
@@ -6132,6 +6153,13 @@ function syncTipSchedule(){
 }
 
 // ── VENUES ──
+let venueActiveOnly=true;   // "Active" is the default view: only venues with a recurring gig
+function setVenueActiveFilter(on){
+  venueActiveOnly=!!on;
+  const a=document.getElementById('venuePillActive'),b=document.getElementById('venuePillAll');
+  if(a)a.className='btn-sm'+(venueActiveOnly?' btn-gold':'');if(b)b.className='btn-sm'+(venueActiveOnly?'':' btn-gold');
+  renderVenueManage();
+}
 function renderVenueManage(){
   const el=document.getElementById('venueManageList');
   const payF=document.getElementById('venueFilterPayMethod')?.value||'';
@@ -6143,6 +6171,7 @@ function renderVenueManage(){
       if(payF&&payF!=='__unset'&&v.payMethod!==payF)return false;
       if(startFrom&&(!v.startDate||v.startDate<startFrom))return false;
       if(startTo&&(!v.startDate||v.startDate>startTo))return false;
+      if(venueActiveOnly&&(v.inactive||v.noRecurring))return false;
       return true;
     })
     .sort((a,b)=>((a.inactive?2:a.noRecurring?1:0)-(b.inactive?2:b.noRecurring?1:0))); // active → no recurring gig → inactive
@@ -6413,7 +6442,7 @@ function saveVenue(){
   })();
   renderVenueManage();populateRosterFilters();closeVenueModal();
 }
-function deleteVenue(id){if(!confirm('Remove this venue?'))return;venues=venues.filter(v=>v.id!==id);persist('venues-list',venues,'venuesSave');renderVenueManage();populateRosterFilters();}
+function deleteVenue(id){if(!confirm('Remove this venue? It is also removed from the master venue list (its nights in the Planner stay).'))return;const _dv=venues.find(v=>v.id===id),_dm=_dv?vmxMasterFor(_dv):null;if(_dm&&_dm.id){try{VMX_RTDB().ref('venues/'+_dm.id).remove();}catch(e){}}venues=venues.filter(v=>v.id!==id);persist('venues-list',venues,'venuesSave');renderVenueManage();populateRosterFilters();}
 
 // ── VENUE HISTORY LOG ──
 // Auto-logged whenever a per-kind pay amount, pay method, or start date
