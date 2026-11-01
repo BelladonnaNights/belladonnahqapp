@@ -7722,7 +7722,11 @@ YOUR JOB: make sure Belladonna is found everywhere people look, set up completel
 - Review requests: after each private event or good venue night, write one short, warm message asking for a review, with the link for the best site for that client (Google first). Ask everyone, not only happy customers. Never offer a reward. Write each as a document in agent_drafts: leadId (empty), agent "mirror", kind "reviewask", body, label (client or venue and "review request"), status "pending", createdAt (ms).
 - Review replies: look in the lead inbox for review notification emails. For each review without a draft write kind "review". Two to four sentences. Gracious and specific: mention one real detail. Positive: thank them, name the night, invite them back. Negative: own what is fair, stay professional, offer a way to make it right. Never argue, never reveal private details.
 
-5. FIX LIST. Write each fix from steps 1 to 3 as a document in agent_drafts with kind "seo", label (START with the listing name as in agent_sites, e.g. "Google Business Profile: add services"; for the website start with "Website:"), body (what is wrong and the exact fix), status "pending".
+5. WHAT YOU WRITE (HQ shows three plain lists, so write each item for the right list). Every item is a document in agent_drafts with agent "mirror", kind "seo", status "pending", createdAt (ms).
+(a) FIX THIS: one document per problem. label = a short title that starts with the listing name ("Website: missing page title", "Instagram: bio has no link"). body = two or three plain sentences: where it is, what is wrong, exactly what to change. Plain prose only. No "Steps:" or "Headline:" labels. Never write a fix for something that is already fine.
+(b) WORDING TO PASTE: one document per set of wording. label starts with "Wording: " ("Wording: business description"). body = the paste-ready pieces, one per line, each starting with a short name and a colon ("Short: ...", "Long: ...", "Headline: ...", "Subhead: ..."). HQ gives each piece its own Copy button and copies only the text after the name, so never put the name inside the text and never put anything that is not meant to be pasted on those lines. One line of plain explanation of where it goes may come first, before the first named piece.
+(c) GET LISTED HERE: one document per site, gig site, directory, community calendar or chamber of commerce worth joining to bring in leads, each separately. label starts with "Suggestion: " and the site name. body = a short plain line on why it is worth it, then "WHERE: " the exact sign-up page link, then "STEPS: " what to do, then "READY TEXT: " the exact text to paste.
+Do not repeat an item that is already pending. Do not write anything about listings that are fine.
 
 6. PROFILE FRESHNESS. Collection agent_sites has profileRefreshed (ms). Flag any listing not refreshed in 90 days.
 
@@ -7730,7 +7734,7 @@ RULES: never log in to a site. Never buy or fake reviews. Never keyword-stuff. K
 
 7. PAGE TEXT. If a public page cannot be fetched, do not stop. Each agent_sites doc may have snapshot and snapshotAt (pasted text of that listing). Use those only if a page cannot be fetched. If profileRefreshed is missing, ask for it there too.
 
-8. EVERY FINDING IS ITS OWN ITEM: each problem found on a listing or the website is its own seo draft labelled with the listing name (website: "Website: ..."), never only a line in a note. Also: BANK AND SUGGESTIONS: keep the reusable copy bank (drafts labelled "Bank: Name, address and phone", "Bank: Business description", "Bank: Headline, services and calls to action") and write "Suggestion: NAME" drafts for places to list or post, each starting with WHERE: (the exact submit page link), STEPS: and READY TEXT:. Name every community event calendar and chamber of commerce separately. Never fetch Facebook or Instagram (robots.txt blocks it); use snapshots.
+8. KEEP IT SIMPLE. Each problem is its own item in the right list from step 5, never only a line in a note. Also keep the reusable copy bank (drafts labelled "Bank: Name, address and phone", "Bank: Business description", "Bank: Headline, services and calls to action") with one named piece per line the same way as in 5(b). Name every community event calendar and chamber of commerce separately. Never fetch Facebook or Instagram (robots.txt blocks it); use snapshots. The business name is Belladonna Nights (Belladonna Entertainment). If any page or listing still says "Belladonna Audio Alchemies", write that as its own fix.
 
 OUTPUT: one line per run: fixes written, review requests drafted, replies drafted, listings flagged. Then the run note.`
 },
@@ -9802,55 +9806,72 @@ function mirrorItemCard(dr,isBank){
     optBar('d'+dr.id,OP.n,OP.i)+'<textarea class="tm-ta" style="margin-top:.6rem" data-did="'+esc(dr.id)+'">'+esc(OP.text||'')+'</textarea>'+pickBar('d'+dr.id,dr.picks,dr.redraft)+
     '<div class="tm-row"><button class="tm-b'+(isBank?' pri':'')+'" data-act="copydraft" data-id="'+esc(dr.id)+'">Copy</button>'+(isBank?'':'<button class="tm-b pri" data-act="approve" data-id="'+esc(dr.id)+'" title="Mark done (also copies the text)">Done</button>')+'<button class="tm-b dim" data-act="skipdraft" data-id="'+esc(dr.id)+'" title="'+(isBank?'Remove from the bank':'Not right now')+'">'+(isBank?'Remove':'Skip')+'</button></div></div>';
 }
-function vMirror(){
-  const d=D();let h='';
-  h+='<div class="tm-sec">Listings</div>';
-  const SK=x=>{const n=String(x.name||'').toLowerCase(),k=[n.replace(/\(.*?\)/g,'').trim()];if(/website/.test(n))k.push('website','belladonnanights.com');if(/google/.test(n))k.push('google','gbp');if(/facebook/.test(n))k.push('facebook');if(/instagram/.test(n))k.push('instagram');if(/nextdoor/.test(n))k.push('nextdoor');if(/yelp/.test(n))k.push('yelp');if(/bing/.test(n))k.push('bing');if(/apple/.test(n))k.push('apple');return k.filter(Boolean);};
-  const hit=(t,x)=>{t=String(t||'').toLowerCase();return SK(x).some(k=>t.indexOf(k)>=0);};
-  const mine={},todo={},used=new Set();
-  const sugg=d.mPending.filter(x=>/^(suggestion|new listing):/i.test(String(x.label||'')));sugg.forEach(x=>used.add(x.id));
-  d.mPending.forEach(dr=>{if(used.has(dr.id))return;const st=d.sites.find(x=>hit(dr.label,x));if(st){(mine[st.id]=mine[st.id]||[]).push(dr);used.add(dr.id);}});
-  allNotes().filter(n=>n.agent==='mirror'&&n.status==='pending'&&/NEEDS YOU:/i.test(n.body||'')).slice(0,1).forEach(n=>{
-    String(n.body).split(/NEEDS YOU:/i)[1].split('\n').map(x=>x.replace(/^\s*[-*\u2022]\s*/,'').trim()).filter(Boolean).forEach(l=>{const st=d.sites.find(x=>hit(l,x));if(st)(todo[st.id]=todo[st.id]||[]).push(l);});
+function mirChunks(body){
+  const SKIP=/^(steps?|go to|where|why|note|notes|url|link|page|do|then|how|open|sign up|signup|cost|price|time)$/i;
+  const lines=String(body||'').split('\n'),intro=[],chunks=[];let cur=null;
+  lines.forEach(ln=>{
+    const m=ln.match(/^\s*([A-Z][A-Za-z0-9 &\/\-]{0,28}):\s*(.*)$/);
+    if(m&&!SKIP.test(m[1].trim())&&m[1].trim().split(/\s+/).length<=4){cur={k:m[1].trim(),v:m[2]};chunks.push(cur);}
+    else if(cur)cur.v+=(cur.v||ln.trim()?'\n':'')+ln;
+    else intro.push(ln);
   });
-  {const nL=Object.keys(mine).reduce((q,k)=>q+mine[k].length,0),nG=d.mPending.filter(x=>!used.has(x.id)).length;
-  if(d.mPending.length)h+='<div class="tm-item"><div class="t1"><b>'+d.mPending.length+' drafts waiting in total</b></div><div class="t2">'+nL+' inside the Listing boxes below (open a listing to see them), '+sugg.length+' in Suggestions, '+nG+' under Waiting for you.</div></div>';}
-  const have=new Set(S.sites.map(s=>s.name)),miss=PRESENCE.filter(n=>!have.has(n));
-  if(miss.length)h+='<div class="tm-item"><div class="t1">'+(d.sites.length?'Listings not set up here yet':'Add the places you need to show up')+'</div><div class="t2">'+miss.map(esc).join(', ')+'</div><div class="tm-row"><button class="tm-b pri" data-act="addpresence">Add these listings</button></div></div>';
-  if(!d.sites.length)h+='<div class="tm-empty">No listings yet.</div>';
-  d.sites.forEach(s=>{
-    const stale=!s.profileRefreshed||Date.now()-s.profileRefreshed>STALE,sp=siteSpec(s.name),done=S.mchk[s.id]||{},nDone=sp.tasks.filter((_,k)=>done[k]).length;
-    const days=s.profileRefreshed?Math.floor((Date.now()-s.profileRefreshed)/DAY):null;
-    h+='<div class="tm-item'+(S.open['c_'+s.id]?'':' folded')+'"><div class="t1 fold" data-act="fold" data-id="'+esc(s.id)+'"><b>'+esc(s.name)+'</b> '+(stale?'<span class="tm-tag warn">stale</span>':'<span class="tm-tag booked">fresh</span>')+((mine[s.id]||[]).length+(todo[s.id]||[]).length?' <span class="tm-tag warn">'+((mine[s.id]||[]).length+(todo[s.id]||[]).length)+' waiting</span>':'')+((s.url||sp.url)?' <a href="'+esc(s.url||sp.url)+'" target="_blank" rel="noopener" style="font-size:.76rem">open the site</a>':'')+'</div>'+
-      '<div class="t2">'+(s.profileRefreshed?'Last refreshed '+days+' day'+(days===1?'':'s')+' ago ('+esc(fmtDay(s.profileRefreshed))+').':'Never marked refreshed.')+' Refresh it at least every 90 days.</div>'+
-      '<details class="tm-det" data-k="m_'+esc(s.id)+'"'+(S.open['m_'+s.id]?' open':'')+' style="margin:.6rem 0 0"><summary>What to do on '+esc(s.name)+' ('+nDone+' of '+sp.tasks.length+' ticked)</summary><div class="in"><label class="tm-lbl">Link to your public page on this site (so Mirror can read it)</label><div class="tm-row" style="margin-top:.2rem"><input class="tm-in" style="flex:1;min-width:12rem" data-url="'+esc(s.id)+'" placeholder="https://" value="'+esc(s.url||'')+'"><button class="tm-b" data-act="savesiteurl" data-id="'+esc(s.id)+'">Save link</button></div>'+
-      sp.tasks.map((t,k)=>'<label style="display:flex;gap:.55rem;align-items:flex-start;margin:.45rem 0;font-size:.84rem;color:var(--text2);line-height:1.45;cursor:pointer"><input type="checkbox" data-chg="mchk" data-id="'+esc(s.id)+'" data-k="'+k+'"'+(done[k]?' checked':'')+' style="margin-top:.2rem"><span>'+esc(t)+'</span></label>').join('')+
-      (sp.note?'<div class="tm-hint" style="margin-top:.5rem">'+esc(sp.note)+'</div>':'')+'</div></details>'+
-      ((todo[s.id]||[]).length?'<div class="t2"><b style="color:var(--ac)">To do:</b></div>'+todo[s.id].map(l=>'<div class="t2">&bull; '+esc(l)+'</div>').join(''):'')+
-      mineTodos(s)+
-      ((mine[s.id]||[]).length?'<div class="t2" style="margin-top:.5rem"><b style="color:var(--ac)">Fixes and drafts for '+esc(s.name)+' ('+mine[s.id].length+'):</b></div>'+mine[s.id].map(x=>draftCard(x,false)).join(''):'')+
-      '<details class="tm-det" data-k="sn_'+esc(s.id)+'"'+(S.open['sn_'+s.id]?' open':'')+' style="margin:.6rem 0 0"><summary>Page text and refresh date for Mirror'+(s.snapshotAt?' (saved '+esc(fmtDay(s.snapshotAt))+')':'')+'</summary><div class="in"><label class="tm-lbl">Last refreshed on</label><input class="tm-in" type="date" style="width:auto" data-chg="setrefreshed" data-id="'+esc(s.id)+'" value="'+(s.profileRefreshed?esc(isoDay(s.profileRefreshed)):'')+'"><label class="tm-lbl" style="margin-top:.6rem">What this page says now (copy and paste it)</label><textarea class="tm-ta" data-snap="'+esc(s.id)+'" style="min-height:90px">'+esc(s.snapshot||'')+'</textarea><div class="tm-row"><button class="tm-b pri" data-act="savesnap" data-id="'+esc(s.id)+'">Save for Mirror</button></div></div></details>'+
-      '<div class="tm-row"><button class="tm-b pri" data-act="refreshed" data-id="'+esc(s.id)+'">Refreshed today</button><button class="tm-b dim" data-act="silencesite" data-id="'+esc(s.id)+'" title="Not working with this site right now. No reminders until you resume it.">Silence</button><button class="tm-b dim red" data-act="delsite" data-id="'+esc(s.id)+'">Delete</button></div></div>';
-  });
-  if(d.silenced.length){
-    let sh='<div class="tm-hint">No reminders and no stale flags. Resume one when you start working with it.</div>';
-    d.silenced.forEach(s=>{sh+='<div class="tm-item"><div class="t1"><b>'+esc(s.name)+'</b> <span class="tm-tag">silenced</span></div><div class="tm-row"><button class="tm-b" data-act="resumesite" data-id="'+esc(s.id)+'">Resume</button><button class="tm-b dim red" data-act="delsite" data-id="'+esc(s.id)+'">Delete</button></div></div>';});
-    h+=det('msil','Silenced ('+d.silenced.length+')',sh,false);
+  chunks.forEach(c=>{c.v=c.v.trim();});
+  return {intro:intro.join('\n').trim(),chunks:chunks.filter(c=>c.v)};
+}
+function mirUrls(txt){return [...new Set((String(txt||'').match(/https?:\/\/[^\s)<>"']+/g)||[]).map(u=>u.replace(/[.,;]+$/,'')))].filter(u=>safeUrl(u));}
+function mirCard(dr,mode){
+  const lab=String(dr.label||'').replace(/^(bank|suggestion|new listing|wording):\s*/i,'').trim()||'Item';
+  const body=String(dr.body||'').trim(),urls=mirUrls(body);
+  const P='<div style="font-size:.86rem;color:var(--text2);line-height:1.55;white-space:pre-wrap;margin:.4rem 0">';
+  let h='<div class="tm-item"><div class="t1"><b>'+esc(lab)+'</b></div>';
+  if(mode==='fix'){
+    h+=P+esc(body)+'</div>';
+  }else{
+    const c=mirChunks(body);
+    if(c.intro)h+=P+esc(c.intro)+'</div>';
+    if(!c.chunks.length&&mode==='wording')h+=mirBox(lab,body);
+    else c.chunks.forEach(x=>{h+=mirBox(x.k,x.v);});
   }
-  const opts=d.sites.map(s=>'<option>'+esc(s.name)+'</option>').join('');
-  h+=det('rev','Draft a review reply','<div class="tm-fg"><div><label class="tm-lbl">Site</label><select class="tm-sel" id="rv-site">'+(opts||'<option>Listing</option>')+'</select></div><div><label class="tm-lbl">Stars</label><input class="tm-in" id="rv-stars" inputmode="numeric" placeholder="5"></div><div class="full"><label class="tm-lbl">Review text</label><textarea class="tm-ta" id="rv-text" style="min-height:80px"></textarea></div></div><div class="tm-row"><button class="tm-b" data-act="copyreview">Copy Mirror prompt</button></div>'+
-    '<textarea class="tm-ta" id="rv-draft" style="min-height:80px;margin-top:.6rem" placeholder="Paste the draft reply here"></textarea><div class="tm-row"><button class="tm-b pri" data-act="addreview">Add to queue</button></div>',false);
-  h+=det('mbank','Copy bank ('+d.mBank.length+')','<div class="tm-hint">Reusable wording to paste when you need it: name and address, business descriptions, headlines and calls to action. Mirror keeps these up to date.</div>'+(d.mBank.length?d.mBank.map(x=>mirrorItemCard(x,true)).join(''):'<div class="tm-empty">Nothing in the bank yet. Mirror fills it on her next run.</div>'),false);
-  h+=det('msugg','Suggestions ('+sugg.length+')','<div class="tm-hint">More places to be listed or to post, with the exact page to go to and the text to paste. Press Done when you have done one.</div>'+(sugg.length?sugg.map(x=>mirrorItemCard(x,false)).join(''):'<div class="tm-empty">No suggestions right now.</div>'),false);
-  const gen=d.mPending.filter(x=>!used.has(x.id));
-  h+='<div class="tm-sec">Waiting for you ('+gen.length+')</div>';
-  if(!gen.length)h+='<div class="tm-empty">Nothing else waiting. Anything for a listing is inside that listing\'s box above.</div>';
-  gen.forEach(x=>h+=draftCard(x,false));
+  const links=urls.length?urls.slice(0,3).map(u=>'<a class="tm-b" href="'+esc(safeUrl(u))+'" target="_blank" rel="noopener">Open '+esc(u.replace(/^https?:\/\/(www\.)?/,'').slice(0,36))+'</a>').join(''):'';
+  h+='<div class="tm-row">'+(mode==='bank'?'':'<button class="tm-b pri" data-act="mirdone" data-id="'+esc(dr.id)+'">Done</button>')+links+'<button class="tm-b dim" data-act="skipdraft" data-id="'+esc(dr.id)+'">'+(mode==='bank'?'Remove':'Skip')+'</button></div></div>';
   return h;
 }
-
-/* ── Job & prompt page ── */
-const PROLE={raven:'lead getter',quill:'reply and quote drafter',vesper:'follow-up and venue care writer',ledger:'lead tracker',sable:'event scout',mirror:'SEO and online presence manager',herald:'curator of themed nights and event ideas',ember:'social media caption writer and event kit builder',marquee:'advertising and marketing planner',coach:'host recruiter and coach',sigil:'paperwork and renewals manager',warden:'gig prep and supplies steward'};
+function mirBox(k,v){
+  return '<div style="margin:.5rem 0"><div style="font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:var(--text3)">'+esc(k)+'</div><div style="display:flex;gap:.6rem;align-items:flex-start;margin-top:.2rem"><div style="flex:1;background:var(--bg,#000);border:1px solid var(--border);border-radius:8px;padding:.55rem .7rem;font-size:.88rem;line-height:1.5;white-space:pre-wrap">'+esc(v)+'</div><button class="tm-b pri" data-act="mircopy" data-txt="'+esc(v)+'">Copy</button></div></div>';
+}
+function vMirror(){
+  const d=D();let h='';
+  const lab=x=>String(x.label||'');
+  const sugg=d.mPending.filter(x=>/^(suggestion|new listing):/i.test(lab(x)));
+  const word=d.mPending.filter(x=>/^wording:/i.test(lab(x))&&sugg.indexOf(x)<0);
+  const fix=d.mPending.filter(x=>sugg.indexOf(x)<0&&word.indexOf(x)<0);
+  const n=fix.length+word.length+sugg.length;
+  h+='<div class="tm-hint" style="font-size:.95rem">'+(n?'<b>'+n+' thing'+(n===1?'':'s')+' to do.</b> Fix the problems, paste the wording where it belongs, and join the sites. Press Done on each one when you finish.':'<b>Nothing to do right now.</b> Mirror checks your sites and adds new items when she runs.')+'</div>';
+  h+='<div class="tm-sec">Fix this ('+fix.length+')</div>';
+  h+=fix.length?fix.map(x=>mirCard(x,'fix')).join(''):'<div class="tm-empty">Nothing to fix right now.</div>';
+  h+='<div class="tm-sec">Wording to paste ('+word.length+')</div>';
+  h+=word.length?word.map(x=>mirCard(x,'wording')).join(''):'<div class="tm-empty">No new wording right now.</div>';
+  h+='<div class="tm-sec">Get listed here ('+sugg.length+')</div>';
+  h+=sugg.length?sugg.map(x=>mirCard(x,'sugg')).join(''):'<div class="tm-empty">No new sites to join right now.</div>';
+  h+=det('mbank','Reusable wording ('+d.mBank.length+')','<div class="tm-hint">Name and address, descriptions, headlines and calls to action. Copy any piece when you need it.</div>'+(d.mBank.length?d.mBank.map(x=>mirCard(x,'bank')).join(''):'<div class="tm-empty">Nothing here yet. Mirror fills it on her next run.</div>'),false);
+  const have=new Set(S.sites.map(s=>s.name)),miss=PRESENCE.filter(nm=>!have.has(nm));
+  let sh='';
+  if(miss.length)sh+='<div class="tm-item"><div class="t1">Not set up here yet</div><div class="t2">'+miss.map(esc).join(', ')+'</div><div class="tm-row"><button class="tm-b pri" data-act="addpresence">Add these listings</button></div></div>';
+  if(!d.sites.length)sh+='<div class="tm-empty">No listings yet.</div>';
+  d.sites.forEach(s=>{
+    const sp=siteSpec(s.name),stale=!s.profileRefreshed||Date.now()-s.profileRefreshed>STALE;
+    sh+='<div class="tm-item"><div class="t1"><b>'+esc(s.name)+'</b> '+(stale?'<span class="tm-tag warn">stale</span>':'<span class="tm-tag booked">fresh</span>')+((s.url||sp.url)?' <a href="'+esc(s.url||sp.url)+'" target="_blank" rel="noopener" style="font-size:.76rem">open the site</a>':'')+'</div>'+
+      '<div class="tm-row" style="margin-top:.2rem"><input class="tm-in" style="flex:1;min-width:12rem" data-url="'+esc(s.id)+'" value="'+esc(s.url||'')+'" aria-label="Link to your page on '+esc(s.name)+'"><button class="tm-b" data-act="savesiteurl" data-id="'+esc(s.id)+'">Save link</button></div>'+
+      '<details class="tm-det" data-k="sn_'+esc(s.id)+'"'+(S.open['sn_'+s.id]?' open':'')+' style="margin:.6rem 0 0"><summary>Page text for Mirror'+(s.snapshotAt?' (saved '+esc(fmtDay(s.snapshotAt))+')':'')+'</summary><div class="in"><label class="tm-lbl">Last refreshed on</label><input class="tm-in" type="date" style="width:auto" data-chg="setrefreshed" data-id="'+esc(s.id)+'" value="'+(s.profileRefreshed?esc(isoDay(s.profileRefreshed)):'')+'"><label class="tm-lbl" style="margin-top:.6rem">What this page says now (copy and paste it)</label><textarea class="tm-ta" data-snap="'+esc(s.id)+'" style="min-height:90px">'+esc(s.snapshot||'')+'</textarea><div class="tm-row"><button class="tm-b pri" data-act="savesnap" data-id="'+esc(s.id)+'">Save for Mirror</button></div></div></details>'+
+      '<div class="tm-row"><button class="tm-b pri" data-act="refreshed" data-id="'+esc(s.id)+'">Refreshed today</button><button class="tm-b dim" data-act="silencesite" data-id="'+esc(s.id)+'">Silence</button><button class="tm-b dim red" data-act="delsite" data-id="'+esc(s.id)+'">Delete</button></div></div>';
+  });
+  d.silenced.forEach(s=>{sh+='<div class="tm-item"><div class="t1"><b>'+esc(s.name)+'</b> <span class="tm-tag">silenced</span></div><div class="tm-row"><button class="tm-b" data-act="resumesite" data-id="'+esc(s.id)+'">Resume</button><button class="tm-b dim red" data-act="delsite" data-id="'+esc(s.id)+'">Delete</button></div></div>';});
+  h+=det('mlist','Your listings ('+d.sites.length+')','<div class="tm-hint">The sites Mirror watches. Keep the link to your page on each one so she can read it.</div>'+sh,false);
+  const opts=d.sites.map(s=>'<option>'+esc(s.name)+'</option>').join('');
+  h+=det('rev','Draft a review reply','<div class="tm-fg"><div><label class="tm-lbl">Site</label><select class="tm-sel" id="rv-site">'+(opts||'<option>Listing</option>')+'</select></div><div><label class="tm-lbl">Stars</label><input class="tm-in" id="rv-stars" inputmode="numeric"></div><div class="full"><label class="tm-lbl">Review text</label><textarea class="tm-ta" id="rv-text" style="min-height:80px"></textarea></div></div><div class="tm-row"><button class="tm-b" data-act="copyreview">Copy Mirror prompt</button></div>'+
+    '<textarea class="tm-ta" id="rv-draft" style="min-height:80px;margin-top:.6rem"></textarea><div class="tm-row"><button class="tm-b pri" data-act="addreview">Add to queue</button></div>',false);
+  return h;
+}
 function defPrompt(id){return INFO[id].prompt.split('{NAME}').join(agent(id).name).split('{ROLE}').join(PROLE[id]||agent(id).role.toLowerCase());}
 function vInfo(id){
   const a=agent(id),I=INFO[id],saved=S.cfg.prompts&&S.cfg.prompts[id];
@@ -10875,6 +10896,8 @@ const A={
   },
   async blocksp(t){const sx=adsState().sponsors.find(i=>i.id===t.dataset.id);if(!sx)return;await col('agent_config').doc('outreach').set({blocklist:{['b'+Date.now().toString(36)]:{name:sx.business,reason:'Sponsor, do not use',at:Date.now()}}},{merge:true});await mqSave({['sponsors.'+sx.id+'.status']:'archived',['sponsors.'+sx.id+'.updatedAt']:Date.now()});toast(sx.business+' is on the Do not use list. It will not come back.',false);},
   async blockdraft(t){const dr=S.drafts.find(x=>x.id===t.dataset.id);if(!dr)return;const l=dr.leadId?leadsById()[dr.leadId]:null;const nm=l?(l.client||l.site):'';await col('agent_drafts').doc(dr.id).update({status:'skipped'});if(l)await col('agent_leads').doc(l.id).update({stage:'skipped',updatedAt:Date.now()});if(nm)await col('agent_config').doc('outreach').set({blocklist:{['b'+Date.now().toString(36)]:{name:nm,reason:'Lead, do not use',at:Date.now()}}},{merge:true});toast((nm||'That lead')+' is on the Do not use list. It will not come back.',false);},
+  async mirdone(t){await col('agent_drafts').doc(t.dataset.id).update({status:'approved',approvedAt:Date.now()});toast('Done.');},
+  async mircopy(t){toast(await copy(t.dataset.txt||'')?'Copied.':'Copy failed.',false);},
   async skipdraft(t){const dr=S.drafts.find(x=>x.id===t.dataset.id);await col('agent_drafts').doc(t.dataset.id).update({status:'skipped'});
     const l=dr&&dr.leadId?leadsById()[dr.leadId]:null;
     if(l){await col('agent_leads').doc(l.id).update({skippedAt:Date.now(),updatedAt:Date.now()});toast('Skipped for now. It can come back later.',false);return;}
