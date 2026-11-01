@@ -1292,6 +1292,7 @@ html::-webkit-scrollbar-thumb:hover,.modal::-webkit-scrollbar-thumb:hover{backgr
       </div>
     </div>
     <div style="font-size:0.62rem;color:var(--text3);letter-spacing:0.04em;margin:-0.5rem 0 0.8rem;">Click a lead to see full details.</div>
+    <div id="leadnoteBox"></div>
     <div id="leadsList"></div>
   </div>
   <div class="subpanel" id="sub-venues-prospects">
@@ -4838,6 +4839,7 @@ let editingLeadId=null;
 let expandedLeadId=null;
 function loadLeads(){
   if(!db)return;
+  try{lnListen();renderLeadnotes();}catch(e){}
   db.collection('leads').get().then(snap=>{
     leads=snap.docs.map(d=>({id:d.id,...d.data()})).filter(l=>locationScopeMatches(l.locationId));
     renderLeads();
@@ -4845,6 +4847,88 @@ function loadLeads(){
 }
 const _lx=x=>String(x==null?'':x).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 const _ln=x=>String(x||'').toLowerCase().replace(/[^a-z0-9]/g,'');
+/* ── Leadnote: notes hosts type on the Host Hub, sorted into leads ── */
+let leadnotes=[],_lnUnsub=null;
+function lnToast(m){try{if(typeof hqToast==='function')hqToast(m);else alert(m);}catch(e){}}
+function lnListen(){
+  if(_lnUnsub||!db)return;
+  try{_lnUnsub=db.collection('agent_leadnotes').onSnapshot(sn=>{
+    leadnotes=sn.docs.map(d=>Object.assign({id:d.id},d.data())).sort((a,b)=>(b.createdMs||0)-(a.createdMs||0));
+    renderLeadnotes();
+  },e=>{leadnotes=[];const b=document.getElementById('leadnoteBox');if(b)b.innerHTML='<div class="empty-state" style="font-size:.75rem">Leadnote could not load: '+_lx(e&&e.message||e)+'. The security rules may need the Leadnote block.</div>';});}catch(e){}
+}
+const LN_CITIES=['Federal Way','Bonney Lake','Gig Harbor','Lake Stevens','Maple Valley','University Place','Des Moines','Tacoma','Puyallup','Auburn','Kent','Seattle','Renton','Lakewood','Sumner','Olympia','Tukwila','Fife','Bellevue','Everett','Burien','Covington','Enumclaw','Milton','Edgewood','Orting','Spanaway','Parkland','Bremerton','Shelton','Lacey','Tumwater','Yelm','DuPont','Steilacoom'];
+function lnExtract(text){
+  const t=String(text||'').replace(/\s+/g,' ').trim(),o={name:'',person:'',phone:'',email:'',city:'',kind:'venue',biz:''};
+  let m=t.match(/[\w.+-]+@[\w-]+\.[\w.-]+/);if(m)o.email=m[0];
+  m=t.match(/(?:\+?1[ .-]?)?\(?\b\d{3}\)?[ .-]?\d{3}[ .-]?\d{4}\b/);if(m)o.phone=m[0];
+  for(const c of LN_CITIES){if(new RegExp('\\b'+c+'\\b','i').test(t)){o.city=c;break;}}
+  const BAD=/^(The|This|She|He|At|In|On|And|But|Her|His|They|It|A|An)$/;
+  m=t.match(/\b(?:[Mm]et|[Mm]eet|[Tt]alked to|[Tt]alked with|[Ss]poke (?:to|with)|[Cc]hatted with)\s+(?:this |a |the |some )?(?:(?:girl|guy|lady|man|woman|dude|person|owner|bartender|manager)\s*[,.:]?\s*)?([A-Z][a-z]{1,15})\b/);
+  if(m&&!BAD.test(m[1]))o.person=m[1];
+  if(!o.person){m=t.match(/\b(?:named|called|name is|name's)\s+([A-Z][a-z]{1,15})\b/);if(m&&!BAD.test(m[1]))o.person=m[1];}
+  m=t.match(/\b(?:runs?|owns?|manages?|works (?:at|for)|from|with)\s+(?:a |an |the |his |her |their )?([^.,;!?]{3,60}?)(?=\s+(?:in|at|and|who|she|he|they|but|so)\b|[.,;!?]|$)/i);
+  if(m)o.biz=m[1].trim();
+  if(!o.biz){m=t.match(/\b(?:owner|manager|bartender|booker)\s+(?:of|at)\s+(?:the\s+)?([A-Z][\w&' ]{2,40}?)(?=\s+(?:about|and|who|says|said|wants|for)\b|[.,;!?]|$)/);if(m)o.biz=m[1].trim();}
+  if(/sponsor|advertis|vendor|donat|prize/i.test(t))o.kind='sponsor';
+  else if(/\b(?:host|hosting|dj|emcee|mc|wants to work for us|work for us|apply|job)\b/i.test(t)&&!/bowling|bar|pub|brewery|venue|restaurant|lounge|club|hotel|alley|gym|cafe|coffee/i.test(t))o.kind='host';
+  else if(/bar|pub|brewery|taproom|venue|restaurant|lounge|club|hotel|alley|gym|cafe|coffee|winery|cidery|event center|bowling|arcade|casino|golf/i.test(t))o.kind='venue';
+  else o.kind='other';
+  o.name=o.biz&&!/^(a|an|the)$/i.test(o.biz)?(o.person?o.person+' · '+o.biz:o.biz):(o.person?o.person+' (from a Leadnote)':'Leadnote contact');
+  if(o.city&&o.name.toLowerCase().indexOf(o.city.toLowerCase())<0)o.name+=' · '+o.city;
+  return o;
+}
+async function leadnoteSortNow(){
+  const todo=leadnotes.filter(n=>(n.status||'new')==='new');
+  if(!todo.length){lnToast('Nothing new to sort.');return;}
+  const loc=(typeof currentLocationScope!=='undefined'&&currentLocationScope!=='ALL')?currentLocationScope:((locations&&locations[0]&&locations[0].code)||'');
+  const tagOf={venue:'Venue lead',sponsor:'Sponsor lead',host:'HOST CANDIDATE',other:'Other'};
+  let made=0;
+  for(const n of todo){
+    try{
+      const x=lnExtract(n.text),id=db.collection('leads').doc().id,when=new Date(n.createdMs||Date.now()).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+      await db.collection('leads').doc(id).set({
+        name:x.name,contactName:x.person,phone:x.phone,email:x.email,city:x.city,locationId:loc,stage:'new',temperature:'',interests:[],
+        contactMethod:'in_person',contactMethodOther:'',source:'inbound',foundBy:(n.hostName||'A host')+' (Leadnote)',
+        nextFollowUp:'',followUpNone:false,usingCompetitor:false,
+        notes:tagOf[x.kind]+' · from Leadnote, '+(n.hostName||'a host')+', '+when+':\n'+n.text,
+        leadnoteId:n.id,createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()
+      },{merge:true});
+      await db.collection('agent_leadnotes').doc(n.id).set({status:'quick',leadIds:[id],kindGuess:x.kind,quickAt:Date.now()},{merge:true});
+      made++;
+    }catch(e){lnToast('Could not file one note: '+(e&&e.message||e));}
+  }
+  if(made){lnToast(made+(made===1?' note':' notes')+' filed as leads. Raven polishes them on her next run.');try{loadLeads();}catch(e){}}
+}
+async function leadnoteSetStatus(id,status){try{await db.collection('agent_leadnotes').doc(id).set({status:status,updatedAt:Date.now()},{merge:true});}catch(e){lnToast('Could not save: '+(e&&e.message||e));}}
+async function leadnoteDelete(id){if(!confirm('Delete this note? Any lead already made from it stays.'))return;try{await db.collection('agent_leadnotes').doc(id).delete();}catch(e){lnToast('Could not delete: '+(e&&e.message||e));}}
+function leadnoteOpenLead(lid){try{openLeadModal(lid);}catch(e){}}
+function renderLeadnotes(){
+  const box=document.getElementById('leadnoteBox');if(!box)return;
+  const nw=leadnotes.filter(n=>(n.status||'new')==='new'),q=leadnotes.filter(n=>n.status==='question');
+  const tagCol={new:'var(--gold)',quick:'var(--teal2)',sorted:'#3aaa6a',question:'#d9534f',done:'var(--text4)'};
+  const lab={new:'New',quick:'Filed, Raven will polish',sorted:'Sorted',question:'Raven has a question',done:'Done'};
+  const card=n=>{const st=n.status||'new',lids=[].concat(n.leadIds||[]);
+    const items=[].concat(n.items||[]).map(i=>'<div style="font-size:.7rem;color:var(--text3);margin-top:.25rem">&bull; <b style="color:var(--text2)">'+_lx(i.type||'')+'</b> '+_lx(i.summary||'')+(i.leadId?' <a href="#" style="color:var(--gold)" onclick="leadnoteOpenLead(\''+_lx(i.leadId)+'\');return false">open lead</a>':'')+'</div>').join('');
+    return '<div class="tm-item" style="margin:.4rem 0;padding:.6rem .8rem;border:1px solid var(--border);background:var(--surface)">'
+      +'<div style="display:flex;justify-content:space-between;gap:.6rem;font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:var(--text3)"><span>'+_lx(n.hostName||'A host')+' &middot; '+_lx(new Date(n.createdMs||0).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}))+'</span><span style="color:'+(tagCol[st]||'var(--text3)')+'">'+_lx(lab[st]||st)+'</span></div>'
+      +'<div style="font-size:.82rem;color:var(--text);margin-top:.35rem;white-space:pre-wrap;word-break:break-word">'+_lx(n.text)+'</div>'
+      +(st==='question'&&n.question?'<div style="font-size:.78rem;color:#d9534f;margin-top:.35rem">Raven asks: '+_lx(n.question)+'</div>':'')
+      +items
+      +(!n.items&&lids.length?lids.map(l=>'<div style="font-size:.7rem;color:var(--text3);margin-top:.25rem"><a href="#" style="color:var(--gold)" onclick="leadnoteOpenLead(\''+_lx(l)+'\');return false">Open the lead made from this</a></div>').join(''):'')
+      +'<div style="display:flex;gap:.4rem;margin-top:.5rem;flex-wrap:wrap">'
+      +(st!=='done'?'<button class="btn-sm" onclick="leadnoteSetStatus(\''+n.id+'\',\'done\')">Mark done</button>':'<button class="btn-sm" onclick="leadnoteSetStatus(\''+n.id+'\',\'new\')">Reopen</button>')
+      +'<button class="btn-sm" style="color:var(--rose)" onclick="leadnoteDelete(\''+n.id+'\')">Delete</button></div></div>';};
+  const active=leadnotes.filter(n=>n.status!=='done'),done=leadnotes.filter(n=>n.status==='done');
+  box.innerHTML='<div class="venue-manage-card" style="margin-bottom:.9rem">'
+    +'<div style="display:flex;align-items:center;justify-content:space-between;gap:.6rem;flex-wrap:wrap"><div><span style="font-size:.8rem;letter-spacing:.3em;text-transform:uppercase;color:var(--gold);font-weight:600">Leadnote</span> <span style="font-size:.7rem;color:var(--text3)">'+nw.length+' new'+(q.length?' &middot; '+q.length+' with a question':'')+'</span></div>'
+    +'<button class="btn-sm btn-gold" onclick="leadnoteSortNow()"'+(nw.length?'':' disabled style="opacity:.5"')+'>Sort now</button></div>'
+    +'<div style="font-size:.68rem;color:var(--text3);margin:.3rem 0 .5rem">Notes hosts type on the Host Hub. Sort now files each new note as a lead right away, with the host\'s words attached. Raven reads them on her next run and fixes the details.</div>'
+    +(active.length?active.slice(0,25).map(card).join(''):'<div style="font-size:.75rem;color:var(--text3)">No notes waiting.</div>')
+    +(done.length?'<details style="margin-top:.5rem"><summary style="cursor:pointer;font-size:.7rem;color:var(--text3)">Done ('+done.length+')</summary>'+done.slice(0,30).map(card).join('')+'</details>':'')
+    +'</div>';
+}
+
 function venueForLead(l){if(!l)return null;const n=_ln(l.name);return (venues||[]).find(v=>(l.venueId&&v.id===l.venueId)||v.leadId===l.id||(n&&_ln(v.name)===n))||null;}
 function leadForVenue(v){if(!v)return null;const n=_ln(v.name);return (leads||[]).find(l=>(v.leadId&&l.id===v.leadId)||l.venueId===v.id||(n&&_ln(l.name)===n))||null;}
 function vmSetLeadStage(lid,stage){
@@ -7332,10 +7416,11 @@ raven:{
   ['Surface check-backs that are due (the day the venue gave, or 5 days if none)','Daily, 9 AM','HQ, built in'],
   ['Hold a "no" for 60 days, then put the venue back on the list','Automatic','HQ, built in'],
   ['Draft a cold email for a target venue that has an email on file, then a follow-up on day 5 (one follow-up only)','When you press Draft email on a venue','You approve and send from your own email'],
-  ['Hand a "yes" to onboarding','When a venue says yes','You, one click']
+  ['Hand a "yes" to onboarding','When a venue says yes','You, one click'],
+  ['Read the notes hosts type on Leadnote and turn each into leads on the Leads page: venue, sponsor or host candidate, with the host\'s words kept. Ask a question when a note is too vague','Every hour, 8 AM to 10 PM, every day, or when you press Sort now on the Leads page','Raven, automatic']
  ],
- reads:['agent_venues (the target list)','agent_config/outreach (trial-night terms)','Your lead inbox (email)'],
- writes:['agent_leads (stage new, source raven)','agent_venues (new venues, evidence, pitch)','agent_drafts (agent raven, kind thanks)'],
+ reads:['agent_venues (the target list)','agent_leadnotes (host notes)','agent_config/outreach (trial-night terms)','Your lead inbox (email)'],
+ writes:['leads (from Leadnote notes)','agent_leadnotes (status, items, questions)','agent_leads (stage new, source raven)','agent_venues (new venues, evidence, pitch)','agent_drafts (agent raven, kind thanks)'],
  handoff:'Inbound leads go to Quill for a reply and quote. A venue that says yes goes to your onboarding list.',
  rules:['Never contact a venue or client herself.','Never put a venue back on the list inside its 60-day hold.','Never visit or pitch a venue marked "confirm it is open first" until you confirm it.'],
  today:'Works by hand inside HQ: add leads, load and add venues, copy the trip brief, log visits, approve thank-yous, hand off yeses.',
@@ -7352,8 +7437,18 @@ Never guess a missing field; leave it empty. A lead without a date or location w
 - Pitch rule: one format on one night, tied to what the venue already runs. Never pitch a night they already fill.
 - Do not touch venues with stage yes, no or onboarding.
 
+3) LEADNOTES. Hosts (Eddy especially) type free-text notes on the Host Hub page called Leadnote, about people they meet: a venue owner, a possible sponsor, a possible host, anything. Each note is a document in the Firestore collection agent_leadnotes with: text (their words), hostName, createdMs, status.
+Each run, read every agent_leadnotes document with status "new" or "quick" (quick means HQ already filed a rough lead for it; its leadIds field holds that lead's id).
+- Split one note into separate items if it mentions more than one person or business.
+- For each item decide: venue lead, sponsor lead, host candidate, or other.
+- Venue and sponsor leads go in the Firestore collection leads (the HQ Leads page) with fields: name (the business, else the person plus what they run), contactName, phone, email, city, locationId (wa-southsound unless the note says otherwise), stage "new", contactMethod "in_person", source "inbound", foundBy "<hostName> (Leadnote)", notes (what they said, what was promised, who follows up whom, Instagram handle, and the tag Venue lead or Sponsor lead), leadnoteId (the note's id), createdAt and updatedAt as ISO strings. If the note has leadIds, UPDATE that lead instead of creating a new one. Never create a second lead for the same leadnoteId and person.
+- A host candidate gets a leads record the same way, with notes starting "HOST CANDIDATE:" so Jett and Ahnna see it.
+- Keep every fact exactly as the host wrote it. Never guess a business name, phone, email or city; leave it empty and say so in notes.
+- Then update the note: status "sorted" and items [{type, summary, leadId}]. If the note is too vague to act on, set status "question" and question "<one short question for the host or Ahnna>", for example "Which bowling alley?"
+- Meeting someone in person is a warm contact, not a cold touch. Do not email or DM anyone because of a Leadnote. Only record it and note any follow-up the host or the other person promised.
+
 RULES
-- Read-only on everything except the collections named above.
+- Read-only on everything except the collections named above (agent_leads, agent_venues, agent_leadnotes and leads).
 - Do not create duplicates: match on site plus client plus eventDate for leads, and on name for venues.
 
 OUTPUT: after each run, one line: how many leads created, how many venues updated or added, anything you could not read.`
