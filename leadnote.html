@@ -16,6 +16,8 @@
   .orn{color:#3a3428;font-family:'Cormorant Garamond',serif;font-size:1.05rem;letter-spacing:0.4em;margin:0.7rem 0 1.2rem;text-align:center;}
   h1{font-family:'Playfair Display',serif;font-weight:600;font-size:1.5rem;color:var(--text);text-align:center;margin-bottom:.4rem}
   .hint{font-size:.82rem;color:var(--text2);line-height:1.6;text-align:center;margin-bottom:1.1rem}
+  .in{display:block;width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:.85rem 1rem;margin-bottom:.7rem;color:var(--text);font-family:inherit;font-size:1rem;outline:none}
+  .in:focus{border-color:var(--gold)}
   textarea{width:100%;min-height:15rem;background:var(--surface2);border:1px solid var(--border2);border-radius:12px;padding:1rem;color:var(--text);font-family:inherit;font-size:1.05rem;line-height:1.5;letter-spacing:.02em;outline:none;resize:vertical}
   textarea:focus{border-color:var(--gold)}
   .btn{display:block;width:100%;text-align:center;background:rgba(201,169,110,.14);color:var(--gold);border:1px solid var(--gold);border-radius:10px;padding:1rem;margin-top:1rem;font-family:inherit;font-size:.82rem;letter-spacing:.2em;text-transform:uppercase;font-weight:600;cursor:pointer}
@@ -55,8 +57,27 @@
   function when(ms){ try{ return new Date(ms).toLocaleString('en-US',{weekday:'short',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}); }catch(e){ return ''; } }
 
   function signedOut(){
-    $('main').innerHTML = '<h1>Leadnote</h1><div class="msg">Please sign in on the Host Hub first, then open this page again.</div>'
-      + '<a class="btn" style="text-decoration:none" href="./">Open the Host Hub</a>';
+    $('main').innerHTML = '<h1>Leadnote</h1><div class="hint">Sign in with your Belladonna login to send notes.</div>'
+      + '<input class="in" id="lid" placeholder="Email, username or host ID" autocomplete="username" autocapitalize="none">'
+      + '<input class="in" id="lpw" type="password" placeholder="Password" autocomplete="current-password" onkeydown="if(event.key===\'Enter\')doLogin()">'
+      + '<button class="btn" id="lbtn" onclick="doLogin()">Sign In</button><div class="msg" id="lmsg"></div>';
+  }
+  function resolveEmail(v){
+    v = (v||'').trim(); if(!v) return Promise.resolve(null);
+    if(v.indexOf('@')>=0) return Promise.resolve(v);
+    return db.collection('loginLookup').doc(v.toLowerCase()).get().then(function(d){ return d.exists ? d.data().email : null; });
+  }
+  function doLogin(){
+    var id = $('lid').value, pw = $('lpw').value, m = $('lmsg'), b = $('lbtn');
+    if(!id.trim() || !pw){ m.className='msg err'; m.textContent='Enter your login and password.'; return; }
+    b.disabled = true; m.className='msg'; m.textContent='Signing in\u2026';
+    resolveEmail(id).then(function(email){
+      if(!email){ throw new Error('We could not find an account matching that.'); }
+      return firebase.auth().signInWithEmailAndPassword(email, pw);
+    }).catch(function(e){
+      b.disabled = false; m.className='msg err';
+      m.textContent = (e && e.code && /wrong-password|invalid-credential|user-not-found/.test(e.code)) ? 'That login or password is not right.' : (e && e.message || 'Could not sign in.');
+    });
   }
 
   function paintForm(){
