@@ -40,6 +40,12 @@
   .song-row{display:flex;justify-content:space-between;align-items:baseline;gap:1rem;padding:0.62rem 0;border-bottom:1px solid var(--border);}
   .song-title{color:var(--text);font-size:0.92rem;font-weight:400;letter-spacing:0.03em;line-height:1.35;}
   .song-artist{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:1.08rem;color:var(--text2);text-align:right;flex-shrink:0;max-width:46%;line-height:1.25;letter-spacing:0.02em;}
+  .pick-btn{display:block;width:100%;background:rgba(201,169,110,.12);color:var(--gold);border:1px solid var(--gold);border-radius:12px;padding:.85rem 1rem;margin:0 0 1rem;font-family:'Josefin Sans',sans-serif;font-size:.8rem;letter-spacing:.2em;text-transform:uppercase;font-weight:600;cursor:pointer}
+  .pick-btn:active,.pick-btn:hover{background:rgba(201,169,110,.22)}
+  .pick-card{border:1px solid var(--border-gold);background:var(--surface);border-radius:14px;padding:1rem 1.1rem;margin-bottom:1.2rem;text-align:center}
+  .pick-card .pk-l{font-size:.6rem;letter-spacing:.3em;text-transform:uppercase;color:var(--gold);margin-bottom:.5rem}
+  .pick-card .pk-t{font-family:'Cormorant Garamond',serif;font-size:1.6rem;font-weight:600;color:var(--text);line-height:1.15}
+  .pick-card .pk-a{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:1.15rem;color:var(--text2);margin-top:.2rem}
   .loading,.msg-empty{text-align:center;color:var(--text3);font-size:0.78rem;letter-spacing:0.1em;padding:3rem 0;}
 </style>
 </head>
@@ -126,14 +132,28 @@
       <div class="theme-title">${escapeHtml(data.title||'Karaoke')}</div>
       ${data.alt?`<div class="theme-alt">${escapeHtml(data.alt)}</div>`:''}
       <div class="theme-sub">${n} song${n===1?'':'s'}</div>
+      <button class="pick-btn" id="pickBtn" type="button">Choose a song for me</button>
+      <div id="pickBox"></div>
       <div class="search-wrap"><input type="text" id="songSearch" placeholder="Search songs or artists…"></div>
       <div class="song-count" id="songCount"></div>
       <div class="song-list" id="songList"></div>
     `;
+    document.getElementById('pickBtn').addEventListener('click',chooseForMe);
     document.getElementById('songSearch').addEventListener('input',e=>renderSongs(e.target.value));
     renderSongs('');
   }
 
+  // Picks one song at random from the whole list and shows it above the first section.
+  let lastPick=null;
+  function chooseForMe(){
+    const songs=allItems.filter(i=>!i.head);
+    if(!songs.length) return;
+    let s=songs[Math.floor(Math.random()*songs.length)];
+    if(songs.length>1){ let g=0; while(s===lastPick && g++<20) s=songs[Math.floor(Math.random()*songs.length)]; }
+    lastPick=s;
+    document.getElementById('pickBox').innerHTML='<div class="pick-card"><div class="pk-l">Your song</div><div class="pk-t">'+escapeHtml(s.title||'')+'</div>'+(s.artist?'<div class="pk-a">'+escapeHtml(s.artist)+'</div>':'')+'</div>';
+    document.getElementById('pickBtn').textContent='Choose another';
+  }
   function renderSongs(query){
     const q=query.trim().toLowerCase();
     const hit=s=>!q||(s.title||'').toLowerCase().includes(q)||(s.artist||'').toLowerCase().includes(q);
