@@ -2178,6 +2178,7 @@ function loadVenuesList(){
   db.collection('hq_data').doc('venues-list').get().then(snap=>{
     if(snap.exists){try{venues=JSON.parse(snap.data().value);renderVenueManage();populateRosterFilters();}catch(e){}}
     venuesLoadedFromServer=true;
+    try{importMasterOnlyVenues();}catch(e){}   // the master list may already be loaded: add any venues that only exist there
   }).catch(()=>{venuesLoadedFromServer=true;});
 }
 // The host roster used to be trusted from this browser's local cache only, with Firebase
@@ -3825,7 +3826,7 @@ async function vmxPushTimesToGigs(v,rows,oldSlots){
   return {n,moved,removed};
 }
 let _vmxStarted=false;
-function vmxStartOnce(){if(_vmxStarted||!rtdb)return;_vmxStarted=true;vmxListen(()=>{try{renderVenueManage();renderDashboardWeek();}catch(e){}},()=>{ensureVenueIds();importMasterOnlyVenues();try{renderVenueManage();}catch(e){}});}
+function vmxStartOnce(){if(_vmxStarted||!rtdb)return;_vmxStarted=true;setTimeout(()=>{try{importMasterOnlyVenues();}catch(e){}},4000);vmxListen(()=>{try{renderVenueManage();renderDashboardWeek();}catch(e){}},()=>{ensureVenueIds();importMasterOnlyVenues();try{renderVenueManage();}catch(e){}});}
 // every venue gets a Venue ID (and a master record) automatically
 let _idsEnsured=false;
 async function ensureVenueIds(){
