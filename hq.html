@@ -443,6 +443,10 @@ html::-webkit-scrollbar-thumb:hover,.modal::-webkit-scrollbar-thumb:hover{backgr
 .sg-row[open] .sg-chev::before{content:'\25BE';}
 .sg-body{padding:.2rem .9rem .9rem;}
 .sg-body .signin-card-actions{margin-top:.8rem;}
+.signin-card-actions{flex-wrap:wrap;row-gap:.6rem}
+.signin-card-actions>div{display:flex;flex-wrap:wrap;gap:.5rem;margin-left:auto;max-width:100%}
+.signin-card-actions .signin-reviewed{white-space:nowrap}
+.signin-card-actions .btn-sm{white-space:nowrap}
 
 /* SCHEDULE */
 .sched-toolbar{display:flex;gap:0.5rem;margin-bottom:1rem;flex-wrap:wrap;align-items:center;}
@@ -6240,7 +6244,7 @@ function renderVenueManage(){
     // each with a dropdown that changes the PERMANENT host (a one-off fill-in is done from the
     // This Week dashboard or the Planner). Venues with no Planner night keep the old default host.
     const hostLine=v.host?`<div style="font-size:0.68rem;color:var(--gold);margin-top:0.4rem;">Default host: ${esc(v.host)}</div>`:'';
-    return `<div class="venue-manage-card"${v.inactive?' style="opacity:0.55;"':(v.noRecurring?' style="opacity:0.8;"':'')}><div class="venue-manage-header"><div class="venue-manage-name">${v.name}${v.inactive?' <span style="font-size:0.62rem;color:var(--text4);font-weight:400;text-transform:uppercase;letter-spacing:0.08em;">· Inactive</span>':(v.noRecurring?' <span style="font-size:0.62rem;color:var(--text3);font-weight:400;text-transform:uppercase;letter-spacing:0.08em;">· One-off only</span>':(v.recurring?' <span style="font-size:0.62rem;color:var(--text3);font-weight:400;text-transform:uppercase;letter-spacing:0.08em;">· Recurring gig</span>':''))}${v.locationId?` <span style="font-size:0.65rem;color:var(--text3);font-weight:400;">· ${locationLabel(v.locationId)}</span>`:''}</div><div style="display:flex;gap:0.4rem;align-items:center;"><button class="btn-sm modal-history-btn" style="padding:0.3rem 0.6rem;font-size:0.6rem;" onclick="openVenueHistoryModal('${v.id}')">History</button><button class="action-btn edit" onclick="openVenueModal('${v.id}')">✎</button><button class="action-btn delete" onclick="deleteVenue('${v.id}')">✕</button></div></div><div class="venue-gig-tags">${(v.gigs||[]).map(g=>`<span class="venue-gig-tag ${gigClass(g)}">${g}</span>`).join('')}</div>${v.venueId?`<div style="font-size:0.6rem;color:var(--text4);margin-top:0.3rem;">Venue ID: ${esc(v.venueId)}</div>`:''}${payLine}${slotsLine}${hostLine}${window.hqBadges?window.hqBadges(v):''}${window.hqAgr?window.hqAgr(v):''}${v.notes?`<div style="font-size:0.81rem;color:var(--text3);margin-top:0.5rem;">${v.notes}</div>`:''}</div>`;
+    return `<div class="venue-manage-card"${v.inactive?' style="opacity:0.55;"':(v.noRecurring?' style="opacity:0.8;"':'')}><div class="venue-manage-header" style="margin-bottom:.35rem;gap:.8rem;flex-wrap:wrap"><div style="display:flex;align-items:center;gap:.9rem;flex-wrap:wrap;min-width:0"><div class="venue-manage-name">${v.name}${v.inactive?' <span style="font-size:0.62rem;color:var(--text4);font-weight:400;text-transform:uppercase;letter-spacing:0.08em;">· Inactive</span>':(v.noRecurring?' <span style="font-size:0.62rem;color:var(--text3);font-weight:400;text-transform:uppercase;letter-spacing:0.08em;">· One-off only</span>':(v.recurring?' <span style="font-size:0.62rem;color:var(--text3);font-weight:400;text-transform:uppercase;letter-spacing:0.08em;">· Recurring gig</span>':''))}${v.locationId?` <span style="font-size:0.65rem;color:var(--text3);font-weight:400;">· ${locationLabel(v.locationId)}</span>`:''}</div><div class="venue-gig-tags" style="margin:0">${(v.gigs||[]).map(g=>`<span class="venue-gig-tag ${gigClass(g)}">${g}</span>`).join('')}</div></div><div style="display:flex;gap:0.4rem;align-items:center;">${window.hqBadgeOnly?window.hqBadgeOnly(v):''}<button class="btn-sm modal-history-btn" style="padding:0.3rem 0.6rem;font-size:0.6rem;" onclick="openVenueHistoryModal('${v.id}')">History</button><button class="action-btn edit" onclick="openVenueModal('${v.id}')">✎</button></div></div>${window.hqVenueLine?window.hqVenueLine(v):''}</div>`;
   }).join('');
 }
 const VENUE_GIG_SLOT_DAYS=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
@@ -8376,7 +8380,7 @@ function remState(){
 async function remSave(patch){const ref=col('agent_config').doc('reminders');try{await ref.update(patch);}catch(e){await ref.set(expandPatch(patch),{merge:true});}}
 function remBox(id){
   const a=agent(id),r=remState(),mine=r.open.filter(x=>x.agent===id),today=isoDay(Date.now());
-  let h='<div class="tm-item" style="margin-top:0;margin-bottom:1rem"><div class="t1"><b>Remind me</b> <span class="tm-tag">'+mine.length+' open</span></div><div class="tm-hint" style="margin:.2rem 0 .5rem">Leave '+esc(a.name)+' a note and it shows up in your Gazette until you check it off.</div>';
+  let h='<div class="tm-item" style="margin-top:0;margin-bottom:1rem"><div class="t1"><b>Remind me</b> <span class="tm-tag">'+mine.length+' open</span></div><div style="height:.4rem"></div>';
   mine.forEach(x=>{const tag=!x.date?'':x.date<today?'<span class="tm-tag lost">was due '+esc(fmtEv(x.date))+'</span>':x.date===today?'<span class="tm-tag warn">today</span>':'<span class="tm-tag">'+esc(fmtEv(x.date))+'</span>';
     h+='<div class="t2" style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;margin:.25rem 0"><span style="flex:1;min-width:160px">'+esc(x.text)+'</span>'+tag+'<button class="tm-b pri" data-act="remdone" data-id="'+esc(x.id)+'">Done</button><button class="tm-b dim red" data-act="remdel" data-id="'+esc(x.id)+'">Delete</button></div>';});
   h+='<div class="tm-row" style="margin-top:.5rem"><input class="tm-in" id="rem-text" placeholder="e.g. Create a Nextdoor business account" style="flex:1;min-width:200px"><input class="tm-in" id="rem-date" type="date" style="width:auto" title="Optional: remind me on or after this date"><button class="tm-b pri" data-act="remadd" data-agent="'+esc(id)+'">Add</button></div></div>';
@@ -9607,13 +9611,12 @@ function vLedger(){
 /* ── Sable ── */
 function vSable(){
   const d=D(),dg=d.digest;let h='';
-  h+=det('sprompt','Run Sable (copy the scout prompt)','<div class="tm-hint">Run this as a scheduled task every Monday morning. When it finishes, paste its JSON block below.</div><div class="tm-row"><button class="tm-b" data-act="copysable">Copy Sable prompt</button></div>',!dg);
-  h+=det('sload','Load this week\'s digest','<textarea class="tm-ta" id="sableJson" placeholder="Paste Sable\'s output here. The JSON block is found automatically."></textarea><div class="tm-row"><button class="tm-b pri" data-act="loaddigest">Load digest</button></div>',!dg);
   if(!dg)return h+'<div class="tm-empty">No digest loaded yet.</div>';
   h+='<div class="tm-sec">Top opportunities'+(dg.runDate?' · '+esc(fmtEv(dg.runDate)):'')+'</div>';
   if(!d.top5.length)h+='<div class="tm-empty">No top picks in this digest.</div>';
   const skAt=(S.cfg.sable&&S.cfg.sable.skipAt)||{},todayIso=isoDay(Date.now()),passed=[];
   d.top5.forEach((t,i)=>{
+    if(t.date&&String(t.date)<todayIso)return;
     const st=d.dec['t'+i],u=safeUrl(t.sourceUrl);
     if(st==='skip'){if(Date.now()-(skAt['t'+i]||0)<30*DAY&&(!t.date||t.date>=todayIso))passed.push([t,i]);return;}
     h+='<div class="tm-item"><div class="t1"><b>'+esc(t.event)+'</b> · '+esc(fmtEv(t.date))+(st?' <span class="tm-tag '+(st==='pursue'?'booked':'lost')+'">'+st+'</span>':'')+'</div>'+
@@ -9626,7 +9629,7 @@ function vSable(){
   const all=Array.isArray(dg.all)?dg.all:[];
   if(all.length){
     h+='<div class="tm-sec">Everything by date ('+all.length+')</div><div class="tm-item">';
-    all.slice().sort((a,b)=>String(a.date).localeCompare(String(b.date))).forEach(e=>{
+    all.slice().filter(e=>!e.date||String(e.date)>=todayIso).sort((a,b)=>String(a.date).localeCompare(String(b.date))).forEach(e=>{
       const u=safeUrl(e.sourceUrl);
       h+='<div class="t2" style="margin:.35rem 0"><b style="color:var(--text)">'+esc(fmtEv(e.date))+'</b> · '+esc(e.event)+(e.category?' <span class="tm-tag">'+esc(e.category)+'</span>':'')+(u?' <a href="'+esc(u)+'" target="_blank" rel="noopener">link</a>':'')+'</div>';
     });
@@ -9885,7 +9888,10 @@ function curatorState(){
   return {ideas:ideas,fresh:ideas.filter(x=>!x.status||x.status==='new'),profiles:c.profiles||{},catalog:(c.catalog&&c.catalog.text)||''};
 }
 const pfKey=id=>'p'+String(id).replace(/[^a-zA-Z0-9]/g,'_');
-function ideaVenues(x){return [].concat(x.venues||[]).map(v=>typeof v==='string'?{name:v,kind:'',why:''}:v).filter(v=>v&&v.name);}
+function ideaVenues(x){
+  let ours=null;try{ours=(typeof venues!=='undefined'&&Array.isArray(venues)?venues:[]).filter(v=>v&&v.name&&!v.inactive).map(v=>blNorm(v.name));}catch(e){ours=[];}
+  return [].concat(x.venues||[]).map(v=>typeof v==='string'?{name:v,kind:'',why:''}:v).filter(v=>v&&v.name).map(v=>{try{if(v.kind!=='have'&&ours.indexOf(blNorm(v.name))>=0)return Object.assign({},v,{kind:'have'});}catch(e){}return v;});
+}
 const IV_TAG={have:'we work here',want:'we want',suggest:'Iris suggests'};
 function ideaPrompt(x){return 'Write a short, persuasive pitch to a venue owner for this Belladonna idea, in our brand voice. Warm, confident, a little gothic and fun. Four to six sentences, one clear next step (a free trial night). Never promise a price.\n\nIDEA: '+x.title+(x.kind?' ('+x.kind+')':'')+'\nWHAT IT IS: '+(x.pitch||'')+(ideaVenues(x).length?'\nBEST AT: '+ideaVenues(x).filter(v=>v.best).map(v=>v.name+(v.why?' ('+v.why+')':'')).join('; ')+'\nALSO FITS: '+ideaVenues(x).filter(v=>!v.best).map(v=>v.name+(v.why?' ('+v.why+')':'')).join('; '):'')+(x.uses&&x.uses.length?'\nWE ALREADY HAVE: '+[].concat(x.uses).join(', '):'')+(x.missing?'\nSTILL TO BUILD: '+x.missing:'')+'\n\nUse only what is stated above. Do not invent venue features.';}
 function ideaCard(x){
@@ -10256,6 +10262,32 @@ window.hqBadges=function(v){
   const bill=v.payMethod?[v.payMethod,v.billFreq==='gig'?'per gig':(v.billDay==='last'?'last day':ord(v.billDay||1))+' of the month',v.billAmount,v.billNote].filter(Boolean).map(esc).join(' &middot; '):'';
   if(!b&&!info&&!bill)return '';
   return '<div style="margin-top:.4rem">'+b+'</div>'+(bill?'<div style="font-size:0.68rem;color:var(--text3);margin-top:.3rem;"><b>Bills:</b> '+bill+'</div>':'')+(info?'<div style="font-size:0.68rem;color:var(--text3);margin-top:.3rem;">'+info+'</div>':'');
+};
+window.hqBadgeOnly=function(v){
+  const n=vnorm(v.name),a=agrState().active.find(x=>vnorm(x.venue)===n);
+  const l=Object.assign({},(typeof leadForVenue==='function'?leadForVenue(v):null)||{},v.leadInfo||{});
+  const bd=(t,c,tip)=>'<span class="acct-status-badge" title="'+esc(tip||'')+'" style="border-color:'+c+';color:'+c+';margin-right:.35rem;">'+t+'</span>';
+  if(a){
+    const m={checkin:['2-month check-in due','#d9a441'],reply:['Waiting on their reply','#d9a441'],talk:['Talk to them first','#d9534f'],renew:['Renewal coming up','#d9a441'],renewwait:['Renewal coming up','#d9a441']}[a.phase];
+    if(a.days<0&&a.phase!=='checkin')return bd('Agreement ended','#d9534f','Ended '+a.endsOn);
+    if(m)return bd(m[0],m[1],'Ends '+a.endsOn);
+    return bd('Signed','#3aaa6a',a.days+' days left');
+  }
+  if(v.noAgreement||(l.signedStage==='active'))return bd('No agreement','#5aa7c9','Working with us, nothing signed');
+  if(l.signedStage==='signed')return bd('Signed','#3aaa6a','');
+  return '';
+};
+window.hqVenueLine=function(v){
+  const l=Object.assign({},(typeof leadForVenue==='function'?leadForVenue(v):null)||{},v.leadInfo||{});
+  const U=(x,base)=>/^https?:\/\//i.test(x)?x:base+String(x).replace(/^@/,'');
+  const lk=(t,u)=>'<a href="'+esc(u)+'" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline">'+t+'</a>';
+  const parts=[];
+  if(v.venueId)parts.push('Venue ID: '+esc(v.venueId));
+  const em=v.email||l.email;if(em)parts.push(esc(em));
+  if(v.instagram)parts.push(lk('Instagram',U(v.instagram,'https://instagram.com/')));
+  if(v.facebook)parts.push(lk('Facebook',U(v.facebook,'https://facebook.com/')));
+  if(v.website)parts.push(lk('Website',U(v.website,'https://')));
+  return parts.length?'<div style="font-size:0.68rem;color:var(--text3);">'+parts.join(' &middot; ')+'</div>':'';
 };
 window.hqAgr=function(v){
   const c=(S.cfg.sigil||{}).agreements||{},n=vnorm(v.name);
