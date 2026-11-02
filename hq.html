@@ -7700,18 +7700,17 @@ mirror:{
   ['Audit belladonnanights.com: page titles, descriptions, headings, schema markup, mobile, speed, sitemap, location and service pages','First Monday of each month','Mirror, planned (you paste the results in by hand today)'],
   ['Check the Google Business Profile: categories, services, hours, photos, weekly post, questions and answers','First Monday of each month, weekly post reminder every Monday','Mirror, planned'],
   ['Check every other listing (Bing Places, Apple Business Connect, Yelp, Facebook, Instagram, Nextdoor and your gig sites) for identical name, address, phone, hours and links','Monthly','Mirror, planned'],
-  ['Flag any listing not refreshed in 90 days, and tell you exactly what to do on that site (photos, video, packages, bio, calendar, reviews)','Daily check, shown on her card','HQ, built in: each listing has its own checklist'],
   ['Skip any site you have silenced','Always','HQ, built in'],
   ['Draft the review-request message after each private event and each venue night that went well','Within 24 hours of the event','Mirror drafts, you send'],
   ['Draft a reply to each new review','Within 24 hours of the review arriving','Mirror, automatic (you paste the review in by hand today)'],
   ['Write the exact fixes as a short list (page, what is wrong, the new text)','With each audit','Mirror'],
   ['Make the fixes on the site and the listings, then mark each listing refreshed','After each audit','You or Eddy']
  ],
- reads:['agent_sites (your listings: name, url, profileRefreshed, active)','Your public website and public listing pages','Review notification emails (email)'],
+ reads:['agent_sites (your listings: name, url, active)','Your public website and public listing pages','Review notification emails (email)'],
  writes:['agent_drafts (agent mirror, kind review, reviewask or seo, status pending)'],
  handoff:'Review requests go to you to send. Strong reviews and new photos feed the website and the next Iris posts.',
  rules:['Never log in to a site or listing.','Never buy, trade or write fake reviews, and never offer a reward for a review.','Never ask only happy customers for reviews. Ask everyone.','Never ask a customer for a Yelp review. Yelp does not allow it.','Skip any site whose active flag is false. That site is silenced and needs no reminders or fixes.','Never argue with a reviewer. Own what is fair, stay professional, offer a way to make it right.','Keep the name, address, phone number and hours identical everywhere. Never stuff keywords.','Only claim what is true: services, areas and prices you really offer.'],
- today:'Stale-listing flags work in HQ. For audits and review messages you copy her prompt, run it, paste the fixes and drafts back and approve.',
+ today:'For audits and review messages you copy her prompt, run it, paste the fixes and drafts back and approve.',
  auto:'Still needs automating: the monthly audit and spotting review emails. Needs the business account to reach the public web, your inbox and Firestore.',
  prompt:PRE+`
 YOUR JOB: make sure Belladonna is found everywhere people look, set up completely and correctly, and that reviews and feedback keep coming in. Service area: Auburn, Kent, Renton, Federal Way, Tacoma, Seattle and the surrounding Seattle-Tacoma area. Website: belladonnanights.com.
@@ -7732,11 +7731,10 @@ YOUR JOB: make sure Belladonna is found everywhere people look, set up completel
 (c) GET LISTED HERE: one document per site, gig site, directory, community calendar or chamber of commerce worth joining to bring in leads, each separately. label starts with "Suggestion: " and the site name. body = a short plain line on why it is worth it, then "WHERE: " the exact sign-up page link, then "STEPS: " what to do, then "READY TEXT: " the exact text to paste.
 Do not repeat an item that is already pending. Do not write anything about listings that are fine.
 
-6. PROFILE FRESHNESS. Collection agent_sites has profileRefreshed (ms). Flag any listing not refreshed in 90 days.
 
 RULES: never log in to a site. Never buy or fake reviews. Never keyword-stuff. Keep name, address, phone and hours identical everywhere. Only claim what is true.
 
-7. PAGE TEXT. If a public page cannot be fetched, do not stop. Each agent_sites doc may have snapshot and snapshotAt (pasted text of that listing). Use those only if a page cannot be fetched. If profileRefreshed is missing, ask for it there too.
+7. PAGE TEXT. If a public page cannot be fetched, do not stop. Each agent_sites doc may have snapshot and snapshotAt (pasted text of that listing). Use those only if a page cannot be fetched.
 
 8. KEEP IT SIMPLE. Each problem is its own item in the right list from step 5, never only a line in a note. Also keep the reusable copy bank (drafts labelled "Bank: Name, address and phone", "Bank: Business description", "Bank: Headline, services and calls to action") with one named piece per line the same way as in 5(b). Name every community event calendar and chamber of commerce separately. Never fetch Facebook or Instagram (robots.txt blocks it); use snapshots. The business name is Belladonna Nights (Belladonna Entertainment). If any page or listing still says "Belladonna Audio Alchemies", write that as its own fix.
 
@@ -8013,7 +8011,7 @@ function D(){
     cd:coachState(),
     waiting:L.filter(l=>l.stage==='quoted'&&!l.repliedAt).length,
     sites:sites,
-    stale:sites.filter(s=>!s.profileRefreshed||Date.now()-s.profileRefreshed>STALE),
+    stale:[],
     digest:dg||null,top5:top5,dec:dec,
     undecided:top5.filter((_,i)=>!dec['t'+i]).length
   };
@@ -8061,9 +8059,9 @@ function cardInfo(id,d){
   if(id==='marquee'){const a=adsState();const parts=[a.fresh.length?plural(a.fresh.length,'ad move','ad moves')+' waiting':'',a.stale.length?plural(a.stale.length,'ad','ads')+' to check':'',a.budget?fmtMoney(a.total)+' of '+fmtMoney(a.budget)+' spent':''].filter(Boolean);return {need:a.fresh.length+a.stale.length,line:parts.length?parts.join(' · '):'Set your budget'};}
   if(id==='herald'){const c=curatorState();return {need:c.fresh.length,line:c.fresh.length?plural(c.fresh.length,'new idea','new ideas'):(c.ideas.length?'No new ideas':'No ideas yet')};}
   if(id==='mirror'){
-    const s=d.stale.length,p=d.mPending.length;
+    const s=0,p=d.mPending.length;
     if(!d.sites.length)return {need:0,line:'Add your listings'};
-    return {need:s+p,line:(s||p)?[s?plural(s,'profile','profiles')+' stale':'',p?plural(p,'draft','drafts')+' waiting':''].filter(Boolean).join(' · '):'All profiles fresh'};
+    return {need:s+p,line:(s||p)?[p?plural(p,'draft','drafts')+' waiting':''].filter(Boolean).join(' · '):'Nothing waiting'};
   }
   return {need:0,line:''};
 }
@@ -8370,7 +8368,6 @@ function briefData(){
     add('mirror',fx.length,plural(fx.length,'website or listing fix','website and listing fixes')+' to approve',fx.slice(0,6).map(x=>cut(x.label,50)).join('; ')+(fx.length>6?'; and '+(fx.length-6)+' more':'')+'. Each is inside its listing\'s box on Mirror\'s desk.');
     add('mirror',nl.length,plural(nl.length,'new place to list the business','new places to list the business'),nl.map(x=>cut(String(x.label).replace(/^(new listing|suggestion):\s*/i,''),40)).join('; ')+'.');
     add('mirror',rv.length,plural(rv.length,'review reply or request','review replies and requests')+' to approve',rv.map(x=>cut(x.label,60)).join('; ')+'.');}
-  add('mirror',d.stale.length,plural(d.stale.length,'profile is','profiles are')+' stale',d.stale.slice(0,6).map(x=>x.name+(x.profileRefreshed?' ('+ago(x.profileRefreshed)+')':' (never refreshed)')).join('; ')+'. Open Mirror for what to change on each.');
   allNotes().filter(n=>n.status==='pending'&&/NEEDS YOU:/i.test(n.body||'')).forEach(n=>{
     const m=String(n.body).split(/NEEDS YOU:/i)[1]||'',ls=m.split('\n').map(x=>x.replace(/^\s*[-*\u2022]\s*/,'').trim()).filter(Boolean);
     ls.forEach(l=>need.push({a:n.agent,text:l,body:agent(n.agent)?agent(n.agent).name+' left this in '+(n.agent==='warden'?'his':'her')+' run note '+ago(n.createdAt)+'.':'',note:n.id}));
@@ -8801,7 +8798,7 @@ YOUR JOB: look over Belladonna's whole online image (website, Google Business Pr
 LABELS: every draft label and every NEEDS YOU line must START with the listing it is about, named as in agent_sites (for the website start with "Website:"; for Google start with "Google Business Profile:"; for Facebook "Facebook Page:"; and so on). HQ files each one inside that listing's box on your desk. Only things that belong to no listing go without a prefix. Bank and Suggestion drafts use those prefixes instead.
 0. REACH. Try every public page: website, Google listing, Yelp, directories (not Facebook or Instagram, see FACEBOOK AND INSTAGRAM below). Look at the photos and posts too, not only the text. Anything you cannot open (blocked, login wall, empty) goes on a NEEDS YOU line starting "- Needs a look:" with the listing name and what you could not see. Never guess what is on a page you could not open.
 0b. PAGE TEXT. If a public page cannot be fetched, do not stop. Each agent_sites doc may also have snapshot (pasted text of that listing) and snapshotAt. Audit from those only if a page cannot be fetched. Never log in to anything.
-1. For each active site, if profileRefreshed is missing or 90 or more days old, set auditNotes to the exact steps to fix it and addDraft kind "seo". If profileRefreshed is missing, add "- Set the Last refreshed date on SITE in Mirror's desk" to NEEDS YOU.
+1. Read agent_sites. For each active site, read its public page (url) or, if it cannot be fetched, its snapshot.
 2. SEO AND DISCOVERY: from the snapshots, check titles, meta descriptions, headings, service and city wording, hours, phone, name consistency across sites. addDraft kind "seo", one fix per draft, with the exact new text.
 2b. EVERY FINDING IS ITS OWN ITEM. Anything wrong or missing that you find on a listing or on the website (for example mismatched Instagram links, no phone number or address, no real headings) must be written as its own addDraft kind "seo" whose label STARTS with the listing name as in agent_sites (for the website start it with "Website:"), one item per problem, with the exact fix. A summary note is not enough: never list findings only in a note. If a finding is in your note, it must also exist as its own item, and do not repeat one that already exists.
 3. BANK. Keep a reusable copy bank for Ahnna to paste from when she needs it. Write each as addDraft kind "seo" with a label that starts with "Bank: ": "Bank: Name, address and phone" (the one exact block to paste everywhere, matching the website), "Bank: Business description" (a short, a medium and a long version), "Bank: Headline, services and calls to action". Only claim what is true. Never write a second copy of a Bank draft that already exists unless the facts changed.
@@ -9879,11 +9876,11 @@ function vMirror(){
   if(miss.length)sh+='<div class="tm-item"><div class="t1">Not set up here yet</div><div class="t2">'+miss.map(esc).join(', ')+'</div><div class="tm-row"><button class="tm-b pri" data-act="addpresence">Add these listings</button></div></div>';
   if(!d.sites.length)sh+='<div class="tm-empty">No listings yet.</div>';
   d.sites.forEach(s=>{
-    const sp=siteSpec(s.name),stale=!s.profileRefreshed||Date.now()-s.profileRefreshed>STALE;
-    sh+='<div class="tm-item"><div class="t1"><b>'+esc(s.name)+'</b> '+(stale?'<span class="tm-tag warn">stale</span>':'<span class="tm-tag booked">fresh</span>')+((s.url||sp.url)?' <a href="'+esc(s.url||sp.url)+'" target="_blank" rel="noopener" style="font-size:.76rem">open the site</a>':'')+'</div>'+
+    const sp=siteSpec(s.name);
+    sh+='<div class="tm-item"><div class="t1"><b>'+esc(s.name)+'</b>'+((s.url||sp.url)?' <a href="'+esc(s.url||sp.url)+'" target="_blank" rel="noopener" style="font-size:.76rem">open the site</a>':'')+'</div>'+
       '<div class="tm-row" style="margin-top:.2rem"><input class="tm-in" style="flex:1;min-width:12rem" data-url="'+esc(s.id)+'" value="'+esc(s.url||'')+'" aria-label="Link to your page on '+esc(s.name)+'"><button class="tm-b" data-act="savesiteurl" data-id="'+esc(s.id)+'">Save link</button></div>'+
-      '<details class="tm-det" data-k="sn_'+esc(s.id)+'"'+(S.open['sn_'+s.id]?' open':'')+' style="margin:.6rem 0 0"><summary>Page text for Mirror'+(s.snapshotAt?' (saved '+esc(fmtDay(s.snapshotAt))+')':'')+'</summary><div class="in"><label class="tm-lbl">Last refreshed on</label><input class="tm-in" type="date" style="width:auto" data-chg="setrefreshed" data-id="'+esc(s.id)+'" value="'+(s.profileRefreshed?esc(isoDay(s.profileRefreshed)):'')+'"><label class="tm-lbl" style="margin-top:.6rem">What this page says now (copy and paste it)</label><textarea class="tm-ta" data-snap="'+esc(s.id)+'" style="min-height:90px">'+esc(s.snapshot||'')+'</textarea><div class="tm-row"><button class="tm-b pri" data-act="savesnap" data-id="'+esc(s.id)+'">Save for Mirror</button></div></div></details>'+
-      '<div class="tm-row"><button class="tm-b pri" data-act="refreshed" data-id="'+esc(s.id)+'">Refreshed today</button><button class="tm-b dim" data-act="silencesite" data-id="'+esc(s.id)+'">Silence</button><button class="tm-b dim red" data-act="delsite" data-id="'+esc(s.id)+'">Delete</button></div></div>';
+      '<details class="tm-det" data-k="sn_'+esc(s.id)+'"'+(S.open['sn_'+s.id]?' open':'')+' style="margin:.6rem 0 0"><summary>Page text for Mirror'+(s.snapshotAt?' (saved '+esc(fmtDay(s.snapshotAt))+')':'')+'</summary><div class="in"><label class="tm-lbl">What this page says now (copy and paste it)</label><textarea class="tm-ta" data-snap="'+esc(s.id)+'" style="min-height:90px">'+esc(s.snapshot||'')+'</textarea><div class="tm-row"><button class="tm-b pri" data-act="savesnap" data-id="'+esc(s.id)+'">Save for Mirror</button></div></div></details>'+
+      '<div class="tm-row"><button class="tm-b dim" data-act="silencesite" data-id="'+esc(s.id)+'">Silence</button><button class="tm-b dim red" data-act="delsite" data-id="'+esc(s.id)+'">Delete</button></div></div>';
   });
   d.silenced.forEach(s=>{sh+='<div class="tm-item"><div class="t1"><b>'+esc(s.name)+'</b> <span class="tm-tag">silenced</span></div><div class="tm-row"><button class="tm-b" data-act="resumesite" data-id="'+esc(s.id)+'">Resume</button><button class="tm-b dim red" data-act="delsite" data-id="'+esc(s.id)+'">Delete</button></div></div>';});
   h+=det('mlist','Your listings ('+d.sites.length+')','<div class="tm-hint">The sites Mirror watches. Keep the link to your page on each one so she can read it.</div>'+sh,false);
