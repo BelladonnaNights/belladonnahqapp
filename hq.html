@@ -9889,6 +9889,8 @@ function vMirror(){
     '<textarea class="tm-ta" id="rv-draft" style="min-height:80px;margin-top:.6rem"></textarea><div class="tm-row"><button class="tm-b pri" data-act="addreview">Add to queue</button></div>',false);
   return h;
 }
+/* ── Job & prompt page ── */
+const PROLE={raven:'lead getter',quill:'reply and quote drafter',vesper:'follow-up and venue care writer',ledger:'lead tracker',sable:'event scout',mirror:'SEO and online presence manager',herald:'curator of themed nights and event ideas',ember:'social media caption writer and event kit builder',marquee:'advertising and marketing planner',coach:'host recruiter and coach',sigil:'paperwork and renewals manager',warden:'gig prep and supplies steward'};
 function defPrompt(id){return INFO[id].prompt.split('{NAME}').join(agent(id).name).split('{ROLE}').join(PROLE[id]||agent(id).role.toLowerCase());}
 function vInfo(id){
   const a=agent(id),I=INFO[id],saved=S.cfg.prompts&&S.cfg.prompts[id];
