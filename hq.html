@@ -8888,6 +8888,7 @@ function renderDrawer(force){
   const _main=((S.view==='info'&&INFO[S.cur])?vInfo(S.cur):({raven:vRaven,quill:vQuill,vesper:vVesper,ledger:vLedger,sable:vSable,mirror:vMirror,herald:vIris,ember:vSabine,marquee:vRen,coach:vWren,huddle:vHuddle,sigil:vSigil,warden:vThorne,setup:vSetup})[S.cur]());
   const _top=_fold?remFold(S.cur):'',_bot=_fold?notesFold(S.cur):'';
   body.innerHTML=_pre+_top+(_fold?foldSections(_main):_main)+_bot;
+  if(_fold)autoFoldItems(body);
   body.scrollTop=top;
 }
 const NOTE_DOC={sable:'sable',sigil:'sigil',warden:'warden',coach:'coach',vesper:'care',herald:'curator',ember:'social',marquee:'ads'};
@@ -8909,6 +8910,18 @@ function notesBlock(id){
   if(!L.length)return h+'<div class="tm-empty">No notes. After each run she leaves a short note here.</div>';
   L.forEach(n=>{h+='<div class="tm-item"><div class="t2" style="white-space:pre-wrap;color:var(--text)">'+esc(n.body||'')+'</div><div class="tm-row"><span class="tm-tag">'+esc(fmtDay(n.createdAt))+'</span><button class="tm-b" data-act="notedone" data-id="'+esc(n.id)+'">Got it</button></div></div>';});
   return h;
+}
+/* General rule: every item on every desk opens collapsed (title only). Click the title to open it. */
+function autoFoldItems(root){
+  const seen={};
+  root.querySelectorAll('.tm-item').forEach(it=>{
+    if(it.classList.contains('folded')||it.querySelector(':scope>.t1.fold'))return;
+    if(it.parentElement&&it.parentElement.closest('.tm-item'))return;
+    const t1=it.firstElementChild;if(!t1||!t1.classList.contains('t1')||it.children.length<2)return;
+    let k=S.cur+'|'+t1.textContent.replace(/\s+/g,' ').trim().slice(0,70);seen[k]=(seen[k]||0)+1;if(seen[k]>1)k+='#'+seen[k];
+    t1.classList.add('fold');t1.dataset.act='fold';t1.dataset.id='af_'+k;
+    if(!S.open['c_af_'+k])it.classList.add('folded');
+  });
 }
 function foldSections(html){
   const parts=html.split('<div class="tm-sec">');if(parts.length<2)return html;
@@ -10029,7 +10042,7 @@ document.addEventListener('toggle',e=>{const d=e.target;if(d&&d.dataset&&d.datas
 function curatorState(){
   const c=S.cfg.curator||{};
   const ideas=Object.entries(c.ideas||{}).filter(([k,v])=>v&&v.title).map(([k,v])=>Object.assign({id:k},v)).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
-  ideas.forEach(x=>{if(x.status==='saved'){const m=x.saved&&x.saved.month,t=m?new Date(+m.slice(0,4),+m.slice(5,7)-1,1).getTime():0;x.resurfaced=!t||Date.now()>=t-45*DAY;}});
+  ideas.forEach(x=>{if(x.status==='saved'){const m=x.saved&&x.saved.month,t=(x.saved&&x.saved.target)||(m?new Date(+m.slice(0,4),+m.slice(5,7)-1,1).getTime():0);x.resurfaced=!t||Date.now()>=t-45*DAY;}});
   const seeds=Object.entries(c.seeds||{}).filter(([k,v])=>v&&v.title).map(([k,v])=>Object.assign({id:k},v)).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
   return {ideas:ideas,fresh:ideas.filter(x=>!x.status||x.status==='new'||(x.status==='saved'&&x.resurfaced)),seeds:seeds,profiles:c.profiles||{},catalog:(c.catalog&&c.catalog.text)||''};
 }
@@ -10055,15 +10068,32 @@ function ideaCard(x){
     '<div class="tm-row">'+(st==='new'?b('ideaset','liked','Like','pri')+b('ideaset','pursuing','Pursue'):'')+(st==='liked'?b('ideaset','pursuing','Pursue','pri'):'')+(st==='pursuing'?b('ideaset','made','Made it','pri'):'')+((st==='pursuing'||st==='liked')?b('ideacopy','','Copy pitch myself','dim'):'')+(x.status==='saved'&&!x.resurfaced?b('ideaset','new','Bring back now','pri'):'')+(st==='skipped'||st==='made'?b('ideaset','new','Undo','dim'):(x.status==='saved'&&!x.resurfaced?'':b('ideaset','skipped','Skip','dim')))+b('ideadel','','Remove','dim red')+'</div>'+
     ((st==='new'||st==='liked'||st==='pursuing'||st==='skipped')?'<div class="tm-row" style="align-items:center;gap:.4rem;margin-top:.3rem"><select class="tm-sel" id="sv-'+esc(x.id)+'" style="width:auto">'+svOptions()+'</select>'+b('ideasave','','Save for later','dim')+((st==='new'||st==='liked')?b('ideabrain','','Move to Brainstorm','dim'):'')+'</div>':'')+ideaEditBox(x)+'</div>';
 }
-function ideaShowOpts(keep){return (keep?'<option value="__keep">Leave the timing as it is</option>':'')+'<option value="">Show it now</option>'+svOptions();}
+const MON=['January','February','March','April','May','June','July','August','September','October','November','December'];
+function whenControl(p,w){
+  w=w||{};const ms=(w.months||[]).map(Number);
+  return '<div class="full"><label class="tm-lbl">When is it?</label><div style="display:flex;flex-wrap:wrap;gap:.2rem .9rem;margin:.2rem 0">'+MON.map((m,i)=>'<label style="display:inline-flex;gap:.3rem;align-items:center;font-size:.8rem"><input type="checkbox" data-wm="'+p+'" value="'+(i+1)+'"'+(ms.indexOf(i+1)>=0?' checked':'')+'>'+m+'</label>').join('')+'</div><label class="tm-lbl" style="margin-top:.4rem">Or one exact date (like July 4)</label><input class="tm-in" type="date" style="width:auto" id="'+p+'-date" value="'+esc(w.date||'')+'"><div class="tm-hint">Pick any months, or one date. The idea waits in Saved for later and comes back about six weeks before. Leave it all empty to show it now.</div></div>';
+}
+function whenRead(p){
+  const months=[...document.querySelectorAll('input[data-wm="'+p+'"]:checked')].map(e=>+e.value).sort((a,b)=>a-b),de=document.getElementById(p+'-date'),date=de?de.value:'';
+  return {months:months,date:date};
+}
+function whenResult(w){
+  const now=Date.now(),d0=new Date(),c=[];let label=[];
+  if(w.date){let d=new Date(w.date+'T12:00:00');if(isNaN(d))d=null;if(d){while(d.getTime()<now-DAY)d.setFullYear(d.getFullYear()+1);c.push(d.getTime());label.push(d.toLocaleDateString('en-US',{month:'long',day:'numeric'}));}}
+  (w.months||[]).forEach(m=>{let d=new Date(d0.getFullYear(),m-1,1,12);const cur=m===d0.getMonth()+1;if(cur)c.push(now);else{if(d.getTime()<now)d.setFullYear(d.getFullYear()+1);c.push(d.getTime());}label.push(MON[m-1]);});
+  if(!c.length)return null;
+  const target=Math.min.apply(null,c);
+  return {target:target,label:label.join(', '),hidden:target-45*DAY>now};
+}
+function whenSig(w){return (w.months||[]).join(',')+'|'+(w.date||'');}
 function ideaEditBox(x){
   const i=esc(x.id),vn=ideaVenues(x).map(v=>v.name).join(', ');
-  return '<details class="tm-det" style="margin:.5rem 0 0"><summary>Edit this idea</summary><div class="in"><div class="tm-fg"><div class="full"><label class="tm-lbl">Title</label><input class="tm-in" id="ie-title-'+i+'" value="'+esc(x.title||'')+'"></div><div><label class="tm-lbl">Kind</label><select class="tm-sel" id="ie-kind-'+i+'">'+CU_KIND.map(k=>'<option'+(k===x.kind?' selected':'')+'>'+k+'</option>').join('')+'</select></div><div><label class="tm-lbl">When it happens</label><input class="tm-in" id="ie-when-'+i+'" value="'+esc(x.when||'')+'"></div><div class="full"><label class="tm-lbl">The idea</label><textarea class="tm-ta" id="ie-pitch-'+i+'">'+esc(x.pitch||'')+'</textarea></div><div class="full"><label class="tm-lbl">Best at (venues, separated by commas)</label><input class="tm-in" id="ie-venues-'+i+'" value="'+esc(vn)+'"></div><div class="full"><label class="tm-lbl">Show it to me</label><select class="tm-sel" id="ie-show-'+i+'">'+ideaShowOpts(true)+'</select></div></div><div class="tm-row"><button class="tm-b pri" data-act="ideaedit" data-id="'+i+'">Save changes</button></div></div></details>';
+  return '<details class="tm-det" style="margin:.5rem 0 0"><summary>Edit this idea</summary><div class="in"><div class="tm-fg"><div class="full"><label class="tm-lbl">Title</label><input class="tm-in" id="ie-title-'+i+'" value="'+esc(x.title||'')+'"></div><div><label class="tm-lbl">Kind</label><select class="tm-sel" id="ie-kind-'+i+'">'+CU_KIND.map(k=>'<option'+(k===x.kind?' selected':'')+'>'+k+'</option>').join('')+'</select></div><div class="full"><label class="tm-lbl">The idea</label><textarea class="tm-ta" id="ie-pitch-'+i+'">'+esc(x.pitch||'')+'</textarea></div><div class="full"><label class="tm-lbl">Best at (venues, separated by commas)</label><input class="tm-in" id="ie-venues-'+i+'" value="'+esc(vn)+'"></div>'+whenControl('iw-'+x.id,x.whenSel)+'</div><div class="tm-row"><button class="tm-b pri" data-act="ideaedit" data-id="'+i+'">Save changes</button></div></div></details>';
 }
-function svOptions(){const o=[],d=new Date();for(let i=1;i<=12;i++){const t=new Date(d.getFullYear(),d.getMonth()+i,1);o.push('<option value="'+t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'">'+t.toLocaleDateString('en-US',{month:'long',year:'numeric'})+'</option>');}return o.join('');}
+function svOptions(){const o=[],d=new Date();for(let i=1;i<=12;i++){const t=new Date(d.getFullYear(),d.getMonth()+i,1);o.push('<option value="'+t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'">'+t.toLocaleDateString('en-US',{month:'long'})+'</option>');}return o.join('');}
 function seedCard(x){
   return '<div class="tm-item"><div class="t1"><b>'+esc(x.title)+'</b>'+(x.from==='idea'?' <span class="tm-tag">from an Iris idea</span>':'')+'</div>'+
-    '<textarea class="tm-ta" id="bs-notes-'+esc(x.id)+'" style="min-height:70px" placeholder="Your notes, thoughts, pieces of the idea...">'+esc(x.notes||'')+'</textarea>'+
+    '<textarea class="tm-ta" id="bs-notes-'+esc(x.id)+'" style="min-height:70px">'+esc(x.notes||'')+'</textarea>'+
     '<div class="tm-row" style="align-items:center;gap:.4rem"><select class="tm-sel" id="bs-kind-'+esc(x.id)+'" style="width:auto">'+CU_KIND.map(k=>'<option>'+k+'</option>').join('')+'</select>'+
     '<button class="tm-b pri" data-act="brainpromote" data-id="'+esc(x.id)+'">Promote to idea</button><button class="tm-b" data-act="brainsave" data-id="'+esc(x.id)+'">Save notes</button><button class="tm-b dim red" data-act="braindel" data-id="'+esc(x.id)+'">Delete</button></div></div>';
 }
@@ -10111,7 +10141,7 @@ function vIris(){
   h+=det('seedadd','Add to the brainstorm list','<div class="tm-fg"><div class="full"><label class="tm-lbl">The seed</label><input class="tm-in" id="bs-title"></div><div class="full"><label class="tm-lbl">Notes</label><textarea class="tm-ta" id="bs-notes"></textarea></div></div><div class="tm-row"><button class="tm-b pri" data-act="brainadd">Add</button></div>',false);
   const sk=c.ideas.filter(x=>x.status==='skipped');
   if(sk.length)h+=det('ideask','Skipped ('+sk.length+')',sk.map(ideaCard).join(''),false);
-  h+=det('ideaadd','Add an idea by hand','<div class="tm-fg"><div class="full"><label class="tm-lbl">Title</label><input class="tm-in" id="id-title"></div><div><label class="tm-lbl">Kind</label><select class="tm-sel" id="id-kind">'+CU_KIND.map(k=>'<option>'+k+'</option>').join('')+'</select></div><div class="full"><label class="tm-lbl">The idea</label><textarea class="tm-ta" id="id-pitch"></textarea></div><div class="full"><label class="tm-lbl">Best at (venues)</label><input class="tm-in" id="id-venues"></div><div><label class="tm-lbl">When it happens</label><input class="tm-in" id="id-when"></div><div><label class="tm-lbl">Show it to me</label><select class="tm-sel" id="id-show">'+ideaShowOpts(false)+'</select></div></div><div class="tm-hint">If you pick a month, the idea waits in "Saved for later" and comes back about six weeks before it.</div><div class="tm-row"><button class="tm-b pri" data-act="ideaadd">Add</button></div>',false);
+  h+=det('ideaadd','Add an idea by hand','<div class="tm-fg"><div class="full"><label class="tm-lbl">Title</label><input class="tm-in" id="id-title"></div><div><label class="tm-lbl">Kind</label><select class="tm-sel" id="id-kind">'+CU_KIND.map(k=>'<option>'+k+'</option>').join('')+'</select></div><div class="full"><label class="tm-lbl">The idea</label><textarea class="tm-ta" id="id-pitch"></textarea></div><div class="full"><label class="tm-lbl">Best at (venues)</label><input class="tm-in" id="id-venues"></div>'+whenControl('iw-new',null)+'</div><div class="tm-row"><button class="tm-b pri" data-act="ideaadd">Add</button></div>',false);
   const vl=(typeof venues!=='undefined'&&Array.isArray(venues)?venues:[]).filter(v=>v&&v.name&&!v.inactive).sort((a,b)=>String(a.name).localeCompare(String(b.name)));
   const rs=researchState();
   h+='<div class="tm-sec">Venue research ('+rs.done.length+' done, '+rs.waiting.length+' waiting)</div><div class="tm-hint">Iris studies every venue we work with and every venue we want or could try for: what it is, what people say about it online, events it has done, what she thinks it would like, and what we could do there. Public sources only. She never logs in anywhere.</div>';
@@ -10771,15 +10801,15 @@ const A={
   async dossidea(t){const d=researchState().done.find(x=>x.id===t.dataset.id);if(!d)return;const a=[].concat(d.ideas||[])[+t.dataset.i];if(!a)return;await cuSave({['ideas.i'+Date.now().toString(36)]:{title:d.name+': '+String(a).slice(0,60),kind:'Venue pitch',pitch:a,venues:[d.name],status:'new',source:'research',createdAt:Date.now()}});toast('Saved to Ideas.');},
   async ideaset(t){const v=t.dataset.v,id=t.dataset.id,p={['ideas.'+id+'.status']:v,['ideas.'+id+'.updatedAt']:Date.now()};if(v==='pursuing'){const cur=curatorState().ideas.find(i=>i.id===id);if(!cur||!cur.quill||cur.quill.status!=='drafted')p['ideas.'+id+'.quill']={status:'ready',at:Date.now()};}if(v==='new'){p['ideas.'+id+'.saved']=null;}await cuSave(p);if(v==='pursuing')toast('Sent to Quill. He drafts the venue pitches on his next run.');},
   async ideasave(t){const id=t.dataset.id,sel=document.getElementById('sv-'+id);if(!sel)return;const m=sel.value,lab=sel.options[sel.selectedIndex].text;await cuSave({['ideas.'+id+'.status']:'saved',['ideas.'+id+'.saved']:{month:m,label:lab,at:Date.now()},['ideas.'+id+'.updatedAt']:Date.now()});toast('Saved for '+lab+'. It comes back about six weeks before.');},
-  async ideabrain(t){const x=curatorState().ideas.find(i=>i.id===t.dataset.id);if(!x)return;const sid='s'+Date.now().toString(36);await cuSave({['seeds.'+sid]:{title:x.title,notes:x.pitch||'',from:'idea',ideaId:x.id,createdAt:Date.now()},['ideas.'+x.id+'.status']:'brainstormed',['ideas.'+x.id+'.updatedAt']:Date.now()});toast('Moved to the Brainstorm list.');},
+  async ideabrain(t){const x=curatorState().ideas.find(i=>i.id===t.dataset.id);if(!x)return;const sid='s'+Date.now().toString(36),now=Date.now();await col('agent_config').doc('curator').set({seeds:{[sid]:{title:x.title,notes:x.pitch||'',from:'idea',ideaId:x.id,createdAt:now}},ideas:{[x.id]:{status:'brainstormed',updatedAt:now}}},{merge:true});S.open['f_herald_brainstormlist']=true;renderDrawer(true);toast('Moved to the Brainstorm list below.');},
   async brainadd(){const ti=val('bs-title');if(!ti){toast('Give it a title.',true);return;}await cuSave({['seeds.s'+Date.now().toString(36)]:{title:ti,notes:val('bs-notes'),from:'hand',createdAt:Date.now()}});toast('Added to the Brainstorm list.');},
   async brainsave(t){const id=t.dataset.id,e=document.getElementById('bs-notes-'+id);if(!e)return;await cuSave({['seeds.'+id+'.notes']:e.value,['seeds.'+id+'.updatedAt']:Date.now()});toast('Saved.');},
   async brainpromote(t){const id=t.dataset.id,x=curatorState().seeds.find(i=>i.id===id);if(!x)return;const e=document.getElementById('bs-notes-'+id),k=document.getElementById('bs-kind-'+id),notes=e?e.value:(x.notes||'');await cuSave({['ideas.i'+Date.now().toString(36)]:{title:x.title,kind:k?k.value:'Event',pitch:notes||x.title,venues:[],status:'new',source:'brainstorm',createdAt:Date.now()},['seeds.'+id]:null});toast('Promoted to a full idea.');},
   async braindel(t){if(!confirm('Delete this seed?'))return;await cuSave({['seeds.'+t.dataset.id]:null});},
   async ideadel(t){if(!confirm('Remove this idea?'))return;await cuSave({['ideas.'+t.dataset.id]:null});},
   async ideacopy(t){const x=curatorState().ideas.find(i=>i.id===t.dataset.id);if(x)toast(await copy(ideaPrompt(x))?'Brief copied. Paste it into Claude.':'Copy failed.',false);},
-  async ideaadd(){const ti=val('id-title');if(!ti){toast('Give it a title.',true);return;}const sh=document.getElementById('id-show'),m=sh?sh.value:'',o={title:ti,kind:document.getElementById('id-kind').value,pitch:val('id-pitch'),when:val('id-when'),venues:val('id-venues').split(',').map(x=>x.trim()).filter(Boolean),status:'new',source:'hand',createdAt:Date.now()};if(m){o.status='saved';o.saved={month:m,label:sh.options[sh.selectedIndex].text,at:Date.now()};}await cuSave({['ideas.i'+Date.now().toString(36)]:o});toast(m?'Added. It comes back about six weeks before '+sh.options[sh.selectedIndex].text+'.':'Added.');},
-  async ideaedit(t){const id=t.dataset.id,x=curatorState().ideas.find(i=>i.id===id);if(!x)return;const g=k=>{const e=document.getElementById('ie-'+k+'-'+id);return e?e.value:'';};const ti=g('title').trim();if(!ti){toast('Give it a title.',true);return;}const old=ideaVenues(x),vn=g('venues').split(',').map(v=>v.trim()).filter(Boolean).map(n=>old.find(o=>blNorm(o.name)===blNorm(n))||n);const p={['ideas.'+id+'.title']:ti,['ideas.'+id+'.kind']:g('kind'),['ideas.'+id+'.when']:g('when'),['ideas.'+id+'.pitch']:g('pitch'),['ideas.'+id+'.venues']:vn,['ideas.'+id+'.edited']:true,['ideas.'+id+'.updatedAt']:Date.now()};const sh=document.getElementById('ie-show-'+id),m=sh?sh.value:'__keep';if(m===''){p['ideas.'+id+'.status']='new';p['ideas.'+id+'.saved']=null;}else if(m!=='__keep'){p['ideas.'+id+'.status']='saved';p['ideas.'+id+'.saved']={month:m,label:sh.options[sh.selectedIndex].text,at:Date.now()};}await cuSave(p);toast('Saved.');},
+  async ideaadd(){const ti=val('id-title');if(!ti){toast('Give it a title.',true);return;}const w=whenRead('iw-new'),r=whenResult(w),o={title:ti,kind:document.getElementById('id-kind').value,pitch:val('id-pitch'),venues:val('id-venues').split(',').map(x=>x.trim()).filter(Boolean),status:'new',source:'hand',createdAt:Date.now()};if(r){o.when=r.label;o.whenSel=w;if(r.hidden){o.status='saved';o.saved={month:new Date(r.target).toISOString().slice(0,7),label:r.label,target:r.target,at:Date.now()};}}await cuSave({['ideas.i'+Date.now().toString(36)]:o});toast(r&&r.hidden?'Added. It comes back about six weeks before '+r.label+'.':'Added.');},
+  async ideaedit(t){const id=t.dataset.id,x=curatorState().ideas.find(i=>i.id===id);if(!x)return;const g=k=>{const e=document.getElementById('ie-'+k+'-'+id);return e?e.value:'';};const ti=g('title').trim();if(!ti){toast('Give it a title.',true);return;}const old=ideaVenues(x),vn=g('venues').split(',').map(v=>v.trim()).filter(Boolean).map(n=>old.find(o=>blNorm(o.name)===blNorm(n))||n);const p={['ideas.'+id+'.title']:ti,['ideas.'+id+'.kind']:g('kind'),['ideas.'+id+'.pitch']:g('pitch'),['ideas.'+id+'.venues']:vn,['ideas.'+id+'.edited']:true,['ideas.'+id+'.updatedAt']:Date.now()};const w=whenRead('iw-'+id);if(whenSig(w)!==whenSig(x.whenSel||{})){const r=whenResult(w);p['ideas.'+id+'.whenSel']=r?w:null;if(!r){p['ideas.'+id+'.status']='new';p['ideas.'+id+'.saved']=null;}else{p['ideas.'+id+'.when']=r.label;if(r.hidden){p['ideas.'+id+'.status']='saved';p['ideas.'+id+'.saved']={month:new Date(r.target).toISOString().slice(0,7),label:r.label,target:r.target,at:Date.now()};}else{p['ideas.'+id+'.status']='new';p['ideas.'+id+'.saved']=null;}}}await cuSave(p);toast('Saved.');},
   async ivsave(t){const id=t.dataset.id,tags=[...document.querySelectorAll('input[data-pt="'+id+'"]:checked')].map(e=>e.value);const pc=cntOf(val('iv-pool-'+id)),dc=cntOf(val('iv-dart-'+id));if(pc>0&&tags.indexOf('pool')<0)tags.push('pool');if(dc>0&&tags.indexOf('darts')<0)tags.push('darts');const vn=(venues||[]).find(v=>v.id===id);await cuSave({['profiles.'+pfKey(id)]:{name:vn?vn.name:(t.dataset.name||''),tags:tags,capacity:val('iv-cap-'+id),notes:val('iv-note-'+id),poolTables:pc,dartBoards:dc}});toast('Saved.');},
   async cucat(){await cuSave({'catalog.text':($('#cu-cat')||{}).value||'','catalog.savedAt':Date.now()});toast('Catalog saved.');},
   async sgaddstd(){const p={};const have=new Set(sigilState().items.map(x=>x.name));SG_STD.filter(n=>!have.has(n)).forEach((n,k)=>{p['items.s'+Date.now().toString(36)+k]={name:n,due:''};});await sgSave(p);toast('List added. Set a date on each.');},
