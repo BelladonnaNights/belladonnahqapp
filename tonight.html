@@ -45,6 +45,24 @@
   .date-nav button{background:var(--surface2);border:1px solid var(--border);color:var(--gold);width:2rem;height:2rem;border-radius:8px;font-size:0.95rem;cursor:pointer;flex-shrink:0;}
   .date-nav button:hover{border-color:var(--border2);}
   .date-nav .date-display{flex:1;text-align:center;font-size:0.82rem;color:var(--text2);}
+  .picker{position:relative;}
+  .date-nav .date-display{cursor:pointer;border-bottom:1px dashed var(--border2);padding-bottom:1px;}
+  .date-nav .date-display:hover{color:var(--gold);}
+  .cal{margin-top:0.8rem;background:var(--surface2);border:1px solid var(--border2);border-radius:12px;padding:0.8rem;}
+  .cal-head{display:flex;align-items:center;justify-content:space-between;gap:0.4rem;margin-bottom:0.6rem;}
+  .cal-head button{background:var(--surface);border:1px solid var(--border);color:var(--gold);width:2rem;height:2rem;border-radius:8px;font-size:0.95rem;cursor:pointer;}
+  .cal-head button:hover{border-color:var(--border2);}
+  .cal-title{font-family:'Cinzel',serif;font-weight:600;font-size:0.72rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);text-align:center;flex:1;}
+  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}
+  .cal-dow{font-size:0.56rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--text3);text-align:center;padding:0.2rem 0;}
+  .cal-day{background:transparent;border:1px solid transparent;border-radius:8px;color:var(--text2);font-family:'Josefin Sans',sans-serif;font-size:0.82rem;height:2.1rem;cursor:pointer;}
+  .cal-day:hover{border-color:var(--border2);color:var(--text);}
+  .cal-day.today{border-color:var(--live);color:var(--live);}
+  .cal-day.sel{background:rgba(201,169,110,0.2);border-color:var(--gold);color:var(--gold);}
+  .cal-day.blank{visibility:hidden;cursor:default;}
+  .cal-foot{display:flex;justify-content:center;margin-top:0.6rem;}
+  .cal-foot button{background:transparent;border:1px solid var(--border2);color:var(--gold);font-family:'Josefin Sans',sans-serif;letter-spacing:0.14em;text-transform:uppercase;font-size:0.62rem;border-radius:9px;padding:0.45rem 1rem;cursor:pointer;}
+  .cal-foot button:hover{background:rgba(201,169,110,0.1);}
   .date-today-pill{font-size:0.58rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--live);background:var(--live-dim);border-radius:20px;padding:0.15rem 0.5rem;margin-left:0.4rem;white-space:nowrap;}
   .venue-title{text-align:center;margin-bottom:1.6rem;}
   .venue-title .vname{font-family:'Cormorant Garamond',serif;font-size:1.3rem;color:var(--text);}
@@ -97,12 +115,12 @@
     <div class="picker-row">
       <div class="picker-label">Date</div>
       <div class="date-nav">
-        <button onclick="shiftDate(-1)">‹</button>
-        <div class="date-display" id="dateDisplay">—</div>
-        <button onclick="shiftDate(1)">›</button>
+        <button type="button" onclick="shiftDate(-1)" aria-label="Previous day">‹</button>
+        <div class="date-display" id="dateDisplay" role="button" tabindex="0" title="Tap to pick a date" onclick="toggleCal()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCal();}">—</div>
+        <button type="button" onclick="shiftDate(1)" aria-label="Next day">›</button>
       </div>
-      <input type="date" class="picker-input" id="dateInput" style="flex:0 0 0;width:0;padding:0;border:0;opacity:0;position:absolute;">
     </div>
+    <div class="cal" id="cal" style="display:none;"></div>
   </div>
 
   <div id="main">
@@ -218,6 +236,36 @@
     loadTonight();
   }
   updateDateDisplay();
+
+  // ── Pop-up calendar: opens when the date text is tapped. The arrows only step one day. ──
+  let calMonth=new Date(currentDate.getFullYear(),currentDate.getMonth(),1);
+  function toggleCal(){
+    const c=document.getElementById('cal');
+    if(c.style.display==='none'){calMonth=new Date(currentDate.getFullYear(),currentDate.getMonth(),1);renderCal();c.style.display='block';}
+    else c.style.display='none';
+  }
+  function calShift(n){calMonth=new Date(calMonth.getFullYear(),calMonth.getMonth()+n,1);renderCal();}
+  function calPick(y,m,d){
+    currentDate=new Date(y,m,d);
+    document.getElementById('cal').style.display='none';
+    updateDateDisplay();loadTonight();
+  }
+  function calToday(){const t=new Date();calPick(t.getFullYear(),t.getMonth(),t.getDate());}
+  function renderCal(){
+    const y=calMonth.getFullYear(),m=calMonth.getMonth(),first=new Date(y,m,1).getDay(),days=new Date(y,m+1,0).getDate();
+    const todayKey=dateToKey(new Date()),selKey=dateToKey(currentDate);
+    let h='<div class="cal-head"><button type="button" onclick="calShift(-1)" aria-label="Previous month">‹</button><div class="cal-title">'+calMonth.toLocaleDateString('en-US',{month:'long',year:'numeric'})+'</div><button type="button" onclick="calShift(1)" aria-label="Next month">›</button></div><div class="cal-grid">';
+    ['Su','Mo','Tu','We','Th','Fr','Sa'].forEach(d=>{h+='<div class="cal-dow">'+d+'</div>';});
+    for(let i=0;i<first;i++)h+='<button type="button" class="cal-day blank" tabindex="-1" aria-hidden="true"></button>';
+    for(let d=1;d<=days;d++){
+      const k=dateToKey(new Date(y,m,d));
+      h+='<button type="button" class="cal-day'+(k===todayKey?' today':'')+(k===selKey?' sel':'')+'" onclick="calPick('+y+','+m+','+d+')">'+d+'</button>';
+    }
+    h+='</div><div class="cal-foot"><button type="button" onclick="calToday()">Today</button></div>';
+    document.getElementById('cal').innerHTML=h;
+  }
+  document.addEventListener('click',e=>{const c=document.getElementById('cal');if(c.style.display==='none')return;if(e.target.closest('#cal')||e.target.closest('#dateDisplay'))return;c.style.display='none';});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape')document.getElementById('cal').style.display='none';});
 
   function venueById(id){return venues.find(v=>v.id===id);}
   // A night record belongs to this venue if it carries the venue's ID, or (older records) has the same name.
