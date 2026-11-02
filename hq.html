@@ -7418,7 +7418,9 @@ You work inside Belladonna HQ, on its My Team page. Your data lives in Firebase 
 
 HARD RULES
 - FIVE OPTIONS: every draft you write holds FIVE different versions of the same message in its body, separated by a line containing exactly ---OPTION--- (nothing else on that line). Vary the angle and opening, keep every fact identical, and follow the voice guide in all five. Never use that separator anywhere else. A run note is the one exception and stays a single version. HQ lets Ahnna flip through the five and keep the parts she likes.
-- REDRAFTS: each run, read agent_drafts for your drafts that have a redraft field (parts Ahnna highlighted) and no newer draft whose label ends with [redraft of <that draft's id>]. For each, write ONE new draft with the same agent, kind, venueId and leadId, a label equal to the old label plus " [redraft of <old id>]", and a body of five new versions built around her parts, using the parts word for word, then the usual ---OPTION--- separators. HQ then hides the old one.
+- COLD EMAIL AND DM DRAFTS: every cold email or Instagram DM draft body holds FOUR different versions, each with a different angle, separated by a line containing exactly ---OPTION---. Ahnna picks one and highlights the parts she likes. Emails start with a Subject line in every version.
+- REWRITES: each run, read agent_drafts for your drafts that have a rewrite field (Ahnna pressed Send for rewrite) and no newer draft whose label ends with [redraft of <that draft's id>]. Before writing, read everything the team knows about that venue or person: agent_venues (evidence, pitch, touches), agent_config curator (research dossier and bait line, profiles, ideas that name the venue), agent_config sable (events and dates to avoid), agent_config knowngigs (gigs the venue already has, never pitch those), Our Venues, agent_leads, and the price sheet and voice. Then write ONE new draft with the same agent, kind, venueId and leadId, a label equal to the old label plus " [redraft of <old id>]", and a body of four new versions with different angles, separated by ---OPTION--- lines. HQ then hides the old one.
+- REDRAFTS: each run, read agent_drafts for your drafts that have a redraft field (parts Ahnna highlighted) and no newer draft whose label ends with [redraft of <that draft's id>]. For each, write ONE new draft with the same agent, kind, venueId and leadId, a label equal to the old label plus " [redraft of <old id>]", and a body of new versions built around her parts (four for emails and DMs, five for captions), using the parts word for word, then the usual ---OPTION--- separators. HQ then hides the old one.
 - Nothing you write is ever sent to a client or venue. Everything goes into HQ as a draft or a record for Ahnna to approve.
 - Never invent prices, dates, availability or facts. If something is missing, say exactly what is missing.
 - Never log into a gig site or any account with a bot. Work only from emails, HQ data and public web pages.
@@ -8613,12 +8615,14 @@ Thank you for thinking of us for {date}. We are booked that night, and I do not 
 Ahnna
 Belladonna Audio Alchemies`}
 ];
+LIB_SIT.push({id:'unknown',label:'Unknown: not sure what to say',body:''});
 function libFill(f){
   const sv=LIB_SERV[f.svc]||LIB_SERV.karaoke,sit=LIB_SIT.find(x=>x.id===f.sit)||LIB_SIT[0];
   const v={name:f.name,venue:f.venue,date:f.date,price:f.price,night:sv.night,hook:sv.hook,trial:termsShort()};
   return sit.body.replace(/\{(\w+)\}/g,(m,k)=>v[k]||('['+(LIB_MISS[k]||k)+']'));
 }
 function libPrompt(f){
+  if(f.sit==='unknown')return unknownPrompt(f);
   const sv=LIB_SERV[f.svc]||LIB_SERV.karaoke,sit=LIB_SIT.find(x=>x.id===f.sit)||LIB_SIT[0];
   return 'You are Quill, the reply and quote drafter for '+BRAND+'.\nVoice: '+voice()+'\n\nPRICE SHEET:\n'+(pricing()||'(not set: do not invent prices, tell me what is missing)')+'\n\nSITUATION: '+sit.label+'\nSERVICE: '+sv.label+'\nWHO I AM WRITING TO: '+(f.name||'(unknown)')+(f.venue?' at '+f.venue:'')+'\nDATE: '+(f.date||'(none)')+'\nPRICE TO USE: '+(f.price||'(work it out from the price sheet, or ask me)')+'\n\nWHAT THEY SENT ME:\n'+(f.msg||'(nothing, this is outbound)')+'\n\nHERE IS A STARTING DRAFT TO IMPROVE, NOT COPY:\n'+libFill(f)+'\n\nRewrite it so it answers their actual message first, uses only prices from the price sheet, and sounds like the voice above. Output only the message, ready to send.';
 }
@@ -8630,12 +8634,13 @@ function libForm(){
   '<div><label class="tm-lbl">Service</label><select class="tm-sel" id="lib-svc">'+o(Object.keys(LIB_SERV).map(k=>[k,LIB_SERV[k].label]),f.svc)+'</select></div>'+
   '<div><label class="tm-lbl">Their name</label><input class="tm-in" id="lib-name" value="'+esc(f.name||'')+'"></div>'+
   '<div><label class="tm-lbl">Venue or event</label><input class="tm-in" id="lib-venue" value="'+esc(f.venue||'')+'"></div>'+
-  '<div><label class="tm-lbl">Date</label><input class="tm-in" id="lib-date" value="'+esc(f.date||'')+'" placeholder="e.g. Friday, Dec 12"></div>'+
-  '<div><label class="tm-lbl">Price</label><input class="tm-in" id="lib-price" value="'+esc(f.price||'')+'" placeholder="e.g. $450"></div>'+
+  '<div><label class="tm-lbl">Date</label><input class="tm-in" id="lib-date" value="'+esc(f.date||'')+'"></div>'+
+  '<div><label class="tm-lbl">Price</label><input class="tm-in" id="lib-price" value="'+esc(f.price||'')+'"></div>'+
   '<div class="full"><label class="tm-lbl">What they sent you (optional, used by the Quill prompt)</label><textarea class="tm-ta" id="lib-msg" style="min-height:70px">'+esc(f.msg||'')+'</textarea></div></div>'+
   '<div class="tm-row"><button class="tm-b pri" data-act="libbuild">Build reply</button><button class="tm-b" data-act="libprompt">Copy Quill prompt</button></div>'+
-  '<textarea class="tm-ta" id="lib-out" style="min-height:260px;margin-top:.7rem" placeholder="Your draft appears here. Edit it, then copy.">'+esc(f.out||'')+'</textarea>'+
-  '<div class="tm-row"><button class="tm-b" data-act="libcopy">Copy reply</button></div>';
+  '<textarea class="tm-ta" id="lib-out" style="min-height:260px;margin-top:.7rem">'+esc(f.out||'')+'</textarea>'+
+  '<div class="tm-row"><button class="tm-b" data-act="libcopy">Copy reply</button></div>'+
+  '<div class="tm-hint" style="margin-top:.8rem">Unknown, or want options? Press Copy Quill prompt, run it in Claude, then paste the four replies here (a line with ---OPTION--- between them). They go into Drafts waiting with the option arrows and the highlight tools.</div><textarea class="tm-ta" id="lib-paste" style="min-height:90px"></textarea><div class="tm-row"><button class="tm-b pri" data-act="libqueue">Add to Drafts waiting</button></div>';
 }
 function libRead(){const g=id=>{const e=$('#'+id);return e?e.value.trim():'';};return {sit:g('lib-sit'),svc:g('lib-svc'),name:g('lib-name'),venue:g('lib-venue'),date:g('lib-date'),price:g('lib-price'),msg:g('lib-msg'),out:(($('#lib-out')||{}).value||'')};}
 
@@ -8754,6 +8759,8 @@ const TASKS=[
    c. The one extra DM: kind "dm", only when the venue has an instagram handle, touch 1 was an email, it is 1 month or more after touch 1, there was no reply and no ig-dm touch exists. One or two lines, for example "I sent a note to your email, just wanted to say hi here too." It is allowed once, ever, and does not count as a touch.
    d. Never email and DM the same venue on the same day, and never post publicly on their page asking for work.
    d2. KNOWN GIGS. Read agent_config knowngigs. Never draft or pitch a venue for a kind of night that venue already has, whether we run it (Our Venues gigs and slots) or someone else does (knowngigs gigs with status "still going" or "not sure"). Pitch a different kind of night or a different day instead, or write nothing. Each Monday also check up to 10 knowngigs gigs whose "checked" date is empty or more than 30 days old: look at the venue page and the run-by person's social links (knowngigs people) and see if the gig still runs. With setConfig doc "knowngigs" update gigs.<id>.status ("still going", "ended" or "not sure"), gigs.<id>.checked (today, YYYY-MM-DD) and gigs.<id>.notes only if something changed. Never add or delete rows. If the write is refused, list the changes in your run note instead.
+   d3. FOUR OPTIONS. Every cold email or DM draft (kinds email, email2, email3, cold, colddm, dm) has a body of FOUR different versions, each with a different angle, separated by a line containing exactly ---OPTION---. Emails start each version with a Subject line.
+   d4. REWRITE REQUESTS. Read agent_drafts for pending cold drafts that have a rewrite field and no newer draft whose label ends with [redraft of <that draft's id>]. Read everything the team knows first: agent_venues, agent_config curator (research dossier, bait line, profiles, ideas naming the venue), agent_config sable, agent_config knowngigs, Our Venues, agent_leads, the price sheet and the voice. Write ONE new draft, same agent, kind and venueId, label = old label + " [redraft of <old id>]", body of four new versions separated by ---OPTION--- lines.
    e. A "no" (declinedAt set, or stage "no" with no noUntil) stops outreach: write nothing. A "not now" waits for the time they gave. If conversation is true they replied: write nothing, Ahnna handles it, and anything they reply to restarts the normal conversation.
 4. For each new Hot or Warm lead, addDraft kind "reply" (agent quill, leadId set). Answer their question first, mention Belladonna second.
 Do not touch venues you did not just add except to draft.`},
@@ -8856,7 +8863,7 @@ function libPatterns(){
   let t='QUILL REPLY PATTERNS (use for every reply draft; same patterns Ahnna uses by hand in HQ)\nPick the closest situation, keep its structure and warmth, fill the {tokens} from the email, and adapt it so it answers what they actually asked FIRST. Prices only from the price sheet in agent_config pricing, never invent one. If a detail is unknown, leave a [bracket] for Ahnna.\n\nSERVICES (use as {night} and {hook}):\n';
   Object.keys(LIB_SERV).forEach(k=>{t+='- '+LIB_SERV[k].label+': night = "'+LIB_SERV[k].night+'", hook = "'+LIB_SERV[k].hook+'"\n';});
   t+='\n';
-  LIB_SIT.forEach(x=>{t+='SITUATION: '+x.label+'\n'+x.body.replace('{trial}','{trial = the short trial-night line from agent_config outreach.short}')+'\n\n';});
+  LIB_SIT.filter(x=>x.body).forEach(x=>{t+='SITUATION: '+x.label+'\n'+x.body.replace('{trial}','{trial = the short trial-night line from agent_config outreach.short}')+'\n\n';});
   return t.trim();
 }
 function tkHash(i){const x=tkBuild(i,'{URL}','{KEY}');let h=5381;for(let k=0;k<x.length;k++)h=((h<<5)+h+x.charCodeAt(k))|0;return (h>>>0).toString(36);}
@@ -8994,24 +9001,52 @@ function savePicks(k,arr){const id=k.slice(1);if(k[0]==='d')return col('agent_dr
 function keepEdit(k){if(k[0]!=='d')return;const ta=document.querySelector('[data-did="'+k.slice(1)+'"]');if(!ta)return;S.oi=S.oi||{};S.oe=S.oe||{};S.oe[k+':'+(Math.max(+S.oi[k]||0,0))]=ta.value;}
 function selText(k){const id=k.slice(1);if(k[0]==='d'){const ta=document.querySelector('[data-did="'+id+'"]');if(ta&&ta.selectionEnd>ta.selectionStart)return ta.value.slice(ta.selectionStart,ta.selectionEnd).trim();}
   const sel=window.getSelection(),el=document.querySelector('[data-ck="'+k+'"]');if(sel&&el&&sel.toString().trim()&&sel.anchorNode&&el.contains(sel.anchorNode))return sel.toString().trim();return '';}
-function redraftPrompt(isD,label,current,parts){return 'Redraft this '+(isD?'message':'social caption')+' for Belladonna. Build it around the parts I kept below: use my parts word for word, and write everything around them in our voice. Give me FIVE different versions, separated by a line containing exactly ---OPTION---. No commentary.\n\nPARTS I WANT KEPT\n'+parts.map((p,i)=>(i+1)+'. '+p).join('\n')+'\n\nTHE CURRENT DRAFT ('+label+')\n'+current+'\n\nOUR VOICE\n'+(isD?emailVoice():emGuide()+'\n\n'+voiceFull());}
+function redraftPrompt(isD,label,current,parts){return 'Redraft this '+(isD?'message':'social caption')+' for Belladonna. Build it around the parts I kept below: use my parts word for word, and write everything around them in our voice. Give me '+(isD?'FOUR':'FIVE')+' different versions, separated by a line containing exactly ---OPTION---. No commentary.\n\nPARTS I WANT KEPT\n'+parts.map((p,i)=>(i+1)+'. '+p).join('\n')+'\n\nTHE CURRENT DRAFT ('+label+')\n'+current+'\n\nOUR VOICE\n'+(isD?emailVoice():emGuide()+'\n\n'+voiceFull());}
+function teamKnow(name,dr){
+  const n=blNorm(name),L=[],kv=(t,x)=>{x=String(x==null?'':x).trim();if(x)L.push(t+': '+x);};
+  const pv=(S.venues||[]).find(x=>blNorm(x.name)===n)||(dr&&dr.venueId?(S.venues||[]).find(x=>x.id===dr.venueId):null);
+  if(pv){kv('City',pv.city);kv('Address',pv.address);kv('Why we picked them (Raven)',pv.evidence);kv('Pitch angle so far',pv.pitch);kv('Contact',[pv.contactName,pv.contact].filter(Boolean).join(' · '));kv('Instagram',pv.instagram);
+    const T=otTouches(pv);if(T.length)kv('Earlier touches',T.map(t=>(t.date||'')+' '+(t.step||'')+(t.subject?' ("'+t.subject+'")':'')).join('; '));}
+  const ho=(typeof venues!=='undefined'&&Array.isArray(venues)?venues:[]).find(x=>x&&blNorm(x.name)===n);
+  if(ho){L.push('WE ALREADY WORK HERE (Our Venues).');kv('Gigs we run',[].concat(ho.gigs||[]).map(g=>typeof g==='string'?g:(g&&g.kind)||'').join(', '));kv('Slots',(ho.gigSlots||[]).map(sl=>[sl.kind,sl.day,sl.time].filter(Boolean).join(' ')).join('; '));kv('Notes',ho.notes);kv('Perks',ho.perks);}
+  const pf=Object.values((S.cfg.curator||{}).profiles||{}).find(p=>p&&blNorm(p.name)===n);
+  if(pf){kv('What the venue offers (tags)',[].concat(pf.tags||[]).join(', '));kv('Capacity',pf.capacity);kv('Venue notes',pf.notes);}
+  const rs=((S.cfg.curator||{}).research||{})[pfKey(String(name||'').toLowerCase())];
+  if(rs){Object.keys(rs).forEach(k=>{if(['name','kind','researchedAt','id'].indexOf(k)>=0)return;const v=rs[k];kv('Iris research, '+k,Array.isArray(v)?v.join('; '):(typeof v==='object'?JSON.stringify(v):v));});}
+  const ideas=curatorState().ideas.filter(x=>['new','liked','pursuing'].indexOf(x.status||'new')>=0&&ideaVenues(x).some(v=>blNorm(v.name)===n));
+  if(ideas.length)kv('Iris ideas that fit them',ideas.map(x=>x.title+': '+(x.pitch||'')).join(' | '));
+  const kg=kgRows('gigs').filter(g=>g.venue&&(blNorm(g.venue)===n||blNorm(g.venue).indexOf(n)>=0||n.indexOf(blNorm(g.venue))>=0)&&g.status!=='ended');
+  if(kg.length)kv('Nights they ALREADY have run by others (never pitch these)',kg.map(g=>[g.kind,g.night,g.runBy&&'run by '+g.runBy].filter(Boolean).join(' ')).join('; '));
+  const dg=(S.cfg.sable&&S.cfg.sable.digest)||{};
+  if(Array.isArray(dg.top5)&&dg.top5.length)kv('Sable, upcoming events worth tying a pitch to',dg.top5.slice(0,5).map(e=>[e.event,e.date,e.idea].filter(Boolean).join(' - ')).join(' | '));
+  if(Array.isArray(dg.avoid)&&dg.avoid.length)kv('Sable, dates to avoid',dg.avoid.map(e=>[e.date,e.reason].filter(Boolean).join(': ')).join(' | '));
+  return L.length?L.join('\n'):'(the team has nothing on this one yet)';
+}
+function rewritePrompt(dr,current){
+  const name=(dr.label||'').replace(/^[^:]*:\s*/,'').replace(/\s*\(.*$/,'').replace(/\s*\[redraft of.*$/,'');
+  return 'You are Quill, writing for '+BRAND+'.\nVoice: '+voice()+'\n\nEMAIL VOICE GUIDE:\n'+emailVoice()+'\n\nOUR FREE TRIAL OFFER:\n'+termsShort()+'\n\nWHO THIS IS FOR: '+name+'\n\nEVERYTHING THE TEAM KNOWS ABOUT THEM:\n'+teamKnow(name,dr)+'\n\nTHE CURRENT DRAFT TO BEAT:\n'+current+'\n\nWrite FOUR new versions, each with a different angle (for example the season, their slow night, a fresh idea from Iris, something local from Sable). Use only the facts above, never invent a feature or event, and never pitch a night they already have. Cold emails: 2 to 6 short lines, one question at most, each version starts with a Subject line. Separate the four versions with a line containing exactly ---OPTION---. Output only the four versions.';
+}
+function unknownPrompt(f){
+  return 'You are Quill, the reply and quote drafter for '+BRAND+'.\nVoice: '+voice()+'\n\nEMAIL VOICE GUIDE:\n'+emailVoice()+'\n\nPRICE SHEET:\n'+(pricing()||'(not set: do not invent prices, tell me what is missing)')+'\n\nOUR FREE TRIAL OFFER:\n'+termsShort()+'\n\nWHO I AM WRITING TO: '+(f.name||'(unknown)')+(f.venue?' at '+f.venue:'')+'\nDATE: '+(f.date||'(none)')+'\n\nEVERYTHING THE TEAM KNOWS:\n'+(f.venue?teamKnow(f.venue,null):'(no venue given)')+'\n\nWHAT THEY SENT ME:\n'+(f.msg||'(nothing)')+'\n\nI am not sure how to answer this. Work out what they actually want, then write FOUR different replies with different angles. Use ideas from the team facts above where they fit, quote only from the price sheet, never invent a feature, price or event, and never pitch a night they already have. Separate the four with a line containing exactly ---OPTION---. Output only the four replies.';
+}
 function draftCard(dr,withPrice){
   const l=leadsById()[dr.leadId];const OP=optState('d'+dr.id,dr.body);
   const head=l?leadLine(l):'<b>'+esc(dr.label||'Draft')+'</b>';
   return '<div class="tm-item"><div class="t1">'+head+'</div>'+
     '<div class="t2">'+esc(dr.kind==='n1'?'First nudge':dr.kind==='n2'?'Final nudge':dr.kind==='review'?'Review reply':dr.kind==='thanks'?'Thank-you':dr.kind==='email'?'Cold email (touch 1)':dr.kind==='email2'?'Cold email (touch 2)':dr.kind==='email3'?'Cold email (touch 3)':dr.kind==='cold'?'Cold email':dr.kind==='dm'?'Extra Instagram DM':dr.kind==='colddm'?'Instagram message (touch)':dr.kind==='reviewask'?'Review request':dr.kind==='checkin'?'Venue check-in':dr.kind==='paperwork'?'Paperwork reminder':dr.kind==='seo'?'SEO fix':'Reply and quote')+' · drafted '+fmtDay(dr.createdAt)+'</div>'+
-    optBar('d'+dr.id,OP.n,OP.i)+'<textarea class="tm-ta" style="margin-top:.6rem" data-did="'+esc(dr.id)+'">'+esc(OP.text||'')+'</textarea>'+pickBar('d'+dr.id,dr.picks,dr.redraft)+
+    optBar('d'+dr.id,OP.n,OP.i)+'<textarea class="tm-ta" style="margin-top:.6rem" data-did="'+esc(dr.id)+'">'+esc(OP.text||'')+'</textarea>'+pickBar('d'+dr.id,dr.picks,dr.redraft)+(dr.rewrite?'<div class="t2" style="color:var(--text3)">Rewrite requested '+esc(fmtDay(dr.rewrite.at))+'. Quill writes four new versions on his next run, and the prompt was copied if you want it sooner.</div>':'')+
     '<div class="tm-row">'+(withPrice?'<input class="tm-in s" data-pid="'+esc(dr.id)+'" placeholder="Quoted $" value="'+esc(l&&l.quotedPrice||'')+'">':'')+
     (OT_KIND[dr.kind]
       ?'<button class="tm-b pri" data-act="approve" data-mode="sent" data-id="'+esc(dr.id)+'" title="Mark as sent. Logs it in the outreach history. Raven picks it up on her next run." aria-label="Mark as sent">&#10003;</button>'+
         '<button class="tm-b" data-act="copydraft" data-id="'+esc(dr.id)+'">Copy</button>'+
+        '<button class="tm-b" data-act="sendrewrite" data-id="'+esc(dr.id)+'" title="Quill reads everything the team knows about this venue and writes four new versions">Send for rewrite</button>'+
         (dr.kind!=='dm'&&dr.kind!=='colddm'?'<button class="tm-b" data-act="opengmail" data-id="'+esc(dr.id)+'" title="Opens Gmail as '+ADMIN_MAIL+' with the address, subject and text filled in">Open in Gmail</button>':'')
       :'<button class="tm-b pri" data-act="approve" data-id="'+esc(dr.id)+'">Approve &amp; copy</button>'+
         ((l&&/[^\s@]+@[^\s@]+\.[^\s@]+/.test(String(l.contact||'')))?'<button class="tm-b" data-act="opengmail" data-id="'+esc(dr.id)+'" title="Opens Gmail as '+ADMIN_MAIL+' with the address, subject and text filled in">Open in Gmail</button>':''))+
     '<button class="tm-b dim" data-act="skipdraft" data-id="'+esc(dr.id)+'" title="Not right now. It can come back later">Skip</button>'+(dr.leadId?'<button class="tm-b dim" data-act="blockdraft" data-id="'+esc(dr.id)+'" title="Never work this one again">Do not use</button>':'')+'</div></div>';
 }
 function pasteBox(kind,leadId,label){
-  return '<textarea class="tm-ta" style="min-height:80px;margin-top:.5rem" data-paste="'+esc(leadId||'')+'|'+kind+'" placeholder="Paste the draft here"></textarea>'+
+  return '<textarea class="tm-ta" style="min-height:80px;margin-top:.5rem" data-paste="'+esc(leadId||'')+'|'+kind+'" ></textarea>'+
     '<div class="tm-row"><button class="tm-b" data-act="adddraft" data-lead="'+esc(leadId||'')+'" data-kind="'+kind+'" data-label="'+esc(label||'')+'">Add to queue</button></div>';
 }
 
@@ -10788,7 +10823,7 @@ const A={
   async hddel(t){if(!confirm('Delete this saved answer?'))return;await hdSave({['items.'+t.dataset.id]:null});},
   async fold(t,e){S.open['c_'+t.dataset.id]=!S.open['c_'+t.dataset.id];renderDrawer(true);},
   async vtl(t){S.open['tl_'+t.dataset.id]=!S.open['tl_'+t.dataset.id];renderDrawer(true);},
-  async libbuild(){S.lib=libRead();S.lib.out=libFill(S.lib);const e=$('#lib-out');if(e)e.value=S.lib.out;toast('Draft built. Fix any [brackets], then copy.',false);},
+  async libbuild(){S.lib=libRead();if(S.lib.sit==='unknown'){toast('For Unknown, press Copy Quill prompt, run it in Claude, then paste the four replies into the box below.',false);return;}S.lib.out=libFill(S.lib);const e=$('#lib-out');if(e)e.value=S.lib.out;toast('Draft built. Fix any [brackets], then copy.',false);},
   async libcopy(){const f=libRead();S.lib=f;toast(await copy(f.out)?'Reply copied.':'Nothing to copy yet. Press Build reply.',!f.out);},
   async libprompt(){const f=libRead();S.lib=f;toast(await copy(libPrompt(f))?'Quill prompt copied. Paste it into a Claude chat.':'Copy failed.',false);},
   async cdcover(t){const w=($('#cb-'+t.dataset.id)||{}).value||'';await cdSave({['callouts.'+t.dataset.id+'.status']:'covered',['callouts.'+t.dataset.id+'.coveredBy']:w.trim(),['callouts.'+t.dataset.id+'.coveredAt']:Date.now()});toast('Marked covered.');},
@@ -10852,6 +10887,8 @@ const A={
   },
   async kgcopy(t){toast(await copy(kgCsvText(t.dataset.set))?'CSV copied.':'Copy failed.',false);},
   kgdl(t){const set=t.dataset.set,b=new Blob([kgCsvText(set)],{type:'text/csv'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=(set==='gigs'?'gigs-run-by-others':'people-we-know')+'.csv';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},500);},
+  async sendrewrite(t){const id=t.dataset.id,dr=S.drafts.find(x=>x.id===id);if(!dr)return;keepEdit('d'+id);const cp=copy(rewritePrompt(dr,optState('d'+id,dr.body).text));await col('agent_drafts').doc(id).update({rewrite:{at:Date.now()}});toast('Sent to Quill.'+(await cp?' The prompt is copied too if you want it now in your own chat.':''),false);},
+  async libqueue(){const f=libRead();S.lib=f;const ta=document.getElementById('lib-paste'),body=ta?ta.value.trim():'';if(!body){toast('Paste the replies first.',true);return;}await col('agent_drafts').add({leadId:null,agent:'quill',kind:'reply',body:body,label:'Reply: '+(f.venue||f.name||'unknown'),status:'pending',createdAt:Date.now()});if(ta)ta.value='';toast('Added to Drafts waiting, with the options and highlight tools.');},
   async unskipdraft(t){const ta=document.querySelector('[data-skb="'+t.dataset.id+'"]');const u={status:'pending'};if(ta)u.body=ta.value;await col('agent_drafts').doc(t.dataset.id).update(u);toast('Back in Cold emails.');},
   async skcopy(t){const ta=document.querySelector('[data-skb="'+t.dataset.id+'"]');toast(await copy(ta?ta.value:'')?'Copied.':'Copy failed.',false);},
   async copydraft2(t){const ta=document.querySelector('[data-ckb="'+t.dataset.id+'"]'),dr=S.drafts.find(x=>x.id===t.dataset.id);toast(await copy(ta?ta.value:(dr&&dr.body)||'')?'Copied.':'Copy failed.',false);},
