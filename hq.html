@@ -672,6 +672,7 @@ html::-webkit-scrollbar-thumb:hover,.modal::-webkit-scrollbar-thumb:hover{backgr
 #panel-team .np-cols{column-count:2;column-gap:1.6rem;column-rule:1px solid #b7a98a;}
 #panel-team .np-item{display:flex;gap:.6rem;align-items:flex-start;break-inside:avoid;padding:.45rem 0;border-bottom:1px dotted #8c7f66;cursor:pointer;}
 #panel-team .np-item input{width:20px;height:20px;margin-top:.15rem;accent-color:#7a1f2b;flex-shrink:0;}
+#panel-team .np-ini{font-weight:700;font-size:inherit;margin-left:.2rem;font-style:normal;letter-spacing:0;}
 #panel-team .np-hd{display:block;font-weight:700;font-size:1.05rem;line-height:1.25;}
 #panel-team .np-by{display:block;font-size:.78rem;font-style:italic;color:#5a4e3e;margin-top:.1rem;}
 #panel-team .np-by a,#panel-team .np-filed a{color:#7a1f2b;text-decoration:underline;}
@@ -1515,7 +1516,7 @@ html::-webkit-scrollbar-thumb:hover,.modal::-webkit-scrollbar-thumb:hover{backgr
   <div id="tmBrief" style="margin-bottom:1.1rem"></div>
   <div class="tm-grid" id="tmGrid"></div>
   <div class="tm-foot">
-    <details class="tm-det" style="--ac:#c9a96e" id="tmFindDet" open>
+    <details class="tm-det" style="--ac:#c9a96e" id="tmFindDet">
       <summary>Search the Team</summary>
       <div class="in"><div class="tm-hint">Type a word or phrase to see which team member handles it.</div><input class="tm-in" id="tmFind" type="search" autocomplete="off" aria-label="Search the team"><div id="tmFindOut" style="margin-top:.7rem"></div></div>
     </details>
@@ -7629,7 +7630,7 @@ herald:{
  reads:['Our Venues (HQ Venues tab)','agent_config/curator (what each venue offers, your catalog, past ideas)','agent_config/sable (this week\'s events)','agent_leads and agent_venues','The public web (public domain)'],
  writes:['agent_config/curator (ideas, research)'],
  handoff:'A pursued idea goes to Quill, who drafts the pitch to each venue Iris named, and to Thorne for any prep it needs.',
- rules:['Never contact a venue.','Never invent a venue feature, and never claim an existing catalog item that is not in the catalog. Inventing NEW ideas, nights and categories is your job and is allowed when it is clearly marked as new. Use only what is ticked, noted or pasted.','Public domain claims need a source link. If it cannot be confirmed, leave it out.','Movie nights may need a public performance license unless the film is public domain. Flag it, never give legal advice.','Never repeat an idea already on the board, even a skipped one, a saved one or one moved to the brainstorm list.'],
+ rules:['Never suggest a night a venue already has, whether we run it or someone else does (see Gigs run by others on Raven\'s desk).','Never contact a venue.','Never invent a venue feature, and never claim an existing catalog item that is not in the catalog. Inventing NEW ideas, nights and categories is your job and is allowed when it is clearly marked as new. Use only what is ticked, noted or pasted.','Public domain claims need a source link. If it cannot be confirmed, leave it out.','Movie nights may need a public performance license unless the film is public domain. Flag it, never give legal advice.','Never repeat an idea already on the board, even a skipped one, a saved one or one moved to the brainstorm list.'],
  today:'Works by hand: tick what each venue offers, paste your catalog, add ideas yourself, like, pursue or skip.',
  auto:'Needs the business account to write ideas on Mondays. The Venue Menu is a separate app, so for now you paste its movie list into the catalog box.',
  prompt:PRE+`
@@ -7643,6 +7644,7 @@ Every Monday at 9 AM Pacific:
 5. Mix at least: one idea built only from existing catalog items put together in a new way, one idea tailored to a specific venue's feature, and one "Build this" where a small missing piece unlocks it.
 5b. TIMING. Every idea is for a date 10 to 16 weeks from today so there is time to find a venue, plan and promote. Put the target date on every idea: date (YYYY-MM-DD) and when (a short readable date like "Sat Jan 17"). Never write an idea for a date less than 10 weeks away.
 5c. SABLE EVENT IDEAS. In addition to the 5 to 8 ideas above, write 5 MORE ideas, each tied to a different event in the Sable digest (top5 and all). Only use Sable events that are 8 or more weeks away from today (timing "start now"); never tie an idea to a "tight" or "too late" event. Skip any event Ahnna marked skip. Each of these ideas gets sableEvent (the event name), date (the event date, YYYY-MM-DD) and when. If fewer than 5 qualifying events exist, write as many as there are and say so in the run note.
+6a. GIGS WE ALREADY HAVE OR SOMEONE ELSE RUNS. Never suggest a night or gig that a venue already has. Read Our Venues (their gigs and slots) and agent_config knowngigs (gigs run by others: venue, night, type, run by, status). Do not write an idea for a kind of night (karaoke, trivia, music bingo) at a venue that already has it, whether we run it or another business or host does (status "still going" or "not sure"). A weekly trivia night at a venue where we already run trivia is never an idea. You may pitch a DIFFERENT kind of night, or a different day, at that venue.
 6. Skip any idea already in ideas with any status, including skipped, saved and brainstormed ones. Also read curator seeds (Ahnna's brainstorm list: rough ideas she will finish herself) and never write an idea that repeats one of them. An idea with status saved comes back by itself when its time is near, so do not rewrite it.
 7. VENUE MATCHING. For each idea list ALL venues that fit, in three groups: Our Venues, leads and prospects with their profiles (offers tags, capacity, notes in curator profiles), every venue in agent_venues and the Leads tab (targets we want), and the dossiers in agent_config curator research (what each offers, past events, what they would like). A venue fits only when a dossier, profile or note states a real feature or past event the idea needs. Give each a one-line why from that fact, there is no limit on how many you list. Mark best:true on the strongest fits (HQ shows those under "Best at" and the rest under "Also a good fit"). Include venues we do not work with yet. If a promising venue has no dossier, add it with kind "suggest" and say what to check. Never invent a venue feature.
 
@@ -8291,25 +8293,27 @@ function evBadge(x){const m=String(x.date||'').match(/^(\d{4})-(\d{2})-(\d{2})/)
 const THUMB='<svg viewBox="0 0 24 24" width="30" height="30" aria-hidden="true"><path d="M1 21h4V9H1v12zM23 10c0-1.1-.9-2-2-2h-6.31l.95-4.57.03-.32c0-.41-.17-.79-.44-1.06L14.17 1 7.59 7.59C7.22 7.95 7 8.45 7 9v10c0 1.1.9 2 2 2h9c.83 0 1.54-.5 1.84-1.22l3.02-7.05c.09-.23.14-.47.14-.73v-2z"/></svg>';
 
 function baitFor(name){const r=((S.cfg.curator||{}).research||{})[pfKey(String(name||'').toLowerCase())];if(!r)return '';return String(r.bait||'').trim()||[].concat(r.ideas||[])[0]||'';}
+const ini=id=>{const a=AGENTS.find(z=>z.id===id);return a?' <span class="np-ini" style="color:'+a.color+'" title="'+esc(a.name)+'">'+esc(a.name.charAt(0).toUpperCase())+'</span>':'';};
+const odk=id=>'<span class="np-by"><a href="#" data-act="open" data-agent="'+id+'">open desk</a></span>';
 function irisGazette(){
   const c=curatorState(),rs=researchState(),live=c.ideas.filter(x=>['new','liked','pursuing'].indexOf(x.status||'new')>=0);
   const pd=live.filter(x=>/public domain/i.test(x.kind||'')),other=live.filter(x=>!/public domain/i.test(x.kind||''));
   const TH=(id,on)=>'<div class="np-thumbs"><button class="np-th'+(on?' act':'')+'" data-act="gideathumb" data-id="'+esc(id)+'" data-v="pursuing" title="Pursue this">'+THUMB+'</button><button class="np-th dn" data-act="gideathumb" data-id="'+esc(id)+'" data-v="skipped" title="Pass on this">'+THUMB+'</button></div>';
   const card=x=>{const k=String(x.kind||'Idea').replace('Themed night','Night').replace('Public domain find','Public domain').replace('Venue pitch','Pitch').replace('Build this','Build');
-    return '<div class="np-card'+(x.status==='pursuing'?' on':'')+'"><span class="np-date kind"><b>'+esc(k)+'</b></span><div class="np-cardt"><span class="np-hd">'+esc(x.title)+'</span><span class="np-body">'+esc(x.pitch||'')+'</span>'+(function(){const L=ideaVenues(x),f=v=>esc(v.name)+(v.kind==='want'||v.kind==='suggest'?' (new)':''),bt=L.filter(v=>v.best),rest=L.filter(v=>!v.best);return (bt.length?'<span class="np-by">Best at: '+bt.map(f).join(', ')+'</span>':'')+(rest.length?'<span class="np-by">'+(bt.length?'Also fits: ':'Pitch to: ')+rest.map(f).join(', ')+'</span>':'');})()+(x.missing?'<span class="np-by">Only missing: '+esc(x.missing)+'</span>':'')+(x.sourceUrl&&safeUrl(x.sourceUrl)?'<span class="np-by"><a href="'+esc(safeUrl(x.sourceUrl))+'" target="_blank" rel="noopener">source</a></span>':'')+'</div>'+TH(x.id,x.status==='pursuing')+'</div>';};
+    return '<div class="np-card'+(x.status==='pursuing'?' on':'')+'"><span class="np-date kind"><b>'+esc(k)+'</b></span><div class="np-cardt"><span class="np-hd">'+esc(x.title)+ini('herald')+'</span><span class="np-body">'+esc(x.pitch||'')+'</span>'+(function(){const L=ideaVenues(x),f=v=>esc(v.name)+(v.kind==='want'||v.kind==='suggest'?' (new)':'')+gigFlags(v.name,x.title+' '+(x.pitch||'')+' '+(x.kind||'')).map(g=>' ('+esc(g)+')').join(''),bt=L.filter(v=>v.best),rest=L.filter(v=>!v.best);return (bt.length?'<span class="np-by">Best at: '+bt.map(f).join(', ')+'</span>':'')+(rest.length?'<span class="np-by">'+(bt.length?'Also fits: ':'Pitch to: ')+rest.map(f).join(', ')+'</span>':'');})()+(x.missing?'<span class="np-by">Only missing: '+esc(x.missing)+'</span>':'')+(x.sourceUrl&&safeUrl(x.sourceUrl)?'<span class="np-by"><a href="'+esc(safeUrl(x.sourceUrl))+'" target="_blank" rel="noopener">source</a></span>':'')+odk('herald')+'</div>'+TH(x.id,x.status==='pursuing')+'</div>';};
   const ord=a=>a.slice().sort((p,q)=>(q.status==='pursuing'?1:0)-(p.status==='pursuing'?1:0));
   let h='',n=0;
   if(other.length){n+=other.length;h+='<div class="np-sub">New themed nights and events <em>'+other.length+'</em></div><div class="np-cards">'+ord(other).map(card).join('')+'</div>';}
   if(pd.length){n+=pd.length;h+='<div class="np-sub">Public domain finds we can use <em>'+pd.length+'</em></div><div class="np-cards">'+ord(pd).map(card).join('')+'</div>';}
   const have=rs.done.filter(d=>d.kind==='have'&&[].concat(d.ideas||[]).length),want=rs.done.filter(d=>d.kind!=='have'&&(d.bait||[].concat(d.ideas||[]).length));
-  if(have.length){n+=have.length;h+='<div class="np-sub">What to do at venues we work with <em>'+have.length+'</em></div><div class="np-cards">'+have.map(d=>'<div class="np-card"><span class="np-date kind"><b>Venue</b></span><div class="np-cardt"><span class="np-hd">'+esc(d.name)+'</span>'+[].concat(d.ideas).slice(0,3).map(x=>'<span class="np-body">&bull; '+esc(x)+'</span>').join('')+'</div></div>').join('')+'</div>';}
-  if(want.length){n+=want.length;h+='<div class="np-sub">Bait for venues we want <em>'+want.length+'</em></div><div class="tm-hint" style="color:#4a4034;font-size:1rem">Raven and Quill use each of these in the trip brief and the cold email.</div><div class="np-cards">'+want.map(d=>'<div class="np-card"><span class="np-date kind"><b>'+(d.kind==='suggest'?'Try':'Want')+'</b></span><div class="np-cardt"><span class="np-hd">'+esc(d.name)+'</span><span class="np-body">'+esc(baitFor(d.name))+'</span></div></div>').join('')+'</div>';}
+  if(have.length){n+=have.length;h+='<div class="np-sub">What to do at venues we work with <em>'+have.length+'</em></div><div class="np-cards">'+have.map(d=>'<div class="np-card"><span class="np-date kind"><b>Venue</b></span><div class="np-cardt"><span class="np-hd">'+esc(d.name)+ini('herald')+'</span>'+[].concat(d.ideas).slice(0,3).map(x=>'<span class="np-body">&bull; '+esc(x)+'</span>').join('')+odk('herald')+'</div></div>').join('')+'</div>';}
+  if(want.length){n+=want.length;h+='<div class="np-sub">Bait for venues we want <em>'+want.length+'</em></div><div class="tm-hint" style="color:#4a4034;font-size:1rem">Raven and Quill use each of these in the trip brief and the cold email.</div><div class="np-cards">'+want.map(d=>'<div class="np-card"><span class="np-date kind"><b>'+(d.kind==='suggest'?'Try':'Want')+'</b></span><div class="np-cardt"><span class="np-hd">'+esc(d.name)+ini('herald')+'</span><span class="np-body">'+esc(baitFor(d.name))+'</span>'+odk('herald')+'</div></div>').join('')+'</div>';}
   return {html:h,n:n};
 }
 
 function ideasHtml(ideas){
   const g=[[],[],[],[]];ideas.slice().sort((a,b)=>(b.dec==='pursue'?1:0)-(a.dec==='pursue'?1:0)).forEach(x=>g[evCat(x)].push(x));
-  return g.map((a,i)=>!a.length?'':'<div class="np-sub">'+EV_CATS[i]+' <em>'+a.length+'</em></div><div class="np-cards">'+a.map(x=>'<div class="np-card'+(x.dec==='pursue'?' on':'')+'">'+evBadge(x)+'<div class="np-cardt"><span class="np-hd">'+esc(x.event)+'</span><span class="np-body">'+esc(x.idea||'')+'</span></div>'+(x.i!=null?'<div class="np-thumbs"><button class="np-th'+(x.dec==='pursue'?' act':'')+'" data-act="gthumb" data-i="'+x.i+'" data-v="pursue" title="Pursue this">'+THUMB+'</button><button class="np-th dn" data-act="gthumb" data-i="'+x.i+'" data-v="skip" title="Pass on this">'+THUMB+'</button></div>':'')+'</div>').join('')+'</div>').join('');
+  return g.map((a,i)=>!a.length?'':'<div class="np-sub">'+EV_CATS[i]+' <em>'+a.length+'</em></div><div class="np-cards">'+a.map(x=>'<div class="np-card'+(x.dec==='pursue'?' on':'')+'">'+evBadge(x)+'<div class="np-cardt"><span class="np-hd">'+esc(x.event)+ini('sable')+'</span><span class="np-body">'+esc(x.idea||'')+'</span>'+odk('sable')+'</div>'+(x.i!=null?'<div class="np-thumbs"><button class="np-th'+(x.dec==='pursue'?' act':'')+'" data-act="gthumb" data-i="'+x.i+'" data-v="pursue" title="Pursue this">'+THUMB+'</button><button class="np-th dn" data-act="gthumb" data-i="'+x.i+'" data-v="skip" title="Pass on this">'+THUMB+'</button></div>':'')+'</div>').join('')+'</div>').join('');
 }
 
 // Pulls the To address, subject and body out of a cold-email draft so the Gazette can open it ready to send.
@@ -8441,7 +8445,7 @@ function renderBrief(){
   const d0=new Date(),dt=d0.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
   const doy=Math.floor((d0-new Date(d0.getFullYear(),0,0))/DAY);
   const sec=t=>'<div class="np-sec">'+esc(t)+'</div>';
-  const art=n=>'<label class="np-item"><input type="checkbox" data-chg="bchk" data-key="'+esc(n.key)+'"'+(S.bchk[n.key]?' checked':'')+'><span><span class="np-hd">'+esc(n.text)+'</span>'+(n.body?'<span class="np-body">'+esc(n.body)+'</span>':'')+'<span class="np-by">'+esc(BY[n.a]||agent(n.a).name)+(n.rem?' &middot; your reminder':'')+' &middot; <a href="#" data-act="open" data-agent="'+esc(n.a)+'">open desk</a>'+(n.note?' &middot; <a href="#" data-act="notedone" data-id="'+esc(n.note)+'">got it</a>':'')+(n.ig?' &middot; <a href="'+esc(n.ig)+'" target="_blank" rel="noopener">open Instagram</a>':'')+(n.mail?' &middot; <a href="'+esc(gmailHref(n.mail))+'" target="_blank" rel="noopener"'+(n.mail.to?'':' title="No email address on file for this venue. Add one in the To box."')+'>open email'+(n.mail.to?'':' (add address)')+'</a>':'')+'</span></span></label>';
+  const art=n=>'<label class="np-item"><input type="checkbox" data-chg="bchk" data-key="'+esc(n.key)+'"'+(S.bchk[n.key]?' checked':'')+'><span><span class="np-hd">'+esc(n.text)+ini(n.a)+'</span>'+(n.body?'<span class="np-body">'+esc(n.body)+'</span>':'')+'<span class="np-by">'+esc(BY[n.a]||agent(n.a).name)+(n.rem?' &middot; your reminder':'')+' &middot; <a href="#" data-act="open" data-agent="'+esc(n.a)+'">open desk</a>'+(n.note?' &middot; <a href="#" data-act="notedone" data-id="'+esc(n.note)+'">got it</a>':'')+(n.ig?' &middot; <a href="'+esc(n.ig)+'" target="_blank" rel="noopener">open Instagram</a>':'')+(n.mail?' &middot; <a href="'+esc(gmailHref(n.mail))+'" target="_blank" rel="noopener"'+(n.mail.to?'':' title="No email address on file for this venue. Add one in the To box."')+'>open email'+(n.mail.to?'':' (add address)')+'</a>':'')+'</span></span></label>';
   const urgent=todo.filter(n=>n.u),rest=todo.filter(n=>!n.u);
   let h='<details class="tm-det tm-brief np" data-k="brief"'+(open?' open':'')+'><summary>The Belladonna Gazette · '+esc(b.date)+' · '+(todo.length?'<b style="color:var(--gold)">'+todo.length+' to do</b>':'all clear')+'</summary><div class="in"><div class="np-paper">';
   h+='<div class="np-top"><span>Auburn, Washington</span><span>'+esc(dt)+'</span><span>Vol. I &middot; No. '+doy+' &middot; Free with every gig</span></div>';
@@ -8451,13 +8455,13 @@ function renderBrief(){
   h+='<div class="np-front"><div class="np-flag">'+(urgent.length?'FRONT PAGE':todo.length?'TODAY\'S EDITION':'QUIET ON THE PRESS')+'</div>';
   if(urgent.length){
     const lead=urgent[0],more=urgent.slice(1);
-    h+='<div class="np-frontgrid"><label class="np-lead"><input type="checkbox" data-chg="bchk" data-key="'+esc(lead.key)+'"'+(S.bchk[lead.key]?' checked':'')+'><span><span class="np-kick">'+esc(agent(lead.a).name+' reports')+'</span><span class="np-big">'+esc(lead.text)+'</span><span class="np-body">'+esc(lead.body||'')+'</span><span class="np-by"><a href="#" data-act="open" data-agent="'+esc(lead.a)+'">open desk</a></span></span></label>'+(more.length?'<div class="np-side">'+more.map(art).join('')+'</div>':'')+'</div>';
+    h+='<div class="np-frontgrid"><label class="np-lead"><input type="checkbox" data-chg="bchk" data-key="'+esc(lead.key)+'"'+(S.bchk[lead.key]?' checked':'')+'><span><span class="np-kick">'+esc(agent(lead.a).name+' reports')+'</span><span class="np-big">'+esc(lead.text)+ini(lead.a)+'</span><span class="np-body">'+esc(lead.body||'')+'</span><span class="np-by"><a href="#" data-act="open" data-agent="'+esc(lead.a)+'">open desk</a></span></span></label>'+(more.length?'<div class="np-side">'+more.map(art).join('')+'</div>':'')+'</div>';
   }else if(!todo.length)h+='<div class="np-quiet">Nothing is waiting on you. Go enjoy a night out.</div>';
   else h+='<div class="np-quiet">No emergencies. The rest of the paper is below.</div>';
   h+='</div>';
   // departments
   const used=new Set();let avoidShown=false;
-  const avoidHtml=()=>'<div class="np-box"><div class="np-boxh">Dates to Dodge</div>'+b.avoid.map(x=>'<div class="np-story">'+(x.date?'<div class="np-hd">'+esc(fmtEv(x.date))+'</div>':'')+'<div class="np-body">'+esc(x.reason)+'</div></div>').join('')+'</div>';
+  const avoidHtml=()=>'<div class="np-box"><div class="np-boxh">Dates to Dodge</div>'+b.avoid.map(x=>'<div class="np-story">'+(x.date?'<div class="np-hd">'+esc(fmtEv(x.date))+ini('sable')+'</div>':'')+'<div class="np-body">'+esc(x.reason)+'</div>'+odk('sable')+'</div>').join('')+'</div>';
   const gids=[];
   const gsec_=(id,t,sub,inner,n,dflt)=>{gids.push(id);const o=S.open['g_'+id]!==undefined?S.open['g_'+id]:false;return '<div class="np-dept'+(o?'':' shut')+'"><div class="np-dh" data-act="gsec" data-id="'+id+'"><span>'+esc(t)+(n?' <em class="np-n">'+n+'</em>':'')+'</span><i>'+esc(sub)+'</i><b class="np-chev"></b></div><div class="np-sb">'+inner+'</div></div>';};
   let secs='';
@@ -8481,7 +8485,7 @@ function renderBrief(){
   if(notes.length||b.upcoming.length){
     let inner='';
     if(notes.length)inner+='<div class="'+(notes.length>1?'np-cols':'np-one')+'">'+notes.map(art).join('')+'</div>';
-    if(b.upcoming.length)inner+='<div class="np-sub">Coming up this week</div>'+b.upcoming.map(r=>'<div class="np-filed"><b>'+esc(fmtEv(r.date))+'</b> &middot; '+esc(r.text)+' <i>('+esc(agent(r.agent)?agent(r.agent).name:'')+')</i></div>').join('');
+    if(b.upcoming.length)inner+='<div class="np-sub">Coming up this week</div>'+b.upcoming.map(r=>'<div class="np-filed"><b>'+esc(fmtEv(r.date))+'</b> &middot; '+esc(r.text)+ini(r.agent)+' <i>('+esc(agent(r.agent)?agent(r.agent).name:'')+')</i>'+(agent(r.agent)?' &middot; <a href="#" data-act="open" data-agent="'+esc(r.agent)+'">open desk</a>':'')+'</div>').join('');
     secs+=gsec_('notes','Notes to Self','Things you asked us to remind you about',inner,notes.length,true);
   }
   if(b.avoid.length&&!avoidShown)secs+=gsec_('dodge','Dates to Dodge','Skip or work around these',avoidHtml(),b.avoid.length,true);
@@ -8749,6 +8753,7 @@ const TASKS=[
    b. Touch 2 and touch 3: only when the last touch was 4 or more months ago (or the date in notNowUntil has arrived). Write kind "email2" for touch 2 and "email3" for touch 3. Each one needs a NEW angle that fits the timing (the season, a holiday, a slow night, something new from the curator research or Sable). Read the earlier emails and never repeat them. You may write the touch as kind "colddm" (one DM, only if the venue has an instagram handle) instead of an email, never both for the same touch.
    c. The one extra DM: kind "dm", only when the venue has an instagram handle, touch 1 was an email, it is 1 month or more after touch 1, there was no reply and no ig-dm touch exists. One or two lines, for example "I sent a note to your email, just wanted to say hi here too." It is allowed once, ever, and does not count as a touch.
    d. Never email and DM the same venue on the same day, and never post publicly on their page asking for work.
+   d2. KNOWN GIGS. Read agent_config knowngigs. Never draft or pitch a venue for a kind of night that venue already has, whether we run it (Our Venues gigs and slots) or someone else does (knowngigs gigs with status "still going" or "not sure"). Pitch a different kind of night or a different day instead, or write nothing. Each Monday also check up to 10 knowngigs gigs whose "checked" date is empty or more than 30 days old: look at the venue page and the run-by person's social links (knowngigs people) and see if the gig still runs. With setConfig doc "knowngigs" update gigs.<id>.status ("still going", "ended" or "not sure"), gigs.<id>.checked (today, YYYY-MM-DD) and gigs.<id>.notes only if something changed. Never add or delete rows. If the write is refused, list the changes in your run note instead.
    e. A "no" (declinedAt set, or stage "no" with no noUntil) stops outreach: write nothing. A "not now" waits for the time they gave. If conversation is true they replied: write nothing, Ahnna handles it, and anything they reply to restarts the normal conversation.
 4. For each new Hot or Warm lead, addDraft kind "reply" (agent quill, leadId set). Answer their question first, mention Belladonna second.
 Do not touch venues you did not just add except to draft.`},
@@ -8783,6 +8788,7 @@ Do not touch venues you did not just add except to draft.`},
 3c. SABLE EVENT IDEAS. In addition to the ideas above, write 5 MORE ideas, each tied to a different event in the Sable digest (top5 and all). Only use Sable events that are 8 or more weeks away from today (timing "start now"); never tie an idea to a "tight" or "too late" event. Skip any event Ahnna marked skip. Each of these ideas gets sableEvent (the event name), date (the event date, YYYY-MM-DD) and when. If fewer than 5 qualifying events exist, write as many as there are and say so in the run note.
 4. Combine things we already have that nobody put together. When only a small piece is missing (a category, a prop, a playlist), still write the idea and say what is missing so Ahnna can decide to build it.
 5. Venue pitches: write the idea so a venue owner would want it, based on that venue's real features. Never invent a venue feature. Never contact anyone.
+6a. GIGS WE ALREADY HAVE OR SOMEONE ELSE RUNS. Never suggest a night or gig that a venue already has. Read Our Venues (their gigs and slots) and agent_config knowngigs (gigs run by others: venue, night, type, run by, status). Do not write an idea for a kind of night (karaoke, trivia, music bingo) at a venue that already has it, whether we run it or another business or host does (status "still going" or "not sure"). A weekly trivia night at a venue where we already run trivia is never an idea. You may pitch a DIFFERENT kind of night, or a different day, at that venue.
 6. Skip any idea already in ideas with any status, including skipped.`},
  {name:'Venue research',who:'Iris',when:'Tuesdays, 9:00 am',plain:'Studies up to 12 venues a week (ones we work with first, then ones we want) across the public web and social media, and writes what she thinks about each and what we could do there.',ids:['herald'],
   body:`TASK: Venue research. Public web and social media only. Never log in anywhere, never join a private group, never message anyone, never post.
@@ -9182,7 +9188,7 @@ function outreachHistory(){
 function venueCard(v,fold){
   const st=v.stage||'target',now=Date.now();
   const last=v.visits?Object.values(v.visits).sort((a,b)=>b.at-a.at)[0]:null;
-  let h='<div class="tm-item'+(fold&&!S.open['c_'+v.id]?' folded':'')+'"><div class="t1'+(fold?' fold':'')+'"'+(fold?' data-act="fold" data-id="'+esc(v.id)+'"':'')+'><span class="tm-tag '+TAGC[st]+'">'+TAGL[st]+'</span><b>'+esc(v.name)+'</b> · '+esc(v.city||'')+(v.address?' · '+esc(v.address):'')+'</div>';
+  let h='<div class="tm-item'+(fold&&!S.open['c_'+v.id]?' folded':'')+'"><div class="t1'+(fold?' fold':'')+'"'+(fold?' data-act="fold" data-id="'+esc(v.id)+'"':'')+'><span class="tm-tag '+TAGC[st]+'">'+TAGL[st]+'</span>'+thrownTag(v)+'<b>'+esc(v.name)+'</b> · '+esc(v.city||'')+(v.address?' · '+esc(v.address):'')+'</div>'+thrownLine(v);
   if(v.verify)h+='<div class="t2"><span class="tm-tag warn">confirm it is open first</span>Check the venue\'s own page, then mark it confirmed.</div>';
   if(v.evidence)h+='<div class="t2">'+esc(v.evidence)+'</div>';
   if(v.pitch)h+='<div class="t2"><b>Pitch:</b> '+esc(v.pitch)+'</div>';
@@ -9221,6 +9227,61 @@ function vRaven(){
   const d=D(),o=d.venDue.length+d.venYes.length+d.rPending.length,i=d.missing.length;
   return '<div class="tm-row" style="margin:0 0 1rem"><button class="tm-b'+(S.rtab==='outreach'?' pri':'')+'" data-act="rtab" data-v="outreach">Venue outreach'+(o?' ('+o+')':'')+'</button><button class="tm-b'+(S.rtab==='inbound'?' pri':'')+'" data-act="rtab" data-v="inbound">Gig-site leads'+(i?' ('+i+')':'')+'</button></div>'+(S.rtab==='outreach'?vOutreach():vInbound());
 }
+/* ── Gigs run by others + people we know ── */
+const KG_SETS={
+ gigs:{title:'Gigs run by others',need:'venue',cols:[['venue','Venue'],['night','Night'],['kind','Type'],['runBy','Run by'],['social','Their social'],['status','Status'],['checked','Last checked'],['notes','Notes']],
+  alias:{venue:['venue','bar','place','location'],night:['night','day','nights','when'],kind:['type','kind','gig','gigtype'],runBy:['runby','host','hostedby','who','business'],social:['theirsocial','social','socials','instagram','link'],status:['status'],checked:['lastchecked','checked'],notes:['notes','note']}},
+ people:{title:'People we know',need:'name',cols:[['name','Name'],['kind','Business or host'],['instagram','Instagram'],['facebook','Facebook'],['website','Website'],['notes','Notes']],
+  alias:{name:['name','person','business','host'],kind:['businessorhost','kind','type'],instagram:['instagram','ig'],facebook:['facebook','fb'],website:['website','site','web','url'],notes:['notes','note']}}
+};
+const KG_TYPES=['Karaoke','Trivia','Music bingo','Other'],KG_STATUS=['still going','ended','not sure'],KG_KIND=['Business','Host','Other'];
+function kgRows(set){const o=((S.cfg.knowngigs||{})[set])||{};return Object.entries(o).filter(([k,v])=>v&&typeof v==='object').map(([k,v])=>Object.assign({id:k},v));}
+async function kgSave(patch){const ref=col('agent_config').doc('knowngigs');try{await ref.update(patch);}catch(e){await ref.set(expandPatch(patch),{merge:true});}}
+function csvParse(t){const rows=[];let r=[],f='',q=false;t=String(t||'');for(let i=0;i<t.length;i++){const c=t[i];if(q){if(c==='"'){if(t[i+1]==='"'){f+='"';i++;}else q=false;}else f+=c;}else if(c==='"')q=true;else if(c===','){r.push(f);f='';}else if(c==='\n'||c==='\r'){if(c==='\r'&&t[i+1]==='\n')i++;r.push(f);f='';if(r.some(x=>x.trim()))rows.push(r);r=[];}else f+=c;}r.push(f);if(r.some(x=>x.trim()))rows.push(r);return rows;}
+function csvOut(rows){return rows.map(r=>r.map(x=>{x=String(x==null?'':x);return /[",\n\r]/.test(x)?'"'+x.replace(/"/g,'""')+'"':x;}).join(',')).join('\n');}
+function kgNorm(set,f,v){v=String(v==null?'':v).trim();
+  if(f==='status'){const l=v.toLowerCase();return !l?'not sure':/end|clos|stop|gone|no longer|cancel/.test(l)?'ended':/going|active|yes|run|still|on/.test(l)?'still going':'not sure';}
+  if(f==='checked'){const m=/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/.exec(v);if(m){const y=m[3].length===2?'20'+m[3]:m[3];return y+'-'+m[1].padStart(2,'0')+'-'+m[2].padStart(2,'0');}return v;}
+  if(f==='kind'&&set==='gigs'){const l=v.toLowerCase();return /karaoke/.test(l)?'Karaoke':/trivia/.test(l)?'Trivia':/bingo/.test(l)?'Music bingo':v||'Other';}
+  return v;}
+function kgCsvText(set){const sp=KG_SETS[set];return csvOut([sp.cols.map(c=>c[1])].concat(kgRows(set).map(r=>sp.cols.map(c=>r[c[0]]||''))));}
+function kgRow(set,r){
+  const sp=KG_SETS[set],key=set==='gigs'?[r.venue,r.night,r.kind].filter(Boolean).join(' · '):[r.name,r.kind].filter(Boolean).join(' · ');
+  const tag=set==='gigs'?'<span class="tm-tag '+(r.status==='ended'?'lost':r.status==='still going'?'booked':'warn')+'">'+esc(r.status||'not sure')+'</span>':'';
+  const fld=c=>{const f=c[0],base='data-chg="kgf" data-set="'+set+'" data-id="'+esc(r.id)+'" data-f="'+f+'"';
+    let inp;
+    if(set==='gigs'&&f==='kind')inp='<select class="tm-sel" '+base+'>'+KG_TYPES.concat(r.kind&&KG_TYPES.indexOf(r.kind)<0?[r.kind]:[]).map(o=>'<option'+(o===r.kind?' selected':'')+'>'+esc(o)+'</option>').join('')+'</select>';
+    else if(set==='gigs'&&f==='status')inp='<select class="tm-sel" '+base+'>'+KG_STATUS.map(o=>'<option'+(o===(r.status||'not sure')?' selected':'')+'>'+o+'</option>').join('')+'</select>';
+    else if(set==='people'&&f==='kind')inp='<select class="tm-sel" '+base+'><option value=""></option>'+KG_KIND.concat(r.kind&&KG_KIND.indexOf(r.kind)<0?[r.kind]:[]).map(o=>'<option'+(o===r.kind?' selected':'')+'>'+esc(o)+'</option>').join('')+'</select>';
+    else if(f==='checked')inp='<input class="tm-in" type="date" '+base+' value="'+esc(/^\d{4}-\d{2}-\d{2}$/.test(r.checked||'')?r.checked:'')+'">';
+    else inp='<input class="tm-in" '+base+' value="'+esc(r[f]||'')+'">';
+    return '<div'+(f==='notes'?' class="full"':'')+'><label class="tm-lbl">'+esc(c[1])+'</label>'+inp+'</div>';};
+  const links=set==='people'?['instagram','facebook','website'].map(f=>{const u=r[f]||'';const href=/^https?:\/\//i.test(u)?u:(f==='instagram'&&u?'https://instagram.com/'+u.replace(/^@/,''):'');return href?'<a href="'+esc(href)+'" target="_blank" rel="noopener">'+f+'</a>':'';}).filter(Boolean).join(' &middot; '):'';
+  return '<div class="tm-item'+(S.open['c_'+r.id]?'':' folded')+'"><div class="t1 fold" data-act="fold" data-id="'+esc(r.id)+'"><b>'+esc(key||'(blank)')+'</b> '+tag+(r.runBy?'<span class="tm-tag">'+esc(r.runBy)+'</span>':'')+'</div><div class="tm-fg">'+sp.cols.map(fld).join('')+'</div>'+(links?'<div class="t2">'+links+'</div>':'')+
+    '<div class="tm-row">'+(set==='gigs'?'<button class="tm-b pri" data-act="kgchecked" data-id="'+esc(r.id)+'" title="Sets Last checked to today and Status to still going">Checked today, still going</button>':'')+'<button class="tm-b dim red" data-act="kgdel" data-set="'+set+'" data-id="'+esc(r.id)+'">Delete</button></div></div>';
+}
+function kgSection(set){
+  const sp=KG_SETS[set],rows=kgRows(set).sort((a,b)=>String(a.venue||a.name||'').localeCompare(String(b.venue||b.name||'')));
+  let h='<div class="tm-sec">'+sp.title+' ('+rows.length+')</div>';
+  h+='<div class="tm-hint">'+(set==='gigs'?'Gigs at venues that someone else runs (another business or a host we know). Raven, Iris and Quill never suggest or pitch a night a venue already has. The team re-checks these about every 30 days. Everything here can change: edit any field, or press Checked today.':'The other businesses and hosts we know, with their social pages, so the team can look at them when checking gigs. Add the Run by name on a gig to match.')+'</div>';
+  if(!rows.length)h+='<div class="tm-empty">None added yet.</div>';
+  rows.forEach(r=>h+=kgRow(set,r));
+  const add='<div class="tm-fg">'+sp.cols.filter(c=>c[0]!=='status'&&c[0]!=='checked').map(c=>{const id='kga-'+set+'-'+c[0];return '<div'+(c[0]==='notes'?' class="full"':'')+'><label class="tm-lbl">'+esc(c[1])+'</label>'+(set==='gigs'&&c[0]==='kind'?'<select class="tm-sel" id="'+id+'">'+KG_TYPES.map(o=>'<option>'+o+'</option>').join('')+'</select>':'<input class="tm-in" id="'+id+'">')+'</div>';}).join('')+'</div><div class="tm-row"><button class="tm-b pri" data-act="kgadd" data-set="'+set+'">Add</button></div>';
+  h+=det('kgadd_'+set,'Add one',add,false);
+  const csv='<div class="tm-hint">Paste a CSV or choose a file, then press Import. The first row holds the column names: '+esc(sp.cols.map(c=>c[1]).join(', '))+'. Rows already in the list are skipped. Status can be still going, ended or not sure.</div><textarea class="tm-ta" id="kgcsv-'+set+'" style="min-height:90px"></textarea><div class="tm-row"><input type="file" accept=".csv,text/csv,text/plain" data-chg="kgfile" data-set="'+set+'"><button class="tm-b pri" data-act="kgimport" data-set="'+set+'">Import</button><button class="tm-b" data-act="kgcopy" data-set="'+set+'">Copy as CSV</button><button class="tm-b" data-act="kgdl" data-set="'+set+'">Download CSV</button></div>';
+  h+=det('kgcsv_'+set,'Import or export CSV',csv,false);
+  return h;
+}
+function knownGigsHtml(){return kgSection('gigs')+kgSection('people');}
+function gigKindsIn(t){t=String(t||'').toLowerCase();const o=[];if(/karaoke|sing-?along/.test(t))o.push('karaoke');if(/trivia/.test(t))o.push('trivia');if(/bingo/.test(t))o.push('bingo');return o;}
+function gigFlags(venueName,text){
+  const want=gigKindsIn(text);if(!want.length||!venueName)return [];
+  const n=blNorm(venueName),out=[];
+  const v=(typeof venues!=='undefined'&&Array.isArray(venues)?venues:[]).find(x=>x&&!x.inactive&&blNorm(x.name)===n);
+  if(v){const ks=[].concat(v.gigs||[]).map(g=>typeof g==='string'?g:(g&&g.kind)||'').concat((v.gigSlots||[]).map(sl=>sl.kind||'')).join(' ');const have=gigKindsIn(ks);want.forEach(k=>{if(have.indexOf(k)>=0&&out.indexOf('we already run '+k+' here')<0)out.push('we already run '+k+' here');});}
+  kgRows('gigs').filter(g=>g.status!=='ended'&&g.venue&&(blNorm(g.venue)===n||blNorm(g.venue).indexOf(n)>=0||n.indexOf(blNorm(g.venue))>=0)).forEach(g=>{gigKindsIn(g.kind).forEach(k=>{if(want.indexOf(k)>=0)out.push((g.runBy||'someone else')+' already runs '+k+(g.night?' ('+g.night+')':'')+' here');});});
+  return out;
+}
 function blockSection(){
   const L=blList();
   let h='<div class="tm-sec">Do not use ('+L.length+')</div><div class="tm-hint">Venues we never contact or visit. No cold emails, no DMs, no trip stops. A reason is optional.</div>';
@@ -9245,9 +9306,12 @@ function vOutreach(){
   h+='<div class="tm-sec">Cold emails ('+coldP.length+')</div>';
   if(!coldP.length)h+='<div class="tm-empty">No cold emails or DMs waiting for review.</div>';
   coldP.forEach(x=>h+=draftCard(x,false));
+  const skC=S.drafts.filter(x=>x.status==='skipped'&&OT_KIND[x.kind]).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+  h+=det('coldsk','Skipped cold emails ('+skC.length+')',skC.length?skC.map(x=>'<div class="tm-item"><div class="t1"><b>'+esc(x.label||'Cold email')+'</b> <span class="tm-tag">drafted '+esc(fmtDay(x.createdAt))+'</span></div><textarea class="tm-ta" style="margin-top:.5rem" data-skb="'+esc(x.id)+'">'+esc(x.body||'')+'</textarea><div class="tm-row"><button class="tm-b pri" data-act="unskipdraft" data-id="'+esc(x.id)+'">Put back in Cold emails</button><button class="tm-b" data-act="skcopy" data-id="'+esc(x.id)+'">Copy</button></div></div>').join(''):'<div class="tm-empty">No skipped cold emails.</div>',false);
   h+=sponsorSection();
   h+=outreachHistory();
   h+=blockSection();
+  h+=knownGigsHtml();
   const tp=tripPlan();
   h+='<div class="tm-sec">Next trip</div>';
   if(!tp.stops.length)h+='<div class="tm-empty">No venues are ready to visit. Add venues below, or wait for a hold to end.</div>';
@@ -10057,11 +10121,19 @@ function obSave(b,quiet){
   return cuSave({['profiles.'+pfKey(id)]:{name:b.dataset.name||'',tags:tags,capacity:g('ob-cap-'+x),notes:g('ob-note-'+x),poolTables:cntOf(g('ob-pool-'+x)),dartBoards:cntOf(g('ob-dart-'+x)),manual:true}}).then(()=>{if(!quiet)toast('Saved. Iris and every profile show this now.');else if(b.tagName==='BUTTON'){b.textContent='Saved';setTimeout(()=>{b.textContent='Save';},1500);}}).catch(e=>toast('Could not save: '+(e&&e.message||e),true));
 }
 function prospectExists(name){const n=blNorm(name);return !!n&&(S.venues||[]).some(v=>blNorm(v.name)===n);}
+function thrownInfo(v){
+  if(v&&v.thrownFrom)return {who:v.thrownFrom,title:v.thrownIdea||'',at:v.thrownAt||v.createdAt||0};
+  const m=/^Idea from Iris:\s*(.*)$/i.exec(String((v&&v.evidence)||''));
+  return m?{who:'Iris',title:m[1],at:(v&&v.createdAt)||0}:null;
+}
+function thrownTag(v){const t=thrownInfo(v);return t?'<span class="tm-tag booked" title="You threw this to Raven from '+esc(t.who)+'\'s ideas">thrown from '+esc(t.who)+'</span>':'';}
+function thrownLine(v){const t=thrownInfo(v);return t?'<div class="t2"><b>Thrown to Raven from '+esc(t.who)+'\'s idea:</b> '+esc(t.title)+(t.at?' &middot; '+esc(fmtDay(t.at)):'')+'</div>':'';}
 async function addProspectDoc(o){
   if(!o.name||!String(o.name).trim()){toast('Type a name first.',true);return false;}
   if(prospectExists(o.name)){toast(o.name+' is already a prospect.',true);return false;}
   const sent=!!o.emailed;
   const doc={name:String(o.name).trim(),city:o.city||'',address:o.address||'',contact:o.contact||'',contactName:o.contactName||'',evidence:o.evidence||'',pitch:o.pitch||'',stage:sent?'cold':'target',createdAt:Date.now(),addedBy:'manual'};
+  if(o.thrownFrom){doc.thrownFrom=o.thrownFrom;doc.thrownIdea=o.thrownIdea||'';doc.thrownAt=Date.now();}
   if(sent){doc.emailedAt=o.emailedAt||Date.now();}
   const ref=await col('agent_venues').add(doc);
   if(sent){try{await otSave({['touches.'+otId()]:otDoc({kind:'venue',tid:ref.id,name:doc.name,step:'email1',date:isoDay(doc.emailedAt),note:'Added by hand as already emailed'})});}catch(e){}}
@@ -10088,8 +10160,8 @@ function renderProspects(){
   list.filter(v=>!isBlocked(v)).forEach(v=>{
     const st=v.stage||'target',T=otTouches(v),em=emailOf(v);
     const line=(t,x)=>x?'<div style="margin:.25rem 0;font-size:.85rem"><b>'+t+':</b> '+esc(x)+'</div>':'';
-    h+='<details data-pk="'+esc(v.id)+'"'+(S.open['pr_'+v.id]?' open':'')+' style="border:1px solid var(--border,#444);border-radius:10px;padding:.55rem .8rem;margin-bottom:.5rem"><summary style="cursor:pointer;display:flex;gap:.5rem;align-items:center;flex-wrap:wrap"><span class="tm-tag '+(TAGC[st]||'')+'">'+esc(TAGL[st]||st)+'</span><b>'+esc(v.name)+'</b><span style="opacity:.7;font-size:.8rem">'+esc(v.city||'')+'</span>'+(T.length?'<span style="opacity:.7;font-size:.75rem">'+T.length+' email'+(T.length>1?'s':'')+' sent</span>':'')+(v.followUpOn?'<span style="opacity:.7;font-size:.75rem">check back '+esc(v.followUpOn)+'</span>':'')+'</summary><div style="margin-top:.5rem">'+
-      line('Address',v.address)+line('Contact',[v.contactName,v.contact].filter(Boolean).join(' · '))+(em?'':line('Email','not found yet'))+line('Why them',v.evidence)+line('Pitch',v.pitch)+line("Iris's idea to open with",baitFor(v.name))+
+    h+='<details data-pk="'+esc(v.id)+'"'+(S.open['pr_'+v.id]?' open':'')+' style="border:1px solid var(--border,#444);border-radius:10px;padding:.55rem .8rem;margin-bottom:.5rem"><summary style="cursor:pointer;display:flex;gap:.5rem;align-items:center;flex-wrap:wrap"><span class="tm-tag '+(TAGC[st]||'')+'">'+esc(TAGL[st]||st)+'</span>'+thrownTag(v)+'<b>'+esc(v.name)+'</b><span style="opacity:.7;font-size:.8rem">'+esc(v.city||'')+'</span>'+(T.length?'<span style="opacity:.7;font-size:.75rem">'+T.length+' email'+(T.length>1?'s':'')+' sent</span>':'')+(v.followUpOn?'<span style="opacity:.7;font-size:.75rem">check back '+esc(v.followUpOn)+'</span>':'')+'</summary><div style="margin-top:.5rem">'+
+      line('Address',v.address)+line('Contact',[v.contactName,v.contact].filter(Boolean).join(' · '))+(em?'':line('Email','not found yet'))+(thrownInfo(v)?line('Thrown to Raven from '+thrownInfo(v).who,thrownInfo(v).title+(thrownInfo(v).at?' ('+fmtDay(thrownInfo(v).at)+')':'')):'')+line('Why them',v.evidence)+line('Pitch',v.pitch)+line("Iris's idea to open with",baitFor(v.name))+
       (T.length?line('Emails sent',T.map(t=>(t.date||'')+' ('+(t.step||'')+')').join(', ')):'')+
       offersBlock(v.id,v.name,'pr')+'<div style="font-size:.75rem;opacity:.7">Work this one on Raven\'s desk in My Team.</div></div></details>';
   });
@@ -10121,7 +10193,7 @@ function ideaCard(x){
   const st=(x.status==='saved'&&x.resurfaced)?'new':(x.status||'new'),tg={new:'new',liked:'booked',pursuing:'quoted',made:'booked',skipped:'lost',saved:'quoted'}[st]||'new';
   const b=(a,v,l,c)=>'<button class="tm-b'+(c?' '+c:'')+'" data-act="'+a+'" data-id="'+esc(x.id)+'"'+(v?' data-v="'+v+'"':'')+'>'+l+'</button>';
   return '<div class="tm-item"><div class="t1"><span class="tm-tag '+tg+'">'+esc(st)+'</span><span class="tm-tag">'+esc(x.kind||'Idea')+'</span>'+(x.status==='saved'&&x.resurfaced?'<span class="tm-tag booked">back for '+esc((x.saved&&x.saved.label)||'now')+'</span>':'')+(x.raven?'<span class="tm-tag booked">with Raven</span>':'')+(x.sableEvent?'<span class="tm-tag quoted">Sable: '+esc(x.sableEvent)+'</span>':'')+(x.quill&&x.quill.status==='ready'?'<span class="tm-tag quoted">ready for Quill</span>':(x.quill&&x.quill.status==='drafted'?'<span class="tm-tag booked">Quill drafted '+esc(x.quill.count||'')+'</span>':''))+'<b>'+esc(x.title)+'</b></div><div class="t2">'+esc(x.pitch||'')+'</div>'+
-    (function(){const L=ideaVenues(x);if(!L.length)return '';const row=v=>'<div class="t2">&bull; <b>'+esc(v.name)+'</b>'+(IV_TAG[v.kind]?' <span class="tm-tag'+(v.kind==='have'?' booked':v.kind==='want'?' quoted':' new')+'">'+IV_TAG[v.kind]+'</span>':'')+(v.why?' '+esc(v.why):'')+(v.kind!=='have'&&!prospectExists(v.name)?' <button class="tm-b dim" data-act="addprospect" data-name="'+esc(v.name)+'" data-why="'+esc(v.why||'')+'">Add to prospects</button>':'')+'</div>';const bt=L.filter(v=>v.best),rest=L.filter(v=>!v.best);return (bt.length?'<div class="t2"><b>Best at ('+bt.length+'):</b></div>'+bt.map(row).join(''):'')+(rest.length?'<div class="t2"><b>'+(bt.length?'Also a good fit':'Pitch to')+' ('+rest.length+'):</b></div>'+rest.map(row).join(''):'');})()+
+    (function(){const L=ideaVenues(x);if(!L.length)return '';const row=v=>'<div class="t2">&bull; <b>'+esc(v.name)+'</b>'+(IV_TAG[v.kind]?' <span class="tm-tag'+(v.kind==='have'?' booked':v.kind==='want'?' quoted':' new')+'">'+IV_TAG[v.kind]+'</span>':'')+gigFlags(v.name,x.title+' '+(x.pitch||'')+' '+(x.kind||'')).map(f=>' <span class="tm-tag lost">'+esc(f)+'</span>').join('')+(v.why?' '+esc(v.why):'')+(v.kind!=='have'&&!prospectExists(v.name)?' <button class="tm-b dim" data-act="addprospect" data-name="'+esc(v.name)+'" data-why="'+esc(v.why||'')+'">Add to prospects</button>':'')+'</div>';const bt=L.filter(v=>v.best),rest=L.filter(v=>!v.best);return (bt.length?'<div class="t2"><b>Best at ('+bt.length+'):</b></div>'+bt.map(row).join(''):'')+(rest.length?'<div class="t2"><b>'+(bt.length?'Also a good fit':'Pitch to')+' ('+rest.length+'):</b></div>'+rest.map(row).join(''):'');})()+
     ([].concat(x.uses||[]).length?'<div class="t2"><b>Uses what we have:</b> '+[].concat(x.uses).map(esc).join(', ')+'</div>':'')+
     (x.missing?'<div class="t2"><span class="tm-tag warn">only missing</span> '+esc(x.missing)+'</div>':'')+
     (x.when?'<div class="t2"><b>When:</b> '+esc(x.when)+'</div>':'')+
@@ -10381,7 +10453,7 @@ function sponsorGazette(){
   const live=adsState().sponsors.filter(x=>['new','pitched'].indexOf(x.status||'new')>=0).sort((p,q)=>(q.status==='pitched'?1:0)-(p.status==='pitched'?1:0));
   if(!live.length)return {html:'',n:0};
   const btn=(x,v,l)=>{const cur=(x.status||'new')===v;return '<button class="np-act'+(cur?' on':'')+'" data-act="sponsorset" data-id="'+esc(x.id)+'" data-v="'+(cur&&v==='pitched'?'new':v)+'">'+l+'</button>';};
-  const card=x=>'<div class="np-card'+(x.status==='pitched'?' on':'')+'"><span class="np-date kind"><b>Sponsor</b></span><div class="np-cardt"><span class="np-hd">'+esc(x.business)+(x.status==='pitched'?' <em>(pitched)</em>':'')+'</span>'+sponsorCardBody(x,true)+'<span class="np-acts">'+btn(x,'pitched','Pitched')+btn(x,'signed','Signed')+btn(x,'skipped','Hide')+btn(x,'archived','Archive')+'</span></div></div>';
+  const card=x=>'<div class="np-card'+(x.status==='pitched'?' on':'')+'"><span class="np-date kind"><b>Sponsor</b></span><div class="np-cardt"><span class="np-hd">'+esc(x.business)+(x.status==='pitched'?' <em>(pitched)</em>':'')+ini('raven')+'</span>'+sponsorCardBody(x,true)+odk('raven')+'<span class="np-acts">'+btn(x,'pitched','Pitched')+btn(x,'signed','Signed')+btn(x,'skipped','Hide')+btn(x,'archived','Archive')+'</span></div></div>';
   return {html:'<div class="np-sub">Possible sponsors from Raven <em>'+live.length+'</em></div><div class="np-cards">'+live.map(card).join('')+'</div>',n:live.length};
 }
 function sponsorCard(x){
@@ -10427,7 +10499,7 @@ function renGazette(){
   const a=adsState(),live=a.ideas.filter(x=>['new','liked'].indexOf(x.status||'new')>=0).sort((p,q)=>(q.status==='liked'?1:0)-(p.status==='liked'?1:0));
   if(!live.length)return {html:'',n:0};
   const btn=(x,v,l)=>{const cur=(x.status||'new')===v;return '<button class="np-act'+(cur?' on':'')+'" data-act="mqidea" data-id="'+esc(x.id)+'" data-v="'+(cur&&v==='liked'?'new':v)+'">'+l+'</button>';};
-  const card=x=>'<div class="np-card'+(x.status==='liked'?' on':'')+'"><span class="np-date kind"><b>'+(x.kind==='free'?'Free':'Paid')+'</b></span><div class="np-cardt"><span class="np-hd">'+esc(x.title||x.what)+(x.status==='liked'?' <em>(in progress)</em>':'')+'</span>'+(x.pitch?'<span class="np-body">'+esc(x.pitch)+'</span>':'')+(x.cost?'<span class="np-by">Cost: '+esc(x.cost)+'</span>':'')+mqIdeaDetail(x,true)+'<span class="np-acts">'+btn(x,'liked','In progress')+btn(x,'done','Done')+btn(x,'skipped','Hide')+btn(x,'archived','Archive')+'</span></div></div>';
+  const card=x=>'<div class="np-card'+(x.status==='liked'?' on':'')+'"><span class="np-date kind"><b>'+(x.kind==='free'?'Free':'Paid')+'</b></span><div class="np-cardt"><span class="np-hd">'+esc(x.title||x.what)+(x.status==='liked'?' <em>(in progress)</em>':'')+ini('marquee')+'</span>'+(x.pitch?'<span class="np-body">'+esc(x.pitch)+'</span>':'')+(x.cost?'<span class="np-by">Cost: '+esc(x.cost)+'</span>':'')+mqIdeaDetail(x,true)+odk('marquee')+'<span class="np-acts">'+btn(x,'liked','In progress')+btn(x,'done','Done')+btn(x,'skipped','Hide')+btn(x,'archived','Archive')+'</span></div></div>';
   return {html:'<div class="np-sub">Marketing ideas from Ren <em>'+live.length+'</em></div><div class="np-cards">'+live.map(card).join('')+'</div>',n:live.length};
 }
 function mqAskPrompt(){
@@ -10759,6 +10831,29 @@ const A={
   async unblock(t){await col('agent_config').doc('outreach').set({blocklist:{[t.dataset.id]:firebase.firestore.FieldValue.delete()}},{merge:true});toast('Allowed again.');},
   async blockthis(t){const v=S.venues.find(x=>x.id===t.dataset.id);if(!v)return;const id='b'+Date.now().toString(36);await col('agent_config').doc('outreach').set({blocklist:{[id]:{name:v.name,venueId:v.id,reason:'',at:Date.now()}}},{merge:true});toast(v.name+' is on the Do not use list.');},
   async verified(t){await col('agent_venues').doc(t.dataset.id).update({verify:false});toast('Marked confirmed.');},
+  async kgf(t){const v=kgNorm(t.dataset.set,t.dataset.f,t.value);await kgSave({[t.dataset.set+'.'+t.dataset.id+'.'+t.dataset.f]:v});},
+  async kgchecked(t){await kgSave({['gigs.'+t.dataset.id+'.checked']:isoDay(Date.now()),['gigs.'+t.dataset.id+'.status']:'still going'});toast('Marked checked today.');},
+  async kgdel(t){if(!tapTwice(t))return;await kgSave({[t.dataset.set+'.'+t.dataset.id]:firebase.firestore.FieldValue.delete()});toast('Deleted.');},
+  async kgadd(t){const set=t.dataset.set,sp=KG_SETS[set],o={};sp.cols.forEach(c=>{const e=document.getElementById('kga-'+set+'-'+c[0]);if(e)o[c[0]]=kgNorm(set,c[0],e.value);});if(!o[sp.need]){toast('Fill in the '+sp.cols[0][1].toLowerCase()+'.',true);return;}if(set==='gigs'){o.status='still going';o.checked=isoDay(Date.now());}o.createdAt=Date.now();await kgSave({[set+'.k'+Date.now().toString(36)]:o});sp.cols.forEach(c=>{const e=document.getElementById('kga-'+set+'-'+c[0]);if(e&&e.tagName==='INPUT')e.value='';});S.open['kgadd_'+set]=false;toast('Added.');},
+  async kgfile(t){const f=t.files&&t.files[0];if(!f)return;const txt=await f.text();const ta=document.getElementById('kgcsv-'+t.dataset.set);if(ta)ta.value=txt;toast('File loaded. Press Import.');},
+  async kgimport(t){
+    const set=t.dataset.set,sp=KG_SETS[set],ta=document.getElementById('kgcsv-'+set),rows=csvParse(ta?ta.value:'');
+    if(rows.length<1){toast('Paste a CSV first.',true);return;}
+    const nz=x=>String(x||'').toLowerCase().replace(/[^a-z0-9]/g,'');
+    const head=rows[0].map(nz),map={};
+    sp.cols.forEach(c=>{const names=[nz(c[1]),nz(c[0])].concat((sp.alias[c[0]]||[]).map(nz));const i=head.findIndex(h=>names.indexOf(h)>=0);if(i>=0)map[c[0]]=i;});
+    let data=rows;
+    if(Object.keys(map).length){data=rows.slice(1);}else{sp.cols.forEach((c,i)=>{map[c[0]]=i;});}
+    const keyOf=r=>set==='gigs'?nz(r.venue)+'|'+nz(r.night)+'|'+nz(r.kind):nz(r.name);
+    const have=new Set(kgRows(set).map(keyOf)),patch={};let add=0,skip=0,i=0;
+    data.forEach(row=>{const o={};sp.cols.forEach(c=>{o[c[0]]=map[c[0]]!=null?kgNorm(set,c[0],row[map[c[0]]]):'';});if(!o[sp.need]){skip++;return;}if(set==='gigs')o.kind=o.kind||'Other';const k=keyOf(o);if(have.has(k)){skip++;return;}have.add(k);if(set==='gigs'&&!o.checked)o.checked='';o.createdAt=Date.now();patch[set+'.k'+Date.now().toString(36)+(i++)]=o;add++;});
+    if(!add){toast('Nothing new to add'+(skip?' ('+skip+' skipped).':'.'),true);return;}
+    await kgSave(patch);if(ta)ta.value='';toast('Imported '+add+(skip?', skipped '+skip+' already there or blank.':'.'));
+  },
+  async kgcopy(t){toast(await copy(kgCsvText(t.dataset.set))?'CSV copied.':'Copy failed.',false);},
+  kgdl(t){const set=t.dataset.set,b=new Blob([kgCsvText(set)],{type:'text/csv'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=(set==='gigs'?'gigs-run-by-others':'people-we-know')+'.csv';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},500);},
+  async unskipdraft(t){const ta=document.querySelector('[data-skb="'+t.dataset.id+'"]');const u={status:'pending'};if(ta)u.body=ta.value;await col('agent_drafts').doc(t.dataset.id).update(u);toast('Back in Cold emails.');},
+  async skcopy(t){const ta=document.querySelector('[data-skb="'+t.dataset.id+'"]');toast(await copy(ta?ta.value:'')?'Copied.':'Copy failed.',false);},
   async copydraft2(t){const ta=document.querySelector('[data-ckb="'+t.dataset.id+'"]'),dr=S.drafts.find(x=>x.id===t.dataset.id);toast(await copy(ta?ta.value:(dr&&dr.body)||'')?'Copied.':'Copy failed.',false);},
   async copydraft(t){
     const ta=document.querySelector('[data-did="'+t.dataset.id+'"]'),dr=S.drafts.find(x=>x.id===t.dataset.id),txt=ta?ta.value:(dr&&dr.body)||'';
@@ -10881,7 +10976,7 @@ const A={
   async brainpromote(t){const id=t.dataset.id,x=curatorState().seeds.find(i=>i.id===id);if(!x)return;const e=document.getElementById('bs-notes-'+id),k=document.getElementById('bs-kind-'+id),notes=e?e.value:(x.notes||'');await cuNow({['ideas.i'+Date.now().toString(36)]:{title:x.title,kind:k?k.value:'Event',pitch:notes||x.title,venues:[],status:'new',source:'brainstorm',createdAt:Date.now()},['seeds.'+id]:null});toast('Promoted to a full idea.');},
   async braindel(t){if(!tapTwice(t))return;cuLocal({['seeds.'+t.dataset.id]:CU_DEL});renderDrawer(true);const ref=col('agent_config').doc('curator');try{await ref.update({['seeds.'+t.dataset.id]:firebase.firestore.FieldValue.delete()});}catch(e){await ref.set({seeds:{[t.dataset.id]:null}},{merge:true});}toast('Deleted.');},
   async ideadel(t){if(!tapTwice(t))return;cuLocal({['ideas.'+t.dataset.id]:CU_DEL});renderDrawer(true);const ref=col('agent_config').doc('curator');try{await ref.update({['ideas.'+t.dataset.id]:firebase.firestore.FieldValue.delete()});}catch(e){await ref.set({ideas:{[t.dataset.id]:null}},{merge:true});}toast('Removed.');},
-  async idearaven(t){const x=curatorState().ideas.find(i=>i.id===t.dataset.id);if(!x)return;let names=ideaVenues(x).filter(v=>v.kind!=='have').map(v=>v.name);if(!names.length){const m=String(x.title||'').match(/,\s*([^,]+)$/);if(m)names=[m[1].trim()];}if(!names.length){toast('No venue is named on this idea. Open Edit this idea and fill in Best at, then try again.',true);return;}for(const n of names){await addProspectDoc({name:n,evidence:'Idea from Iris: '+x.title,pitch:(x.pitch||x.title)});}await cuNow({['ideas.'+x.id+'.raven']:{at:Date.now(),venues:names},['ideas.'+x.id+'.updatedAt']:Date.now()});toast('Thrown to Raven. Find '+names.join(', ')+' under Prospects on her Venue outreach tab.');},
+  async idearaven(t){const x=curatorState().ideas.find(i=>i.id===t.dataset.id);if(!x)return;let names=ideaVenues(x).filter(v=>v.kind!=='have').map(v=>v.name);if(!names.length){const m=String(x.title||'').match(/,\s*([^,]+)$/);if(m)names=[m[1].trim()];}if(!names.length){toast('No venue is named on this idea. Open Edit this idea and fill in Best at, then try again.',true);return;}for(const n of names){await addProspectDoc({name:n,evidence:'Idea from Iris: '+x.title,pitch:(x.pitch||x.title),thrownFrom:'Iris',thrownIdea:x.title});}await cuNow({['ideas.'+x.id+'.raven']:{at:Date.now(),venues:names},['ideas.'+x.id+'.updatedAt']:Date.now()});toast('Thrown to Raven. Find '+names.join(', ')+' under Prospects on her Venue outreach tab.');},
   async ideacopy(t){const x=curatorState().ideas.find(i=>i.id===t.dataset.id);if(x)toast(await copy(ideaPrompt(x))?'Brief copied. Paste it into Claude.':'Copy failed.',false);},
   async ideaadd(){const ti=val('id-title');if(!ti){toast('Give it a title.',true);return;}const w=whenRead('iw-new'),r=whenResult(w),o={title:ti,kind:document.getElementById('id-kind').value,pitch:val('id-pitch'),venues:val('id-venues').split(',').map(x=>x.trim()).filter(Boolean),status:'new',source:'hand',createdAt:Date.now()};if(r){o.when=r.label;o.whenSel=w;if(r.hidden){o.status='saved';o.saved={month:new Date(r.target).toISOString().slice(0,7),label:r.label,target:r.target,at:Date.now()};}}S.open['ideaadd']=false;S.open['f_herald_ideas']=true;await cuNow({['ideas.i'+Date.now().toString(36)]:o});toast(r&&r.hidden?'Added. It comes back about ten weeks before '+r.label+'.':'Added.');},
   async ideaedit(t){const id=t.dataset.id,x=curatorState().ideas.find(i=>i.id===id);if(!x)return;const g=k=>{const e=document.getElementById('ie-'+k+'-'+id);return e?e.value:'';};const ti=g('title').trim();if(!ti){toast('Give it a title.',true);return;}const old=ideaVenues(x),vn=g('venues').split(',').map(v=>v.trim()).filter(Boolean).map(n=>old.find(o=>blNorm(o.name)===blNorm(n))||n);const p={['ideas.'+id+'.title']:ti,['ideas.'+id+'.kind']:g('kind'),['ideas.'+id+'.pitch']:g('pitch'),['ideas.'+id+'.venues']:vn,['ideas.'+id+'.edited']:true,['ideas.'+id+'.updatedAt']:Date.now()};const w=whenRead('iw-'+id);if(whenSig(w)!==whenSig(x.whenSel||{})){const r=whenResult(w);p['ideas.'+id+'.whenSel']=r?w:null;if(!r){p['ideas.'+id+'.status']='new';p['ideas.'+id+'.saved']=null;}else{p['ideas.'+id+'.when']=r.label;if(r.hidden){p['ideas.'+id+'.status']='saved';p['ideas.'+id+'.saved']={month:new Date(r.target).toISOString().slice(0,7),label:r.label,target:r.target,at:Date.now()};}else{p['ideas.'+id+'.status']='new';p['ideas.'+id+'.saved']=null;}}}await cuNow(p);toast('Saved.');},
