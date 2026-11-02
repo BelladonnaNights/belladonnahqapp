@@ -620,6 +620,10 @@ html::-webkit-scrollbar-thumb:hover,.modal::-webkit-scrollbar-thumb:hover{backgr
 .tm-fsec>summary{cursor:pointer;list-style:none;}
 .tm-fsec>summary::-webkit-details-marker{display:none;}
 .tm-fsec>summary::before{content:none!important;}
+.tm-fsec>summary.tm-sec{display:flex;align-items:flex-start;}
+.tm-fsec>summary .tm-dgrip,.tm-fsec>summary .tm-arr{flex:none;}
+.tm-fsec>summary .tm-arr{margin-top:.02em;}
+.tm-st{flex:1;min-width:0;}
 .tm-arr::before{content:'\25BE';margin-right:.5rem;}
 .tm-fsec:not([open])>summary .tm-arr::before{content:'\25B8';}
 .tm-dgrip{cursor:grab;color:var(--ac);font-size:.55rem;margin-right:.55rem;padding:.3rem .25rem;vertical-align:middle;opacity:.8;}
@@ -1511,6 +1515,10 @@ html::-webkit-scrollbar-thumb:hover,.modal::-webkit-scrollbar-thumb:hover{backgr
   <div id="tmBrief" style="margin-bottom:1.1rem"></div>
   <div class="tm-grid" id="tmGrid"></div>
   <div class="tm-foot">
+    <details class="tm-det" style="--ac:#c9a96e" id="tmFindDet" open>
+      <summary>Search the Team</summary>
+      <div class="in"><div class="tm-hint">Type a word or phrase to see which team member handles it.</div><input class="tm-in" id="tmFind" type="search" autocomplete="off" aria-label="Search the team"><div id="tmFindOut" style="margin-top:.7rem"></div></div>
+    </details>
     <details class="tm-det" style="--ac:#c9a96e" id="tmTasksDet">
       <summary>Scheduled Tasks</summary>
       <div class="in" id="tmTasks"></div>
@@ -8001,7 +8009,7 @@ function D(){
     rPending:dr.filter(d=>d.agent==='raven'&&d.status==='pending'),
     silenced:S.sites.filter(s=>s.active===false),
     care:careVenues(),
-    careDue:careVenues().filter(v=>Date.now()-(v.lastCheckinAt||0)>=CARE),
+    careDue:careVenues().filter(v=>!v.careSkip&&Date.now()-(v.lastCheckinAt||0)>=CARE),
     careRisk:careVenues().filter(v=>v.health==='risk'),
     vlDue:venueLeadsDue(),
     sPending:dr.filter(d=>d.agent==='sigil'&&d.status==='pending'),
@@ -8688,6 +8696,28 @@ function vWren(){
   return h;
 }
 
+/* ── Search the team ── */
+function tmFlat(v,out,skip){if(v==null)return;if(typeof v==='string'){out.push(v);return;}if(Array.isArray(v)){v.forEach(x=>tmFlat(x,out,skip));return;}if(typeof v==='object')Object.keys(v).forEach(k=>{if(k!==skip)tmFlat(v[k],out,skip);});}
+function tmFind(q){
+  const out=$('#tmFindOut');if(!out)return;
+  const words=String(q||'').toLowerCase().split(/\s+/).filter(Boolean);
+  if(!words.length){out.innerHTML='';return;}
+  const phrase=words.join(' ');
+  const res=[];
+  AGENTS.forEach(a=>{
+    const lines=[];tmFlat(INFO[a.id],lines,'prompt');
+    TASKS.forEach(t=>{if(t.who&&String(t.who).toLowerCase().indexOf(a.name.toLowerCase())>=0)lines.push(t.name+' ('+t.when+')');});
+    const all=[a.name,a.role].concat(lines).join('\n').toLowerCase();
+    if(!words.every(w=>all.indexOf(w)>=0))return;
+    const hit=lines.map(x=>String(x).replace(/\s+/g,' ').trim()).filter(x=>x&&words.some(w=>x.toLowerCase().indexOf(w)>=0));
+    const exact=hit.filter(x=>x.toLowerCase().indexOf(phrase)>=0);
+    res.push({a:a,score:(exact.length?100:0)+hit.length,lines:(exact.length?exact:hit).slice(0,3)});
+  });
+  res.sort((x,y)=>y.score-x.score);
+  const mark=t=>{let h=esc(t.length>220?t.slice(0,219)+'…':t);words.forEach(w=>{const r=w.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');h=h.replace(new RegExp('('+esc(r)+')','ig'),'<b style="color:var(--gold)">$1</b>');});return h;};
+  out.innerHTML=res.length?res.map(r=>'<div class="tm-item"><div class="t1"><b>'+esc(r.a.name)+'</b> <span class="tm-tag">'+esc(r.a.role)+'</span></div>'+r.lines.map(l=>'<div class="t2">'+mark(l)+'</div>').join('')+'<div class="tm-row"><button class="tm-b pri" data-act="open" data-agent="'+esc(r.a.id)+'">Open '+esc(r.a.name)+'\'s desk</button></div></div>').join(''):'<div class="tm-empty">Nobody on the team handles that yet.</div>';
+}
+document.addEventListener('input',e=>{if(e.target&&e.target.id==='tmFind')tmFind(e.target.value);});
 /* ── Scheduled tasks ── */
 const TK_HEAD=`You are part of the Belladonna Audio Alchemies agent team. You never log in to any site, never send email or messages, never post, pay, sign, file or buy. You only read, research, and write drafts and notes into HQ.
 
@@ -8901,7 +8931,7 @@ function allNotes(){
   return out.sort((x,y)=>(y.createdAt||0)-(x.createdAt||0));
 }
 function remFold(id){const key='rem_'+id,n=remState().open.filter(x=>x.agent===id).length;
-  return '<details class="tm-fsec" data-k="'+key+'"'+(S.open[key]===true?' open':'')+'><summary class="tm-sec"><span class="tm-dgrip" style="cursor:default;opacity:.35" title="Stays in place">&#9679;</span><span class="tm-arr"></span>Remind me ('+n+' open)</summary>'+remBox(id)+'</details>';}
+  return '<details class="tm-fsec" data-k="'+key+'"'+(S.open[key]===true?' open':'')+'><summary class="tm-sec"><span class="tm-dgrip" style="cursor:default;opacity:.35" title="Stays in place">&#9679;</span><span class="tm-arr"></span><span class="tm-st">Remind me ('+n+' open)</span></summary>'+remBox(id)+'</details>';}
 function notesFold(id){const key='notes_'+id,L=allNotes().filter(n=>n.agent===id&&n.status==='pending').slice(0,5);
   let h='<details class="tm-fsec" data-k="'+key+'"'+(S.open[key]===true?' open':'')+'><summary class="tm-sec"><span class="tm-dgrip" style="cursor:default;opacity:.35" title="Stays in place">&#9679;</span><span class="tm-arr"></span>Run notes ('+L.length+')</summary>';
   if(!L.length)h+='<div class="tm-empty">No notes. After each run a short note shows up here.</div>';
@@ -8932,7 +8962,7 @@ function foldSections(html){
   for(let i=1;i<parts.length;i++){
     const e=parts[i].indexOf('</div>'),title=parts[i].slice(0,e),rest=parts[i].slice(e+6);
     const key='f_'+S.cur+'_'+title.replace(/<[^>]*>/g,'').toLowerCase().replace(/\(.*?\)/g,'').replace(/[^a-z]+/g,'');
-    secs.push({key:key,html:'<details class="tm-fsec" data-k="'+key+'"'+(S.open[key]===true?' open':'')+'><summary class="tm-sec"><span class="tm-dgrip" draggable="true" title="Drag to move this section">&#9679;</span><span class="tm-arr"></span>'+title+'</summary>'+rest+'</details>'});
+    secs.push({key:key,html:'<details class="tm-fsec" data-k="'+key+'"'+(S.open[key]===true?' open':'')+'><summary class="tm-sec"><span class="tm-dgrip" draggable="true" title="Drag to move this section">&#9679;</span><span class="tm-arr"></span><span class="tm-st">'+title+'</span></summary>'+rest+'</details>'});
   }
   const ord=((S.cfg.layout||{})[S.cur])||[];
   if(ord.length)secs.sort((a,b)=>{const x=ord.indexOf(a.key),y=ord.indexOf(b.key);return (x<0?999:x)-(y<0?999:y);});
@@ -9398,6 +9428,7 @@ function agrBtns(x){
   if(x.phase==='reply')r+=b('agrgood','Went well','pri')+b('agrbad','Not good, I will talk to them','red');
   if(x.phase==='talk')r+=b('agrgood','Sorted it out, ready to renew','pri');
   if(x.phase==='renew'||x.phase==='renewwait')r+=b('agrnote','Draft renewal note','pri');
+  if(x.phase==='reply'||x.phase==='talk'||x.phase==='renewwait')r+=b('agrundo','Undo last step','dim');
   r+=b('agrrenew','Renewed')+b('agrend','Venue left','dim')+b('agrdel','Remove','dim red');
   return r;
 }
@@ -9405,11 +9436,11 @@ function agreementsHtml(){
   const g=agrState();
   let h='<div class="tm-sec">Venue agreements ('+g.active.length+' active, '+g.due.length+' need you)</div><div class="tm-hint">Agreements run 3 months, 6 months or 1 year. A 3-month venue gets a check-in at 2 months. If it goes well, the renewal goes out 2 days later and it is now a year. If it does not go well, you talk to them first. 6-month and 1-year venues get a renewal note 45 and 60 days out. Nothing is ever sent for you.</div>';
   if(g.found.length){h+='<div class="tm-sec">Signed, found in your email ('+g.found.length+'). Check the date and term</div>';
-    g.found.forEach(x=>{h+='<div class="tm-item"><div class="t1"><span class="tm-tag warn">new</span><b>'+esc(x.venue)+'</b></div><div class="t2">'+(x.title?esc(x.title)+' &middot; ':'')+(x.evidence?esc(x.evidence):'')+'</div><div class="tm-row"><input class="tm-in s" type="date" id="agd-'+esc(x.id)+'" value="'+esc(x.signedOn||'')+'"><select class="tm-sel" style="width:auto" id="agt-'+esc(x.id)+'"><option value="3"'+(x.termMonths==3?' selected':'')+'>3 months</option><option value="6"'+(x.termMonths==6?' selected':'')+'>6 months</option><option value="12"'+(!x.termMonths||x.termMonths==12?' selected':'')+'>1 year</option></select><button class="tm-b pri" data-act="agrconfirm" data-id="'+esc(x.id)+'">Confirm</button><button class="tm-b dim" data-act="agrdel" data-id="'+esc(x.id)+'">Not an agreement</button></div></div>';});}
+    g.found.forEach(x=>{h+='<div class="tm-item"><div class="t1"><span class="tm-tag warn">new</span><b>'+esc(x.venue)+'</b></div><div class="t2">'+(x.title?esc(x.title)+' &middot; ':'')+(x.evidence?esc(x.evidence):'')+'</div><div class="tm-row"><input class="tm-in s" type="date" id="agd-'+esc(x.id)+'" value="'+esc(x.signedOn||'')+'" data-chg="agrcalc" data-d="agd-'+esc(x.id)+'" data-t="agt-'+esc(x.id)+'" data-e="age-'+esc(x.id)+'"><select class="tm-sel" style="width:auto" id="agt-'+esc(x.id)+'" data-chg="agrcalc" data-d="agd-'+esc(x.id)+'" data-t="agt-'+esc(x.id)+'" data-e="age-'+esc(x.id)+'"><option value="3"'+(x.termMonths==3?' selected':'')+'>3 months</option><option value="6"'+(x.termMonths==6?' selected':'')+'>6 months</option><option value="12"'+(!x.termMonths||x.termMonths==12?' selected':'')+'>1 year</option></select><span class="t2" style="margin:0">Renews on</span><input class="tm-in s" type="date" id="age-'+esc(x.id)+'" value="'+esc(x.endsOn||addMonths(x.signedOn||isoDay(Date.now()),+x.termMonths||12))+'"><button class="tm-b pri" data-act="agrconfirm" data-id="'+esc(x.id)+'">Confirm</button><button class="tm-b dim" data-act="agrdel" data-id="'+esc(x.id)+'">Not an agreement</button></div></div>';});}
   if(!g.active.length)h+='<div class="tm-empty">No agreements tracked yet. Add one below.</div>';
-  g.active.forEach(x=>{h+='<div class="tm-item"><div class="t1"><b>'+esc(x.venue)+'</b> '+agrTag(x)+'<span class="tm-tag">'+esc(TERM_LBL(x.termMonths))+'</span></div><div class="t2">Signed '+esc(fmtEv(x.signedOn))+' &middot; ends '+esc(fmtEv(x.endsOn))+(x.termMonths===3?' &middot; check-in '+esc(fmtEv(x.ckOn)):'')+'</div><div class="tm-row">'+agrBtns(x)+'</div></div>';});
+  g.active.forEach(x=>{h+='<div class="tm-item"><div class="t1"><b>'+esc(x.venue)+'</b> '+agrTag(x)+'<span class="tm-tag">'+esc(TERM_LBL(x.termMonths))+'</span></div><div class="t2">Signed '+esc(fmtEv(x.signedOn))+' &middot; ends '+esc(fmtEv(x.endsOn))+(x.termMonths===3?' &middot; check-in '+esc(fmtEv(x.ckOn)):'')+'</div><div class="tm-row"><label class="tm-lbl" style="margin:0">Renews on</label><input class="tm-in s" type="date" data-chg="agrends" data-id="'+esc(x.id)+'" value="'+esc(x.endsOn||'')+'"></div><div class="tm-row">'+agrBtns(x)+'</div></div>';});
   const vn=(typeof venues!=='undefined'&&Array.isArray(venues)?venues:[]).filter(v=>v&&v.name&&!v.inactive).map(v=>'<option value="'+esc(v.name)+'">').join('');
-  h+=det('agradd','Add a signed agreement','<datalist id="agrVen">'+vn+'</datalist><div class="tm-fg"><div><label class="tm-lbl">Venue</label><input class="tm-in" id="agr-v" list="agrVen"></div><div><label class="tm-lbl">Signed on</label><input class="tm-in" id="agr-d" type="date" value="'+isoDay(Date.now())+'"></div><div><label class="tm-lbl">Term</label><select class="tm-sel" id="agr-t"><option value="3">3 months</option><option value="6">6 months</option><option value="12" selected>1 year</option></select></div></div><div class="tm-row"><button class="tm-b pri" data-act="agradd">Add</button></div>',false);
+  h+=det('agradd','Add a signed agreement','<datalist id="agrVen">'+vn+'</datalist><div class="tm-fg"><div><label class="tm-lbl">Venue</label><input class="tm-in" id="agr-v" list="agrVen"></div><div><label class="tm-lbl">Signed on</label><input class="tm-in" id="agr-d" type="date" value="'+isoDay(Date.now())+'" data-chg="agrcalc" data-d="agr-d" data-t="agr-t" data-e="agr-e"></div><div><label class="tm-lbl">Term</label><select class="tm-sel" id="agr-t" data-chg="agrcalc" data-d="agr-d" data-t="agr-t" data-e="agr-e"><option value="3">3 months</option><option value="6">6 months</option><option value="12" selected>1 year</option></select></div><div><label class="tm-lbl">Renews on (fills in from the term, change it to any date)</label><input class="tm-in" id="agr-e" type="date" value="'+addMonths(isoDay(Date.now()),12)+'"></div></div><div class="tm-row"><button class="tm-b pri" data-act="agradd">Add</button></div>',false);
   return h;
 }
 
@@ -9470,20 +9501,39 @@ function careHtml(){
   const d=D();let h='';
   h+='<div class="tm-sec">Venue care: check in every 3 months ('+d.careDue.length+' due)</div>';
   if(!d.care.length)h+='<div class="tm-empty">No current venues yet. Add the venues you already work with below, or hand a yes to onboarding from Raven.</div>';
-  d.care.slice().sort((a,b)=>(a.lastCheckinAt||0)-(b.lastCheckinAt||0)).forEach(v=>{
-    const due=Date.now()-(v.lastCheckinAt||0)>=CARE,has=S.drafts.some(x=>x.venueId===v.id&&x.kind==='checkin'&&x.status==='pending');
+  d.care.slice().sort((a,b)=>(a.careSkip?1:0)-(b.careSkip?1:0)||(a.lastCheckinAt||0)-(b.lastCheckinAt||0)).forEach(v=>{
+    const sk=!!v.careSkip,due=!sk&&Date.now()-(v.lastCheckinAt||0)>=CARE,has=S.drafts.some(x=>x.venueId===v.id&&x.kind==='checkin'&&x.status==='pending');
     const H=v.health||'good';
-    h+='<div class="tm-item'+(S.open['c_'+v.id]?'':' folded')+'"><div class="t1 fold" data-act="fold" data-id="'+esc(v.id)+'"><b>'+esc(v.name)+'</b> '+(due?'<span class="tm-tag warn">check-in due</span>':'<span class="tm-tag booked">next '+esc(fmtDay((v.lastCheckinAt||0)+CARE))+'</span>')+(H==='risk'?'<span class="tm-tag lost">at risk</span>':H==='watch'?'<span class="tm-tag warn">watch</span>':'')+'</div>'+
+    h+='<div class="tm-item'+(S.open['c_'+v.id]?'':' folded')+'"><div class="t1 fold" data-act="fold" data-id="'+esc(v.id)+'"><b>'+esc(v.name)+'</b> '+(sk?'<span class="tm-tag">no check-ins</span>':due?'<span class="tm-tag warn">check-in due</span>':'<span class="tm-tag booked">next '+esc(fmtDay((v.lastCheckinAt||0)+CARE))+'</span>')+(H==='risk'?'<span class="tm-tag lost">at risk</span>':H==='watch'?'<span class="tm-tag warn">watch</span>':'')+'</div>'+
       (v.healthWhy?'<div class="t2"><b>Vesper\'s read:</b> '+esc(v.healthWhy)+'</div>':'')+checksHtml(v)+
       '<div class="t2">'+(v.lastCheckinAt?'Last check-in '+esc(fmtDay(v.lastCheckinAt)):'Never checked in')+(v.contactName||v.contact?' · '+esc([v.contactName,v.contact].filter(Boolean).join(' · ')):'')+'</div>'+
-      '<div class="tm-row"><select class="tm-sel" style="width:auto" data-chg="venuehealth" data-id="'+esc(v.id)+'"><option value="good"'+(H==='good'?' selected':'')+'>Health: good</option><option value="watch"'+(H==='watch'?' selected':'')+'>Health: watch</option><option value="risk"'+(H==='risk'?' selected':'')+'>Health: at risk</option></select>'+
+      '<div class="tm-row"><select class="tm-sel" style="width:auto" data-chg="careskip" data-id="'+esc(v.id)+'"><option value="on"'+(sk?'':' selected')+'>Check in every 3 months</option><option value="skip"'+(sk?' selected':'')+'>Skip, no check-ins</option></select><select class="tm-sel" style="width:auto" data-chg="venuehealth" data-id="'+esc(v.id)+'"><option value="good"'+(H==='good'?' selected':'')+'>Health: good</option><option value="watch"'+(H==='watch'?' selected':'')+'>Health: watch</option><option value="risk"'+(H==='risk'?' selected':'')+'>Health: at risk</option></select>'+
       (due&&!has?'<button class="tm-b pri" data-act="carecheckin" data-id="'+esc(v.id)+'">Draft check-in</button>':'')+(has?'<span class="tm-tag">draft waiting</span>':'')+'<button class="tm-b dim" data-act="vtl" data-id="'+esc(v.id)+'">'+(S.open['tl_'+v.id]?'Hide timeline':'Timeline')+'</button></div>'+(S.open['tl_'+v.id]?timelineHtml(v):'')+'</div>';
   });
   return h;
 }
+async function ckSync(venueId,exceptId,newMs){
+  if(!venueId)return;
+  const D=firebase.firestore.FieldValue.delete();
+  const ms=S.drafts.filter(x=>x.venueId===venueId&&x.kind==='checkin'&&x.status==='approved'&&x.id!==exceptId).map(x=>x.approvedAt||0);
+  if(newMs)ms.push(newMs);
+  const last=ms.length?Math.max.apply(null,ms):D;
+  if(String(venueId).indexOf('hq_')===0)await careSave({['venues.'+String(venueId).slice(3)+'.lastCheckinAt']:last});
+  else await col('agent_venues').doc(venueId).update({lastCheckinAt:last});
+}
+function draftsHtml(){
+  const d=D(),ckP=d.sPending.filter(x=>x.kind==='checkin');
+  let h='<div class="tm-sec">Drafts ('+ckP.length+')</div><div class="tm-hint">Check-in drafts wait here. Approve &amp; copy, then paste it into your email or text. Sent check-ins are listed below, where you can fix the date or wording, or undo.</div>';
+  if(!ckP.length)h+='<div class="tm-empty">No check-in drafts waiting.</div>';
+  ckP.forEach(x=>h+=draftCard(x,false));
+  const sent=S.drafts.filter(x=>x.kind==='checkin'&&x.status==='approved').sort((a,b)=>(b.approvedAt||0)-(a.approvedAt||0));
+  const inner=sent.length?sent.map(x=>'<div class="tm-item"><div class="t1"><b>'+esc(x.label||'Check-in')+'</b> <span class="tm-tag booked">sent '+esc(fmtDay(x.approvedAt||x.createdAt))+'</span></div><div class="tm-row"><label class="tm-lbl" style="margin:0">Sent on</label><input class="tm-in s" type="date" data-ckd="'+esc(x.id)+'" value="'+esc(isoDay(x.approvedAt||x.createdAt))+'"></div><textarea class="tm-ta" style="margin-top:.5rem" data-ckb="'+esc(x.id)+'">'+esc(x.body||'')+'</textarea><div class="tm-row"><button class="tm-b pri" data-act="ckedit" data-id="'+esc(x.id)+'">Save changes</button><button class="tm-b" data-act="copydraft2" data-id="'+esc(x.id)+'">Copy</button><button class="tm-b dim" data-act="ckundo" data-id="'+esc(x.id)+'" title="Puts it back in Drafts and rolls the last check-in date back">Undo (back to drafts)</button></div></div>').join(''):'<div class="tm-empty">No check-ins sent yet.</div>';
+  h+=det('cksent','Check-ins sent ('+sent.length+')',inner,false);
+  return h;
+}
 function vSigil(){
   const d=D(),sg=d.sg;
-  let h=invoicesHtml()+agreementsHtml()+careHtml()+'<div class="tm-sec">Renewals and filings ('+sg.items.length+')</div>';
+  let h=invoicesHtml()+agreementsHtml()+careHtml()+draftsHtml()+'<div class="tm-sec">Renewals and filings ('+sg.items.length+')</div>';
   if(!sg.items.length)h+='<div class="tm-empty">Nothing tracked yet.</div><div class="tm-row"><button class="tm-b pri" data-act="sgaddstd">Add the standard list</button></div>';
   sg.items.forEach(x=>{
     h+='<div class="tm-item"><div class="t1"><b>'+esc(x.name)+'</b> '+sgTag(x)+(x.fromEmail?'<span class="tm-tag">from email, confirm the date</span>':'')+'</div><div class="tm-row"><label class="tm-lbl" style="margin:0">Next due</label><input class="tm-in s" type="date" data-chg="sgdue" data-id="'+esc(x.id)+'" value="'+esc(x.due||'')+'"><button class="tm-b dim red" data-act="sgdelitem" data-id="'+esc(x.id)+'">Remove</button></div></div>';
@@ -9499,9 +9549,10 @@ function vSigil(){
       '<div class="tm-row">'+(p.miss.length?'<button class="tm-b" data-act="sgdraft" data-id="'+esc(p.id)+'">Draft reminder</button>':'')+'<button class="tm-b dim red" data-act="sgdelperson" data-id="'+esc(p.id)+'">Remove</button></div></div>';
   });
   h+=det('sgperson','Add a host or venue','<div class="tm-fg"><div><label class="tm-lbl">Name</label><input class="tm-in" id="sgp-name"></div><div><label class="tm-lbl">Type</label><select class="tm-sel" id="sgp-kind"><option value="host">Host</option><option value="venue">Venue</option></select></div></div><div class="tm-row"><button class="tm-b pri" data-act="sgaddperson">Add</button></div>',false);
-  h+='<div class="tm-sec">Reminders to approve ('+d.sPending.length+')</div>';
-  if(!d.sPending.length)h+='<div class="tm-empty">No reminders waiting.</div>';
-  d.sPending.forEach(x=>h+=draftCard(x,false));
+  const ckP=d.sPending.filter(x=>x.kind==='checkin'),otP=d.sPending.filter(x=>x.kind!=='checkin');
+  h+='<div class="tm-sec">Reminders to approve ('+otP.length+')</div>';
+  if(!otP.length)h+='<div class="tm-empty">No reminders waiting.</div>';
+  otP.forEach(x=>h+=draftCard(x,false));
   return h;
 }
 const normV=s=>String(s||'').toLowerCase().replace(/[^a-z0-9]/g,'');
@@ -10708,6 +10759,7 @@ const A={
   async unblock(t){await col('agent_config').doc('outreach').set({blocklist:{[t.dataset.id]:firebase.firestore.FieldValue.delete()}},{merge:true});toast('Allowed again.');},
   async blockthis(t){const v=S.venues.find(x=>x.id===t.dataset.id);if(!v)return;const id='b'+Date.now().toString(36);await col('agent_config').doc('outreach').set({blocklist:{[id]:{name:v.name,venueId:v.id,reason:'',at:Date.now()}}},{merge:true});toast(v.name+' is on the Do not use list.');},
   async verified(t){await col('agent_venues').doc(t.dataset.id).update({verify:false});toast('Marked confirmed.');},
+  async copydraft2(t){const ta=document.querySelector('[data-ckb="'+t.dataset.id+'"]'),dr=S.drafts.find(x=>x.id===t.dataset.id);toast(await copy(ta?ta.value:(dr&&dr.body)||'')?'Copied.':'Copy failed.',false);},
   async copydraft(t){
     const ta=document.querySelector('[data-did="'+t.dataset.id+'"]'),dr=S.drafts.find(x=>x.id===t.dataset.id),txt=ta?ta.value:(dr&&dr.body)||'';
     toast(await copy(txt)?'Copied.':'Copy failed.',false);
@@ -10803,8 +10855,14 @@ const A={
     if(last)u.lastCheckinAt=new Date(last+'T12:00:00').getTime();
     await col('agent_venues').add(u);toast('Venue added.');
   },
-  async agradd(){const v=val('agr-v'),d=val('agr-d'),t=+val('agr-t');if(!v||!d){toast('Add the venue and the date signed.',true);return;}await sgSave({['agreements.a'+Date.now().toString(36)]:{venue:v,signedOn:d,termMonths:t,endsOn:addMonths(d,t),status:'active',source:'hand'}});vhLog(v,'Agreement signed: '+TERM_LBL(t)+', ends '+niceDay(addMonths(d,t)),d);toast('Added.');},
-  async agrconfirm(t){const x=agrState().found.find(a=>a.id===t.dataset.id);if(!x)return;const n=+(document.getElementById('agt-'+x.id)||{}).value||12,d=(document.getElementById('agd-'+x.id)||{}).value||x.signedOn;if(!d){toast('Pick the date it was signed.',true);return;}await sgSave({['agreements.'+x.id+'.signedOn']:d,['agreements.'+x.id+'.termMonths']:n,['agreements.'+x.id+'.endsOn']:addMonths(d,n),['agreements.'+x.id+'.status']:'active'});vhLog(x.venue,'Agreement signed: '+TERM_LBL(n)+', ends '+niceDay(addMonths(d,n)),d);toast('Confirmed. Ends '+fmtEv(addMonths(d,n))+'.');},
+  agrcalc(t){const g=i=>document.getElementById(t.dataset[i]),d=g('d'),m=g('t'),e=g('e');if(d&&m&&e&&d.value)e.value=addMonths(d.value,+m.value||12);},
+  async agrends(t){if(!t.value)return;await sgSave({['agreements.'+t.dataset.id+'.endsOn']:t.value});toast('Renewal date set to '+fmtEv(t.value)+'.');},
+  async agrundo(t){const x=agrState().active.find(a=>a.id===t.dataset.id);if(!x)return;const D=firebase.firestore.FieldValue.delete(),p='agreements.'+x.id+'.';if(x.checkinOutcome)await sgSave({[p+'checkinOutcome']:D,[p+'renewAfter']:D});else await sgSave({[p+'checkinAt']:D});toast('Undone.');},
+  async careskip(t){const id=t.dataset.id,on=t.value==='skip';if(id.indexOf('hq_')===0)await careSave({['venues.'+id.slice(3)+'.careSkip']:on});else await col('agent_venues').doc(id).update({careSkip:on});toast(on?'No check-ins for this venue.':'Check-ins back on.');},
+  async ckedit(t){const id=t.dataset.id,dr=S.drafts.find(x=>x.id===id);if(!dr)return;const dv=(document.querySelector('[data-ckd="'+id+'"]')||{}).value,bv=(document.querySelector('[data-ckb="'+id+'"]')||{}).value;const ms=dv?new Date(dv+'T12:00:00').getTime():(dr.approvedAt||Date.now());await col('agent_drafts').doc(id).update({body:bv==null?dr.body:bv,approvedAt:ms});await ckSync(dr.venueId,id,ms);toast('Saved.');},
+  async ckundo(t){const id=t.dataset.id,dr=S.drafts.find(x=>x.id===id);if(!dr)return;const D=firebase.firestore.FieldValue.delete();await col('agent_drafts').doc(id).update({status:'pending',approvedAt:D});await ckSync(dr.venueId,id,null);toast('Back in Drafts.');},
+  async agradd(){const v=val('agr-v'),d=val('agr-d'),t=+val('agr-t'),e=val('agr-e')||addMonths(d,t);if(!v||!d){toast('Add the venue and the date signed.',true);return;}await sgSave({['agreements.a'+Date.now().toString(36)]:{venue:v,signedOn:d,termMonths:t,endsOn:e,status:'active',source:'hand'}});vhLog(v,'Agreement signed: '+TERM_LBL(t)+', ends '+niceDay(e),d);toast('Added.');},
+  async agrconfirm(t){const x=agrState().found.find(a=>a.id===t.dataset.id);if(!x)return;const n=+(document.getElementById('agt-'+x.id)||{}).value||12,d=(document.getElementById('agd-'+x.id)||{}).value||x.signedOn;if(!d){toast('Pick the date it was signed.',true);return;}const e=(document.getElementById('age-'+x.id)||{}).value||addMonths(d,n);await sgSave({['agreements.'+x.id+'.signedOn']:d,['agreements.'+x.id+'.termMonths']:n,['agreements.'+x.id+'.endsOn']:e,['agreements.'+x.id+'.status']:'active'});vhLog(x.venue,'Agreement signed: '+TERM_LBL(n)+', ends '+niceDay(e),d);toast('Confirmed. Ends '+fmtEv(e)+'.');},
   async agrrenew(t){const x=agrState().active.find(a=>a.id===t.dataset.id);if(!x)return;const n=x.termMonths===3?12:(x.termMonths||12),start=x.days<0?isoDay(Date.now()):x.endsOn;await sgSave({['agreements.'+x.id+'.status']:'renewed',['agreements.a'+Date.now().toString(36)]:{venue:x.venue,signedOn:start,termMonths:n,endsOn:addMonths(start,n),status:'active',source:'hand'}});vhLog(x.venue,'Agreement renewed: '+TERM_LBL(n)+', ends '+niceDay(addMonths(start,n)),start);toast('Renewed for '+TERM_LBL(n)+'.');},
   async agrcheckin(t){const x=agrState().active.find(a=>a.id===t.dataset.id);if(!x)return;await col('agent_drafts').add({leadId:null,agent:'sigil',kind:'checkin',body:agrCheckin(x),label:'Check-in (2 months): '+x.venue,status:'pending',createdAt:Date.now()});await sgSave({['agreements.'+x.id+'.checkinDraftAt']:Date.now()});toast('Draft is in Waiting to approve.');},
   async agrsent(t){await sgSave({['agreements.'+t.dataset.id+'.checkinAt']:Date.now()});vhLog(agrVenueOf(t.dataset.id),'2-month check-in sent');toast('Check-in marked sent.');},
@@ -10900,6 +10958,7 @@ const A={
     const id=t.dataset.id,dr=S.drafts.find(x=>x.id===id);if(!dr)return;
     const ta=document.querySelector('[data-did="'+id+'"]'),body=ta?ta.value.trim():(dr.body||'');
     const pe=document.querySelector('[data-pid="'+id+'"]'),price=pe?pe.value.trim():'';
+    const cp0=(t.dataset.mode==='sent')?null:copy(body);
     const b=fdb().batch();
     b.update(col('agent_drafts').doc(id),{body:body,status:'approved',approvedAt:Date.now()});
     const l=leadsById()[dr.leadId];
@@ -10925,7 +10984,7 @@ const A={
       toast(dr.venueId&&(dr.kind==='email'||dr.kind==='email2')?'Marked sent and logged. The next touch is due in 4 months.':dr.venueId&&dr.kind==='email3'?'Marked sent and logged. That was touch 3: if they never answer, outreach stops.':dr.venueId&&dr.kind==='colddm'?'Marked sent and logged. The next touch is due in 4 months.':dr.venueId&&dr.kind==='dm'?'Marked sent and logged. That was the one extra DM.':'Marked sent and logged.',false);
       return;
     }
-    toast(await copy(body)?(dr.venueId&&(dr.kind==='email'||dr.kind==='email2')?'Approved, copied and logged. The next touch is due in 4 months.':dr.venueId&&dr.kind==='email3'?'Approved, copied and logged. That was touch 3: if they never answer, outreach stops.':dr.venueId&&dr.kind==='colddm'?'Approved, copied and logged. Send it as an Instagram DM. The next touch is due in 4 months.':dr.venueId&&dr.kind==='dm'?'Approved, copied and logged. Send it as an Instagram DM. That was the one extra DM.':dr.kind==='checkin'?'Approved and copied. Next check-in in 3 months.':'Approved and copied. Paste it into the site.'):'Approved. Copy failed, select the text and copy it yourself.',false);
+    toast(await cp0?(dr.venueId&&(dr.kind==='email'||dr.kind==='email2')?'Approved, copied and logged. The next touch is due in 4 months.':dr.venueId&&dr.kind==='email3'?'Approved, copied and logged. That was touch 3: if they never answer, outreach stops.':dr.venueId&&dr.kind==='colddm'?'Approved, copied and logged. Send it as an Instagram DM. The next touch is due in 4 months.':dr.venueId&&dr.kind==='dm'?'Approved, copied and logged. Send it as an Instagram DM. That was the one extra DM.':dr.kind==='checkin'?'Approved and copied. Next check-in in 3 months.':'Approved and copied. Paste it into the site.'):'Approved. Copy failed, select the text and copy it yourself.',false);
   },
   async undodraft(t){
     const id=t.dataset.id,dr=S.drafts.find(x=>x.id===id);if(!dr)return;
