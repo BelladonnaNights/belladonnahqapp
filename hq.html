@@ -8309,7 +8309,7 @@ function start(){
   try{d.collection('socialPosts').where('date','>=',isoDay(Date.now()-DAY)).onSnapshot(s=>{S.posts=s.docs.map(x=>Object.assign({id:x.id},x.data()));render();},e=>{S.posts=null;});}catch(e){S.posts=null;}
   try{d.collection('socialLibrary').onSnapshot(s=>{const x=s.docs.find(y=>y.id==='bank');S.bank=x?x.data():null;},e=>{S.bank=null;});}catch(e){}
   try{d.collection('venueFeedback').where('type','==','categoryEntry').onSnapshot(s=>{S.vent=s.docs.map(x=>Object.assign({id:x.id},x.data()));render();},e=>{S.vent=null;});}catch(e){S.vent=null;}
-  d.collection('agent_config').onSnapshot(s=>{const c={};s.docs.forEach(x=>c[x.id]=x.data());S.cfg=c;render();try{refreshOffers();}catch(e){}try{if(typeof renderVenueManage==='function')renderVenueManage();}catch(e){}},onErr);
+  d.collection('agent_config').onSnapshot(s=>{const c={};s.docs.forEach(x=>c[x.id]=x.data());S.cfg=c;render();try{window.kggRefresh();}catch(e){}try{refreshOffers();}catch(e){}try{if(typeof renderVenueManage==='function')renderVenueManage();}catch(e){}},onErr);
 }
 window.teamOpen=function(){start();render();if(Date.now()-(S.recAt||0)>10*60*1000){S.recAt=Date.now();try{if(typeof loadRecruits==='function')loadRecruits();}catch(e){}try{if(typeof loadLeads==='function')loadLeads();}catch(e){}setTimeout(render,1200);}if(typeof loadShiftsData==='function'&&(!(typeof shiftsData!=='undefined'&&shiftsData.length)||Date.now()-(S.shiftsAt||0)>10*60*1000)){S.shiftsAt=Date.now();Promise.resolve(loadShiftsData()).then(()=>render()).catch(()=>{});}};
 
@@ -9454,6 +9454,7 @@ function kgSection(set){
   const sp=KG_SETS[set],rows=kgRows(set).sort((a,b)=>String(a.venue||a.name||'').localeCompare(String(b.venue||b.name||'')));
   let h='<div class="tm-sec">'+sp.title+' ('+rows.length+')</div>';
   h+='<div class="tm-hint">'+(set==='gigs'?'Gigs at venues that someone else runs (another business or a host we know). Raven, Iris and Quill never suggest or pitch a night a venue already has. Sable re-checks these on her weekly Gig check, oldest first, and adds gigs she finds nearby. Everything here can change: edit any field, or press Checked today.':'The other businesses and hosts we know, with their social pages, so the team can look at them when checking gigs. Add the Run by name on a gig to match.')+'</div>';
+  if(set==='gigs')h+='<div class="tm-row"><button class="tm-b pri" data-act="kggrid">Open weekly grid</button></div>';
   if(!rows.length)h+='<div class="tm-empty">None added yet.</div>';
   rows.forEach(r=>h+=kgRow(set,r));
   const add='<div class="tm-fg">'+sp.cols.filter(c=>c[0]!=='status'&&c[0]!=='checked').map(c=>{const id='kga-'+set+'-'+c[0];return '<div'+(c[0]==='notes'?' class="full"':'')+'><label class="tm-lbl">'+esc(c[1])+'</label>'+(set==='gigs'&&c[0]==='kind'?'<select class="tm-sel" id="'+id+'">'+KG_TYPES.map(o=>'<option>'+o+'</option>').join('')+'</select>':'<input class="tm-in" id="'+id+'">')+'</div>';}).join('')+'</div><div class="tm-row"><button class="tm-b pri" data-act="kgadd" data-set="'+set+'">Add</button></div>';
@@ -9462,6 +9463,58 @@ function kgSection(set){
   h+=det('kgcsv_'+set,'Import or export CSV',csv,false);
   return h;
 }
+/* ── Weekly grid: the same layout as her breakdown sheet, built from Gigs run by others + our own nights ── */
+const KGG={type:'',st:'live',q:''},KG_WD=['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+function kggData(){
+  const area=r=>{const m=/Area:\s*([^·]+)/i.exec(r.notes||'');return m?m[1].trim():'No area yet';};
+  const byV={};
+  const get=(name,ar)=>{const k=blNorm(name);if(!byV[k])byV[k]={name:name,area:ar,cells:{}};else if(ar&&byV[k].area==='No area yet')byV[k].area=ar;return byV[k];};
+  kgRows('gigs').forEach(r=>{if(!r.venue||KG_WD.indexOf(r.night)<0)return;
+    const st=r.status||'not sure';
+    if(KGG.type&&r.kind!==KGG.type)return;
+    if(KGG.st==='live'&&st==='ended')return;if(KGG.st&&KGG.st!=='live'&&KGG.st!=='all'&&st!==KGG.st)return;
+    const v=get(r.venue,area(r));(v.cells[r.night]=v.cells[r.night]||[]).push({who:r.runBy||'(nobody named)',kind:r.kind||'Other',st:st,tip:[r.kind,r.notes,r.checked?'Checked '+r.checked:'Never checked',r.social].filter(Boolean).join(' · ')});});
+  try{if(!KGG.st||KGG.st==='live'||KGG.st==='all'){(typeof venues!=='undefined'?venues:[]).filter(v=>v&&v.name&&!v.inactive).forEach(hv=>{
+    (venueEditorSlots(hv)||[]).forEach(sl=>{if(!sl.kind||!sl.day||!vmxLive(sl.status))return;const kk=sl.kind==='Private Events'?'Events':sl.kind;const kd=/event/i.test(kk)?'Other':kk;if(KGG.type&&kd!==KGG.type)return;
+      const v=get(hv.name,'Our venues');const day=KG_WD.find(x=>x.toLowerCase()===String(sl.day).toLowerCase());if(!day)return;
+      (v.cells[day]=v.cells[day]||[]).push({who:'Belladonna',kind:kd,st:'ours',tip:'Our night: '+sl.kind+(sl.time?' at '+sl.time:'')});});});}}catch(e){}
+  const q=KGG.q.toLowerCase().trim();
+  let list=Object.values(byV).filter(v=>!q||(v.name+' '+Object.values(v.cells).map(c=>c.map(x=>x.who).join(' ')).join(' ')).toLowerCase().indexOf(q)>=0);
+  list=list.filter(v=>Object.keys(v.cells).length);
+  const areas={};list.forEach(v=>{(areas[v.area]=areas[v.area]||[]).push(v);});
+  return Object.keys(areas).sort((a,b)=>(a==='Our venues'?1:0)-(b==='Our venues'?1:0)||(a==='No area yet'?1:0)-(b==='No area yet'?1:0)||a.localeCompare(b)).map(a=>({area:a,venues:areas[a].sort((x,y)=>x.name.localeCompare(y.name))}));
+}
+function kggHtml(){
+  const g=kggData();let n=0;
+  let h='<table class="kgg-t"><thead><tr><th class="kgg-v">Venue</th>'+KG_WD.map(d=>'<th>'+d+'</th>').join('')+'</tr></thead><tbody>';
+  if(!g.length)h+='<tr><td colspan="8" style="padding:1.2rem;opacity:.7">Nothing matches. Add gigs or import your sheet in Gigs run by others.</td></tr>';
+  g.forEach(a=>{h+='<tr><td class="kgg-city" colspan="8">'+esc(a.area)+'</td></tr>';
+    a.venues.forEach(v=>{h+='<tr><td class="kgg-v">'+esc(v.name)+'</td>'+KG_WD.map(d=>'<td>'+(v.cells[d]||[]).map(c=>{n++;return '<span class="kgg-c kgg-'+(c.st==='still going'?'on':c.st==='not sure'?'ns':c.st==='ended'?'end':'us')+'" title="'+esc(c.tip)+'">'+esc(c.who)+'<i>'+esc(c.kind==='Music bingo'?'Bingo':c.kind)+'</i></span>';}).join('')+'</td>').join('')+'</tr>';});});
+  h+='</tbody></table>';
+  return '<div class="tm-hint" style="margin:.2rem 0 .8rem">'+n+' nights shown. <span class="kgg-c kgg-on">still going</span> <span class="kgg-c kgg-ns">not sure</span> <span class="kgg-c kgg-end">ended</span> <span class="kgg-c kgg-us">ours</span> Hover a cell for the type, notes and when it was last checked.</div><div class="kgg-wrap">'+h+'</div>';
+}
+function kggCsv(){
+  const rows=[['Venues'].concat(KG_WD)];
+  kggData().forEach(a=>{rows.push([String(a.area).toUpperCase()]);a.venues.forEach(v=>{rows.push([v.name].concat(KG_WD.map(d=>(v.cells[d]||[]).filter(c=>c.st!=='ours'&&c.st!=='ended').map(c=>(c.who==='(nobody named)'?'':c.who)+(c.st==='not sure'?'?':'')).join('/'))));});rows.push([]);});
+  return csvOut(rows);
+}
+function kggRender(){const b=document.getElementById('kggBody');if(b)b.innerHTML=kggHtml();}
+window.kgOpenGrid=function(){
+  if(!document.getElementById('kggStyle')){const st=document.createElement('style');st.id='kggStyle';st.textContent='.kgg-wrap{overflow:auto;max-height:calc(100vh - 15rem);border:1px solid rgba(201,169,110,.3);border-radius:8px}.kgg-t{border-collapse:collapse;width:100%;font-size:.78rem}.kgg-t th{position:sticky;top:0;background:#0b0b0b;color:var(--gold);font-weight:600;letter-spacing:.12em;text-transform:uppercase;font-size:.62rem;padding:.55rem .6rem;border-bottom:1px solid rgba(201,169,110,.4);text-align:left;z-index:2}.kgg-t td{border-bottom:1px solid rgba(255,255,255,.06);border-right:1px solid rgba(255,255,255,.05);padding:.35rem .5rem;vertical-align:top;min-width:105px}.kgg-t .kgg-v{position:sticky;left:0;background:#0b0b0b;min-width:170px;font-weight:600;color:var(--text);z-index:1}.kgg-t th.kgg-v{z-index:3}.kgg-city{background:rgba(201,169,110,.12);color:var(--gold);letter-spacing:.22em;text-transform:uppercase;font-size:.65rem;font-weight:600;padding:.45rem .6rem!important}.kgg-c{display:inline-flex;gap:.35rem;align-items:baseline;padding:.12rem .45rem;border-radius:4px;border:1px solid;margin:.1rem .15rem .1rem 0;font-size:.72rem;cursor:default}.kgg-c i{font-style:normal;font-size:.55rem;letter-spacing:.1em;text-transform:uppercase;opacity:.75}.kgg-on{color:var(--live);border-color:var(--live);background:rgba(80,200,120,.08)}.kgg-ns{color:var(--gold);border-color:var(--gold);background:rgba(201,169,110,.08)}.kgg-end{color:var(--rose);border-color:var(--rose);text-decoration:line-through;opacity:.8}.kgg-us{color:#c9a0dc;border-color:#c9a0dc;background:rgba(201,160,220,.08)}';document.head.appendChild(st);}
+  let m=document.getElementById('kggModal');
+  if(!m){m=document.createElement('div');m.className='modal-bg vmx';m.id='kggModal';
+    m.innerHTML='<div class="modal vm-wide" style="max-width:1400px"><div class="vm-top"><button type="button" class="vm-back" onclick="document.getElementById(\'kggModal\').classList.remove(\'open\')">&larr; Gigs run by others</button><div class="vm-ttl"><i></i><span>Weekly grid</span><i class="r"></i></div><span></span></div>'+
+    '<div class="vm-sec"><div class="vm-grid" style="grid-template-columns:repeat(auto-fit,minmax(180px,1fr))"><div class="form-group"><label class="form-label">Search</label><input class="form-input" id="kggQ"></div><div class="form-group"><label class="form-label">Type</label><select class="form-input" id="kggType"><option value="">All types</option><option>Karaoke</option><option>Trivia</option><option>Music bingo</option><option>Other</option></select></div><div class="form-group"><label class="form-label">Show</label><select class="form-input" id="kggSt"><option value="live">Everything except ended</option><option value="still going">Still going only</option><option value="not sure">Not sure only</option><option value="ended">Ended only</option><option value="all">All</option></select></div></div></div>'+
+    '<div class="vm-sec" id="kggBody"></div><div class="modal-actions vm-actions"><div style="flex:1"></div><button class="modal-cancel" id="kggCopy">Copy as CSV</button><button class="modal-cancel" id="kggDl">Download CSV</button><button class="modal-save" style="flex:none;min-width:9rem" onclick="document.getElementById(\'kggModal\').classList.remove(\'open\')">Close</button></div></div>';
+    document.body.appendChild(m);
+    m.querySelector('#kggQ').addEventListener('input',e=>{KGG.q=e.target.value;kggRender();});
+    m.querySelector('#kggType').addEventListener('change',e=>{KGG.type=e.target.value;kggRender();});
+    m.querySelector('#kggSt').addEventListener('change',e=>{KGG.st=e.target.value;kggRender();});
+    m.querySelector('#kggCopy').addEventListener('click',async()=>{toast(await copy(kggCsv())?'Grid copied as CSV.':'Copy failed.',false);});
+    m.querySelector('#kggDl').addEventListener('click',()=>{const b=new Blob([kggCsv()],{type:'text/csv'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='gigs-weekly-grid.csv';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},500);});}
+  kggRender();m.classList.add('open');
+};
+window.kggRefresh=function(){const m=document.getElementById('kggModal');if(m&&m.classList.contains('open'))kggRender();};
 function knownGigsHtml(){return kgSection('gigs')+kgSection('people');}
 function gigKindsIn(t){t=String(t||'').toLowerCase();const o=[];if(/karaoke|sing-?along/.test(t))o.push('karaoke');if(/trivia/.test(t))o.push('trivia');if(/bingo/.test(t))o.push('bingo');return o;}
 function gigFlags(venueName,text){
@@ -11219,6 +11272,7 @@ const A={
   async ibowner(t){await ibSave({['items.'+t.dataset.id+'.owner']:t.value});toast('Updated.');},
   async ibreopen(t){await ibSave({['items.'+t.dataset.id+'.status']:'open'});toast('Reopened.');},
   async ibdel(t){if(!tapTwice(t))return;await ibSave({['items.'+t.dataset.id]:firebase.firestore.FieldValue.delete()});toast('Deleted.');},
+  kggrid(t){window.kgOpenGrid();},
   async kgclear(t){const set=t.dataset.set,n=kgRows(set).length;if(!n){toast('Nothing to clear.',true);return;}if(!tapTwice(t))return;const u={};kgRows(set).forEach(r=>{u[set+'.'+r.id]=firebase.firestore.FieldValue.delete();});await kgSave(u);toast('Cleared '+n+'.');},
   async kgdel(t){if(!tapTwice(t))return;await kgSave({[t.dataset.set+'.'+t.dataset.id]:firebase.firestore.FieldValue.delete()});toast('Deleted.');},
   async kgadd(t){const set=t.dataset.set,sp=KG_SETS[set],o={};sp.cols.forEach(c=>{const e=document.getElementById('kga-'+set+'-'+c[0]);if(e)o[c[0]]=kgNorm(set,c[0],e.value);});if(!o[sp.need]){toast('Fill in the '+sp.cols[0][1].toLowerCase()+'.',true);return;}if(set==='gigs'){o.status='still going';o.checked=isoDay(Date.now());}o.createdAt=Date.now();await kgSave({[set+'.k'+Date.now().toString(36)]:o});sp.cols.forEach(c=>{const e=document.getElementById('kga-'+set+'-'+c[0]);if(e&&e.tagName==='INPUT')e.value='';});S.open['kgadd_'+set]=false;toast('Added.');},
