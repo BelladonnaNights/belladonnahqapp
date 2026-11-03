@@ -258,8 +258,8 @@ html::-webkit-scrollbar-thumb:hover,.modal::-webkit-scrollbar-thumb:hover{backgr
 }
 
 /* ── Edit Venue pop-up: full-page card look ── */
-#venueModal{padding:0;align-items:stretch;justify-content:center;background:#030303}
-#venueModal .modal.vm-wide{max-width:960px;max-height:100vh;height:100%;background:transparent;border:none;padding:1.2rem 1.4rem 0}
+.modal-bg.vmx{padding:0;align-items:stretch;justify-content:center;background:#030303}
+.modal-bg.vmx .modal.vm-wide{max-width:960px;max-height:100vh;height:100%;background:transparent;border:none;padding:1.2rem 1.4rem 0}
 .vm-top{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;margin-bottom:1.1rem}
 .vm-back{justify-self:start;background:none;border:none;color:var(--text2);font-family:inherit;font-size:.66rem;letter-spacing:.24em;text-transform:uppercase;cursor:pointer;padding:.3rem 0}
 .vm-back:hover{color:var(--gold)}
@@ -267,17 +267,17 @@ html::-webkit-scrollbar-thumb:hover,.modal::-webkit-scrollbar-thumb:hover{backgr
 .vm-ttl span{font-size:1.5rem;letter-spacing:.34em;text-transform:uppercase;color:var(--gold);font-weight:300;white-space:nowrap}
 .vm-ttl i{display:block;width:70px;height:1px;background:linear-gradient(90deg,transparent,var(--gold))}
 .vm-ttl i.r{background:linear-gradient(270deg,transparent,var(--gold))}
-#venueModal .vm-sec{border:1px solid rgba(201,169,110,.55);border-radius:12px;padding:.9rem 1.2rem 1.1rem;margin-bottom:1rem;background:linear-gradient(180deg,rgba(201,169,110,.04),rgba(201,169,110,0))}
-#venueModal .vm-sec:first-of-type{padding-top:.9rem}
-#venueModal .vm-sec-h{font-size:.8rem;letter-spacing:.34em;font-weight:600;gap:.9rem;margin-bottom:.8rem;color:var(--gold)}
-#venueModal .vm-sec-h svg,#venueModal .form-label svg{stroke:var(--gold);flex:none}
-#venueModal .vm-sec-h svg{width:24px;height:24px}
-#venueModal .form-label{display:flex;align-items:center;gap:.55rem;font-size:.62rem;letter-spacing:.26em;color:var(--text2)}
-#venueModal .form-label svg{width:16px;height:16px}
-#venueModal .form-input,#venueModal .form-textarea{background:linear-gradient(180deg,#171717,#0b0b0b);border:1px solid rgba(201,169,110,.26);border-radius:4px;box-shadow:inset 0 1px 4px rgba(0,0,0,.75);color-scheme:dark}
-#venueModal select.form-input{-webkit-appearance:none;appearance:none;border-radius:8px;border-color:rgba(201,169,110,.32);background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 14'%3E%3Cpath d='M2 5l3-3 3 3M2 9l3 3 3-3' fill='none' stroke='%23f0ece0' stroke-width='1.5'/%3E%3C/svg%3E") no-repeat right .8rem center/9px,linear-gradient(180deg,#3b3b3b,#141414);padding-right:2rem;cursor:pointer}
+.modal-bg.vmx .vm-sec{border:1px solid rgba(201,169,110,.55);border-radius:12px;padding:.9rem 1.2rem 1.1rem;margin-bottom:1rem;background:linear-gradient(180deg,rgba(201,169,110,.04),rgba(201,169,110,0))}
+.modal-bg.vmx .vm-sec:first-of-type{padding-top:.9rem}
+.modal-bg.vmx .vm-sec-h{font-size:.8rem;letter-spacing:.34em;font-weight:600;gap:.9rem;margin-bottom:.8rem;color:var(--gold)}
+.modal-bg.vmx .vm-sec-h svg,.modal-bg.vmx .form-label svg{stroke:var(--gold);flex:none}
+.modal-bg.vmx .vm-sec-h svg{width:24px;height:24px}
+.modal-bg.vmx .form-label{display:flex;align-items:center;gap:.55rem;font-size:.62rem;letter-spacing:.26em;color:var(--text2)}
+.modal-bg.vmx .form-label svg{width:16px;height:16px}
+.modal-bg.vmx .form-input,.modal-bg.vmx .form-textarea{background:linear-gradient(180deg,#171717,#0b0b0b);border:1px solid rgba(201,169,110,.26);border-radius:4px;box-shadow:inset 0 1px 4px rgba(0,0,0,.75);color-scheme:dark}
+.modal-bg.vmx select.form-input{-webkit-appearance:none;appearance:none;border-radius:8px;border-color:rgba(201,169,110,.32);background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 14'%3E%3Cpath d='M2 5l3-3 3 3M2 9l3 3 3-3' fill='none' stroke='%23f0ece0' stroke-width='1.5'/%3E%3C/svg%3E") no-repeat right .8rem center/9px,linear-gradient(180deg,#3b3b3b,#141414);padding-right:2rem;cursor:pointer}
 .vm-g4{grid-template-columns:1.2fr 1.1fr 1.1fr .9fr}
-#venueModal .vm-g6{grid-template-columns:repeat(4,1fr) 1.6fr}
+.modal-bg.vmx .vm-g6{grid-template-columns:repeat(4,1fr) 1.6fr}
 .vm-bill{grid-template-columns:repeat(6,1fr)}
 .vm-bill>:nth-child(-n+3){grid-column:span 2}
 .vm-bill>:nth-child(4){grid-column:span 4}
@@ -285,7 +285,7 @@ html::-webkit-scrollbar-thumb:hover,.modal::-webkit-scrollbar-thumb:hover{backgr
 .vm-bill>:nth-child(6){grid-column:1/-1}
 #gigChips .chip{border-radius:6px;padding:.5rem 1.1rem;border:1px solid rgba(201,169,110,.3);background:#0c0c0c;color:var(--text2);letter-spacing:.1em}
 #gigChips .chip.selected-skill{background:var(--gold);border-color:var(--gold2);color:#000;font-weight:600}
-#venueModal .tip-pay-row.vm-slot{border-radius:6px;border-color:rgba(201,169,110,.3);background:rgba(255,255,255,.015)}
+.modal-bg.vmx .tip-pay-row.vm-slot{border-radius:6px;border-color:rgba(201,169,110,.3);background:rgba(255,255,255,.015)}
 #vmOffers .offers-box{border:none!important;padding:0!important;margin:0!important}
 #vmOffers .offers-box>div:first-child{display:flex;align-items:center;gap:.9rem;font-size:.8rem!important;letter-spacing:.34em;text-transform:uppercase;color:var(--gold);font-weight:600!important;margin-bottom:.8rem!important}
 #vmOffers .offers-box>div:first-child::before{content:'';width:24px;height:24px;flex:none;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23c9a96e' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 3l9 5-9 5-9-5 9-5zM3 13l9 5 9-5M3 17.500l9 5 9-5'/%3E%3C/svg%3E") no-repeat center/contain}
@@ -293,22 +293,30 @@ html::-webkit-scrollbar-thumb:hover,.modal::-webkit-scrollbar-thumb:hover{backgr
 #vmOffers .offers-box>div:nth-child(2){display:grid;grid-template-columns:repeat(4,1fr);gap:.6rem}
 #vmOffers .offers-box>div:nth-child(2) label{display:flex!important;margin:0!important;gap:.6rem!important;align-items:center;border:1px solid rgba(201,169,110,.3);border-radius:4px;padding:.55rem .7rem;background:#0c0c0c;font-size:.82rem!important}
 #vmOffers:empty{display:none}
+#leadOffers .offers-box{border:none!important;padding:0!important;margin:0!important}
+#leadOffers .offers-box>div:first-child{display:flex;align-items:center;gap:.9rem;font-size:.8rem!important;letter-spacing:.34em;text-transform:uppercase;color:var(--gold);font-weight:600!important;margin-bottom:.8rem!important}
+#leadOffers .offers-box>div:first-child::before{content:'';width:24px;height:24px;flex:none;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23c9a96e' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 3l9 5-9 5-9-5 9-5zM3 13l9 5 9-5M3 17.500l9 5 9-5'/%3E%3C/svg%3E") no-repeat center/contain}
+#leadOffers .offers-box>div:first-child span{letter-spacing:.04em;text-transform:none;color:var(--text3);font-size:.72rem!important;font-weight:400}
+#leadOffers .offers-box>div:nth-child(2){display:grid;grid-template-columns:repeat(4,1fr);gap:.6rem}
+#leadOffers .offers-box>div:nth-child(2) label{display:flex!important;margin:0!important;gap:.6rem!important;align-items:center;border:1px solid rgba(201,169,110,.3);border-radius:4px;padding:.55rem .7rem;background:#0c0c0c;font-size:.82rem!important}
+#leadOffers:empty{display:none}
+#leadOffers .offers-box{margin:0}
 #vmOffers .offers-box{margin:0}
 #vmOtherContactsWrap{margin-top:.8rem}
 #vmLead:has(#vmLeadInfo:empty):has(#vmAll:empty){display:none}
 #vmAll details{border:1px solid rgba(201,169,110,.4)!important;border-radius:6px!important;margin:.8rem 0 0!important;background:#0a0a0a;padding:.55rem .9rem!important}
 .vm-admin-wrap{margin-top:1rem;padding-top:1rem;border-top:1px solid rgba(201,169,110,.3)}
-#venueModal .vm-admin-btn{border:1px solid rgba(201,169,110,.5);border-radius:4px;background:#0a0a0a;font-size:.7rem;letter-spacing:.3em;padding:.75rem 1rem}
-#venueModal .vm-actions{margin:0 -1.4rem;padding:.9rem 1.4rem;background:#050505;border-top:1px solid rgba(201,169,110,.3);gap:.8rem}
-#venueModal .modal-cancel{border-radius:3px;border-color:rgba(201,169,110,.35);color:var(--text2);padding:.85rem 1.4rem;letter-spacing:.28em}
-#venueModal .modal-save{border-radius:6px;background:linear-gradient(180deg,rgba(201,169,110,.22),rgba(201,169,110,.06));border:1px solid var(--gold);color:var(--gold2);letter-spacing:.4em;font-weight:600;padding:.85rem}
+.modal-bg.vmx .vm-admin-btn{border:1px solid rgba(201,169,110,.5);border-radius:4px;background:#0a0a0a;font-size:.7rem;letter-spacing:.3em;padding:.75rem 1rem}
+.modal-bg.vmx .vm-actions{margin:0 -1.4rem;padding:.9rem 1.4rem;background:#050505;border-top:1px solid rgba(201,169,110,.3);gap:.8rem}
+.modal-bg.vmx .modal-cancel{border-radius:3px;border-color:rgba(201,169,110,.35);color:var(--text2);padding:.85rem 1.4rem;letter-spacing:.28em}
+.modal-bg.vmx .modal-save{border-radius:6px;background:linear-gradient(180deg,rgba(201,169,110,.22),rgba(201,169,110,.06));border:1px solid var(--gold);color:var(--gold2);letter-spacing:.4em;font-weight:600;padding:.85rem}
 @media(max-width:760px){
-  #venueModal .modal.vm-wide{padding:1rem 1rem 0}
+  .modal-bg.vmx .modal.vm-wide{padding:1rem 1rem 0}
   .vm-ttl span{font-size:1.1rem;letter-spacing:.2em}.vm-ttl i{width:24px}
-  .vm-g4,#venueModal .vm-g6,.vm-bill{grid-template-columns:1fr 1fr}
+  .vm-g4,.modal-bg.vmx .vm-g6,.vm-bill{grid-template-columns:1fr 1fr}
   .vm-bill>*{grid-column:auto!important}.vm-bill>:nth-child(4),.vm-bill>:nth-child(6){grid-column:1/-1!important}
   #vmOffers .offers-box>div:nth-child(2){grid-template-columns:1fr 1fr}
-  #venueModal .vm-actions{margin:0 -1rem;padding:.8rem 1rem}
+  .modal-bg.vmx .vm-actions{margin:0 -1rem;padding:.8rem 1rem}
 }
 .modal-title{font-size:0.65rem;letter-spacing:0.32em;text-transform:uppercase;color:var(--text3);margin-bottom:1.1rem;font-weight:400;}
 .form-group{margin-bottom:0.9rem;}
@@ -1112,25 +1120,18 @@ html::-webkit-scrollbar-thumb:hover,.modal::-webkit-scrollbar-thumb:hover{backgr
 </div>
 
 <!-- RECRUIT MODAL -->
-<div class="modal-bg" id="recruitModal">
-  <div class="modal" style="max-width:420px;">
-    <div class="modal-title" id="recruitModalTitle">Add Lead</div>
-    <div class="form-group"><label class="form-label">Name</label><input type="text" class="form-input" id="recruitName"></div>
-    <div style="display:flex;gap:0.6rem;">
-      <div class="form-group" style="flex:1;"><label class="form-label">Phone</label><input type="text" class="form-input" id="recruitPhone"></div>
-      <div class="form-group" style="flex:1;"><label class="form-label">Email</label><input type="text" class="form-input" id="recruitEmail"></div>
-    </div>
-    <div class="form-group"><label class="form-label">Location</label><select class="form-input" id="recruitLocation"></select></div>
-    <div class="form-group"><label class="form-label">Notes</label><textarea class="form-input" id="recruitNotes" rows="2"></textarea></div>
-    <div class="form-group">
-      <label class="form-label">Milestones</label>
-      <div id="recruitMilestoneChecks" style="display:flex;flex-direction:column;gap:0.4rem;"></div>
-    </div>
-    <div class="modal-actions">
-      <button class="btn-sm" id="recruitDeleteBtn" onclick="deleteRecruit()" style="color:var(--rose);display:none;">Delete</button>
+<div class="modal-bg vmx" id="recruitModal">
+  <div class="modal vm-wide">
+    <div class="vm-top"><button type="button" class="vm-back" onclick="closeModal('recruitModal')">&larr; Host Leads</button><div class="vm-ttl"><i></i><span id="recruitModalTitle">Add Lead</span><i class="r"></i></div><span></span></div>
+    <div class="vm-sec"><div class="vm-sec-h"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-7 8-7s8 3 8 7"/></svg>Contact</div><div class="vm-grid vm-g2"><div class="form-group"><label class="form-label">Name</label><input type="text" class="form-input" id="recruitName"></div><div class="form-group"><label class="form-label">Location</label><select class="form-input" id="recruitLocation"></select></div><div class="form-group"><label class="form-label">Phone</label><input type="tel" class="form-input" id="recruitPhone"></div><div class="form-group"><label class="form-label">Email</label><input type="email" class="form-input" id="recruitEmail"></div></div></div>
+    <div class="vm-sec"><div class="vm-sec-h"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l4 4 10-10"/></svg>Milestones</div><div id="recruitMilestoneChecks" style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem 1.4rem;"></div></div>
+    <div class="vm-sec"><div class="vm-sec-h"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h9l4 4v14H6zM14 3v5h5M9 12h7M9 16h7"/></svg>Notes</div><div class="form-group"><textarea class="form-textarea" id="recruitNotes" style="min-height:90px;"></textarea></div></div>
+    <div class="vm-sec"><div class="vm-sec-h"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="1.5"/><path d="M3 7l9 6 9-6"/></svg>Touches and notes from the field</div><div id="recruitHistory"></div></div>
+    <div class="modal-actions vm-actions">
+      <button class="modal-cancel" id="recruitDeleteBtn" onclick="deleteRecruit()" style="color:var(--rose);display:none;">Delete</button>
       <div style="flex:1;"></div>
-      <button class="btn-sm" onclick="closeModal('recruitModal')">Cancel</button>
-      <button class="btn-sm btn-gold" onclick="saveRecruit()">Save</button>
+      <button class="modal-cancel" onclick="closeModal('recruitModal')">Cancel</button>
+      <button class="modal-save" onclick="saveRecruit()" style="flex:none;min-width:9rem;">Save Lead</button>
     </div>
   </div>
 </div>
@@ -1369,81 +1370,31 @@ html::-webkit-scrollbar-thumb:hover,.modal::-webkit-scrollbar-thumb:hover{backgr
 </div>
 
 <!-- LEAD MODAL -->
-<div class="modal-bg" id="leadModal">
-  <div class="modal" style="max-width:640px;">
-    <div class="modal-title" id="leadModalTitle">Add Lead</div>
-    <div class="form-group"><label class="form-label">Venue / Company Name</label><input type="text" class="form-input" id="leadName"></div>
-    <div class="form-group"><label class="form-label">Contact Person</label><input type="text" class="form-input" id="leadContactName"></div>
-    <div style="display:flex;gap:0.6rem;">
-      <div class="form-group" style="flex:1;"><label class="form-label">Phone</label><input type="text" class="form-input" id="leadPhone"></div>
-      <div class="form-group" style="flex:1;"><label class="form-label">Email</label><input type="text" class="form-input" id="leadEmail"></div>
-    </div>
-    <div style="display:flex;gap:0.6rem;">
-      <div class="form-group" style="flex:1;"><label class="form-label">City</label><input type="text" class="form-input" id="leadCity"></div>
-      <div class="form-group" style="flex:1;"><label class="form-label">Location</label><select class="form-input" id="leadLocation"></select></div>
-    </div>
-    <div style="display:flex;gap:0.6rem;">
-      <div class="form-group" style="flex:1;"><label class="form-label">Stage</label>
-        <select class="form-input" id="leadStage">
-          <option value="new">New Lead</option>
-          <option value="contact">First Contact</option>
-          <option value="interview">Interview</option>
-          <option value="negotiation">Negotiations</option>
-          <option value="contract">Agreement Sent</option>
-          <option value="active">Working, no agreement</option>
-          <option value="signed">Signed (now a venue)</option>
-          <option value="paused">Paused</option>
-        </select>
-      </div>
-      <div class="form-group" style="flex:1;"><label class="form-label">Temperature</label>
-        <select class="form-input" id="leadTemp">
-          <option value="hot">🔥 Hot</option>
-          <option value="warm">🌤 Warm</option>
-          <option value="cold">❄ Cold</option>
-        </select>
-      </div>
-    </div>
-    <div class="form-group"><label class="form-label">What They're Looking For</label>
-      <div id="leadInterestRows" style="display:flex;flex-direction:column;gap:0.4rem;margin-bottom:0.5rem;"></div>
-      <button class="btn-sm" onclick="addLeadInterestRow()" type="button">+ Add Night</button>
-    </div>
-    <div style="display:flex;gap:0.6rem;">
-      <div class="form-group" style="flex:1;"><label class="form-label">How They Contacted Us</label>
-        <select class="form-input" id="leadContactMethod" onchange="document.getElementById('leadContactMethodOtherWrap').style.display=this.value==='other'?'':'none';">
-          <option value="email">Email</option>
-          <option value="instagram">Instagram</option>
-          <option value="facebook">Facebook</option>
-          <option value="in_person">In Person</option>
-          <option value="phone">Phone</option>
-          <option value="other">Other</option>
-        </select>
-      </div>
-      <div class="form-group" style="flex:1;" id="leadContactMethodOtherWrap"><label class="form-label">Which Other</label><input type="text" class="form-input" id="leadContactMethodOther"></div>
-    </div>
-    <div style="display:flex;gap:0.6rem;">
-      <div class="form-group" style="flex:1;"><label class="form-label">Source</label>
-        <select class="form-input" id="leadSource">
-          <option value="inbound">They found us</option>
-          <option value="outbound">We found them</option>
-        </select>
-      </div>
-      <div class="form-group" style="flex:1;"><label class="form-label">Found By</label><input type="text" class="form-input" id="leadFoundBy" placeholder="Name"></div>
-    </div>
-    <div style="display:flex;gap:0.6rem;align-items:flex-end;">
-      <div class="form-group" style="flex:1;">
-        <label class="form-label">Next Follow-Up</label>
-        <input type="date" class="form-input" id="leadFollowUp">
-        <label style="display:flex;align-items:center;gap:0.4rem;cursor:pointer;font-size:0.72rem;color:var(--text3);margin-top:0.35rem;"><input type="checkbox" id="leadFollowUpNone" onchange="document.getElementById('leadFollowUp').disabled=this.checked;if(this.checked)document.getElementById('leadFollowUp').value='';"> None needed</label>
-      </div>
-      <div class="form-group" style="flex:1;"><label style="display:flex;align-items:center;gap:0.4rem;cursor:pointer;font-size:0.75rem;color:var(--text2);"><input type="checkbox" id="leadCompetitor"> Currently using a competitor</label></div>
-    </div>
-    <div class="form-group"><label class="form-label">Notes</label><textarea class="form-input" id="leadNotes" rows="3"></textarea></div>
-    <div id="leadOffers"></div>
-    <div class="modal-actions">
-      <button class="btn-sm" id="leadDeleteBtn" onclick="deleteLead()" style="color:var(--rose);display:none;">Delete</button>
+<div class="modal-bg vmx" id="leadModal">
+  <div class="modal vm-wide">
+    <div class="vm-top"><button type="button" class="vm-back" onclick="closeModal('leadModal')">&larr; Leads</button><div class="vm-ttl"><i></i><span id="leadModalTitle">Add Lead</span><i class="r"></i></div><span></span></div>
+    <div class="vm-sec"><div class="vm-grid vm-g3">
+<div class="form-group"><label class="form-label">Venue / Company Name</label><input type="text" class="form-input" id="leadName"></div><div class="form-group"><label class="form-label">Stage</label><select class="form-input" id="leadStage"><option value="new">New Lead</option><option value="contact">First Contact</option><option value="interview">Interview</option><option value="negotiation">Negotiations</option><option value="contract">Agreement Sent</option><option value="active">Working, no agreement</option><option value="signed">Signed (now a venue)</option><option value="paused">Paused</option></select></div><div class="form-group"><label class="form-label">Temperature</label><select class="form-input" id="leadTemp"><option value="hot">🔥 Hot</option><option value="warm">🌤 Warm</option><option value="cold">❄ Cold</option></select></div>
+    </div></div>
+    <div class="vm-sec"><div class="vm-sec-h"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-7 8-7s8 3 8 7"/></svg>Contact</div><div class="vm-grid vm-g3">
+<div class="form-group"><label class="form-label">Contact Person</label><input type="text" class="form-input" id="leadContactName"></div><div class="form-group"><label class="form-label">Phone</label><input type="tel" class="form-input" id="leadPhone"></div><div class="form-group"><label class="form-label">Email</label><input type="email" class="form-input" id="leadEmail"></div><div class="form-group"><label class="form-label">City</label><input type="text" class="form-input" id="leadCity"></div><div class="form-group"><label class="form-label">Location</label><select class="form-input" id="leadLocation"></select></div><div class="form-group"><label class="form-label">Address</label><input type="text" class="form-input" id="leadAddress"></div><div class="form-group"><label class="form-label">Instagram</label><input type="text" class="form-input" id="leadInstagram"></div><div class="form-group"><label class="form-label">Website</label><input type="text" class="form-input" id="leadWebsite"></div><div class="form-group"><label class="form-label">Facebook</label><input type="text" class="form-input" id="leadFacebook"></div>
+    </div></div>
+    <div class="vm-sec"><div class="vm-sec-h"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.8 5.800 6.200.9-4.500 4.400 1.100 6.200L12 17.300 6.400 20.300l1.100-6.200L3 9.700l6.200-.9z"/></svg>What they're looking for</div><div id="leadInterestRows" style="display:flex;flex-direction:column;gap:0.4rem;margin-bottom:0.5rem;"></div><button class="btn-sm" onclick="addLeadInterestRow()" type="button">+ Add Night</button></div>
+    <div class="vm-sec"><div class="vm-sec-h"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M5 6h11l3 2.500-3 2.500H5zM19 14H8l-3 2.500L8 19h11z"/></svg>How they came to us</div><div class="vm-grid vm-g4">
+<div class="form-group"><label class="form-label">How They Contacted Us</label><select class="form-input" id="leadContactMethod" onchange="document.getElementById('leadContactMethodOtherWrap').style.display=this.value==='other'?'':'none';"><option value="email">Email</option><option value="instagram">Instagram</option><option value="facebook">Facebook</option><option value="in_person">In Person</option><option value="phone">Phone</option><option value="other">Other</option></select></div><div class="form-group" id="leadContactMethodOtherWrap"><label class="form-label">Which Other</label><input type="text" class="form-input" id="leadContactMethodOther"></div><div class="form-group"><label class="form-label">Source</label><select class="form-input" id="leadSource"><option value="inbound">They found us</option><option value="outbound">We found them</option></select></div><div class="form-group"><label class="form-label">Found By</label><input type="text" class="form-input" id="leadFoundBy"></div>
+    </div></div>
+    <div class="vm-sec"><div class="vm-sec-h"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="15" rx="1.5"/><path d="M4 10h16M9 3v4M15 3v4"/></svg>Follow-up</div><div class="vm-grid vm-g2">
+      <div class="form-group"><label class="form-label">Next Follow-Up</label><input type="date" class="form-input" id="leadFollowUp"><label style="display:flex;align-items:center;gap:0.4rem;cursor:pointer;font-size:0.72rem;color:var(--text3);margin-top:0.35rem;"><input type="checkbox" id="leadFollowUpNone" onchange="document.getElementById('leadFollowUp').disabled=this.checked;if(this.checked)document.getElementById('leadFollowUp').value='';"> None needed</label></div>
+      <div class="form-group" style="align-self:end;"><label style="display:flex;align-items:center;gap:0.4rem;cursor:pointer;font-size:0.78rem;color:var(--text2);"><input type="checkbox" id="leadCompetitor"> Currently using a competitor</label></div>
+    </div></div>
+    <div class="vm-sec"><div class="vm-sec-h"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h9l4 4v14H6zM14 3v5h5M9 12h7M9 16h7"/></svg>Notes</div><div class="form-group"><textarea class="form-textarea" id="leadNotes" style="min-height:90px;"></textarea></div></div>
+    <div class="vm-sec" id="leadOffers"></div>
+    <div class="vm-sec"><div class="vm-sec-h"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="1.5"/><path d="M3 7l9 6 9-6"/></svg>Touches and emails sent</div><div id="leadHistory"></div></div>
+    <div class="modal-actions vm-actions">
+      <button class="modal-cancel" id="leadDeleteBtn" onclick="deleteLead()" style="color:var(--rose);display:none;">Delete</button>
       <div style="flex:1;"></div>
-      <button class="btn-sm" onclick="closeModal('leadModal')">Cancel</button>
-      <button class="btn-sm btn-gold" onclick="saveLead()">Save</button>
+      <button class="modal-cancel" onclick="closeModal('leadModal')">Cancel</button>
+      <button class="modal-save" onclick="saveLead()" style="flex:none;min-width:9rem;">Save Lead</button>
     </div>
   </div>
 </div>
@@ -1812,13 +1763,18 @@ match /agent_config/{id}  { allow read, write: if isAdmin(); }</pre>
 </div>
 
 <!-- ROSTER MODAL -->
-<div class="modal-bg" id="rosterModal">
-  <div class="modal">
-    <div class="modal-title" id="rosterModalTitle">Add Host</div>
-    <div class="form-group"><label class="form-label">Host Name</label><input type="text" class="form-input" id="rmName" placeholder="Full name"></div>
-    <div class="form-group"><label class="form-label">Last Name <span style="font-size:0.6rem;color:var(--text4);text-transform:none;letter-spacing:0;">(shown on the host card here in HQ — never sent to the tip-a-host page)</span></label><input type="text" class="form-input" id="rmLastName" placeholder="Last name"></div>
-    <div class="form-group"><label class="form-label">Host ID <span style="font-size:0.6rem;color:var(--text4);text-transform:none;letter-spacing:0;">(matched against the Host ID set on their Gateway account in Accounts — takes priority over the email below if both are set)</span></label><div style="display:flex;gap:0.4rem;align-items:center;"><input type="text" class="form-input" id="rmHostId" placeholder="not set" readonly style="color:var(--text3);" onblur="lockRmHostId()"><button type="button" class="hq-btn-ghost" style="padding:0.45rem 0.8rem;" onclick="unlockRmHostId()">Edit</button></div></div>
-    <div class="form-group"><label class="form-label">Gateway Account Email <span style="font-size:0.6rem;color:var(--text4);text-transform:none;letter-spacing:0;">(fallback link to their Belladonna account if no Host ID is set on either side)</span></label><input type="text" class="form-input" id="rmGatewayEmail" placeholder="the email they signed up with"></div>
+<div class="modal-bg vmx" id="rosterModal">
+  <div class="modal vm-wide">
+    <div class="vm-top"><button type="button" class="vm-back" onclick="closeRosterModal()">&larr; Hosts</button><div class="vm-ttl"><i></i><span id="rosterModalTitle">Add Host</span><i class="r"></i></div><span></span></div>
+    <div class="vm-sec"><div class="vm-grid vm-g3">
+    <div class="form-group"><label class="form-label">Host Name</label><input type="text" class="form-input" id="rmName"></div>
+    <div class="form-group"><label class="form-label">Last Name </label><input type="text" class="form-input" id="rmLastName"></div>
+    <div class="form-group"><label class="form-label">Location</label><select class="form-input" id="rmLocation"></select></div>
+    </div></div>
+    <div class="vm-sec"><div class="vm-sec-h"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M5 6h11l3 2.500-3 2.500H5zM19 14H8l-3 2.500L8 19h11z"/></svg>Belladonna account link</div><div class="vm-grid vm-g2">
+    <div class="form-group"><label class="form-label">Host ID <span style="font-size:0.6rem;color:var(--text4);text-transform:none;letter-spacing:0;">(matched against the Host ID set on their Gateway account in Accounts — takes priority over the email below if both are set)</span></label><div style="display:flex;gap:0.4rem;align-items:center;"><input type="text" class="form-input" id="rmHostId" readonly style="color:var(--text3);" onblur="lockRmHostId()"><button type="button" class="hq-btn-ghost" style="padding:0.45rem 0.8rem;" onclick="unlockRmHostId()">Edit</button></div></div>
+    <div class="form-group"><label class="form-label">Gateway Account Email <span style="font-size:0.6rem;color:var(--text4);text-transform:none;letter-spacing:0;">(fallback link to their Belladonna account if no Host ID is set on either side)</span></label><input type="text" class="form-input" id="rmGatewayEmail"></div>
+    </div>
     <div class="form-group" id="rmHostSetupWrap" style="display:none;">
       <label class="form-label">Host Setup</label>
       <div style="display:flex;align-items:center;gap:0.6rem;flex-wrap:wrap;">
@@ -1827,18 +1783,21 @@ match /agent_config/{id}  { allow read, write: if isAdmin(); }</pre>
         <button class="btn-sm" type="button" onclick="viewStarsForRoster()">View Stars</button>
       </div>
     </div>
-    <div class="form-group"><label class="form-label">Location</label><select class="form-input" id="rmLocation"></select></div>
+    </div>
     <div class="form-group" id="rmRegularWrap" style="display:none;">
       <label class="form-label">Regular Gigs <span style="font-size:0.6rem;color:var(--text4);text-transform:none;letter-spacing:0;">(weekly nights this host permanently runs — saves immediately)</span></label>
       <div id="rmRegularList"></div>
       <select class="form-input" id="rmRegularAdd" onchange="addRegularNightToHost(this)" style="margin-top:0.4rem;"></select>
     </div>
+    <div class="vm-sec"><div class="vm-sec-h"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.8 5.800 6.200.9-4.500 4.400 1.100 6.200L12 17.300 6.400 20.300l1.100-6.200L3 9.700l6.200-.9z"/></svg>Skills, training and rank</div>
     <div class="form-group"><label class="form-label">Skills / Training</label><div class="chip-grid" id="skillChips"></div></div>
     <div class="form-group"><label class="form-label">Trained Venues</label><div class="chip-grid" id="venueChips"></div></div>
     <div class="form-group">
       <label class="form-label">Rank</label>
       <div class="chip-grid" id="rankChips"></div>
     </div>
+    </div>
+    <div class="vm-sec"><div class="vm-sec-h"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Tip-a-host page</div>
     <div class="tip-section">
       <div class="form-group" style="margin-bottom:0.6rem;">
         <label class="form-label">Tip-a-Host Page</label>
@@ -1848,7 +1807,7 @@ match /agent_config/{id}  { allow read, write: if isAdmin(); }</pre>
         <div class="form-group">
           <label class="form-label">Profile Picture URL</label>
           <div style="display:flex;gap:0.6rem;align-items:center;">
-            <input type="text" class="form-input" id="rmTipPhoto" placeholder="https://… (Cloudflare-hosted image)" oninput="previewTipPhoto()">
+            <input type="text" class="form-input" id="rmTipPhoto" oninput="previewTipPhoto()">
             <img id="rmTipPhotoPrev" class="tip-photo-prev" style="display:none;" alt="">
           </div>
         </div>
@@ -1860,7 +1819,9 @@ match /agent_config/{id}  { allow read, write: if isAdmin(); }</pre>
         </div>
       </div>
     </div>
-    <div class="modal-actions">
+    </div>
+    <div class="vm-sec"><div class="vm-sec-h"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="1.5"/><path d="M3 7l9 6 9-6"/></svg>Recruiting, touches and notes</div><div id="rmHistory"></div></div>
+    <div class="modal-actions vm-actions">
       <button class="modal-cancel" onclick="closeRosterModal()">Cancel</button>
       <button class="modal-save" onclick="saveRoster()">Save Host</button>
     </div>
@@ -1941,7 +1902,7 @@ match /agent_config/{id}  { allow read, write: if isAdmin(); }</pre>
 </div>
 
 <!-- VENUE MODAL -->
-<div class="modal-bg" id="venueModal">
+<div class="modal-bg vmx" id="venueModal">
   <div class="modal vm-wide">
     <div class="vm-top"><button type="button" class="vm-back" onclick="closeVenueModal()">&larr; Venues</button><div class="vm-ttl"><i></i><span id="venueModalTitle">Add Venue</span><i class="r"></i></div><span></span></div>
     <input type="checkbox" id="vmInactive" style="display:none">
@@ -4803,8 +4764,9 @@ function openRecruitModal(id){
   locSel.value=(r&&r.locationId)?r.locationId:(currentLocationScope!=='ALL'?currentLocationScope:((locations[0]&&locations[0].code)||''));
   document.getElementById('recruitNotes').value=r?r.notes||'':'';
   document.getElementById('recruitDeleteBtn').style.display=r?'':'none';
+  {const h=document.getElementById('recruitHistory');if(h)h.innerHTML=(r&&window.hqHistoryHtml)?window.hqHistoryHtml(r,'host'):'<div style="font-size:.8rem;opacity:.7">Save the lead first, then reopen it.</div>';}
   document.getElementById('recruitMilestoneChecks').innerHTML=RECRUIT_MILESTONES.map(m=>`
-    <label style="display:flex;align-items:center;gap:0.5rem;font-size:0.75rem;cursor:pointer;">
+    <label style="display:flex;align-items:center;gap:0.5rem;font-size:0.8rem;cursor:pointer;">
       <input type="checkbox" id="recruitM-${m.key}" ${r&&r.milestones&&r.milestones[m.key]?'checked':''} style="width:16px;height:16px;">
       ${m.label}
     </label>
@@ -5108,6 +5070,8 @@ function openLeadModal(id){
   document.getElementById('leadFollowUp').disabled=!!(l&&l.followUpNone);
   document.getElementById('leadCompetitor').checked=!!(l&&l.usingCompetitor);
   document.getElementById('leadNotes').value=l?l.notes||'':'';
+  [['leadAddress','address'],['leadInstagram','instagram'],['leadWebsite','website'],['leadFacebook','facebook']].forEach(a=>{const e=document.getElementById(a[0]);if(e)e.value=l?(l[a[1]]||(l.prospectInfo&&l.prospectInfo[a[1]])||''):'';});
+  {const h=document.getElementById('leadHistory');if(h)h.innerHTML=(l&&window.hqHistoryHtml)?window.hqHistoryHtml(l,'venue'):'<div style="font-size:.8rem;opacity:.7">Save the lead first, then reopen it. Every touch and email sent shows here, including the ones from when it was a prospect.</div>';}
   {const o=document.getElementById('leadOffers');if(o)o.innerHTML=(l&&typeof offersBlock==='function')?offersBlock(l.id,l.name,'ld'):'<div style="font-size:.8rem;opacity:.7">Save the lead first, then reopen it to fill in what it offers.</div>';}
   document.getElementById('leadDeleteBtn').style.display=l?'':'none';
   document.getElementById('leadModal').classList.add('open');
@@ -5127,9 +5091,16 @@ function saveLead(){
     contactMethodOther:document.getElementById('leadContactMethod').value==='other'?document.getElementById('leadContactMethodOther').value.trim():'',
     source:document.getElementById('leadSource').value, foundBy:document.getElementById('leadFoundBy').value.trim(),
     nextFollowUp:document.getElementById('leadFollowUp').value, followUpNone:document.getElementById('leadFollowUpNone').checked, usingCompetitor:document.getElementById('leadCompetitor').checked,
-    notes:document.getElementById('leadNotes').value.trim(), updatedAt:new Date().toISOString()
+    notes:document.getElementById('leadNotes').value.trim(), updatedAt:new Date().toISOString(),
+    address:document.getElementById('leadAddress').value.trim(), instagram:document.getElementById('leadInstagram').value.trim(),
+    website:document.getElementById('leadWebsite').value.trim(), facebook:document.getElementById('leadFacebook').value.trim()
   };
   if(!editingLeadId)data.createdAt=new Date().toISOString();
+  // Carry everything the prospect had onto the lead, and keep it there.
+  try{const cur=editingLeadId?leads.find(x=>x.id===editingLeadId):null,ps=window.hqProspectSnap&&window.hqProspectSnap({id:editingLeadId,name:name,prospectId:cur&&cur.prospectId});
+    if(ps){data.prospectId=ps.prospectId;data.prospectInfo=ps.info;
+      ['address','instagram','website','facebook','city','contactName'].forEach(k=>{if(!data[k]&&ps.info[k])data[k]=ps.info[k];});
+      if(!data.email&&ps.info.email)data.email=ps.info.email;}}catch(e){}
   const id=editingLeadId||db.collection('leads').doc().id;
   db.collection('leads').doc(id).set(data,{merge:true}).then(()=>{
     closeModal('leadModal'); loadLeads();
@@ -5150,8 +5121,10 @@ function transferLeadToVenue(id){
   const gigs=[...new Set(interests.map(i=>i.type).filter(Boolean))];
   const scheduleNote=interests.length?('Wants: '+interests.map(formatLeadInterest).join('; ')):'';
   const newVid=Date.now().toString();
+  let _ps=null;try{_ps=window.hqProspectSnap&&window.hqProspectSnap(l);}catch(e){}
+  const _pi=l.prospectInfo||(_ps?_ps.info:{})||{};
   venues.push({
-    id:newVid, leadId:l.id, city:l.city||'', contactName:l.contactName||'', phone:l.phone||'', email:l.email||'', noAgreement:(l.stage==='active'), leadInfo:{contactName:l.contactName||'',phone:l.phone||'',email:l.email||'',city:l.city||'',contactMethod:l.contactMethod||'',contactMethodOther:l.contactMethodOther||'',source:l.source||'',foundBy:l.foundBy||'',usingCompetitor:!!l.usingCompetitor,interests:Array.isArray(l.interests)?l.interests:[],notes:l.notes||'',createdAt:l.createdAt||'',signedStage:l.stage||''}, name:l.name, gigs,
+    id:newVid, leadId:l.id, prospectId:l.prospectId||(_ps?_ps.prospectId:''), prospectInfo:Object.keys(_pi).length?_pi:null, address:l.address||_pi.address||'', instagram:l.instagram||_pi.instagram||'', website:l.website||_pi.website||'', facebook:l.facebook||_pi.facebook||'', city:l.city||'', contactName:l.contactName||'', phone:l.phone||'', email:l.email||'', noAgreement:(l.stage==='active'), leadInfo:{contactName:l.contactName||'',phone:l.phone||'',email:l.email||'',city:l.city||'',contactMethod:l.contactMethod||'',contactMethodOther:l.contactMethodOther||'',source:l.source||'',foundBy:l.foundBy||'',usingCompetitor:!!l.usingCompetitor,interests:Array.isArray(l.interests)?l.interests:[],notes:l.notes||'',createdAt:l.createdAt||'',signedStage:l.stage||''}, name:l.name, gigs,
     notes:[l.city?('City: '+l.city):'',l.contactName?('Contact: '+l.contactName+(l.phone?' · '+l.phone:'')+(l.email?' · '+l.email:'')):'',scheduleNote,l.notes||''].filter(Boolean).join('\n'),
     locationId:l.locationId
   });
@@ -6127,6 +6100,7 @@ function openRosterModal(id=null){
   (tip.payments||[]).forEach(p=>addTipPayRow(p));
   previewTipPhoto();
   setTipDraft(!!tip.enabled);
+  {const h=document.getElementById('rmHistory');if(h)h.innerHTML=(host&&window.hqHistoryHtml)?window.hqHistoryHtml(host,'host'):'<div style="font-size:.8rem;opacity:.7">Save the host first, then reopen. Whatever we had on them as a recruit shows here.</div>';}
   document.getElementById('rosterModal').classList.add('open');
 }
 function toggleChip(el,type){el.classList.toggle(type==='skill'?'selected-skill':'selected-venue');}
@@ -6148,8 +6122,10 @@ function saveRoster(){
   if(badUrl){alert('The photo, payment link and QR code fields need full https:// web addresses.');return;}
   const tip={enabled:tipEnabledDraft,photo:tipPhoto,payments:tipPayments};
   let savedId=editRosterId;
-  if(editRosterId){const h=roster.find(x=>x.id===editRosterId);if(h){h.name=name;h.lastName=lastName;h.skills=skills;h.venues=vs;h.rankId=rankId;h.locationId=locationId;h.tip=tip;h.hostId=hostId;h.gatewayEmail=gatewayEmail;}}
-  else{savedId=Date.now().toString();roster.push({id:savedId,name,lastName,skills,venues:vs,rankId,locationId,tip,hostId,gatewayEmail});}
+  let _rc=null;try{const nn=x=>String(x||'').toLowerCase().replace(/[^a-z0-9]/g,'');_rc=(typeof recruits!=='undefined'?recruits:[]).find(r=>nn(r.name)===nn(name))||null;}catch(e){}
+  const _ri=_rc?{phone:_rc.phone||'',email:_rc.email||'',notes:_rc.notes||'',milestones:_rc.milestones||{},createdAt:_rc.createdAt||''}:null;
+  if(editRosterId){const h=roster.find(x=>x.id===editRosterId);if(h){h.name=name;h.lastName=lastName;h.skills=skills;h.venues=vs;h.rankId=rankId;h.locationId=locationId;h.tip=tip;h.hostId=hostId;h.gatewayEmail=gatewayEmail;if(_rc&&!h.recruitId){h.recruitId=_rc.id;h.recruitInfo=_ri;}}}
+  else{savedId=Date.now().toString();roster.push(Object.assign({id:savedId,name,lastName,skills,venues:vs,rankId,locationId,tip,hostId,gatewayEmail},_rc?{recruitId:_rc.id,recruitInfo:_ri}:{}));}
   persist('host-roster',roster,'rosterSave');
   renderRoster();filterRoster();closeRosterModal();
   syncTipHosts([savedId]);
@@ -6444,7 +6420,8 @@ function openVenueModal(id=null){
   document.getElementById('vmNotes').value=venue?venue.notes||'':'';
   document.getElementById('vmPerks').value=venue?venue.perks||'':'';
   try{const L=Object.assign({},(venue&&leadForVenue(venue))||{},(venue&&venue.leadInfo)||{});const sv=(i,x)=>{const e=document.getElementById(i);if(e)e.value=x||'';};
-    sv('vmAddress',venue&&venue.address);sv('vmCity',(venue&&venue.city)||L.city);sv('vmOwner',venue&&venue.owner);sv('vmManager',venue&&venue.manager);sv('vmContactName',(venue&&venue.contactName)||L.contactName);sv('vmPhone',(venue&&venue.phone)||L.phone);sv('vmEmail',(venue&&venue.email)||L.email);sv('vmWebsite',venue&&venue.website);sv('vmInstagram',venue&&venue.instagram);sv('vmFacebook',venue&&venue.facebook);sv('vmOtherContacts',venue&&venue.otherContacts);}catch(e){}
+    const PI=(venue&&venue.prospectInfo)||{};
+    sv('vmAddress',(venue&&venue.address)||PI.address);sv('vmCity',(venue&&venue.city)||L.city);sv('vmOwner',venue&&venue.owner);sv('vmManager',venue&&venue.manager);sv('vmContactName',(venue&&venue.contactName)||L.contactName);sv('vmPhone',(venue&&venue.phone)||L.phone);sv('vmEmail',(venue&&venue.email)||L.email);sv('vmWebsite',(venue&&venue.website)||PI.website);sv('vmInstagram',(venue&&venue.instagram)||PI.instagram);sv('vmFacebook',(venue&&venue.facebook)||PI.facebook);sv('vmOtherContacts',venue&&venue.otherContacts);}catch(e){}
   try{renderVenueLeadInfo(id);}catch(e){}
   {const o=document.getElementById('vmAll');if(o){o.innerHTML=(venue&&window.hqVenueAll)?window.hqVenueAll(venue):'';o.dataset.vid=venue?venue.id:'';}}
   {const o=document.getElementById('vmOffers');if(o)o.innerHTML=(venue&&typeof offersBlock==='function')?offersBlock(venue.id,venue.name,'vm'):'<div style="font-size:.8rem;opacity:.7">Save the venue first, then reopen it to fill in what it offers.</div>';}
@@ -9526,6 +9503,75 @@ function venueTimeline(v){
   const trend=(recent!=null&&prior!=null)?(recent>prior*1.15?'crowds growing':recent<prior*0.85?'crowds shrinking':'crowds steady'):'';
   return {events:ev,n30:n30.length,n90:n90.length,crowd:avg(n90.map(s=>s.crowdSize)),tips:avg(n90.map(s=>s.tipScale)),issues:n90.filter(s=>String(s.issues||'').trim()).length,trend:trend};
 }
+
+/* ── One history for a prospect, lead, venue or host: every touch, the emails that were sent, and what came over from the earlier stage ── */
+function hxNm(x){return String(x||'').toLowerCase().replace(/[^a-z0-9]/g,'');}
+window.hqProspectFor=function(rec){
+  try{const n=hxNm(rec&&rec.name);if(!n)return null;
+    return (S.venues||[]).find(v=>v&&((rec.prospectId&&v.id===rec.prospectId)||hxNm(v.name)===n))||null;}catch(e){return null;}
+};
+window.hqProspectSnap=function(rec){
+  const p=window.hqProspectFor(rec);if(!p)return null;
+  const o={prospectId:p.id,info:{}};
+  ['name','city','address','contact','contactName','instagram','website','facebook','evidence','pitch','stage','emailedAt','emailed2At','emailed3At','createdAt','addedBy','thrownFrom','thrownIdea','followUpOn','igDmAt','lastTouchAt'].forEach(k=>{if(p[k]!=null&&p[k]!=='')o.info[k]=p[k];});
+  const em=emailOf(p);if(em)o.info.email=em;
+  return o;
+};
+window.hqHistoryHtml=function(rec,kind){
+  try{
+    if(S&&!S.started)start();
+    const n=hxNm(rec.name),ids={};
+    [rec.id,rec.prospectId,rec.leadId,rec.venueId,rec.recruitId].forEach(x=>{if(x)ids[x]=1;});
+    (S.venues||[]).forEach(v=>{if(n&&hxNm(v.name)===n)ids[v.id]=1;});
+    hqLeads().forEach(l=>{if(n&&hxNm(l.name)===n){ids[l.id]=1;if(l.venueId)ids[l.venueId]=1;}});
+    let recr=null;
+    if(kind==='host'){try{(typeof recruits!=='undefined'?recruits:[]).forEach(r=>{if((rec.recruitId&&r.id===rec.recruitId)||(n&&hxNm(r.name)===n)){ids[r.id]=1;recr=recr||r;}});}catch(e){}}
+    const T=otAll().filter(t=>ids[t.tid]||(n&&hxNm(t.name)===n));
+    const Dr=(S.drafts||[]).filter(d=>OT_KIND[d.kind]&&ids[d.venueId]&&d.status==='approved');
+    const used={},body={};
+    T.slice().reverse().forEach(t=>{
+      if(t.body){body[t.id]=t.body;return;}
+      const c=Dr.filter(d=>!used[d.id]&&OT_KIND[d.kind].step===t.step).sort((a,b)=>Math.abs((a.approvedAt||0)-(t.at||0))-Math.abs((b.approvedAt||0)-(t.at||0)))[0];
+      if(c){used[c.id]=1;body[t.id]=c.body;}
+    });
+    const ln=(a,b)=>b?'<div style="margin:.2rem 0;font-size:.82rem"><b>'+a+':</b> '+esc(b)+'</div>':'';
+    let h='';
+    const pr=window.hqProspectFor(rec);
+    const pi=rec.prospectInfo||(pr&&pr.id!==rec.id?window.hqProspectSnap(rec).info:null);
+    if(kind!=='host'&&pi){
+      h+='<div style="margin-bottom:.7rem;padding:.55rem .8rem;border:1px solid rgba(201,169,110,.3);border-radius:8px"><div style="font-size:.7rem;letter-spacing:.2em;text-transform:uppercase;opacity:.7;margin-bottom:.3rem">What we knew from Prospects</div>'+
+        ln('Why them',pi.evidence)+ln('Pitch',pi.pitch)+ln('Address',pi.address)+ln('Contact',[pi.contactName,pi.email||pi.contact].filter(Boolean).join(' · '))+ln('Instagram',pi.instagram)+ln('Website',pi.website)+ln('Added by',pi.addedBy)+(pi.thrownFrom?ln('Thrown to Raven from',pi.thrownFrom+(pi.thrownIdea?': '+pi.thrownIdea:'')):'')+'</div>';
+    }
+    if(kind==='host'){
+      const ri=rec.recruitInfo||recr;
+      if(ri){const ms=(typeof RECRUIT_MILESTONES!=='undefined'?RECRUIT_MILESTONES:[]).filter(m=>ri.milestones&&ri.milestones[m.key]).map(m=>m.label).join(', ');
+        h+='<div style="margin-bottom:.7rem;padding:.55rem .8rem;border:1px solid rgba(201,169,110,.3);border-radius:8px"><div style="font-size:.7rem;letter-spacing:.2em;text-transform:uppercase;opacity:.7;margin-bottom:.3rem">From recruiting</div>'+ln('Phone',ri.phone)+ln('Email',ri.email)+ln('Notes',ri.notes)+ln('Milestones done',ms)+'</div>';}
+    }
+    const visits=pr?Object.values(pr.visits||{}):[];
+    const rows=[];
+    T.forEach(t=>rows.push({at:t.at||otMs(t.date)||0,t:t}));
+    visits.forEach(x=>rows.push({at:x.at||0,v:x}));
+    rows.sort((a,b)=>b.at-a.at);
+    if(!rows.length)h+='<div class="tm-empty" style="font-size:.82rem;opacity:.75">No touches logged yet.</div>';
+    rows.forEach(r=>{
+      if(r.v){const x=r.v;h+='<div style="border-top:1px solid var(--border);padding:.45rem 0;font-size:.82rem"><span style="color:var(--text3)">'+esc(fmtDay(r.at))+'</span> &nbsp;<span class="tm-tag">Visit</span> '+esc([x.who?x.who+' visited':'',x.said?'they said: '+x.said:'',x.outcome?'outcome: '+x.outcome:''].filter(Boolean).join(' · '))+'</div>';return;}
+      const t=r.t,b=body[t.id];
+      h+='<div style="border-top:1px solid var(--border);padding:.45rem 0;font-size:.82rem"><div><span style="color:var(--text3)">'+esc(t.date||'')+'</span> &nbsp;<span class="tm-tag">'+esc(OT_STEP[t.step]||t.step||'Touch')+'</span>'+(t.channel==='instagram'?' <span style="opacity:.7">Instagram</span>':'')+(t.subject?' &nbsp;<b>'+esc(t.subject)+'</b>':'')+(t.note?' <span style="opacity:.7">'+esc(t.note)+'</span>':'')+'</div>'+
+        (b?'<details style="margin-top:.3rem"><summary style="cursor:pointer;opacity:.85">Read what was sent</summary><div style="white-space:pre-wrap;margin-top:.3rem;padding:.55rem .7rem;border:1px solid var(--border);border-radius:6px;background:rgba(255,255,255,.02)">'+esc(b)+'</div></details>':(OT_TOUCH.test(t.step)?'<div style="opacity:.6;font-size:.75rem;margin-top:.2rem">The date was saved, but not the message text.</div>':''))+'</div>';
+    });
+    const wait=(S.drafts||[]).filter(d=>OT_KIND[d.kind]&&ids[d.venueId]&&d.status==='pending').length;
+    if(wait)h+='<div style="border-top:1px solid var(--border);padding:.45rem 0;font-size:.8rem;opacity:.8">'+wait+' draft'+(wait>1?'s':'')+' waiting on Raven\'s desk, not sent yet.</div>';
+    return h;
+  }catch(e){return '<div style="font-size:.8rem;opacity:.7">Could not load the history: '+esc(e&&e.message||e)+'</div>';}
+};
+function offersFallback(id,name){
+  try{const P=((S.cfg&&S.cfg.curator)||{}).profiles||{},n=hxNm(name);if(!n)return null;const ids=[];
+    (S.venues||[]).forEach(v=>{if(hxNm(v.name)===n)ids.push(v.id);});
+    hqLeads().forEach(l=>{if(hxNm(l.name)===n)ids.push(l.id);});
+    (typeof venues!=='undefined'?venues:[]).forEach(v=>{if(hxNm(v.name)===n)ids.push(v.id);});
+    for(const x of ids){const p=P[pfKey(x)];if(p&&((p.tags&&p.tags.length)||p.capacity||p.notes||p.poolTables||p.dartBoards))return p;}
+  }catch(e){}return null;
+}
 window.hqVenueAll=function(v){
   try{if(S&&!S.started)start();}catch(e){}
   try{
@@ -9534,6 +9580,7 @@ window.hqVenueAll=function(v){
     const none=t=>'<div style="opacity:.7">'+t+'</div>';
     const care=(careVenues()||[]).find(c=>c.id==='hq_'+v.id)||null;
     let out='';
+    out+=sec('Touches and emails sent',window.hqHistoryHtml(v,'venue'));
     out+=sec('Timeline (nights, check-ins, outreach, feedback)',timelineHtml(care||{id:'hq_'+v.id,name:v.name}));
     const ag=agrState(),mine=ag.active.concat(ag.found).filter(x=>nm(x.venue)===nv);
     out+=sec('Agreement and renewals ('+mine.length+')',mine.length?mine.map(x=>'<div style="margin:.2rem 0"><b>'+esc(TERM_LBL(x.termMonths||12))+'</b> &middot; signed '+esc(fmtEv(x.signedOn))+(x.endsOn?' &middot; ends '+esc(fmtEv(x.endsOn)):'')+' '+(x.status==='detected'?'<span class="tm-tag new">found in email, confirm on Sigil\'s desk</span>':agrTag(x))+(x.checkinAt?' &middot; check-in sent '+esc(fmtFull(x.checkinAt)):'')+(x.checkinOutcome?' &middot; outcome: '+esc(x.checkinOutcome):'')+'</div>').join('')+none('Manage these on Sigil\'s desk.'):none('No agreement tracked for this venue yet. Add one on Sigil\'s desk.'));
@@ -10252,7 +10299,7 @@ function researchHtml(name){
 }
 function offersBlock(id,name,ctx){
   try{if(S&&!S.started)start();}catch(e){}
-  const c=(S&&S.cfg&&S.cfg.curator)||{},p=(c.profiles||{})[pfKey(id)]||{},tg=p.tags||[],x=ctx+'-'+id;
+  const c=(S&&S.cfg&&S.cfg.curator)||{},p=(c.profiles||{})[pfKey(id)]||offersFallback(id,name)||{},tg=p.tags||[],x=ctx+'-'+id;
   const r=(c.research||{})[pfKey(String(name||'').toLowerCase())];
   const L=a=>[].concat(a||[]).filter(Boolean);
   const ln=(t,v)=>v?'<div style="font-size:.8rem;margin:.2rem 0"><b>'+t+':</b> '+esc(v)+'</div>':'';
@@ -10314,7 +10361,7 @@ function renderProspects(){
     const line=(t,x)=>x?'<div style="margin:.25rem 0;font-size:.85rem"><b>'+t+':</b> '+esc(x)+'</div>':'';
     h+='<details data-pk="'+esc(v.id)+'"'+(S.open['pr_'+v.id]?' open':'')+' style="border:1px solid var(--border,#444);border-radius:10px;padding:.55rem .8rem;margin-bottom:.5rem"><summary style="cursor:pointer;display:flex;gap:.5rem;align-items:center;flex-wrap:wrap"><span class="tm-tag '+(TAGC[st]||'')+'">'+esc(TAGL[st]||st)+'</span>'+thrownTag(v)+'<b>'+esc(v.name)+'</b><span style="opacity:.7;font-size:.8rem">'+esc(v.city||'')+'</span>'+(T.length?'<span style="opacity:.7;font-size:.75rem">'+T.length+' email'+(T.length>1?'s':'')+' sent</span>':'')+(v.followUpOn?'<span style="opacity:.7;font-size:.75rem">check back '+esc(v.followUpOn)+'</span>':'')+'</summary><div style="margin-top:.5rem">'+
       line('Address',v.address)+line('Contact',[v.contactName,v.contact].filter(Boolean).join(' · '))+(em?'':line('Email','not found yet'))+(thrownInfo(v)?line('Thrown to Raven from '+thrownInfo(v).who,thrownInfo(v).title+(thrownInfo(v).at?' ('+fmtDay(thrownInfo(v).at)+')':'')):'')+line('Why them',v.evidence)+line('Pitch',v.pitch)+line("Iris's idea to open with",baitFor(v.name))+
-      (T.length?line('Emails sent',T.map(t=>(t.date||'')+' ('+(t.step||'')+')').join(', ')):'')+
+      '<div style="margin:.5rem 0;padding:.4rem .7rem;border:1px solid var(--border,#444);border-radius:8px"><div style="font-size:.7rem;letter-spacing:.2em;text-transform:uppercase;opacity:.7">Touches and emails sent</div>'+window.hqHistoryHtml(v,'venue')+'</div>'+
       offersBlock(v.id,v.name,'pr')+'<div style="font-size:.75rem;opacity:.7">Work this one on Raven\'s desk in My Team.</div></div></details>';
   });
   el.innerHTML=h;
@@ -11259,7 +11306,7 @@ const A={
         b.update(vref,u2);
       }
       const vv=(S.venues||[]).find(x=>x.id===dr.venueId),sm=String(body).match(/^\s*subject:\s*(.*)/i);
-      b.set(col('agent_config').doc('outreach'),{touches:{[otId()]:otDoc({kind:'venue',tid:dr.venueId,name:(vv&&vv.name)||String(dr.label||'').replace(/^[^:]*:\s*/,'').replace(/\s*\(.*$/,''),step:stp,subject:sm?sm[1].trim():''})}},{merge:true});
+      b.set(col('agent_config').doc('outreach'),{touches:{[otId()]:otDoc({kind:'venue',tid:dr.venueId,name:(vv&&vv.name)||String(dr.label||'').replace(/^[^:]*:\s*/,'').replace(/\s*\(.*$/,''),step:stp,subject:sm?sm[1].trim():'',body:String(body).slice(0,8000)})}},{merge:true});
     }
     await b.commit();
     if(t.dataset.mode==='sent'){
