@@ -10403,6 +10403,7 @@ async function addProspect(){
 const PR={q:'',stage:'',city:''};
 function renderProspects(force){
   const el=document.getElementById('prospectsBody');if(!el)return;
+  try{if(S&&!S.started)start();}catch(e){}
   if(!force){const a=document.activeElement;if(a&&el.contains(a)&&a.dataset&&a.dataset.lg)return;if(Array.from(el.querySelectorAll('[data-lg]')).some(x=>x.dataset.lg!=='date'&&x.value!==x.defaultValue))return;}
   const all=(S.venues||[]).filter(v=>v&&v.name);
   const cities=[...new Set(all.map(v=>v.city).filter(Boolean))].sort();
