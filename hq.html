@@ -894,6 +894,7 @@ html::-webkit-scrollbar-thumb:hover,.modal::-webkit-scrollbar-thumb:hover{backgr
       <div class="live-label">On shift now</div>
     </div>
   </div>
+  <div id="viCard" class="card" style="display:none;margin-bottom:1rem;padding:12px 14px;"></div>
   <div class="dash-filter-pills">
     <button class="dash-filter-pill active" onclick="setDashboardKindFilter('all',this)">All</button>
     <button class="dash-filter-pill" onclick="setDashboardKindFilter('trivia',this)">Trivia</button>
@@ -8280,6 +8281,7 @@ function start(){
   list('agent_venues','venues');
   try{d.collection('socialPosts').where('date','>=',isoDay(Date.now()-DAY)).onSnapshot(s=>{S.posts=s.docs.map(x=>Object.assign({id:x.id},x.data()));render();},e=>{S.posts=null;});}catch(e){S.posts=null;}
   try{d.collection('socialLibrary').onSnapshot(s=>{const x=s.docs.find(y=>y.id==='bank');S.bank=x?x.data():null;},e=>{S.bank=null;});}catch(e){}
+  try{d.collection('venueFeedback').where('type','==','categoryEntry').onSnapshot(s=>{S.vent=s.docs.map(x=>Object.assign({id:x.id},x.data()));render();},e=>{S.vent=null;});}catch(e){S.vent=null;}
   d.collection('agent_config').onSnapshot(s=>{const c={};s.docs.forEach(x=>c[x.id]=x.data());S.cfg=c;render();try{refreshOffers();}catch(e){}try{if(typeof renderVenueManage==='function')renderVenueManage();}catch(e){}},onErr);
 }
 window.teamOpen=function(){start();render();if(Date.now()-(S.recAt||0)>10*60*1000){S.recAt=Date.now();try{if(typeof loadRecruits==='function')loadRecruits();}catch(e){}try{if(typeof loadLeads==='function')loadLeads();}catch(e){}setTimeout(render,1200);}if(typeof loadShiftsData==='function'&&(!(typeof shiftsData!=='undefined'&&shiftsData.length)||Date.now()-(S.shiftsAt||0)>10*60*1000)){S.shiftsAt=Date.now();Promise.resolve(loadShiftsData()).then(()=>render()).catch(()=>{});}};
@@ -10304,9 +10306,25 @@ function dossierCard(d){
     '<div class="t2">Researched '+esc(fmtDay(d.researchedAt))+'</div></div>';
 }
 
+function ventHtml(){
+  const L=Array.isArray(S.vent)?S.vent.slice():null;
+  if(L===null)return '<div class="tm-sec">Venue ideas</div><div class="tm-hint">Venue ideas could not be loaded here. Approve them in the Venue Menu admin under Feedback Inbox.</div>';
+  L.sort((a,b)=>((b.createdAt&&b.createdAt.toMillis?b.createdAt.toMillis():0)-(a.createdAt&&a.createdAt.toMillis?a.createdAt.toMillis():0)));
+  const pend=L.filter(x=>!x.decision||x.decision==='pending'),done=L.filter(x=>x.decision&&x.decision!=='pending');
+  const card=x=>{const dec=x.decision||'pending';
+    return '<div class="tm-item"><div class="t1"><b>'+esc(x.entryName||'(no name)')+'</b> <span class="tm-tag">'+esc(x.gameType||'')+'</span> <span class="tm-tag '+(dec==='approved'?'ok':'')+'">'+esc(dec)+'</span></div>'
+    +'<div class="t2">'+esc(x.venueName||'Unknown venue')+(x.targetDate?' · wants it for '+esc(x.targetDate):'')+'</div>'
+    +(x.description?'<div class="t2"><b>Idea:</b> '+esc(x.description)+'</div>':'')
+    +(x.sampleQuestions?'<div class="t2"><b>Samples:</b> '+esc(x.sampleQuestions)+'</div>':'')
+    +'<div class="tm-row">'+(dec!=='approved'?'<button class="tm-b pri" data-act="ventdec" data-id="'+esc(x.id)+'" data-v="approved">Approve</button>':'')+(dec!=='declined'?'<button class="tm-b dim" data-act="ventdec" data-id="'+esc(x.id)+'" data-v="declined">Decline</button>':'')+(dec!=='pending'?'<button class="tm-b dim" data-act="ventdec" data-id="'+esc(x.id)+'" data-v="pending">Undo</button>':'')+'</div></div>';};
+  let h='<div class="tm-sec">Venue ideas ('+pend.length+' waiting)</div><div class="tm-hint">Category ideas venues suggested from the Venue Menu. Approve or decline here, or in the Venue Menu admin Feedback Inbox: both show the same answer. After approving, add it to the catalog in the Venue Menu admin (Add to catalog button).</div>';
+  h+=pend.length?pend.map(card).join(''):'<div class="tm-empty">Nothing waiting.</div>';
+  if(done.length)h+=det('ventdone','Answered ('+done.length+')',done.map(card).join(''),false);
+  return h;
+}
 function vIris(){
   const c=curatorState();
-  let h='<div class="tm-sec">Ideas ('+c.fresh.length+' new, '+c.ideas.length+' total)</div><div class="tm-hint">Themed nights, events and pitches Iris built from what we have, the venues, Sable\'s finds and the public domain. Pursue one and Quill drafts the pitch to each venue Iris named on his next run.</div>';
+  let h=ventHtml()+'<div class="tm-sec">Ideas ('+c.fresh.length+' new, '+c.ideas.length+' total)</div><div class="tm-hint">Themed nights, events and pitches Iris built from what we have, the venues, Sable\'s finds and the public domain. Pursue one and Quill drafts the pitch to each venue Iris named on his next run.</div>';
   if(!c.ideas.length)h+='<div class="tm-empty">No ideas yet. Fill in the venue details and catalog below, then run the Curator task.</div>';
   const away=x=>x.status==='skipped'||x.status==='brainstormed'||(x.status==='saved'&&!x.resurfaced);
   c.ideas.filter(x=>!away(x)&&x.status!=='pursuing').forEach(x=>h+=ideaCard(x));
@@ -10873,6 +10891,7 @@ const A={
   async verified(t){await col('agent_venues').doc(t.dataset.id).update({verify:false});toast('Marked confirmed.');},
   async kgf(t){const v=kgNorm(t.dataset.set,t.dataset.f,t.value);await kgSave({[t.dataset.set+'.'+t.dataset.id+'.'+t.dataset.f]:v});},
   async kgchecked(t){await kgSave({['gigs.'+t.dataset.id+'.checked']:isoDay(Date.now()),['gigs.'+t.dataset.id+'.status']:'still going'});toast('Marked checked today.');},
+  async ventdec(t){try{await col('venueFeedback').doc(t.dataset.id).update({decision:t.dataset.v,status:t.dataset.v==='pending'?'new':'read'});toast(t.dataset.v==='approved'?'Approved.':t.dataset.v==='declined'?'Declined.':'Back to waiting.');}catch(e){toast('Could not save: '+e.message,true);}},
   async kgdel(t){if(!tapTwice(t))return;await kgSave({[t.dataset.set+'.'+t.dataset.id]:firebase.firestore.FieldValue.delete()});toast('Deleted.');},
   async kgadd(t){const set=t.dataset.set,sp=KG_SETS[set],o={};sp.cols.forEach(c=>{const e=document.getElementById('kga-'+set+'-'+c[0]);if(e)o[c[0]]=kgNorm(set,c[0],e.value);});if(!o[sp.need]){toast('Fill in the '+sp.cols[0][1].toLowerCase()+'.',true);return;}if(set==='gigs'){o.status='still going';o.checked=isoDay(Date.now());}o.createdAt=Date.now();await kgSave({[set+'.k'+Date.now().toString(36)]:o});sp.cols.forEach(c=>{const e=document.getElementById('kga-'+set+'-'+c[0]);if(e&&e.tagName==='INPUT')e.value='';});S.open['kgadd_'+set]=false;toast('Added.');},
   async kgfile(t){const f=t.files&&t.files[0];if(!f)return;const txt=await f.text();const ta=document.getElementById('kgcsv-'+t.dataset.set);if(ta)ta.value=txt;toast('File loaded. Press Import.');},
@@ -11264,6 +11283,46 @@ function wire(){
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>{wire();render();});else{wire();render();}
 })();
+/* ── Venue ideas card (dashboard): venues suggest category ideas from the Venue Menu; approve or decline here ── */
+var VI={list:null,open:false,tries:0};
+function viEsc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function viFs(){return (typeof fdb==='function'?fdb():null);}
+function viStart(){
+  var d=null;try{d=viFs();}catch(e){}
+  if(!d){if(VI.tries++<20)setTimeout(viStart,1500);return;}
+  try{d.collection('venueFeedback').where('type','==','categoryEntry').onSnapshot(function(s){
+    VI.list=s.docs.map(function(x){return Object.assign({id:x.id},x.data());});viRender();
+  },function(){VI.list=null;viRender();if(VI.tries++<20)setTimeout(viStart,5000);});}catch(e){}
+}
+function viRender(){
+  var box=document.getElementById('viCard');if(!box)return;
+  if(!VI.list){box.style.display='none';return;}
+  var L=VI.list.slice().sort(function(a,b){return (b.createdAt&&b.createdAt.toMillis?b.createdAt.toMillis():0)-(a.createdAt&&a.createdAt.toMillis?a.createdAt.toMillis():0);});
+  var pend=L.filter(function(x){return !x.decision||x.decision==='pending';}),done=L.filter(function(x){return x.decision&&x.decision!=='pending';});
+  if(!L.length){box.style.display='none';return;}
+  var card=function(x){var dec=x.decision||'pending';
+    return '<div style="border:1px solid var(--border);border-left:3px solid '+(dec==='approved'?'#7DC996':dec==='declined'?'#C0654F':'#D3944F')+';border-radius:6px;padding:10px 12px;margin-top:8px;">'
+    +'<div><b>'+viEsc(x.entryName||'(no name)')+'</b> · '+viEsc(x.gameType||'')+' · <i>'+viEsc(dec)+'</i></div>'
+    +'<div style="font-size:12px;opacity:.8;margin:2px 0;">'+viEsc(x.venueName||'Unknown venue')+(x.targetDate?' · wants it for '+viEsc(x.targetDate):'')+'</div>'
+    +(x.description?'<div style="white-space:pre-line;margin-top:4px;">'+viEsc(x.description)+'</div>':'')
+    +(x.sampleQuestions?'<div style="white-space:pre-line;margin-top:4px;"><b>Samples:</b> '+viEsc(x.sampleQuestions)+'</div>':'')
+    +'<div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;">'
+    +(dec!=='approved'?'<button class="tm-b" onclick="viDecide(\''+x.id+'\',\'approved\')">Approve</button>':'')
+    +(dec!=='declined'?'<button class="tm-b" onclick="viDecide(\''+x.id+'\',\'declined\')">Decline</button>':'')
+    +(dec!=='pending'?'<button class="tm-b" onclick="viDecide(\''+x.id+'\',\'pending\')">Undo</button>':'')
+    +'</div></div>';};
+  box.style.display='';
+  box.innerHTML='<details'+(VI.open||pend.length?' open':'')+' ontoggle="VI.open=this.open"><summary style="cursor:pointer;font-weight:600;">Venue ideas ('+pend.length+' waiting)</summary>'
+    +'<div style="font-size:12px;opacity:.75;margin:4px 0;">Category ideas venues sent from the Venue Menu. After approving, add it to the catalog in the Venue Menu admin (Feedback Inbox, Add to catalog).</div>'
+    +(pend.length?pend.map(card).join(''):'<div style="margin-top:6px;opacity:.7;">Nothing waiting.</div>')
+    +(done.length?'<details style="margin-top:10px;"><summary style="cursor:pointer;opacity:.8;">Answered ('+done.length+')</summary>'+done.map(card).join('')+'</details>':'')
+    +'</details>';
+}
+function viDecide(id,v){
+  try{viFs().collection('venueFeedback').doc(id).update({decision:v,status:v==='pending'?'new':'read'}).catch(function(e){alert('Could not save: '+e.message);});}catch(e){}
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',viStart);else viStart();
+
 </script>
 </body>
 </html>
