@@ -8847,6 +8847,14 @@ Do not touch venues you did not just add except to draft.`},
 4d. LINKS. If the venue's website, Instagram or Facebook page is missing from Our Venues, the lead or agent_venues, put the one you found in links in the dossier. HQ copies links into the venue's record when that field is empty. Never replace a link someone already saved.
 5. Up to 3 times a week you may add a venue we do not have and do not track but think we SHOULD try for, with kind "suggest". Say why in summary.
 6. Mark anything you could not confirm as not verified. Never repeat rumors about named private people. Business information only. Never copy reviews at length.`},
+ {name:'Team Ideas',who:'Iris',when:'Weekdays, 9:30 am',plain:'Checks the Team Ideas box every weekday. Writes the outline for a new idea and sends it to the right teammates, and when an idea comes back to her with everyone\'s notes she compiles the final plan and marks it ready for you.',ids:['herald'],
+  body:`TASK: Team Ideas. Writes only to agent_config ideabox. Read-only everywhere else.
+1. Read agent_config and find the doc ideabox, field items (a map of idea id to {title, body, owner, route, status, notes, plan, addedBy}). Only look at items whose status is open.
+2. Fresh seed (owner empty): follow IRIS ON A FRESH SEED in your TEAM IDEAS rule. Write the step-by-step outline as a note, then set owner to the first teammate and route to the rest, with herald as the LAST entry of route.
+3. Coming back to you (owner is herald and route is empty, other agents have added notes): follow IRIS COMPILING. Write the finished plan into the plan field, set status to review and owner to empty.
+4. Sent back by Ahnna (a newer note from her): revise the plan to match it and set status to review again.
+5. If an item is owned by another agent, leave it alone. Never delete items or notes. If there is nothing for you, say so in your run note.
+Write with setConfig doc "ideabox" data {items:{<id>:{owner:"...",route:[...],notes:{<ms>:{who:"Iris",text:"...",at:<ms>}}}}}.`},
  {name:'Social captions',who:'Sabine',when:'Daily, 7:15 am',plain:'Writes captions in your voice for every Clio post in the next two weeks that has none, and builds Facebook event kits for special nights. They show up in Clio and on Sabine\'s desk for you to copy into Buffer.',ids:['ember'],
   body:`TASK: Social captions. Read-only everywhere except agent_config social. Never post, never schedule, never contact anyone.
 1. Read Clio posts for today through 14 days ahead: {"op":"readPosts","from":"TODAY","to":"TODAY+14"} (use the real dates). Skip posts with posted true, type "big", a platform containing "Story", or a caption that is not empty.
@@ -10928,7 +10936,7 @@ const A={
   async mqresdel(t){if(!confirm('Delete these results?'))return;await mqSave({['results.'+t.dataset.id]:null});},
   async mqspendadd(){const w=val('ms-what'),a=val('ms-amt');if(!w||!a){toast('Add what it was and how much.',true);return;}await mqSave({['spend.s'+Date.now().toString(36)]:{what:w,amount:a,date:val('ms-date')||isoDay(Date.now()),createdAt:Date.now()}});toast('Added.');},
   async mqspenddel(t){await mqSave({['spend.'+t.dataset.id]:null});},
-  async fold2(t){const k='c_'+t.dataset.id;S.open[k]=S.open[k]===false;renderDrawer(true);},
+  async fold2(t){const k='c_'+t.dataset.id,it=t.parentElement;if(it)it.classList.toggle('folded');S.open[k]=!(it&&it.classList.contains('folded'));renderDrawer(true);},
 
 
   hdinc(t){S.hd=S.hd||{what:'',goal:''};S.hd.what=val('hd-what');S.hd.goal=val('hd-goal');const I=hdInc();if(t.dataset.ag)I.agents[t.dataset.k]=t.checked;else I[t.dataset.k]=t.checked;S.hd.inc=I;},
@@ -10943,7 +10951,7 @@ const A={
   async hdsave(){const t=val('hd-title'),a=val('hd-ans');if(!t||!a){toast('Add a title and paste the answer.',true);return;}await hdSave({['items.h'+Date.now().toString(36)]:{title:t,answer:a,createdAt:Date.now()}});['hd-title','hd-ans'].forEach(i=>{const e=$('#'+i);if(e)e.value='';});toast('Saved.');},
   async hdcopyans(t){const x=((S.cfg.huddle||{}).items||{})[t.dataset.id];if(!x)return;toast(await copy(x.answer||'')?'Copied.':'Copy failed.',false);},
   async hddel(t){if(!confirm('Delete this saved answer?'))return;await hdSave({['items.'+t.dataset.id]:null});},
-  async fold(t,e){S.open['c_'+t.dataset.id]=!S.open['c_'+t.dataset.id];renderDrawer(true);},
+  async fold(t,e){const it=t.parentElement;if(it)it.classList.toggle('folded');S.open['c_'+t.dataset.id]=!(it&&it.classList.contains('folded'));renderDrawer(true);},
   async vtl(t){S.open['tl_'+t.dataset.id]=!S.open['tl_'+t.dataset.id];renderDrawer(true);},
   async libbuild(){S.lib=libRead();if(S.lib.sit==='unknown'){toast('For Unknown, press Copy Quill prompt, run it in Claude, then paste the four replies into the box below.',false);return;}S.lib.out=libFill(S.lib);const e=$('#lib-out');if(e)e.value=S.lib.out;toast('Draft built. Fix any [brackets], then copy.',false);},
   async libcopy(){const f=libRead();S.lib=f;toast(await copy(f.out)?'Reply copied.':'Nothing to copy yet. Press Build reply.',!f.out);},
