@@ -276,6 +276,10 @@ html::-webkit-scrollbar-thumb:hover,.modal::-webkit-scrollbar-thumb:hover{backgr
 .modal-bg.vmx .form-label svg{width:16px;height:16px}
 .modal-bg.vmx .form-input,.modal-bg.vmx .form-textarea{background:linear-gradient(180deg,#171717,#0b0b0b);border:1px solid rgba(201,169,110,.26);border-radius:4px;box-shadow:inset 0 1px 4px rgba(0,0,0,.75);color-scheme:dark}
 .modal-bg.vmx select.form-input{-webkit-appearance:none;appearance:none;border-radius:8px;border-color:rgba(201,169,110,.32);background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 14'%3E%3Cpath d='M2 5l3-3 3 3M2 9l3 3 3-3' fill='none' stroke='%23f0ece0' stroke-width='1.5'/%3E%3C/svg%3E") no-repeat right .8rem center/9px,linear-gradient(180deg,#3b3b3b,#141414);padding-right:2rem;cursor:pointer}
+.modal-bg.vmx .vm-grid{align-items:end}
+.modal-bg.vmx .vm-grid>.form-group{min-width:0}
+.modal-bg.vmx .vm-grid .form-label{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:.16em}
+.modal-bg.vmx .vm-grid .form-input,.modal-bg.vmx .vm-grid select.form-input{width:100%;box-sizing:border-box;height:2.4rem}
 .vm-g4{grid-template-columns:1.2fr 1.1fr 1.1fr .9fr}
 .modal-bg.vmx .vm-g6{grid-template-columns:repeat(4,1fr) 1.6fr}
 .vm-bill{grid-template-columns:repeat(6,1fr)}
@@ -1126,7 +1130,7 @@ html::-webkit-scrollbar-thumb:hover,.modal::-webkit-scrollbar-thumb:hover{backgr
     <div class="vm-sec"><div class="vm-sec-h"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-7 8-7s8 3 8 7"/></svg>Contact</div><div class="vm-grid vm-g2"><div class="form-group"><label class="form-label">Name</label><input type="text" class="form-input" id="recruitName"></div><div class="form-group"><label class="form-label">Location</label><select class="form-input" id="recruitLocation"></select></div><div class="form-group"><label class="form-label">Phone</label><input type="tel" class="form-input" id="recruitPhone"></div><div class="form-group"><label class="form-label">Email</label><input type="email" class="form-input" id="recruitEmail"></div></div></div>
     <div class="vm-sec"><div class="vm-sec-h"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l4 4 10-10"/></svg>Milestones</div><div id="recruitMilestoneChecks" style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem 1.4rem;"></div></div>
     <div class="vm-sec"><div class="vm-sec-h"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h9l4 4v14H6zM14 3v5h5M9 12h7M9 16h7"/></svg>Notes</div><div class="form-group"><textarea class="form-textarea" id="recruitNotes" style="min-height:90px;"></textarea></div></div>
-    <div class="vm-sec"><div class="vm-sec-h"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="1.5"/><path d="M3 7l9 6 9-6"/></svg>Touches and notes from the field</div><div id="recruitHistory"></div></div>
+    <div class="vm-sec"><div class="vm-sec-h"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="1.5"/><path d="M3 7l9 6 9-6"/></svg>Outreach log</div><div id="recruitHistory"></div></div>
     <div class="modal-actions vm-actions">
       <button class="modal-cancel" id="recruitDeleteBtn" onclick="deleteRecruit()" style="color:var(--rose);display:none;">Delete</button>
       <div style="flex:1;"></div>
@@ -1374,22 +1378,22 @@ html::-webkit-scrollbar-thumb:hover,.modal::-webkit-scrollbar-thumb:hover{backgr
   <div class="modal vm-wide">
     <div class="vm-top"><button type="button" class="vm-back" onclick="closeModal('leadModal')">&larr; Leads</button><div class="vm-ttl"><i></i><span id="leadModalTitle">Add Lead</span><i class="r"></i></div><span></span></div>
     <div class="vm-sec"><div class="vm-grid vm-g3">
-<div class="form-group"><label class="form-label">Venue / Company Name</label><input type="text" class="form-input" id="leadName"></div><div class="form-group"><label class="form-label">Stage</label><select class="form-input" id="leadStage"><option value="new">New Lead</option><option value="contact">First Contact</option><option value="interview">Interview</option><option value="negotiation">Negotiations</option><option value="contract">Agreement Sent</option><option value="active">Working, no agreement</option><option value="signed">Signed (now a venue)</option><option value="paused">Paused</option></select></div><div class="form-group"><label class="form-label">Temperature</label><select class="form-input" id="leadTemp"><option value="hot">🔥 Hot</option><option value="warm">🌤 Warm</option><option value="cold">❄ Cold</option></select></div>
+<div class="form-group"><label class="form-label">Name</label><input type="text" class="form-input" id="leadName"></div><div class="form-group"><label class="form-label">Stage</label><select class="form-input" id="leadStage"><option value="new">New Lead</option><option value="contact">First Contact</option><option value="interview">Interview</option><option value="negotiation">Negotiations</option><option value="contract">Agreement Sent</option><option value="active">Working, no agreement</option><option value="signed">Signed (now a venue)</option><option value="paused">Paused</option></select></div><div class="form-group"><label class="form-label">Temperature</label><select class="form-input" id="leadTemp"><option value="hot">🔥 Hot</option><option value="warm">🌤 Warm</option><option value="cold">❄ Cold</option></select></div>
     </div></div>
     <div class="vm-sec"><div class="vm-sec-h"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-7 8-7s8 3 8 7"/></svg>Contact</div><div class="vm-grid vm-g3">
-<div class="form-group"><label class="form-label">Contact Person</label><input type="text" class="form-input" id="leadContactName"></div><div class="form-group"><label class="form-label">Phone</label><input type="tel" class="form-input" id="leadPhone"></div><div class="form-group"><label class="form-label">Email</label><input type="email" class="form-input" id="leadEmail"></div><div class="form-group"><label class="form-label">City</label><input type="text" class="form-input" id="leadCity"></div><div class="form-group"><label class="form-label">Location</label><select class="form-input" id="leadLocation"></select></div><div class="form-group"><label class="form-label">Address</label><input type="text" class="form-input" id="leadAddress"></div><div class="form-group"><label class="form-label">Instagram</label><input type="text" class="form-input" id="leadInstagram"></div><div class="form-group"><label class="form-label">Website</label><input type="text" class="form-input" id="leadWebsite"></div><div class="form-group"><label class="form-label">Facebook</label><input type="text" class="form-input" id="leadFacebook"></div>
+<div class="form-group"><label class="form-label">Contact person</label><input type="text" class="form-input" id="leadContactName"></div><div class="form-group"><label class="form-label">Phone</label><input type="tel" class="form-input" id="leadPhone"></div><div class="form-group"><label class="form-label">Email</label><input type="email" class="form-input" id="leadEmail"></div><div class="form-group"><label class="form-label">City</label><input type="text" class="form-input" id="leadCity"></div><div class="form-group"><label class="form-label">Location</label><select class="form-input" id="leadLocation"></select></div><div class="form-group"><label class="form-label">Address</label><input type="text" class="form-input" id="leadAddress"></div><div class="form-group"><label class="form-label">Instagram</label><input type="text" class="form-input" id="leadInstagram"></div><div class="form-group"><label class="form-label">Website</label><input type="text" class="form-input" id="leadWebsite"></div><div class="form-group"><label class="form-label">Facebook</label><input type="text" class="form-input" id="leadFacebook"></div>
     </div></div>
     <div class="vm-sec"><div class="vm-sec-h"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.8 5.800 6.200.9-4.500 4.400 1.100 6.200L12 17.300 6.400 20.300l1.100-6.200L3 9.700l6.200-.9z"/></svg>What they're looking for</div><div id="leadInterestRows" style="display:flex;flex-direction:column;gap:0.4rem;margin-bottom:0.5rem;"></div><button class="btn-sm" onclick="addLeadInterestRow()" type="button">+ Add Night</button></div>
-    <div class="vm-sec"><div class="vm-sec-h"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M5 6h11l3 2.500-3 2.500H5zM19 14H8l-3 2.500L8 19h11z"/></svg>How they came to us</div><div class="vm-grid vm-g4">
-<div class="form-group"><label class="form-label">How They Contacted Us</label><select class="form-input" id="leadContactMethod" onchange="document.getElementById('leadContactMethodOtherWrap').style.display=this.value==='other'?'':'none';"><option value="email">Email</option><option value="instagram">Instagram</option><option value="facebook">Facebook</option><option value="in_person">In Person</option><option value="phone">Phone</option><option value="other">Other</option></select></div><div class="form-group" id="leadContactMethodOtherWrap"><label class="form-label">Which Other</label><input type="text" class="form-input" id="leadContactMethodOther"></div><div class="form-group"><label class="form-label">Source</label><select class="form-input" id="leadSource"><option value="inbound">They found us</option><option value="outbound">We found them</option></select></div><div class="form-group"><label class="form-label">Found By</label><input type="text" class="form-input" id="leadFoundBy"></div>
+    <div class="vm-sec"><div class="vm-sec-h"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M5 6h11l3 2.500-3 2.500H5zM19 14H8l-3 2.500L8 19h11z"/></svg>How they came to us</div><div class="vm-grid" style="grid-template-columns:repeat(auto-fit,minmax(190px,1fr))">
+<div class="form-group"><label class="form-label">Reached us by</label><select class="form-input" id="leadContactMethod" onchange="document.getElementById('leadContactMethodOtherWrap').style.display=this.value==='other'?'':'none';"><option value="email">Email</option><option value="instagram">Instagram</option><option value="facebook">Facebook</option><option value="in_person">In Person</option><option value="phone">Phone</option><option value="other">Other</option></select></div><div class="form-group" id="leadContactMethodOtherWrap"><label class="form-label">If other, which</label><input type="text" class="form-input" id="leadContactMethodOther"></div><div class="form-group"><label class="form-label">Source</label><select class="form-input" id="leadSource"><option value="inbound">They found us</option><option value="outbound">We found them</option></select></div><div class="form-group"><label class="form-label">Found by</label><input type="text" class="form-input" id="leadFoundBy"></div>
     </div></div>
-    <div class="vm-sec"><div class="vm-sec-h"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="15" rx="1.5"/><path d="M4 10h16M9 3v4M15 3v4"/></svg>Follow-up</div><div class="vm-grid vm-g2">
-      <div class="form-group"><label class="form-label">Next Follow-Up</label><input type="date" class="form-input" id="leadFollowUp"><label style="display:flex;align-items:center;gap:0.4rem;cursor:pointer;font-size:0.72rem;color:var(--text3);margin-top:0.35rem;"><input type="checkbox" id="leadFollowUpNone" onchange="document.getElementById('leadFollowUp').disabled=this.checked;if(this.checked)document.getElementById('leadFollowUp').value='';"> None needed</label></div>
-      <div class="form-group" style="align-self:end;"><label style="display:flex;align-items:center;gap:0.4rem;cursor:pointer;font-size:0.78rem;color:var(--text2);"><input type="checkbox" id="leadCompetitor"> Currently using a competitor</label></div>
+    <div class="vm-sec"><div class="vm-sec-h"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="15" rx="1.5"/><path d="M4 10h16M9 3v4M15 3v4"/></svg>Follow-up</div><div class="vm-grid vm-g3">
+      <div class="form-group"><label class="form-label">Next follow-up</label><input type="date" class="form-input" id="leadFollowUp"><label style="display:flex;align-items:center;gap:0.4rem;cursor:pointer;font-size:0.72rem;color:var(--text3);margin-top:0.35rem;white-space:nowrap"><input type="checkbox" id="leadFollowUpNone" onchange="document.getElementById('leadFollowUp').disabled=this.checked;if(this.checked)document.getElementById('leadFollowUp').value='';"> None needed</label></div>
+      <div class="form-group"><label style="display:flex;align-items:center;gap:0.4rem;cursor:pointer;font-size:0.78rem;color:var(--text2);padding-bottom:.55rem"><input type="checkbox" id="leadCompetitor"> Currently using a competitor</label></div>
     </div></div>
     <div class="vm-sec"><div class="vm-sec-h"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h9l4 4v14H6zM14 3v5h5M9 12h7M9 16h7"/></svg>Notes</div><div class="form-group"><textarea class="form-textarea" id="leadNotes" style="min-height:90px;"></textarea></div></div>
     <div class="vm-sec" id="leadOffers"></div>
-    <div class="vm-sec"><div class="vm-sec-h"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="1.5"/><path d="M3 7l9 6 9-6"/></svg>Touches and emails sent</div><div id="leadHistory"></div></div>
+    <div class="vm-sec"><div class="vm-sec-h"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="1.5"/><path d="M3 7l9 6 9-6"/></svg>Outreach log and emails sent</div><div id="leadHistory"></div></div>
     <div class="modal-actions vm-actions">
       <button class="modal-cancel" id="leadDeleteBtn" onclick="deleteLead()" style="color:var(--rose);display:none;">Delete</button>
       <div style="flex:1;"></div>
@@ -1772,8 +1776,8 @@ match /agent_config/{id}  { allow read, write: if isAdmin(); }</pre>
     <div class="form-group"><label class="form-label">Location</label><select class="form-input" id="rmLocation"></select></div>
     </div></div>
     <div class="vm-sec"><div class="vm-sec-h"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M5 6h11l3 2.500-3 2.500H5zM19 14H8l-3 2.500L8 19h11z"/></svg>Belladonna account link</div><div class="vm-grid vm-g2">
-    <div class="form-group"><label class="form-label">Host ID <span style="font-size:0.6rem;color:var(--text4);text-transform:none;letter-spacing:0;">(matched against the Host ID set on their Gateway account in Accounts — takes priority over the email below if both are set)</span></label><div style="display:flex;gap:0.4rem;align-items:center;"><input type="text" class="form-input" id="rmHostId" readonly style="color:var(--text3);" onblur="lockRmHostId()"><button type="button" class="hq-btn-ghost" style="padding:0.45rem 0.8rem;" onclick="unlockRmHostId()">Edit</button></div></div>
-    <div class="form-group"><label class="form-label">Gateway Account Email <span style="font-size:0.6rem;color:var(--text4);text-transform:none;letter-spacing:0;">(fallback link to their Belladonna account if no Host ID is set on either side)</span></label><input type="text" class="form-input" id="rmGatewayEmail"></div>
+    <div class="form-group"><label class="form-label">Host ID </label><div style="display:flex;gap:0.4rem;align-items:center;"><input type="text" class="form-input" id="rmHostId" readonly style="color:var(--text3);" onblur="lockRmHostId()"><button type="button" class="hq-btn-ghost" style="padding:0.45rem 0.8rem;" onclick="unlockRmHostId()">Edit</button></div><div class="vm-hint">matched against the Host ID set on their Gateway account in Accounts — takes priority over the email below if both are set</div></div>
+    <div class="form-group"><label class="form-label">Gateway Account Email </label><input type="text" class="form-input" id="rmGatewayEmail"><div class="vm-hint">fallback link to their Belladonna account if no Host ID is set on either side</div></div>
     </div>
     <div class="form-group" id="rmHostSetupWrap" style="display:none;">
       <label class="form-label">Host Setup</label>
@@ -1820,7 +1824,7 @@ match /agent_config/{id}  { allow read, write: if isAdmin(); }</pre>
       </div>
     </div>
     </div>
-    <div class="vm-sec"><div class="vm-sec-h"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="1.5"/><path d="M3 7l9 6 9-6"/></svg>Recruiting, touches and notes</div><div id="rmHistory"></div></div>
+    <div class="vm-sec"><div class="vm-sec-h"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="1.5"/><path d="M3 7l9 6 9-6"/></svg>Recruiting and outreach log</div><div id="rmHistory"></div></div>
     <div class="modal-actions vm-actions">
       <button class="modal-cancel" onclick="closeRosterModal()">Cancel</button>
       <button class="modal-save" onclick="saveRoster()">Save Host</button>
@@ -5071,7 +5075,7 @@ function openLeadModal(id){
   document.getElementById('leadCompetitor').checked=!!(l&&l.usingCompetitor);
   document.getElementById('leadNotes').value=l?l.notes||'':'';
   [['leadAddress','address'],['leadInstagram','instagram'],['leadWebsite','website'],['leadFacebook','facebook']].forEach(a=>{const e=document.getElementById(a[0]);if(e)e.value=l?(l[a[1]]||(l.prospectInfo&&l.prospectInfo[a[1]])||''):'';});
-  {const h=document.getElementById('leadHistory');if(h)h.innerHTML=(l&&window.hqHistoryHtml)?window.hqHistoryHtml(l,'venue'):'<div style="font-size:.8rem;opacity:.7">Save the lead first, then reopen it. Every touch and email sent shows here, including the ones from when it was a prospect.</div>';}
+  {const h=document.getElementById('leadHistory');if(h)h.innerHTML=(l&&window.hqHistoryHtml)?window.hqLogPanel('ld',l,'venue'):'<div style="font-size:.8rem;opacity:.7">Save the lead first, then reopen it. Every touch and email sent shows here, including the ones from when it was a prospect.</div>';}
   {const o=document.getElementById('leadOffers');if(o)o.innerHTML=(l&&typeof offersBlock==='function')?offersBlock(l.id,l.name,'ld'):'<div style="font-size:.8rem;opacity:.7">Save the lead first, then reopen it to fill in what it offers.</div>';}
   document.getElementById('leadDeleteBtn').style.display=l?'':'none';
   document.getElementById('leadModal').classList.add('open');
@@ -8777,7 +8781,7 @@ const TASKS=[
    d. Never email and DM the same venue on the same day, and never post publicly on their page asking for work.
    d2. KNOWN GIGS. Read agent_config knowngigs. Never draft or pitch a venue for a kind of night that venue already has, whether we run it (Our Venues gigs and slots) or someone else does (knowngigs gigs with status "still going" or "not sure"). Pitch a different kind of night or a different day instead, or write nothing. Each Monday also check up to 10 knowngigs gigs whose "checked" date is empty or more than 30 days old: look at the venue page and the run-by person's social links (knowngigs people) and see if the gig still runs. With setConfig doc "knowngigs" update gigs.<id>.status ("still going", "ended" or "not sure"), gigs.<id>.checked (today, YYYY-MM-DD) and gigs.<id>.notes only if something changed. Never add or delete rows. If the write is refused, list the changes in your run note instead.
    d3. FOUR OPTIONS. Every cold email or DM draft (kinds email, email2, email3, cold, colddm, dm) has a body of FOUR different versions, each with a different angle, separated by a line containing exactly ---OPTION---. Emails start each version with a Subject line.
-   d4. REWRITE REQUESTS. Read agent_drafts for pending cold drafts that have a rewrite field and no newer draft whose label ends with [redraft of <that draft's id>]. Read everything the team knows first: agent_venues, agent_config curator (research dossier, bait line, profiles, ideas naming the venue), agent_config sable, agent_config knowngigs, Our Venues, agent_leads, the price sheet and the voice. Write ONE new draft, same agent, kind and venueId, label = old label + " [redraft of <old id>]", body of four new versions separated by ---OPTION--- lines.
+   d4. REWRITE REQUESTS (do these FIRST, before anything else in step 3). This is an exception to "never write a draft that already exists" and to "one draft per venue per run": a rewrite request always gets a new draft, and it does not count against the limit. Read agent_drafts for pending cold drafts (any agent, kinds email, email2, email3, cold, colddm, dm) that have a rewrite field and no newer draft whose label ends with [redraft of <that draft's id>]. Read everything the team knows first: agent_venues, agent_config curator (research dossier, bait line, profiles, ideas naming the venue), agent_config sable, agent_config knowngigs, Our Venues, agent_leads, the price sheet and the voice. Write ONE new draft, same agent, kind and venueId, label = old label + " [redraft of <old id>]", body of four new versions separated by ---OPTION--- lines.
    e. A "no" (declinedAt set, or stage "no" with no noUntil) stops outreach: write nothing. A "not now" waits for the time they gave. If conversation is true they replied: write nothing, Ahnna handles it, and anything they reply to restarts the normal conversation.
 4. For each new Hot or Warm lead, addDraft kind "reply" (agent quill, leadId set). Answer their question first, mention Belladonna second.
 Do not touch venues you did not just add except to draft.`},
@@ -8856,7 +8860,7 @@ Write with setConfig doc "ideabox" data {items:{<id>:{owner:"...",route:[...],no
   body:`TASK: Sponsor hunt. Public web only. Never email or message anyone, never log in, never post.
 1. Read agent_config ads: settings (sponsorOffer, area) and sponsors (every business already there, with any status). A sponsor with status skipped and a skippedAt date was only skipped for now: do not list it again for 30 days after skippedAt, then you may offer it again if it still fits. Status archived or anything on the blocklist is never offered again. Also read agent_config outreach blocklist: never add, pitch or list any business on it. Read Our Venues ({"op":"readVenues"}, skip inactive) and agent_leads.
 2. What a sponsor gets: use settings.sponsorOffer. If it is empty use this: a slide on our gig screensavers (it plays between our trivia and bingo games and between karaoke singers), shout-outs during those nights, and the chance to give a prize to the winners as free marketing.
-3. Search the web for up to 6 NEW local businesses likely to want to reach our crowd (adults who go out for karaoke, trivia and bingo): restaurants, breweries and distilleries, auto shops, gyms, salons, realtors, insurance, local services, within the area and near the venues we work with. Prefer ones near a venue we work with and ones that already advertise locally. Skip national chains with no local decision-maker, other karaoke, trivia or bingo hosts, and any business already in sponsors.
+3. Search the web for up to 6 NEW local businesses likely to want to reach our crowd (adults who go out for karaoke, trivia and bingo). They must NOT be bars, pubs, taverns, taprooms, breweries, distilleries or nightclubs: those are our venues, not sponsors. Look for small, local, independent businesses of every kind, and actively include women-owned, Black-owned, queer-owned and other minority-owned ones. Examples (not a limit): lash and brow artists, tattoo studios, permanent jewelry, hair stylists and barbers, nail techs, estheticians, makers and artists, garden nurseries, farmers markets and their vendors, coffee shops, ice cream shops, bakeries, independent restaurants and food trucks, antique and thrift shops, book and record shops, florists, boutiques, fitness and yoga studios, and mobile services (detailing, pet grooming, cleaning). Mix the kinds: at most 2 of the same kind in one run, and never the same kind two runs in a row. Only say a business is women-, Black-, queer- or otherwise owned if its own website or public pages say so; never guess, and put it in kind or why when it is stated. Prefer ones near a venue we work with and ones that already advertise locally. Skip national chains with no local decision-maker, other karaoke, trivia or bingo hosts, and any business already in sponsors.
 4. For each, confirm on its own website that it exists and find a public contact: an email address or its contact page link. Never guess an email.
 5. setConfig doc "ads" with sponsors{<new id>:{business,kind (what kind of business),city,nearVenue (a venue from Our Venues, or empty),why (one sentence on why they fit),contact (a name if public, else empty),email (empty if none found),url (their website or contact page),pitch (a short, friendly email, subject line first, in the Belladonna voice from the voice doc, that offers what a sponsor gets, names the nearVenue night when there is one, and asks for a 10 minute chat; no prices, and no claims about crowd size unless the data shows it),status:"new",createdAt (ms)}}.
 6. Report in one line: how many you found and the best one.`},
@@ -9105,12 +9109,12 @@ function draftCard(dr,withPrice){
   const head=l?leadLine(l):'<b>'+esc(dr.label||'Draft')+'</b>';
   return '<div class="tm-item"><div class="t1">'+head+'</div>'+
     '<div class="t2">'+esc(dr.kind==='n1'?'First nudge':dr.kind==='n2'?'Final nudge':dr.kind==='review'?'Review reply':dr.kind==='thanks'?'Thank-you':dr.kind==='email'?'Cold email (touch 1)':dr.kind==='email2'?'Cold email (touch 2)':dr.kind==='email3'?'Cold email (touch 3)':dr.kind==='cold'?'Cold email':dr.kind==='dm'?'Extra Instagram DM':dr.kind==='colddm'?'Instagram message (touch)':dr.kind==='reviewask'?'Review request':dr.kind==='checkin'?'Venue check-in':dr.kind==='paperwork'?'Paperwork reminder':dr.kind==='seo'?'SEO fix':'Reply and quote')+' · drafted '+fmtDay(dr.createdAt)+'</div>'+
-    optBar('d'+dr.id,OP.n,OP.i)+'<textarea class="tm-ta" style="margin-top:.6rem" data-did="'+esc(dr.id)+'">'+esc(OP.text||'')+'</textarea>'+pickBar('d'+dr.id,dr.picks,dr.redraft)+(dr.rewrite?'<div class="t2" style="color:var(--text3)">Rewrite requested '+esc(fmtDay(dr.rewrite.at))+'. Quill writes four new versions on his next run, and the prompt was copied if you want it sooner.</div>':'')+
+    optBar('d'+dr.id,OP.n,OP.i)+'<textarea class="tm-ta" style="margin-top:.6rem" data-did="'+esc(dr.id)+'">'+esc(OP.text||'')+'</textarea>'+pickBar('d'+dr.id,dr.picks,dr.redraft)+(dr.rewrite?'<div class="t2" style="color:var(--text3)">Rewrite requested '+esc(fmtDay(dr.rewrite.at))+'. '+(dr.agent==='raven'?'Raven writes four new versions on her next Lead run (weekdays 7 am)':'Quill writes four new versions on his next run')+', and the prompt was copied if you want it sooner.</div>':'')+
     '<div class="tm-row">'+(withPrice?'<input class="tm-in s" data-pid="'+esc(dr.id)+'" placeholder="Quoted $" value="'+esc(l&&l.quotedPrice||'')+'">':'')+
     (OT_KIND[dr.kind]
       ?'<button class="tm-b pri" data-act="approve" data-mode="sent" data-id="'+esc(dr.id)+'" title="Mark as sent. Logs it in the outreach history. Raven picks it up on her next run." aria-label="Mark as sent">&#10003;</button>'+
         '<button class="tm-b" data-act="copydraft" data-id="'+esc(dr.id)+'">Copy</button>'+
-        '<button class="tm-b'+(dr.rewrite?' pri':'')+'" data-act="sendrewrite" data-id="'+esc(dr.id)+'" title="'+(dr.rewrite?'Sent. Tap to copy the prompt again.':'Quill reads everything the team knows about this venue and writes four new versions')+'">'+(dr.rewrite?'Sent for rewrite':'Send for rewrite')+'</button>'+
+        '<button class="tm-b'+(dr.rewrite?' pri':'')+'" data-act="sendrewrite" data-id="'+esc(dr.id)+'" title="'+(dr.rewrite?'Sent. Tap to copy the prompt again.':(dr.agent==='raven'?'Raven':'Quill')+' reads everything the team knows about this venue and writes four new versions')+'">'+(dr.rewrite?'Sent for rewrite':'Send for rewrite')+'</button>'+
         (dr.kind!=='dm'&&dr.kind!=='colddm'?'<button class="tm-b" data-act="opengmail" data-id="'+esc(dr.id)+'" title="Opens Gmail as '+ADMIN_MAIL+' with the address, subject and text filled in">Open in Gmail</button>':'')
       :'<button class="tm-b pri" data-act="approve" data-id="'+esc(dr.id)+'">Approve &amp; copy</button>'+
         ((l&&/[^\s@]+@[^\s@]+\.[^\s@]+/.test(String(l.contact||'')))?'<button class="tm-b" data-act="opengmail" data-id="'+esc(dr.id)+'" title="Opens Gmail as '+ADMIN_MAIL+' with the address, subject and text filled in">Open in Gmail</button>':''))+
@@ -9552,11 +9556,11 @@ window.hqHistoryHtml=function(rec,kind){
     T.forEach(t=>rows.push({at:t.at||otMs(t.date)||0,t:t}));
     visits.forEach(x=>rows.push({at:x.at||0,v:x}));
     rows.sort((a,b)=>b.at-a.at);
-    if(!rows.length)h+='<div class="tm-empty" style="font-size:.82rem;opacity:.75">No touches logged yet.</div>';
+    if(!rows.length)h+='<div class="tm-empty" style="font-size:.82rem;opacity:.75">Nothing logged yet.</div>';
     rows.forEach(r=>{
       if(r.v){const x=r.v;h+='<div style="border-top:1px solid var(--border);padding:.45rem 0;font-size:.82rem"><span style="color:var(--text3)">'+esc(fmtDay(r.at))+'</span> &nbsp;<span class="tm-tag">Visit</span> '+esc([x.who?x.who+' visited':'',x.said?'they said: '+x.said:'',x.outcome?'outcome: '+x.outcome:''].filter(Boolean).join(' · '))+'</div>';return;}
       const t=r.t,b=body[t.id];
-      h+='<div style="border-top:1px solid var(--border);padding:.45rem 0;font-size:.82rem"><div><span style="color:var(--text3)">'+esc(t.date||'')+'</span> &nbsp;<span class="tm-tag">'+esc(OT_STEP[t.step]||t.step||'Touch')+'</span>'+(t.channel==='instagram'?' <span style="opacity:.7">Instagram</span>':'')+(t.subject?' &nbsp;<b>'+esc(t.subject)+'</b>':'')+(t.note?' <span style="opacity:.7">'+esc(t.note)+'</span>':'')+'</div>'+
+      h+='<div style="border-top:1px solid var(--border);padding:.45rem 0;font-size:.82rem"><div><span style="color:var(--text3)">'+esc(t.date||'')+'</span> &nbsp;<span class="tm-tag">'+esc(OT_STEP[t.step]||t.step||'Touch')+'</span>'+(t.channel&&t.channel!=='email'?' <span style="opacity:.7">'+esc(t.channel==='instagram'?'Instagram':t.channel)+'</span>':'')+(t.subject?' &nbsp;<b>'+esc(t.subject)+'</b>':'')+(t.note?' <span style="opacity:.7">'+esc(t.note)+'</span>':'')+'</div>'+
         (b?'<details style="margin-top:.3rem"><summary style="cursor:pointer;opacity:.85">Read what was sent</summary><div style="white-space:pre-wrap;margin-top:.3rem;padding:.55rem .7rem;border:1px solid var(--border);border-radius:6px;background:rgba(255,255,255,.02)">'+esc(b)+'</div></details>':(OT_TOUCH.test(t.step)?'<div style="opacity:.6;font-size:.75rem;margin-top:.2rem">The date was saved, but not the message text.</div>':''))+'</div>';
     });
     const wait=(S.drafts||[]).filter(d=>OT_KIND[d.kind]&&ids[d.venueId]&&d.status==='pending').length;
@@ -9572,6 +9576,58 @@ function offersFallback(id,name){
     for(const x of ids){const p=P[pfKey(x)];if(p&&((p.tags&&p.tags.length)||p.capacity||p.notes||p.poolTables||p.dartBoards))return p;}
   }catch(e){}return null;
 }
+
+OT_STEP.call='Phone call';OT_STEP.text='Text message';OT_STEP.visit='Visited in person';
+window.hqLogFormHtml=function(ctx,rec){
+  const id='lg-'+ctx+'-'+rec.id,today=isoDay(Date.now());
+  const F=(l,i)=>'<div class="form-group"><label class="form-label">'+l+'</label>'+i+'</div>';
+  return '<div style="padding:.7rem .8rem;border:1px solid rgba(201,169,110,.3);border-radius:8px;margin-bottom:.8rem"><div style="font-size:.7rem;letter-spacing:.2em;text-transform:uppercase;opacity:.75;margin-bottom:.5rem">Log outreach</div>'+
+    '<div class="vm-grid vm-g3" style="align-items:end">'+
+    F('What happened','<select class="form-input" data-lg="1" id="'+id+'-type"><option value="email">Sent an email</option><option value="dm">Sent an Instagram DM</option><option value="call">Phone call</option><option value="text">Text message</option><option value="visit">Visited in person</option><option value="reply">They replied</option><option value="">Only set the next date</option></select>')+
+    F('Date','<input type="date" class="form-input" data-lg="date" id="'+id+'-date" value="'+today+'">')+
+    F('Next outreach on','<input type="date" class="form-input" data-lg="1" id="'+id+'-next" value="'+esc(rec.followUpOn||rec.nextFollowUp||'')+'">')+'</div>'+
+    '<div class="form-group" style="margin-top:.6rem"><label class="form-label">Subject</label><input class="form-input" data-lg="1" id="'+id+'-subj"></div>'+
+    '<div class="form-group" style="margin-top:.6rem"><label class="form-label">The email or message you sent</label><textarea class="form-textarea" data-lg="1" id="'+id+'-body" style="min-height:120px"></textarea></div>'+
+    '<div style="margin-top:.6rem"><button type="button" class="btn-sm btn-gold" onclick="hqLogAdd(\''+ctx+'\',\''+rec.id+'\',this)">Add to log</button></div></div>';
+};
+window.hqLogPanel=function(ctx,rec,kind){return window.hqLogFormHtml(ctx,rec)+window.hqHistoryHtml(rec,kind||'venue');};
+window.hqLogAdd=async function(ctx,rid,btn){
+  try{
+    const g=k=>{const e=document.getElementById('lg-'+ctx+'-'+rid+'-'+k);return e?e.value:'';};
+    const type=g('type'),date=g('date')||isoDay(Date.now()),subj=g('subj').trim(),body=g('body').trim(),next=g('next');
+    const rec=ctx==='pr'?(S.venues||[]).find(x=>x.id===rid):hqLeads().find(x=>x.id===rid);
+    if(!rec){toast('Could not find it.',true);return;}
+    if(!type&&!next){toast('Pick what happened, or set the next date.',true);return;}
+    const ms=Date.parse(date+'T12:00:00')||Date.now(),tid=ctx==='pr'?rec.id:(rec.prospectId||rec.id);
+    if(type){
+      let step=type;
+      if(ctx==='pr'&&(type==='email'||type==='dm')){const n=otTouches(rec).length;step=type==='dm'?'cold-dm':(n===0?'email1':n===1?'email2':'email3');}
+      else if(type==='dm')step='ig-dm';
+      const bad=otConflict(tid,step,date);if(bad){toast(bad,true);return;}
+      const ch={email:'email',dm:'instagram',call:'phone',text:'text',visit:'in person',reply:'email'}[type];
+      const doc=otDoc({kind:'venue',tid:tid,name:rec.name,step:step,channel:ch,date:date,at:ms});
+      if(subj)doc.subject=subj;if(body)doc.body=body.slice(0,8000);
+      const id=otId();S.cfg.outreach=S.cfg.outreach||{};S.cfg.outreach.touches=S.cfg.outreach.touches||{};S.cfg.outreach.touches[id]=doc;
+      await otSave({['touches.'+id]:doc});
+    }
+    if(ctx==='pr'){
+      const u={};
+      if(type){u.lastTouchAt=ms;
+        if(type==='email'||type==='dm'){const cnt=otTouches(rec).length;u.stage=cnt>=3?'closed':'followup';u.notNowUntil='';
+          if(type==='email'){if(cnt===1)u.emailedAt=ms;else if(cnt===2)u.emailed2At=ms;else if(cnt>=3)u.emailed3At=ms;}
+          u.followUpOn=cnt>=3?'':otPlusMonths(ms,4);}
+        else if(type==='reply'){u.conversation=true;u.followUpOn='';}}
+      if(next)u.followUpOn=next;
+      if(Object.keys(u).length)await col('agent_venues').doc(rec.id).update(u);
+      toast('Added to the log.');renderProspects(1);
+    }else{
+      if(next){await db.collection('leads').doc(rid).set({nextFollowUp:next,followUpNone:false,updatedAt:new Date().toISOString()},{merge:true});rec.nextFollowUp=next;
+        const f=document.getElementById('leadFollowUp');if(f){f.value=next;f.disabled=false;}const fn=document.getElementById('leadFollowUpNone');if(fn)fn.checked=false;}
+      toast('Added to the log.');
+      const h=document.getElementById('leadHistory');if(h)h.innerHTML=window.hqLogPanel('ld',rec,'venue');
+    }
+  }catch(e){toast('Could not save: '+(e&&e.message||e),true);}
+};
 window.hqVenueAll=function(v){
   try{if(S&&!S.started)start();}catch(e){}
   try{
@@ -9580,7 +9636,7 @@ window.hqVenueAll=function(v){
     const none=t=>'<div style="opacity:.7">'+t+'</div>';
     const care=(careVenues()||[]).find(c=>c.id==='hq_'+v.id)||null;
     let out='';
-    out+=sec('Touches and emails sent',window.hqHistoryHtml(v,'venue'));
+    out+=sec('Outreach log and emails sent',window.hqHistoryHtml(v,'venue'));
     out+=sec('Timeline (nights, check-ins, outreach, feedback)',timelineHtml(care||{id:'hq_'+v.id,name:v.name}));
     const ag=agrState(),mine=ag.active.concat(ag.found).filter(x=>nm(x.venue)===nv);
     out+=sec('Agreement and renewals ('+mine.length+')',mine.length?mine.map(x=>'<div style="margin:.2rem 0"><b>'+esc(TERM_LBL(x.termMonths||12))+'</b> &middot; signed '+esc(fmtEv(x.signedOn))+(x.endsOn?' &middot; ends '+esc(fmtEv(x.endsOn)):'')+' '+(x.status==='detected'?'<span class="tm-tag new">found in email, confirm on Sigil\'s desk</span>':agrTag(x))+(x.checkinAt?' &middot; check-in sent '+esc(fmtFull(x.checkinAt)):'')+(x.checkinOutcome?' &middot; outcome: '+esc(x.checkinOutcome):'')+'</div>').join('')+none('Manage these on Sigil\'s desk.'):none('No agreement tracked for this venue yet. Add one on Sigil\'s desk.'));
@@ -10345,15 +10401,16 @@ async function addProspect(){
   if(ok){['pa-name','pa-city','pa-addr','pa-email','pa-who','pa-why','pa-pitch','pa-date'].forEach(i=>{const e=document.getElementById(i);if(e)e.value='';});document.getElementById('pa-sent').checked=false;}
 }
 const PR={q:'',stage:'',city:''};
-function renderProspects(){
+function renderProspects(force){
   const el=document.getElementById('prospectsBody');if(!el)return;
+  if(!force){const a=document.activeElement;if(a&&el.contains(a)&&a.dataset&&a.dataset.lg)return;if(Array.from(el.querySelectorAll('[data-lg]')).some(x=>x.dataset.lg!=='date'&&x.value!==x.defaultValue))return;}
   const all=(S.venues||[]).filter(v=>v&&v.name);
   const cities=[...new Set(all.map(v=>v.city).filter(Boolean))].sort();
   const q=PR.q.toLowerCase();
   const list=all.filter(v=>(!PR.stage||(v.stage||'target')===PR.stage)&&(!PR.city||v.city===PR.city)&&(!q||[v.name,v.city,v.address,v.contact,v.contactName,v.pitch,v.evidence].join(' ').toLowerCase().indexOf(q)>=0)).sort((a,b)=>String(a.name).localeCompare(String(b.name)));
   const keep=document.activeElement&&document.activeElement.id;
   const stages=Object.keys(TAGL);
-  let h='<div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.8rem"><input class="form-input" id="prQ" style="flex:1;min-width:180px" placeholder="Search prospects" value="'+esc(PR.q)+'" oninput="PR.q=this.value;renderProspects()"><select class="form-input" style="width:auto" onchange="PR.stage=this.value;renderProspects()"><option value="">All stages</option>'+stages.map(k=>'<option value="'+k+'"'+(PR.stage===k?' selected':'')+'>'+TAGL[k]+'</option>').join('')+'</select><select class="form-input" style="width:auto" onchange="PR.city=this.value;renderProspects()"><option value="">All cities</option>'+cities.map(c=>'<option'+(PR.city===c?' selected':'')+'>'+esc(c)+'</option>').join('')+'</select></div>';
+  let h='<div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.8rem"><input class="form-input" id="prQ" style="flex:1;min-width:180px" placeholder="Search prospects" value="'+esc(PR.q)+'" oninput="PR.q=this.value;renderProspects(1)"><select class="form-input" style="width:auto" onchange="PR.stage=this.value;renderProspects()"><option value="">All stages</option>'+stages.map(k=>'<option value="'+k+'"'+(PR.stage===k?' selected':'')+'>'+TAGL[k]+'</option>').join('')+'</select><select class="form-input" style="width:auto" onchange="PR.city=this.value;renderProspects()"><option value="">All cities</option>'+cities.map(c=>'<option'+(PR.city===c?' selected':'')+'>'+esc(c)+'</option>').join('')+'</select></div>';
   h+='<div style="font-size:.8rem;opacity:.7;margin-bottom:.6rem">'+list.length+' of '+all.length+' prospects. These are the venues Sable finds and Raven works. Do-not-use venues are hidden.</div>';
   if(!all.length)h+='<div style="opacity:.7">'+(S.started?'No prospects yet. Sable adds them as she finds them.':'Loading...')+'</div>';
   list.filter(v=>!isBlocked(v)).forEach(v=>{
@@ -10361,7 +10418,7 @@ function renderProspects(){
     const line=(t,x)=>x?'<div style="margin:.25rem 0;font-size:.85rem"><b>'+t+':</b> '+esc(x)+'</div>':'';
     h+='<details data-pk="'+esc(v.id)+'"'+(S.open['pr_'+v.id]?' open':'')+' style="border:1px solid var(--border,#444);border-radius:10px;padding:.55rem .8rem;margin-bottom:.5rem"><summary style="cursor:pointer;display:flex;gap:.5rem;align-items:center;flex-wrap:wrap"><span class="tm-tag '+(TAGC[st]||'')+'">'+esc(TAGL[st]||st)+'</span>'+thrownTag(v)+'<b>'+esc(v.name)+'</b><span style="opacity:.7;font-size:.8rem">'+esc(v.city||'')+'</span>'+(T.length?'<span style="opacity:.7;font-size:.75rem">'+T.length+' email'+(T.length>1?'s':'')+' sent</span>':'')+(v.followUpOn?'<span style="opacity:.7;font-size:.75rem">check back '+esc(v.followUpOn)+'</span>':'')+'</summary><div style="margin-top:.5rem">'+
       line('Address',v.address)+line('Contact',[v.contactName,v.contact].filter(Boolean).join(' · '))+(em?'':line('Email','not found yet'))+(thrownInfo(v)?line('Thrown to Raven from '+thrownInfo(v).who,thrownInfo(v).title+(thrownInfo(v).at?' ('+fmtDay(thrownInfo(v).at)+')':'')):'')+line('Why them',v.evidence)+line('Pitch',v.pitch)+line("Iris's idea to open with",baitFor(v.name))+
-      '<div style="margin:.5rem 0;padding:.4rem .7rem;border:1px solid var(--border,#444);border-radius:8px"><div style="font-size:.7rem;letter-spacing:.2em;text-transform:uppercase;opacity:.7">Touches and emails sent</div>'+window.hqHistoryHtml(v,'venue')+'</div>'+
+      '<div style="margin:.5rem 0;padding:.4rem .7rem;border:1px solid var(--border,#444);border-radius:8px"><div style="font-size:.7rem;letter-spacing:.2em;text-transform:uppercase;opacity:.7;margin-bottom:.4rem">Outreach log and emails sent</div>'+window.hqLogFormHtml('pr',v)+window.hqHistoryHtml(v,'venue')+'</div>'+
       offersBlock(v.id,v.name,'pr')+'<div style="font-size:.75rem;opacity:.7">Work this one on Raven\'s desk in My Team.</div></div></details>';
   });
   el.innerHTML=h;
@@ -11077,7 +11134,7 @@ const A={
   },
   async kgcopy(t){toast(await copy(kgCsvText(t.dataset.set))?'CSV copied.':'Copy failed.',false);},
   kgdl(t){const set=t.dataset.set,b=new Blob([kgCsvText(set)],{type:'text/csv'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=(set==='gigs'?'gigs-run-by-others':'people-we-know')+'.csv';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},500);},
-  async sendrewrite(t){const id=t.dataset.id,dr=S.drafts.find(x=>x.id===id);if(!dr)return;keepEdit('d'+id);const cp=copy(rewritePrompt(dr,optState('d'+id,dr.body).text));await col('agent_drafts').doc(id).update({rewrite:{at:Date.now()}});movedTo(t,'Sent to Quill for rewrite');toast('Sent to Quill.'+(await cp?' The prompt is copied too if you want it now in your own chat.':''),false);},
+  async sendrewrite(t){const id=t.dataset.id,dr=S.drafts.find(x=>x.id===id);if(!dr)return;keepEdit('d'+id);const cp=copy(rewritePrompt(dr,optState('d'+id,dr.body).text));await col('agent_drafts').doc(id).update({rewrite:{at:Date.now()}});const _rw=dr.agent==='raven'?'Raven':'Quill';movedTo(t,'Sent to '+_rw+' for rewrite');toast('Sent to '+_rw+'.'+(await cp?' The prompt is copied too if you want it now in your own chat.':''),false);},
   async libqueue(){const f=libRead();S.lib=f;const ta=document.getElementById('lib-paste'),body=ta?ta.value.trim():'';if(!body){toast('Paste the replies first.',true);return;}await col('agent_drafts').add({leadId:null,agent:'quill',kind:'reply',body:body,label:'Reply: '+(f.venue||f.name||'unknown'),status:'pending',createdAt:Date.now()});if(ta)ta.value='';toast('Added to Drafts waiting, with the options and highlight tools.');},
   async unskipdraft(t){const ta=document.querySelector('[data-skb="'+t.dataset.id+'"]');const u={status:'pending'};if(ta)u.body=ta.value;await col('agent_drafts').doc(t.dataset.id).update(u);toast('Back in Cold emails.');},
   async skcopy(t){const ta=document.querySelector('[data-skb="'+t.dataset.id+'"]');toast(await copy(ta?ta.value:'')?'Copied.':'Copy failed.',false);},
