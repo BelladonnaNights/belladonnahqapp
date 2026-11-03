@@ -3069,7 +3069,10 @@ function dateToKey(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart
 // Gigs from OTHER apps (Trivia planner, Bingo) — not HQ's own gigSchedule.
 // Shared by the Dashboard's week view and the Schedule tab's calendar.
 // Same frequency rules the Planner uses (weekly / biweekly / monthly / single).
-function plannerVenueRunsOn(v,dk){
+// Which weeks a every-other-week night runs: the week that holds the example date is an "on" week, the next is off, and so on.
+// Weeks are counted Monday to Sunday, so the example date can be any day of its week.
+function wkStartOf(d){const x=new Date(d);x.setHours(12,0,0,0);x.setDate(x.getDate()-((x.getDay()+6)%7));return x;}
+function plannerVenueRunsOn(v,dk,fallbackAnchor){
   if(!v)return false;
   if(v.endsOn&&dk>=v.endsOn)return false;   // series ended by a "this & future" delete
   const cad=v.cadence||'weekly',st=v.status||'active';
@@ -3077,10 +3080,20 @@ function plannerVenueRunsOn(v,dk){
   if(cad==='single')return !!v.cadenceAnchor&&v.cadenceAnchor===dk&&(st==='active'||st==='seasonal'||st==='one-time');
   if(!(st==='active'||st==='seasonal'))return false;
   if(PLANNER_DAY_MAP[v.day]!==d.getDay())return false;
-  const a=v.cadenceAnchor?new Date(v.cadenceAnchor+'T12:00:00'):null;
-  if(cad==='biweekly'&&a){const diff=Math.round((d-a)/86400000);return Math.abs(Math.floor(diff/7))%2===0;}
-  if(cad==='monthly'&&a)return Math.ceil(d.getDate()/7)===Math.ceil(a.getDate()/7);
+  const a0=v.cadenceAnchor||fallbackAnchor||'';
+  const a=a0?new Date(a0+'T12:00:00'):null;
+  // no example date saved: count from this week so it still alternates instead of showing every week
+  if(cad==='biweekly'){const ref=a||new Date();const wk=Math.round((wkStartOf(d)-wkStartOf(ref))/(7*86400000));return wk%2===0;}
+  if(cad==='monthly'){const ref=a||new Date();return Math.ceil(d.getDate()/7)===Math.ceil(ref.getDate()/7);}
   return true;
+}
+// the Edit Venue schedule is the truth: its live night for this venue, kind and weekday (or null)
+function vmxSlotFor(venueName,kind,dow){
+  try{const all=window.__vmxMaster||{};const k=vmxKey(venueName);
+    const hv=(venues||[]).find(x=>x&&vmxKey(x.name)===k&&x.venueId&&all[x.venueId]);
+    const m=hv?all[hv.venueId]:Object.values(all).find(x=>x&&x.name&&vmxKey(x.name)===k);if(!m||!m.slots)return null;
+    const want=plannerKindKey(kind)||kind,day=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][dow];
+    return Object.values(m.slots).find(x=>x&&x.day===day&&(plannerKindKey(x.kind)||x.kind)===want&&vmxLive(x.status))||null;}catch(e){return null;}
 }
 function getExternalGigsForDate(dk,dow){
   const out=[];
@@ -3097,7 +3110,9 @@ function getExternalGigsForDate(dk,dow){
       if(override&&override.deletedByHQ)return;   // deleted from HQ — hide it
       // A real per-date record always shows; otherwise fall back to the venue's usual weekday.
       const hasExplicitRecord=!!override;
-      const recurs=plannerVenueRunsOn(v,dk);
+      let recurs=plannerVenueRunsOn(v,dk);
+      {const sl=vmxSlotFor(v.name,kindKey,dow);
+       if(sl)recurs=!(v.endsOn&&dk>=v.endsOn)&&plannerVenueRunsOn({day:vmxAbbr(sl.day),cadence:sl.cadence||'weekly',cadenceAnchor:sl.anchor||'',status:sl.status||'active'},dk);}
       if(!hasExplicitRecord&&!recurs)return;
       const cancelled=!!(override&&override.status==='cancelled');
       const kind=kindKey==='Events'?((override&&override.eventKind)||v.eventKind||'Events'):kindKey;
@@ -3785,7 +3800,7 @@ async function vmxSaveHQSlots(v,rows){
           // the Planner already has this exact night — link to it rather than making a second copy
           n.ref={kind:lk,id:dupe.id};
           const base=VMX_KIND_PATH[lk]+'/'+dupe.id+'/';
-          upd[base+'venueId']=m.id;
+          upd[base+'venueId']=m.id;upd[base+'day']=vmxAbbr(n.day);upd[base+'time']=n.time?vmxFmt(lk,n.time):'';upd[base+'cadence']=n.cadence;upd[base+'cadenceAnchor']=n.anchor||'';upd[base+'status']=n.status;
           slots[sid]=n;seen.add(sid);
           continue;
         }
@@ -4278,14 +4293,14 @@ function renderGigCalendar(){
       dayGigs.forEach(g=>{
         const isCancelled=g.status==='cancelled'||gigCheckoutCancelled(g);
         const c=calGigColor(g.kind,isCancelled);
-        entriesHtml+=`<div class="gig-event" style="background:${c}22;border:1px solid ${c};color:${c}" onclick="event.stopPropagation();openGigModal('${g.id}')">${(plannerRecordForGig(g)||{}).venueNote?'★ ':''}${g.kind?g.kind+': ':''}${g.venue}</div>`;
+        entriesHtml+=`<div class="gig-event" style="background:${c}22;border:1px solid ${c};color:${c}" title="From the HQ schedule" onclick="event.stopPropagation();openGigModal('${g.id}')">${(plannerRecordForGig(g)||{}).venueNote?'★ ':''}${g.kind?g.kind+': ':''}${g.venue}</div>`;
       });
       getExternalGigsForDate(dateStr,new Date(dateStr+'T12:00:00').getDay())
         .filter(it=>(!calVenue||it.venue===calVenue)&&(!calType||it.kind===calType))
         .forEach(it=>{
         const c=calGigColor(it.kind,it.cancelled);
         const idx=scheduleExternalItemsFlat.length;scheduleExternalItemsFlat.push(it);
-        entriesHtml+=`<div class="gig-event" style="background:${c}22;border:1px solid ${c};color:${c}" onclick="event.stopPropagation();showDashGigDetail(${idx},true)">${it.venueNote?'★ ':''}${it.kind}: ${it.venue}</div>`;
+        entriesHtml+=`<div class="gig-event" style="background:${c}22;border:1px solid ${c};color:${c}" title="From ${esc(it.source||'the Planner')}" onclick="event.stopPropagation();showDashGigDetail(${idx},true)">${it.venueNote?'★ ':''}${it.kind}: ${it.venue}</div>`;
       });
       html+=`<div class="cal-cell${otherMonth?' other-month':''}${isToday?' today':''}" onclick="openGigModalOnDate('${dateStr}')"><div class="cal-date-num">${day}</div><div class="cal-entries">${entriesHtml}</div></div>`;
     }
@@ -6644,6 +6659,8 @@ function saveVenue(){
   const payMethod=document.getElementById('vmPayMethod').value;
   const startDate=document.getElementById('vmStartDate').value;
   const gigSlots=readVenueGigSlotRows();
+  {const bad=gigSlots.find(x=>x.kind&&x.day&&x.status!=='finished'&&x.cadence&&x.cadence!=='weekly'&&x.cadence!=='single'&&!x.anchor);
+   if(bad){alert('Pick the "Example date it runs" for the '+bad.kind+' night on '+bad.day+'. Every other week and monthly nights need one date they run on, so the calendar knows which weeks to show.');return;}}
   const host=document.getElementById('vmHost').value||null;
   const gv=i=>{const e=document.getElementById(i);return e?e.value.trim():'';};
   const det={address:gv('vmAddress'),city:gv('vmCity'),owner:gv('vmOwner'),manager:gv('vmManager'),contactName:gv('vmContactName'),phone:gv('vmPhone'),email:gv('vmEmail'),website:gv('vmWebsite'),instagram:gv('vmInstagram'),facebook:gv('vmFacebook'),otherContacts:gv('vmOtherContacts'),billDay:gv('vmBillFreq')==='gig'?'':gv('vmBillDay'),billFreq:gv('vmBillFreq'),billAmount:gv('vmBillAmount'),billNote:gv('vmBillNote'),billStart:gv('vmBillStart')};
@@ -8086,6 +8103,7 @@ function D(){
     mBank:dr.filter(d=>d.agent==='mirror'&&/^bank:/i.test(String(d.label||''))&&(d.status==='pending'||d.status==='approved')),
     vDue:vesperDue(),
     venDue:S.venues.filter(v=>(v.stage==='followup'||v.stage==='cold')&&otTouchDue(v)),
+    venCold:S.venues.filter(coldCandidate),
     venYes:S.venues.filter(v=>v.stage==='yes'),
     rPending:dr.filter(d=>d.agent==='raven'&&d.status==='pending'),
     silenced:S.sites.filter(s=>s.active===false),
@@ -8108,9 +8126,9 @@ function D(){
 function cardInfo(id,d){
   const L=S.leads;
   if(id==='raven'){
-    const n=d.newLeads.length,m=d.missing.length,fu=d.venDue.length,y=d.venYes.length,cd=d.rPending.filter(x=>OT_KIND[x.kind]).length,t=d.rPending.length-cd;
-    const parts=[n?plural(n,'new lead','new leads'):'',m?m+' missing info':'',fu?plural(fu,'venue follow-up','venue follow-ups')+' due':'',y?plural(y,'venue yes','venue yeses')+' to hand off':'',cd?plural(cd,'cold email','cold emails')+' to review':'',t?plural(t,'thank-you','thank-yous')+' to send':''].filter(Boolean);
-    return {need:m+fu+y+cd+t,line:parts.length?parts.join(' · '):(S.venues.length?'All quiet':'All quiet · no venues loaded')};
+    const n=d.newLeads.length,m=d.missing.length,fu=d.venDue.length,y=d.venYes.length,fc=d.venCold.length,cd=d.rPending.filter(x=>OT_KIND[x.kind]).length,t=d.rPending.length-cd;
+    const parts=[n?plural(n,'new lead','new leads'):'',m?m+' missing info':'',fu?plural(fu,'venue follow-up','venue follow-ups')+' due':'',y?plural(y,'venue yes','venue yeses')+' to hand off':'',fc?plural(fc,'prospect','prospects')+' may have gone cold':'',cd?plural(cd,'cold email','cold emails')+' to review':'',t?plural(t,'thank-you','thank-yous')+' to send':''].filter(Boolean);
+    return {need:m+fu+y+fc+cd+t,line:parts.length?parts.join(' · '):(S.venues.length?'All quiet':'All quiet · no venues loaded')};
   }
   if(id==='quill'){
     const q=d.qPending.length,n=d.needDraft.length;
@@ -8450,6 +8468,7 @@ function briefData(){
   add('quill',d.needDraft.length,plural(d.needDraft.length,'new lead needs','new leads need')+' a draft',d.needDraft.slice(0,4).map(lt).join('; ')+(d.needDraft.length>4?'; and '+(d.needDraft.length-4)+' more':'')+'. Nobody has answered them yet.');
   add('raven',d.missing.length,plural(d.missing.length,'lead is','leads are')+' missing a date or location',d.missing.slice(0,4).map(l=>(l.client||l.site||'A lead')+' has no '+[!l.eventDate?'date':'',!l.location?'location':''].filter(Boolean).join(' or ')).join('; ')+'. A quote needs both.');
   d.venDue.forEach(v=>{const n=otTouches(v).length;need.push({a:'raven',text:v.name+': '+(v.notNowUntil?'their not-now date has arrived':'touch '+(n+1)+' is due')+' (a new angle that fits the timing)',body:'Touches so far: '+n+' of 3'+(n?', last '+ago(otMs(otTouches(v)[n-1].date)):'')+'. No answer is fine. One touch every 4 months, an email or a DM.'+(who(v)?' Contact: '+who(v)+'.':'')+' Raven drafts it for you to review.'});});
+  d.venCold.forEach(v=>need.push({a:'raven',text:v.name+' may have gone cold',body:'All 3 outreach touches are done and nobody answered in over '+COLD_AFTER_DAYS+' days. Open Raven\'s desk to mark it gone cold, or say not yet.'}));
   d.venYes.forEach(v=>need.push({a:'raven',text:v.name+' said yes. Hand it to onboarding',body:'They agreed'+(v.city?' ('+v.city+')':'')+'.'+(who(v)?' Contact: '+who(v)+'.':'')+' Next: contract, agreement and a first night on the calendar.'}));
   d.rPending.forEach(x=>{
     const NOUN={email:'email',email2:'email',email3:'email',cold:'email',dm:'Instagram message',colddm:'Instagram message'};
@@ -8859,7 +8878,7 @@ RUN NOTE (LAST STEP OF EVERY RUN, even a quiet one, even if something blocked yo
 const TASKS=[
  {name:'Lead run',who:'Raven and Quill',when:'Weekdays, 7:00 am',plain:'Looks for people and venues asking for karaoke, trivia or bingo, scores them hot / warm / cold, drafts cold emails and day-5 follow-ups for venues you have not heard back from, and drafts replies to the good leads.',ids:['raven','quill'],lib:true,
   body:`TASK: Lead run.
-0. Read agent_config outreach blocklist (each entry has a name and optional venueId). NEVER addVenue, addLead, draft, email or DM any venue, client or business on it (match the name ignoring capitals, spaces and punctuation), and skip it in every step below. A prospect (agent_venues) with stage "lead" was moved to the Leads list by Ahnna: never draft, email, DM or change it. A lead with stage "skipped" is never worked again. A lead with a skippedAt date was only skipped for now: do not redraft it for 30 days after skippedAt, then it may be offered again.
+0. Read agent_config outreach blocklist (each entry has a name and optional venueId). NEVER addVenue, addLead, draft, email or DM any venue, client or business on it (match the name ignoring capitals, spaces and punctuation), and skip it in every step below. A prospect (agent_venues) with stage "lead" was moved to the Leads list by Ahnna: never draft, email, DM or change it. A prospect with goneCold true has been marked cold by Ahnna: never draft, email, DM or follow up with it again. Any prospect with outreach already sent is in progress; do not write its stage back to target. A lead with stage "skipped" is never worked again. A lead with a skippedAt date was only skipped for now: do not redraft it for 30 days after skippedAt, then it may be offered again.
 1. Search the public web for people and venues in Seattle-Tacoma asking for or likely to need karaoke, trivia, music bingo or themed nights. Score each Hot / Warm / Cold with a one-line reason. Skip anything older than 3 days.
 2. addLead for each (max 8 per run, skip duplicates by link). addVenue for any new bar or venue worth cold-emailing, but FIRST read agent_venues (every stage, including ones Ahnna added by hand), Our Venues (readVenues), the Leads tab (read collection leads) and the outreach blocklist, and skip any venue whose name matches one of them when you ignore capitals, spaces, punctuation and "and" versus "&". Never addVenue a duplicate and never overwrite or delete an existing prospect; to add a fact to one, use updateVenue on that id and change only the empty fields.
 3. COLD OUTREACH RULES. Read agent_venues, agent_config outreach (touches: every email or Instagram contact, with date and channel) and agent_config curator research. Check agent_drafts first so you never write a draft that already exists, and write at most one draft per venue per run. A "touch" is one cold contact, an email or a DM. A venue gets ONE touch every 4 months and at most 3 touches in total. If they never answer, that is fine: after touch 3 the venue is closed and you write nothing more. Count the touches from agent_config outreach touches (steps email1, email2, email3, cold-email, cold-dm; also count emailedAt, emailed2At and emailed3At on the venue).
@@ -9242,8 +9261,30 @@ const TERMS_SHORT="We do a free trial night: full host, equipment, music and pri
 const VOICE_SHORT="Warm, witty and confident: a charming troublemaker with impeccable taste. Conversational, short punchy sentences, dry humor that teases the experience and never the person. Honest and self-aware when something goes wrong, firm and clear when it matters. Gothic in look, not in language: no spells, potions or Victorian theatrics. No corporate filler, no manufactured urgency, no bubbly positivity. At most one emoji, and exclamation points only when earned.";
 function terms(){return (S.cfg.outreach&&S.cfg.outreach.terms)||TERMS_FULL;}
 function termsShort(){return (S.cfg.outreach&&S.cfg.outreach.short)||TERMS_SHORT;}
-const TAGC={lead:'booked',target:'new',followup:'quoted',cold:'quoted',closed:'lost',yes:'booked',no:'lost',onboarding:'booked'};
-const TAGL={lead:'moved to Leads',target:'target',followup:'in progress',cold:'in progress',closed:'closed (no answer)',yes:'yes',no:'no',onboarding:'handed off'};
+const TAGC={lead:'booked',target:'new',followup:'quoted',cold:'quoted',closed:'lost',gonecold:'lost',yes:'booked',no:'lost',onboarding:'booked'};
+const TAGL={lead:'moved to Leads',target:'target',followup:'in progress',cold:'in progress',closed:'closed (no answer)',gonecold:'gone cold',yes:'yes',no:'no',onboarding:'handed off'};
+// what a prospect really is right now: any outreach makes it in progress, and the Gone cold check puts it last
+function prStage(v){
+  if(v.stage==='lead')return 'lead';
+  if(v.goneCold)return 'gonecold';
+  let st=v.stage||'target';if(st==='cold')st='followup';
+  if(st==='target'&&otTouches(v).length)st='followup';
+  return st;
+}
+const PR_RANK={yes:0,onboarding:1,followup:2,target:3,closed:4,no:5,gonecold:6};
+function prLastTouch(v){const T=otTouches(v);return T.length?otMs(T[T.length-1].date)||0:(v.lastTouchAt||0);}
+// all three touches are done, 30 days have passed and nobody answered: ask Ahnna whether it has gone cold
+const COLD_AFTER_DAYS=30;
+function coldCandidate(v){
+  if(!v||isBlocked(v)||v.goneCold||v.conversation||v.declinedAt)return false;
+  if(['yes','no','onboarding','closed','lead'].indexOf(v.stage)>=0)return false;
+  const T=otTouches(v);if(T.length<3)return false;
+  const last=otMs(T[T.length-1].date)||0,now=Date.now();
+  if(!last||now-last<COLD_AFTER_DAYS*86400000)return false;
+  if(v.coldDismissedAt&&now-v.coldDismissedAt<COLD_AFTER_DAYS*86400000)return false;
+  return true;
+}
+window.hqPfCold=async function(id,on){try{await col('agent_venues').doc(id).update(on?{goneCold:true,goneColdAt:Date.now()}:{goneCold:false,goneColdAt:firebase.firestore.FieldValue.delete(),coldDismissedAt:firebase.firestore.FieldValue.delete()});toast(on?'Marked gone cold. It moves to the bottom of Prospects.':'Back in progress.');}catch(e){toast('Could not save: '+(e&&e.message||e),true);}};
 function eligibleTrip(){
   const _all=eligibleTripRaw();return _all.filter(v=>!isBlocked(v));
 }
@@ -9335,7 +9376,7 @@ function isBlocked(v){if(!v)return false;const n=blNorm(v.name);return blList().
 function otTouchDue(v){
   const today=isoDay(Date.now());
   if(isBlocked(v))return false;
-  if(v.conversation||v.declinedAt||v.stage==='yes'||v.stage==='onboarding'||v.stage==='closed')return false;
+  if(v.conversation||v.declinedAt||v.goneCold||v.stage==='yes'||v.stage==='onboarding'||v.stage==='closed')return false;
   if(v.notNowUntil)return v.notNowUntil<=today;
   const T=otTouches(v);if(T.length<1||T.length>=3)return false;
   return today>=otPlusMonths(otMs(T[T.length-1].date),4);
@@ -9433,7 +9474,7 @@ function venueCard(v,fold){
   return h+'</div>';
 }
 function vRaven(){
-  const d=D(),o=d.venDue.length+d.venYes.length+d.rPending.length,i=d.missing.length;
+  const d=D(),o=d.venDue.length+d.venYes.length+d.venCold.length+d.rPending.length,i=d.missing.length;
   return '<div class="tm-row" style="margin:0 0 1rem"><button class="tm-b'+(S.rtab==='outreach'?' pri':'')+'" data-act="rtab" data-v="outreach">Venue outreach'+(o?' ('+o+')':'')+'</button><button class="tm-b'+(S.rtab==='inbound'?' pri':'')+'" data-act="rtab" data-v="inbound">Gig-site leads'+(i?' ('+i+')':'')+'</button></div>'+(S.rtab==='outreach'?vOutreach():vInbound());
 }
 /* ── Gigs run by others + people we know ── */
@@ -9589,9 +9630,11 @@ function vOutreach(){
     h+='<div class="tm-sec">Targets</div><div class="tm-empty">No venues loaded yet.</div><div class="tm-row"><button class="tm-b pri" data-act="loadstarter">Load my 8 target venues</button></div>';
   }
   const due=d.venDue.concat(d.venYes);
+  const coldCard=v=>{const T=otTouches(v),last=T.length?otMs(T[T.length-1].date):0,days=last?Math.floor((Date.now()-last)/86400000):0;return '<div class="tm-item"><div class="t1"><span class="tm-tag warn">may have gone cold</span><b>'+esc(v.name)+'</b>'+(v.city?' <span style="opacity:.7">'+esc(v.city)+'</span>':'')+'</div><div class="t2">Raven says: all 3 touches are done, the last one '+days+' days ago, and nobody answered. If it has gone cold, mark it and it drops to the bottom of Prospects.</div><div class="tm-row"><button class="tm-b pri" data-act="goneCold" data-id="'+esc(v.id)+'">Mark gone cold</button><button class="tm-b dim" data-act="coldnot" data-id="'+esc(v.id)+'">Not yet, ask again later</button></div></div>';};
   const coldP=d.rPending.filter(x=>OT_KIND[x.kind]),otherP=d.rPending.filter(x=>!OT_KIND[x.kind]);
-  h+='<div class="tm-sec">Needs you ('+(due.length+otherP.length)+')</div>';
-  if(!due.length&&!otherP.length)h+='<div class="tm-empty">No follow-ups due, nothing to hand off, no thank-yous waiting.</div>';
+  h+='<div class="tm-sec">Needs you ('+(due.length+otherP.length+d.venCold.length)+')</div>';
+  d.venCold.forEach(v=>h+=coldCard(v));
+  if(!due.length&&!otherP.length&&!d.venCold.length)h+='<div class="tm-empty">No follow-ups due, nothing to hand off, no thank-yous waiting.</div>';
   due.forEach(v=>h+=venueCard(v));
   otherP.forEach(x=>h+=draftCard(x,false));
   h+='<div class="tm-sec">Leads/Cold Emails ('+coldP.length+')</div>';
@@ -9792,7 +9835,7 @@ window.hqLogAdd=async function(ctx,rid,btn){
     if(ctx==='pr'){
       const u={};
       if(type){u.lastTouchAt=ms;
-        if(type==='email'||type==='dm'){const cnt=otTouches(rec).length;u.stage=cnt>=3?'closed':'followup';u.notNowUntil='';
+        if(type==='email'||type==='dm'){const cnt=otTouches(rec).length;u.stage='followup';u.notNowUntil='';
           if(type==='email'){if(cnt===1)u.emailedAt=ms;else if(cnt===2)u.emailed2At=ms;else if(cnt>=3)u.emailed3At=ms;}
           u.followUpOn=cnt>=3?'':otPlusMonths(ms,4);}
         else if(type==='reply'){u.conversation=true;u.followUpOn='';}}
@@ -10627,7 +10670,7 @@ async function addProspectDoc(o){
   if(prospectExists(o.name)){toast(o.name+' is already a prospect.',true);return false;}
   {const w=window.hqDupWhere(o.name);if(w){toast(o.name+' is already '+w+'. Nobody lives on two lists, so it was not added.',true);return false;}}
   const sent=!!o.emailed;
-  const doc={name:String(o.name).trim(),city:o.city||'',address:o.address||'',contact:o.contact||'',contactName:o.contactName||'',evidence:o.evidence||'',pitch:o.pitch||'',stage:sent?'cold':'target',createdAt:Date.now(),addedBy:'manual'};
+  const doc={name:String(o.name).trim(),city:o.city||'',address:o.address||'',contact:o.contact||'',contactName:o.contactName||'',evidence:o.evidence||'',pitch:o.pitch||'',stage:sent?'followup':'target',createdAt:Date.now(),addedBy:'manual'};
   ['phone','instagram','facebook','website','notes','foundFrom'].forEach(k=>{if(o[k]&&String(o[k]).trim())doc[k]=String(o[k]).trim();});
   if(o.thrownFrom){doc.thrownFrom=o.thrownFrom;doc.thrownIdea=o.thrownIdea||'';doc.thrownAt=Date.now();}
   if(sent){doc.emailedAt=o.emailedAt||Date.now();}
@@ -10663,21 +10706,21 @@ function renderProspects(force){
   const q=PR.q.toLowerCase();
   const dupOf=v=>(v.stage!=='lead'&&!PR.showDup)?window.hqDupWhere(v.name,v.id):'';
   const hiddenDup=all.filter(v=>v.stage!=='lead'&&!isBlocked(v)&&window.hqDupWhere(v.name,v.id));
-  const list=all.filter(v=>v.stage!=='lead'&&(PR.showDup||!window.hqDupWhere(v.name,v.id))&&(PR.stage?(v.stage||'target')===PR.stage:true)&&(!PR.city||v.city===PR.city)&&(!q||[v.name,v.city,v.address,v.contact,v.contactName,v.pitch,v.evidence].join(' ').toLowerCase().indexOf(q)>=0)).sort((a,b)=>String(a.name).localeCompare(String(b.name)));
+  const list=all.filter(v=>v.stage!=='lead'&&(PR.showDup||!window.hqDupWhere(v.name,v.id))&&(PR.stage?prStage(v)===PR.stage:true)&&(!PR.city||v.city===PR.city)&&(!q||[v.name,v.city,v.address,v.contact,v.contactName,v.pitch,v.evidence].join(' ').toLowerCase().indexOf(q)>=0)).sort((a,b)=>((PR_RANK[prStage(a)]!=null?PR_RANK[prStage(a)]:3)-(PR_RANK[prStage(b)]!=null?PR_RANK[prStage(b)]:3))||(prLastTouch(b)-prLastTouch(a))||String(a.name).localeCompare(String(b.name)));
   const keep=document.activeElement&&document.activeElement.id;
-  const stages=Object.keys(TAGL).filter(k=>k!=='lead');
+  const stages=['yes','onboarding','followup','target','closed','no','gonecold'];
   let h='<div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.8rem"><input class="form-input" id="prQ" style="flex:1;min-width:180px" placeholder="Search prospects" value="'+esc(PR.q)+'" oninput="PR.q=this.value;renderProspects(1)"><select class="form-input" style="width:auto" onchange="PR.stage=this.value;renderProspects()"><option value="">All stages</option>'+stages.map(k=>'<option value="'+k+'"'+(PR.stage===k?' selected':'')+'>'+TAGL[k]+'</option>').join('')+'</select><select class="form-input" style="width:auto" onchange="PR.city=this.value;renderProspects()"><option value="">All cities</option>'+cities.map(c=>'<option'+(PR.city===c?' selected':'')+'>'+esc(c)+'</option>').join('')+'</select></div>';
-  h+='<div style="font-size:.8rem;opacity:.7;margin-bottom:.6rem">'+list.length+' of '+all.length+' prospects. These are the venues Sable finds and Raven works. Do-not-use venues are hidden.</div>';
+  h+='<div style="font-size:.8rem;opacity:.7;margin-bottom:.6rem">'+list.length+' of '+all.length+' prospects, in order of how far along they are: yes and handed off first, then in progress (any outreach sent), then not contacted yet, and gone cold last. These are the venues Sable finds and Raven works. Do-not-use venues are hidden.</div>';
   if(hiddenDup.length)h+='<div style="font-size:.78rem;opacity:.8;margin-bottom:.6rem;padding:.4rem .7rem;border:1px solid var(--border,#444);border-radius:8px">'+(PR.showDup?'Showing ':'')+hiddenDup.length+' prospect'+(hiddenDup.length>1?'s':'')+(PR.showDup?' that are':' hidden because they are') +' already a lead or one of Our Venues ('+esc(hiddenDup.slice(0,6).map(v=>v.name).join(', '))+(hiddenDup.length>6?', and more':'')+'). Nothing was deleted. <a href="#" onclick="PR.showDup=!PR.showDup;renderProspects(1);return false">'+(PR.showDup?'Hide them again':'Show them')+'</a></div>';
   if(!all.length)h+='<div style="opacity:.7">'+(S.started?'No prospects yet. Sable adds them as she finds them.':'Loading...')+'</div>';
   list.filter(v=>!isBlocked(v)).forEach(v=>{
-    const st=v.stage||'target',T=otTouches(v),em=emailOf(v);
+    const st=prStage(v),T=otTouches(v),em=emailOf(v);
     const line=(t,x)=>x?'<div style="margin:.25rem 0;font-size:.85rem"><b>'+t+':</b> '+esc(x)+'</div>':'';
     h+='<details data-pk="'+esc(v.id)+'"'+(S.open['pr_'+v.id]?' open':'')+' style="border:1px solid var(--border,#444);border-radius:10px;padding:.55rem .8rem;margin-bottom:.5rem"><summary style="cursor:pointer;display:flex;gap:.5rem;align-items:center;flex-wrap:wrap"><span class="tm-tag '+(TAGC[st]||'')+'">'+esc(TAGL[st]||st)+'</span>'+thrownTag(v)+'<b>'+esc(v.name)+'</b><span style="opacity:.7;font-size:.8rem">'+esc(v.city||'')+'</span>'+(hxLinks(v)?'<span>'+hxLinks(v)+'</span>':'')+(T.length?'<span style="opacity:.7;font-size:.75rem">'+T.length+' email'+(T.length>1?'s':'')+' sent</span>':'')+(v.followUpOn?'<span style="opacity:.7;font-size:.75rem">check back '+esc(v.followUpOn)+'</span>':'')+'</summary><div style="margin-top:.5rem">'+
       '<div class="vm-grid" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr));margin:.3rem 0 .6rem">'+[['name','Name'],['city','City'],['address','Address'],['contactName','Contact name'],['contact',em?'Email or phone':'Email or phone (none found yet)'],['phone','Phone'],['instagram','Instagram'],['facebook','Facebook'],['website','Website'],['foundFrom','Where we got them from']].map(a=>'<div class="form-group"><label class="form-label">'+a[1]+'</label><input class="form-input" id="lg-pf-'+esc(v.id)+'-'+a[0]+'" value="'+esc(v[a[0]]||'')+'" onchange="hqPfSave(\''+esc(v.id)+'\',\''+a[0]+'\',this.value)"></div>').join('')+'</div>'+
       [['evidence','Why them'],['pitch','Pitch (format and night)']].map(a=>'<div class="form-group" style="margin:.3rem 0 .6rem"><label class="form-label">'+a[1]+'</label><textarea class="form-textarea" id="lg-pf-'+esc(v.id)+'-'+a[0]+'" style="min-height:3.4rem;resize:vertical" onchange="hqPfSave(\''+esc(v.id)+'\',\''+a[0]+'\',this.value)">'+esc(v[a[0]]||'')+'</textarea></div>').join('')+'<div class="form-group" style="margin:.3rem 0 .6rem"><label class="form-label">Notes</label><textarea class="form-textarea" id="lg-pf-'+esc(v.id)+'-notes" style="min-height:3.4rem;resize:vertical" onchange="hqPfSave(\''+esc(v.id)+'\',\'notes\',this.value)">'+esc(v.notes||'')+'</textarea></div>'+(thrownInfo(v)?line('Thrown to Raven from '+thrownInfo(v).who,thrownInfo(v).title+(thrownInfo(v).at?' ('+fmtDay(thrownInfo(v).at)+')':'')):'')+line("Iris's idea to open with",baitFor(v.name))+
-      '<div style="margin:.5rem 0;padding:.4rem .7rem;border:1px solid var(--border,#444);border-radius:8px"><div style="font-size:.7rem;letter-spacing:.2em;text-transform:uppercase;opacity:.7;margin-bottom:.4rem">Outreach log and emails sent</div>'+window.hqLogFormHtml('pr',v)+window.hqHistoryHtml(v,'venue')+'</div>'+
-      offersBlock(v.id,v.name,'pr')+'<div style="margin:.6rem 0">'+(st==='lead'?'<span class="tm-tag booked">Moved to Leads</span>':'<button type="button" class="btn-sm btn-gold" onclick="hqProspectToLead(\''+esc(v.id)+'\',this)">Move to Leads</button>')+'</div><div style="font-size:.75rem;opacity:.7">Work this one on Raven\'s desk in My Team.</div></div></details>';
+      '<details data-pk="log_'+esc(v.id)+'"'+(S.open['pr_log_'+v.id]?' open':'')+' style="margin:.5rem 0;padding:.4rem .7rem;border:1px solid var(--border,#444);border-radius:8px"><summary style="cursor:pointer;font-size:.7rem;letter-spacing:.2em;text-transform:uppercase;opacity:.85">Outreach log and emails sent'+(T.length?' ('+T.length+')':'')+'</summary><div style="margin-top:.5rem">'+window.hqLogFormHtml('pr',v)+window.hqHistoryHtml(v,'venue')+'</div></details>'+
+      offersBlock(v.id,v.name,'pr')+'<div style="margin:.6rem 0;display:flex;gap:1rem;flex-wrap:wrap;align-items:center"><label style="font-size:.85rem;display:inline-flex;gap:.4rem;align-items:center;cursor:pointer"><input type="checkbox"'+(v.goneCold?' checked':'')+' onchange="hqPfCold(\''+esc(v.id)+'\',this.checked)" style="width:16px;height:16px"> Gone cold</label>'+(st==='lead'?'<span class="tm-tag booked">Moved to Leads</span>':'<button type="button" class="btn-sm btn-gold" onclick="hqProspectToLead(\''+esc(v.id)+'\',this)">Move to Leads</button>')+'</div><div style="font-size:.75rem;opacity:.7">Work this one on Raven\'s desk in My Team.</div></div></details>';
   });
   el.innerHTML=h;
   Object.keys(_typed).forEach(id=>{const x=document.getElementById(id);if(x&&x.value!==_typed[id])x.value=_typed[id];});
@@ -11376,6 +11419,8 @@ const A={
   async ibreopen(t){await ibSave({['items.'+t.dataset.id+'.status']:'open'});toast('Reopened.');},
   async ibdel(t){if(!tapTwice(t))return;await ibSave({['items.'+t.dataset.id]:firebase.firestore.FieldValue.delete()});toast('Deleted.');},
   kggrid(t){window.kgOpenGrid();},
+  async goneCold(t){await col('agent_venues').doc(t.dataset.id).update({goneCold:true,goneColdAt:Date.now()});movedTo(t,'Marked gone cold: Prospects (bottom)');toast('Marked gone cold. It is at the bottom of Prospects.');},
+  async coldnot(t){await col('agent_venues').doc(t.dataset.id).update({coldDismissedAt:Date.now()});movedTo(t,'Asking again in '+COLD_AFTER_DAYS+' days');toast('Okay, Raven will ask again in '+COLD_AFTER_DAYS+' days.');},
   async kgclear(t){const set=t.dataset.set,n=kgRows(set).length;if(!n){toast('Nothing to clear.',true);return;}if(!tapTwice(t))return;const u={};kgRows(set).forEach(r=>{u[set+'.'+r.id]=firebase.firestore.FieldValue.delete();});await kgSave(u);toast('Cleared '+n+'.');},
   async kgdel(t){if(!tapTwice(t))return;await kgSave({[t.dataset.set+'.'+t.dataset.id]:firebase.firestore.FieldValue.delete()});toast('Deleted.');},
   async kgadd(t){const set=t.dataset.set,sp=KG_SETS[set],o={};sp.cols.forEach(c=>{const e=document.getElementById('kga-'+set+'-'+c[0]);if(e)o[c[0]]=kgNorm(set,c[0],e.value);});if(!o[sp.need]){toast('Fill in the '+sp.cols[0][1].toLowerCase()+'.',true);return;}if(set==='gigs'){o.status='still going';o.checked=isoDay(Date.now());}o.createdAt=Date.now();await kgSave({[set+'.k'+Date.now().toString(36)]:o});sp.cols.forEach(c=>{const e=document.getElementById('kga-'+set+'-'+c[0]);if(e&&e.tagName==='INPUT')e.value='';});S.open['kgadd_'+set]=false;toast('Added.');},
@@ -11632,7 +11677,7 @@ const A={
       const bad=otConflict(dr.venueId,stp,today2);if(bad){toast(bad,true);return;}
       if(dr.kind==='dm')b.update(vref,{igDmAt:now2});
       else{
-        const vx=(S.venues||[]).find(x=>x.id===dr.venueId),cnt=(vx?otTouches(vx).length:0)+1,u2={lastTouchAt:now2,notNowUntil:'',stage:cnt>=3?'closed':'followup',followUpOn:cnt>=3?'':otPlusMonths(now2,4)};
+        const vx=(S.venues||[]).find(x=>x.id===dr.venueId),cnt=(vx?otTouches(vx).length:0)+1,u2={lastTouchAt:now2,notNowUntil:'',stage:'followup',followUpOn:cnt>=3?'':otPlusMonths(now2,4)};
         if(dr.kind==='email')u2.emailedAt=now2;else if(dr.kind==='email2')u2.emailed2At=now2;else if(dr.kind==='email3')u2.emailed3At=now2;
         b.update(vref,u2);
       }
