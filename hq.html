@@ -8102,6 +8102,7 @@ async function copy(text){
   }catch(e){return false;}
 }
 async function run(fn){try{await fn();}catch(e){toast('Failed: '+((e&&(e.code||e.message))||e),true);}}
+function movedTo(t,txt){try{if(t&&t.tagName==='BUTTON'){t.textContent=txt;t.disabled=true;t.classList.add('dim');t.style.opacity='.85';t.style.cursor='default';}}catch(e){}}
 function det(key,title,inner,dflt){
   const o=S.open[key]!==undefined?S.open[key]:!!dflt;
   return '<details class="tm-det" data-k="'+key+'"'+(o?' open':'')+'><summary>'+title+'</summary><div class="in">'+inner+'</div></details>';
@@ -9335,7 +9336,9 @@ function venueCard(v,fold){
     const em=emailOf(v),T=otTouches(v),n=T.length,sent=n>0||v.emailedAt;
     if(!em)h+='<input class="tm-in s" style="width:12rem" data-email="'+esc(v.id)+'" placeholder="their email" value="">';
     if(!v.conversation){
-      if(n<3){const nk=n===0?'email':n===1?'email2':'email3';
+      const waitingDr=(S.drafts||[]).find(d=>d.venueId===v.id&&OT_KIND[d.kind]&&d.status==='pending');
+      if(waitingDr)h+='<button class="tm-b dim" disabled style="opacity:.85;cursor:default" title="Open Raven\'s desk, Cold emails, to copy it, send it, and mark it sent">Sent to Raven: Cold emails</button>';
+      else if(n<3){const nk=n===0?'email':n===1?'email2':'email3';
         h+='<button class="tm-b" data-act="emailvenue" data-id="'+esc(v.id)+'" data-kind="'+nk+'">Draft touch '+(n+1)+' email</button>';
         if(v.instagram)h+='<button class="tm-b dim" data-act="emailvenue" data-id="'+esc(v.id)+'" data-kind="colddm">Draft touch '+(n+1)+' as an Instagram DM instead</button>';}
       if(!v.instagram)h+='<input class="tm-in s" style="width:10rem" data-ig="'+esc(v.id)+'" placeholder="@instagram"><button class="tm-b dim" data-act="saveig" data-id="'+esc(v.id)+'">Save Instagram</button>';
@@ -11027,7 +11030,7 @@ const A={
   },
   async kgcopy(t){toast(await copy(kgCsvText(t.dataset.set))?'CSV copied.':'Copy failed.',false);},
   kgdl(t){const set=t.dataset.set,b=new Blob([kgCsvText(set)],{type:'text/csv'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=(set==='gigs'?'gigs-run-by-others':'people-we-know')+'.csv';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},500);},
-  async sendrewrite(t){const id=t.dataset.id,dr=S.drafts.find(x=>x.id===id);if(!dr)return;keepEdit('d'+id);const cp=copy(rewritePrompt(dr,optState('d'+id,dr.body).text));await col('agent_drafts').doc(id).update({rewrite:{at:Date.now()}});toast('Sent to Quill.'+(await cp?' The prompt is copied too if you want it now in your own chat.':''),false);},
+  async sendrewrite(t){const id=t.dataset.id,dr=S.drafts.find(x=>x.id===id);if(!dr)return;keepEdit('d'+id);const cp=copy(rewritePrompt(dr,optState('d'+id,dr.body).text));await col('agent_drafts').doc(id).update({rewrite:{at:Date.now()}});movedTo(t,'Sent to Quill for rewrite');toast('Sent to Quill.'+(await cp?' The prompt is copied too if you want it now in your own chat.':''),false);},
   async libqueue(){const f=libRead();S.lib=f;const ta=document.getElementById('lib-paste'),body=ta?ta.value.trim():'';if(!body){toast('Paste the replies first.',true);return;}await col('agent_drafts').add({leadId:null,agent:'quill',kind:'reply',body:body,label:'Reply: '+(f.venue||f.name||'unknown'),status:'pending',createdAt:Date.now()});if(ta)ta.value='';toast('Added to Drafts waiting, with the options and highlight tools.');},
   async unskipdraft(t){const ta=document.querySelector('[data-skb="'+t.dataset.id+'"]');const u={status:'pending'};if(ta)u.body=ta.value;await col('agent_drafts').doc(t.dataset.id).update(u);toast('Back in Cold emails.');},
   async skcopy(t){const ta=document.querySelector('[data-skb="'+t.dataset.id+'"]');toast(await copy(ta?ta.value:'')?'Copied.':'Copy failed.',false);},
@@ -11105,7 +11108,7 @@ const A={
     const body=kind==='email'?coldEmailText(v):(kind==='email2'||kind==='email3'||kind==='cold')?coldCheckText(v):dmText(v,kind);
     const tag=isDm?' ('+v.instagram+')':' ('+emailOf(v)+')';
     await col('agent_drafts').add({leadId:null,venueId:v.id,agent:'raven',kind:kind,body:body,label:OT_KIND[kind].label+v.name+tag,status:'pending',createdAt:Date.now()});
-    toast('Draft is waiting in Needs you.');
+    movedTo(t,'Sent to Raven: Cold emails');toast('Sent to Raven. Find it under Cold emails on her desk.');
   },
   async invsent(t){const g=invoiceState().all.find(x=>x.id===t.dataset.id);if(!g)return;await sgSave({['invoices.v'+g.id+'.'+g.k]:Date.now()});toast('Marked sent for '+g.name+'.',false);},
   async invskip(t){const g=invoiceState().all.find(x=>x.id===t.dataset.id);if(!g)return;await sgSave({['invoices.v'+g.id+'.'+g.k]:-1});toast('Skipped this month for '+g.name+'.',false);},
@@ -11117,7 +11120,7 @@ const A={
   async carecheckin(t){
     const v=careVenues().find(x=>x.id===t.dataset.id);if(!v)return;
     await col('agent_drafts').add({leadId:null,venueId:v.id,agent:'sigil',kind:'checkin',body:careText(v),label:'Check-in: '+v.name,status:'pending',createdAt:Date.now()});
-    toast('Draft is waiting above.');
+    movedTo(t,'Sent to Vesper: Drafts');toast('Sent to Vesper. Find it under Drafts on her desk.');
   },
   async venuehealth(t){const id=t.dataset.id;if(id.indexOf('hq_')===0)await careSave({['venues.'+id.slice(3)+'.health']:t.value});else await col('agent_venues').doc(id).update({health:t.value});},
   async copyvl(t){const l=hqLeads().find(x=>x.id===t.dataset.id);if(!l)return;toast(await copy(leadFollowText(l))?'Follow-up copied. Check it, then send it yourself.':'Copy failed.',false);},
@@ -11144,16 +11147,16 @@ const A={
   async agrend(t){if(!confirm('Mark this venue as gone?'))return;const vn=agrVenueOf(t.dataset.id);await sgSave({['agreements.'+t.dataset.id+'.status']:'ended'});vhLog(vn,'Agreement ended: venue left');},
   async agrdel(t){if(!confirm('Remove this?'))return;await sgSave({['agreements.'+t.dataset.id]:null});},
   async addprospect(t){await addProspectDoc({name:t.dataset.name,city:t.dataset.city||'',evidence:t.dataset.why||'',pitch:t.dataset.pitch||''});},
-  async dossidea(t){const d=researchState().done.find(x=>x.id===t.dataset.id);if(!d)return;const a=[].concat(d.ideas||[])[+t.dataset.i];if(!a)return;await cuSave({['ideas.i'+Date.now().toString(36)]:{title:d.name+': '+String(a).slice(0,60),kind:'Venue pitch',pitch:a,venues:[d.name],status:'new',source:'research',createdAt:Date.now()}});toast('Saved to Ideas.');},
-  async ideaset(t){const v=t.dataset.v,id=t.dataset.id,p={['ideas.'+id+'.status']:v,['ideas.'+id+'.updatedAt']:Date.now()};if(v==='pursuing'){const cur=curatorState().ideas.find(i=>i.id===id);if(!cur||!cur.quill||cur.quill.status!=='drafted')p['ideas.'+id+'.quill']={status:'ready',at:Date.now()};}if(v==='new'){p['ideas.'+id+'.saved']=null;}await cuNow(p);if(v==='pursuing')toast('Sent to Quill. He drafts the venue pitches on his next run.');},
+  async dossidea(t){const d=researchState().done.find(x=>x.id===t.dataset.id);if(!d)return;const a=[].concat(d.ideas||[])[+t.dataset.i];if(!a)return;await cuSave({['ideas.i'+Date.now().toString(36)]:{title:d.name+': '+String(a).slice(0,60),kind:'Venue pitch',pitch:a,venues:[d.name],status:'new',source:'research',createdAt:Date.now()}});movedTo(t,'Sent to Iris: Ideas');toast('Saved to Iris\'s Ideas.');},
+  async ideaset(t){const v=t.dataset.v,id=t.dataset.id,p={['ideas.'+id+'.status']:v,['ideas.'+id+'.updatedAt']:Date.now()};if(v==='pursuing'){const cur=curatorState().ideas.find(i=>i.id===id);if(!cur||!cur.quill||cur.quill.status!=='drafted')p['ideas.'+id+'.quill']={status:'ready',at:Date.now()};}if(v==='new'){p['ideas.'+id+'.saved']=null;}await cuNow(p);if(v==='pursuing'){movedTo(t,'Sent to Quill');toast('Sent to Quill. He drafts the venue pitches on his next run.');}},
   async ideasave(t){const id=t.dataset.id,sel=document.getElementById('sv-'+id);if(!sel)return;const m=sel.value,lab=sel.options[sel.selectedIndex].text;await cuNow({['ideas.'+id+'.status']:'saved',['ideas.'+id+'.saved']:{month:m,label:lab,at:Date.now()},['ideas.'+id+'.updatedAt']:Date.now()});toast('Saved for '+lab+'. It comes back about ten weeks before.');},
-  async ideabrain(t){const x=curatorState().ideas.find(i=>i.id===t.dataset.id);if(!x)return;const sid='s'+Date.now().toString(36),now=Date.now();S.open['f_herald_brainstormlist']=true;cuLocal({['seeds.'+sid]:{title:x.title,notes:x.pitch||'',from:'idea',ideaId:x.id,createdAt:now},['ideas.'+x.id+'.status']:'brainstormed',['ideas.'+x.id+'.updatedAt']:now});renderDrawer(true);await col('agent_config').doc('curator').set({seeds:{[sid]:{title:x.title,notes:x.pitch||'',from:'idea',ideaId:x.id,createdAt:now}},ideas:{[x.id]:{status:'brainstormed',updatedAt:now}}},{merge:true});toast('Moved to the Brainstorm list below.');},
+  async ideabrain(t){const x=curatorState().ideas.find(i=>i.id===t.dataset.id);if(!x)return;const sid='s'+Date.now().toString(36),now=Date.now();S.open['f_herald_brainstormlist']=true;cuLocal({['seeds.'+sid]:{title:x.title,notes:x.pitch||'',from:'idea',ideaId:x.id,createdAt:now},['ideas.'+x.id+'.status']:'brainstormed',['ideas.'+x.id+'.updatedAt']:now});renderDrawer(true);await col('agent_config').doc('curator').set({seeds:{[sid]:{title:x.title,notes:x.pitch||'',from:'idea',ideaId:x.id,createdAt:now}},ideas:{[x.id]:{status:'brainstormed',updatedAt:now}}},{merge:true});movedTo(t,'Sent to Iris: Brainstorm list');toast('Moved to Iris\'s Brainstorm list below.');},
   async brainadd(){const ti=val('bs-title');if(!ti){toast('Give it a title.',true);return;}await cuNow({['seeds.s'+Date.now().toString(36)]:{title:ti,notes:val('bs-notes'),from:'hand',createdAt:Date.now()}});toast('Added to the Brainstorm list.');},
   async brainsave(t){const id=t.dataset.id,e=document.getElementById('bs-notes-'+id);if(!e)return;await cuSave({['seeds.'+id+'.notes']:e.value,['seeds.'+id+'.updatedAt']:Date.now()});toast('Saved.');},
-  async brainpromote(t){const id=t.dataset.id,x=curatorState().seeds.find(i=>i.id===id);if(!x)return;const e=document.getElementById('bs-notes-'+id),k=document.getElementById('bs-kind-'+id),notes=e?e.value:(x.notes||'');await cuNow({['ideas.i'+Date.now().toString(36)]:{title:x.title,kind:k?k.value:'Event',pitch:notes||x.title,venues:[],status:'new',source:'brainstorm',createdAt:Date.now()},['seeds.'+id]:null});toast('Promoted to a full idea.');},
+  async brainpromote(t){const id=t.dataset.id,x=curatorState().seeds.find(i=>i.id===id);if(!x)return;const e=document.getElementById('bs-notes-'+id),k=document.getElementById('bs-kind-'+id),notes=e?e.value:(x.notes||'');await cuNow({['ideas.i'+Date.now().toString(36)]:{title:x.title,kind:k?k.value:'Event',pitch:notes||x.title,venues:[],status:'new',source:'brainstorm',createdAt:Date.now()},['seeds.'+id]:null});movedTo(t,'Sent to Iris: Ideas');toast('Promoted to a full idea on Iris\'s desk.');},
   async braindel(t){if(!tapTwice(t))return;cuLocal({['seeds.'+t.dataset.id]:CU_DEL});renderDrawer(true);const ref=col('agent_config').doc('curator');try{await ref.update({['seeds.'+t.dataset.id]:firebase.firestore.FieldValue.delete()});}catch(e){await ref.set({seeds:{[t.dataset.id]:null}},{merge:true});}toast('Deleted.');},
   async ideadel(t){if(!tapTwice(t))return;cuLocal({['ideas.'+t.dataset.id]:CU_DEL});renderDrawer(true);const ref=col('agent_config').doc('curator');try{await ref.update({['ideas.'+t.dataset.id]:firebase.firestore.FieldValue.delete()});}catch(e){await ref.set({ideas:{[t.dataset.id]:null}},{merge:true});}toast('Removed.');},
-  async idearaven(t){const x=curatorState().ideas.find(i=>i.id===t.dataset.id);if(!x)return;let names=ideaVenues(x).filter(v=>v.kind!=='have').map(v=>v.name);if(!names.length){const m=String(x.title||'').match(/,\s*([^,]+)$/);if(m)names=[m[1].trim()];}if(!names.length){toast('No venue is named on this idea. Open Edit this idea and fill in Best at, then try again.',true);return;}for(const n of names){await addProspectDoc({name:n,evidence:'Idea from Iris: '+x.title,pitch:(x.pitch||x.title),thrownFrom:'Iris',thrownIdea:x.title});}await cuNow({['ideas.'+x.id+'.raven']:{at:Date.now(),venues:names},['ideas.'+x.id+'.updatedAt']:Date.now()});toast('Thrown to Raven. Find '+names.join(', ')+' under Prospects on her Venue outreach tab.');},
+  async idearaven(t){const x=curatorState().ideas.find(i=>i.id===t.dataset.id);if(!x)return;let names=ideaVenues(x).filter(v=>v.kind!=='have').map(v=>v.name);if(!names.length){const m=String(x.title||'').match(/,\s*([^,]+)$/);if(m)names=[m[1].trim()];}if(!names.length){toast('No venue is named on this idea. Open Edit this idea and fill in Best at, then try again.',true);return;}for(const n of names){await addProspectDoc({name:n,evidence:'Idea from Iris: '+x.title,pitch:(x.pitch||x.title),thrownFrom:'Iris',thrownIdea:x.title});}await cuNow({['ideas.'+x.id+'.raven']:{at:Date.now(),venues:names},['ideas.'+x.id+'.updatedAt']:Date.now()});movedTo(t,'Sent to Raven: Prospects');toast('Thrown to Raven. Find '+names.join(', ')+' under Prospects on her Venue outreach tab.');},
   async ideacopy(t){const x=curatorState().ideas.find(i=>i.id===t.dataset.id);if(x)toast(await copy(ideaPrompt(x))?'Brief copied. Paste it into Claude.':'Copy failed.',false);},
   async ideaadd(){const ti=val('id-title');if(!ti){toast('Give it a title.',true);return;}const w=whenRead('iw-new'),r=whenResult(w),o={title:ti,kind:document.getElementById('id-kind').value,pitch:val('id-pitch'),venues:val('id-venues').split(',').map(x=>x.trim()).filter(Boolean),status:'new',source:'hand',createdAt:Date.now()};if(r){o.when=r.label;o.whenSel=w;if(r.hidden){o.status='saved';o.saved={month:new Date(r.target).toISOString().slice(0,7),label:r.label,target:r.target,at:Date.now()};}}S.open['ideaadd']=false;S.open['f_herald_ideas']=true;await cuNow({['ideas.i'+Date.now().toString(36)]:o});toast(r&&r.hidden?'Added. It comes back about ten weeks before '+r.label+'.':'Added.');},
   async ideaedit(t){const id=t.dataset.id,x=curatorState().ideas.find(i=>i.id===id);if(!x)return;const g=k=>{const e=document.getElementById('ie-'+k+'-'+id);return e?e.value:'';};const ti=g('title').trim();if(!ti){toast('Give it a title.',true);return;}const old=ideaVenues(x),vn=g('venues').split(',').map(v=>v.trim()).filter(Boolean).map(n=>old.find(o=>blNorm(o.name)===blNorm(n))||n);const p={['ideas.'+id+'.title']:ti,['ideas.'+id+'.kind']:g('kind'),['ideas.'+id+'.pitch']:g('pitch'),['ideas.'+id+'.venues']:vn,['ideas.'+id+'.edited']:true,['ideas.'+id+'.updatedAt']:Date.now()};const w=whenRead('iw-'+id);if(whenSig(w)!==whenSig(x.whenSel||{})){const r=whenResult(w);p['ideas.'+id+'.whenSel']=r?w:null;if(!r){p['ideas.'+id+'.status']='new';p['ideas.'+id+'.saved']=null;}else{p['ideas.'+id+'.when']=r.label;if(r.hidden){p['ideas.'+id+'.status']='saved';p['ideas.'+id+'.saved']={month:new Date(r.target).toISOString().slice(0,7),label:r.label,target:r.target,at:Date.now()};}else{p['ideas.'+id+'.status']='new';p['ideas.'+id+'.saved']=null;}}}await cuNow(p);toast('Saved.');},
@@ -11176,7 +11179,7 @@ const A={
   async sgdraft(t){
     const p=sigilState().people.find(x=>x.id===t.dataset.id);if(!p||!p.miss.length)return;
     await col('agent_drafts').add({leadId:null,agent:'sigil',kind:'paperwork',body:paperText(p),label:'Paperwork: '+p.name,status:'pending',createdAt:Date.now()});
-    toast('Draft is waiting below.');
+    movedTo(t,'Sent to Sigil: Drafts');toast('Sent to Sigil. Find it under Drafts on his desk.');
   },
   async wdprinted(t){const p={};String(t.dataset.ids).split(',').filter(Boolean).forEach(id=>{p['restocks.'+id+'.status']='printed';p['restocks.'+id+'.printedAt']=Date.now();});await wdSave(p);toast('Marked printed.');},
   async wddelivered(t){const p={};String(t.dataset.ids).split(',').filter(Boolean).forEach(id=>{p['restocks.'+id+'.status']='delivered';p['restocks.'+id+'.deliveredAt']=Date.now();});await wdSave(p);toast('Marked delivered.');},
@@ -11216,7 +11219,7 @@ const A={
     const b=fdb().batch();
     b.update(col('agent_venues').doc(v.id),u);
     b.set(col('agent_drafts').doc(),{leadId:null,venueId:v.id,agent:'raven',kind:'thanks',body:thanksText(v,out,who,trial,back),label:'Thank-you: '+v.name,status:'pending',createdAt:now});
-    S.logFor=null;await b.commit();renderDrawer(true);toast('Visit logged. A thank-you draft is waiting.');
+    S.logFor=null;await b.commit();renderDrawer(true);toast('Visit logged. The thank-you draft is on Raven\'s desk under Needs you.');
   },
   close(){closeDrawer();},
   async addlead(){
