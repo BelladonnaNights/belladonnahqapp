@@ -1523,6 +1523,10 @@ html::-webkit-scrollbar-thumb:hover,.modal::-webkit-scrollbar-thumb:hover{backgr
       <summary>Search the Team</summary>
       <div class="in"><div class="tm-hint">Type a word or phrase to see which team member handles it.</div><input class="tm-in" id="tmFind" type="search" autocomplete="off" aria-label="Search the team"><div id="tmFindOut" style="margin-top:.7rem"></div></div>
     </details>
+    <details class="tm-det" style="--ac:#c9a96e" id="tmIdeasDet">
+      <summary id="tmIdeasSum">Team Ideas</summary>
+      <div class="in" id="tmIdeas"></div>
+    </details>
     <details class="tm-det" style="--ac:#c9a96e" id="tmTasksDet">
       <summary>Scheduled Tasks</summary>
       <div class="in" id="tmTasks"></div>
@@ -7424,6 +7428,7 @@ HARD RULES
 - COLD EMAIL AND DM DRAFTS: every cold email or Instagram DM draft body holds FOUR different versions, each with a different angle, separated by a line containing exactly ---OPTION---. Ahnna picks one and highlights the parts she likes. Emails start with a Subject line in every version.
 - REWRITES: each run, read agent_drafts for your drafts that have a rewrite field (Ahnna pressed Send for rewrite) and no newer draft whose label ends with [redraft of <that draft's id>]. Before writing, read everything the team knows about that venue or person: agent_venues (evidence, pitch, touches), agent_config curator (research dossier and bait line, profiles, ideas that name the venue), agent_config sable (events and dates to avoid), agent_config knowngigs (gigs the venue already has, never pitch those), Our Venues, agent_leads, and the price sheet and voice. Then write ONE new draft with the same agent, kind, venueId and leadId, a label equal to the old label plus " [redraft of <old id>]", and a body of four new versions with different angles, separated by ---OPTION--- lines. HQ then hides the old one.
 - REDRAFTS: each run, read agent_drafts for your drafts that have a redraft field (parts Ahnna highlighted) and no newer draft whose label ends with [redraft of <that draft's id>]. For each, write ONE new draft with the same agent, kind, venueId and leadId, a label equal to the old label plus " [redraft of <old id>]", and a body of new versions built around her parts (four for emails and DMs, five for captions), using the parts word for word, then the usual ---OPTION--- separators. HQ then hides the old one.
+- TEAM IDEAS: each run, read the Firestore doc agent_config/ideabox, field items (a map of idea id to {title, body, owner, route, status, notes, addedBy}). Look at every item whose status is open. If owner is your agent id, it is your turn. If owner is empty, it is for the whole team: decide from your job whether it is yours, and if it is not, leave it alone. When it is yours, do your part of the job, then write a note and pass it on. To pass it on, set owner to the first agent id in route, set route to the rest, and if route is empty and nothing more is needed set status to done. If it needs someone who is not in route, set owner to that person. Write it with setConfig, doc ideabox, data {items:{<id>:{owner:"...",route:[...],status:"open"|"done",notes:{<ms>:{who:"<your name>",text:"what you did and what the next person needs",at:<ms>}}}}}. Use the current time in ms as the note key. Never delete items or notes. You may also add an idea of your own the same way with a new id, a title, body, owner (or empty), route, status open and addedBy set to your name. Do not act on an item that is not yours.
 - Nothing you write is ever sent to a client or venue. Everything goes into HQ as a draft or a record for Ahnna to approve.
 - Never invent prices, dates, availability or facts. If something is missing, say exactly what is missing.
 - Never log into a gig site or any account with a bot. Work only from emails, HQ data and public web pages.
@@ -8880,6 +8885,41 @@ function tkBuild(i,url,key){
 }
 function tkState(i){const d=(S.cfg.tasks&&S.cfg.tasks.done)||{},r=d[tkKey(i)];if(!r||!r.hash)return 'none';return r.hash===tkHash(i)?'ok':'stale';}
 function tkWhen(i){const w=(S.cfg.tasks&&S.cfg.tasks.when)||{};return w[tkKey(i)]||TASKS[i].when;}
+/* ── Team Ideas: one shared box. Owner empty = the whole team looks it over. Notes stay on the idea; passing moves it to the next agent in its route. ── */
+async function ibSave(patch){const ref=col('agent_config').doc('ideabox');try{await ref.update(patch);}catch(e){await ref.set(expandPatch(patch),{merge:true});}}
+function ibItems(){const o=((S.cfg.ideabox||{}).items)||{};return Object.entries(o).filter(([k,v])=>v&&typeof v==='object').map(([k,v])=>Object.assign({id:k},v));}
+function ibName(id){if(!id)return 'Whole team';if(id==='ahnna')return 'Ahnna';const a=AGENTS.find(x=>x.id===id);return a?a.name:id;}
+function ibRoute(it){return Array.isArray(it.route)?it.route.filter(Boolean):(it.route&&typeof it.route==='object'?Object.values(it.route).filter(Boolean):[]);}
+function ibNotes(it){const n=it.notes;const L=Array.isArray(n)?n:(n&&typeof n==='object'?Object.values(n):[]);return L.filter(x=>x&&x.text).sort((a,b)=>(a.at||0)-(b.at||0));}
+function ibOpts(sel,blank){return '<option value="">'+blank+'</option>'+AGENTS.map(a=>'<option value="'+a.id+'"'+(sel===a.id?' selected':'')+'>'+esc(a.name)+'</option>').join('')+'<option value="ahnna"'+(sel==='ahnna'?' selected':'')+'>Ahnna</option>';}
+function ibCard(it){
+  const open=(it.status||'open')!=='done',rt=ibRoute(it),nt=ibNotes(it);
+  const tag='<span class="tm-tag'+(open?'':' ok')+'">'+(open?('with '+esc(ibName(it.owner))):'done')+'</span>';
+  let h='<div class="t2">'+(it.body?esc(it.body):'<i>No details.</i>')+'</div>';
+  h+='<div class="tm-hint">Added by '+esc(it.addedBy||'Ahnna')+(it.createdAt?' · '+esc(isoDay(it.createdAt)):'')+'. '+(rt.length?'Then goes to: '+esc(rt.map(ibName).join(', '))+'.':'No one after this.')+'</div>';
+  if(nt.length)h+='<div class="tm-sec" style="font-size:.7rem">Notes</div>'+nt.map(n=>'<div class="t2"><b>'+esc(n.who||'?')+'</b> <span class="tm-hint">'+(n.at?esc(isoDay(n.at)):'')+'</span>\n'+esc(n.text)+'</div>').join('');
+  if(open){
+    h+='<label class="tm-lbl">Leave a note</label><textarea class="tm-ta" style="min-height:70px" id="ibn-'+esc(it.id)+'"></textarea>';
+    h+='<div class="tm-row"><button class="tm-b" data-act="ibnote" data-id="'+esc(it.id)+'">Save note</button><button class="tm-b pri" data-act="ibpass" data-id="'+esc(it.id)+'">'+(rt.length?'Save note and pass to '+esc(ibName(rt[0])):'Save note and finish')+'</button></div>';
+    h+='<div class="tm-fg"><div><label class="tm-lbl">With</label><select class="tm-sel" data-chg="ibowner" data-id="'+esc(it.id)+'">'+ibOpts(it.owner||'','Whole team looks it over')+'</select></div></div>';
+  }else h+='<div class="tm-row"><button class="tm-b" data-act="ibreopen" data-id="'+esc(it.id)+'">Reopen</button></div>';
+  h+='<div class="tm-row"><button class="tm-b dim red" data-act="ibdel" data-id="'+esc(it.id)+'">Delete</button></div>';
+  return det('ib_'+it.id,'<b>'+esc(it.title||'(untitled)')+'</b> '+tag,h,false);
+}
+function renderIdeas(){
+  const el=$('#tmIdeas');if(!el)return;
+  const a=document.activeElement;
+  if(a&&el.contains(a)&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName))return;
+  if(Array.from(el.querySelectorAll('input,textarea')).some(x=>x.value!==x.defaultValue))return;
+  el.querySelectorAll('details[data-k]').forEach(d=>{S.open[d.dataset.k]=d.open;});
+  const all=ibItems().sort((x,y)=>(y.createdAt||0)-(x.createdAt||0)),op=all.filter(x=>(x.status||'open')!=='done'),dn=all.filter(x=>x.status==='done');
+  const sm=$('#tmIdeasSum');if(sm)sm.textContent='Team Ideas'+(op.length?' ('+op.length+' open)':'');
+  let h='<div class="tm-hint">One place for ideas. On each run, every team member looks it over. If it is theirs they do their part, leave a note, and pass it to the next person. If it is not theirs they leave it alone. Leave "With" on whole team if you do not know who it is for.</div>';
+  h+=det('ibadd','Add an idea','<div class="tm-fg"><div class="full"><label class="tm-lbl">Title</label><input class="tm-in" id="ib-title"></div><div class="full"><label class="tm-lbl">Details</label><textarea class="tm-ta" id="ib-body"></textarea></div><div><label class="tm-lbl">With</label><select class="tm-sel" id="ib-owner">'+ibOpts('','Whole team looks it over')+'</select></div><div><label class="tm-lbl">Then pass to</label><select class="tm-sel" id="ib-r1">'+ibOpts('','(no one)')+'</select></div><div><label class="tm-lbl">Then</label><select class="tm-sel" id="ib-r2">'+ibOpts('','(no one)')+'</select></div><div><label class="tm-lbl">Then</label><select class="tm-sel" id="ib-r3">'+ibOpts('','(no one)')+'</select></div></div><div class="tm-row"><button class="tm-b pri" data-act="ibadd">Add idea</button></div>',false);
+  h+=op.length?op.map(ibCard).join(''):'<div class="tm-empty">Nothing open.</div>';
+  if(dn.length)h+=det('ibdone','Done ('+dn.length+')',dn.map(ibCard).join(''),false);
+  el.innerHTML=h;
+}
 function renderTasks(){
   const el=$('#tmTasks');if(!el)return;
   const sig=TASKS.map((t,i)=>tkState(i)+'|'+tkWhen(i)).join(',')+'#'+(S.whenEdit==null?'':S.whenEdit);
@@ -8906,7 +8946,7 @@ function render(){
       '<div class="tm-status"><span class="tm-dot'+(c.need?' attn':'')+'"></span><span>'+esc(c.line)+'</span></div>'+
       '<button class="tm-go" data-act="open" data-agent="'+a.id+'">'+a.btn+'</button></div>';
   }).join('');
-  renderBrief();renderTasks();
+  renderBrief();renderIdeas();renderTasks();
   try{if(document.getElementById('sub-venues-prospects').classList.contains('active'))renderProspects();}catch(e){}
   try{if(S.started&&!window._trSeed){window._trSeed=1;col('agent_config').doc('outreach').get().then(d=>{const x=d.exists?d.data():{},u={};if(!String(x.short||'').trim())u.short=TERMS_SHORT;if(!String(x.terms||'').trim())u.terms=TERMS_FULL;if(Object.keys(u).length)col('agent_config').doc('outreach').set(u,{merge:true});}).catch(()=>{});}}catch(e){}
   try{if(S.started&&!window._emSeed){window._emSeed=1;col('agent_config').doc('voice').get().then(d=>{const x=d.exists?d.data():{};if(!x.email||(x.emailEdited!==true&&x.emailVer!==EMAIL_VER))col('agent_config').doc('voice').set({email:EMAIL_GUIDE,emailVer:EMAIL_VER,emailEdited:false,emailAt:Date.now()},{merge:true});}).catch(()=>{});}}catch(e){}
@@ -10892,6 +10932,12 @@ const A={
   async kgf(t){const v=kgNorm(t.dataset.set,t.dataset.f,t.value);await kgSave({[t.dataset.set+'.'+t.dataset.id+'.'+t.dataset.f]:v});},
   async kgchecked(t){await kgSave({['gigs.'+t.dataset.id+'.checked']:isoDay(Date.now()),['gigs.'+t.dataset.id+'.status']:'still going'});toast('Marked checked today.');},
   async ventdec(t){try{await col('venueFeedback').doc(t.dataset.id).update({decision:t.dataset.v,status:t.dataset.v==='pending'?'new':'read'});toast(t.dataset.v==='approved'?'Approved.':t.dataset.v==='declined'?'Declined.':'Back to waiting.');}catch(e){toast('Could not save: '+e.message,true);}},
+  async ibadd(t){const g=i=>{const e=document.getElementById(i);return e?e.value:'';};const title=g('ib-title').trim();if(!title){toast('Give the idea a title.',true);return;}const id='i'+Date.now().toString(36),rt=[g('ib-r1'),g('ib-r2'),g('ib-r3')].filter(Boolean);await ibSave({['items.'+id]:{title,body:g('ib-body').trim(),owner:g('ib-owner'),route:rt,status:'open',addedBy:'Ahnna',createdAt:Date.now(),notes:{}}});['ib-title','ib-body'].forEach(i=>{const e=document.getElementById(i);if(e)e.value='';});S.open.ibadd=false;toast('Idea added.');renderIdeas();},
+  async ibnote(t){await A.ibpass(t,true);},
+  async ibpass(t,noPass){const id=t.dataset.id,it=ibItems().find(x=>x.id===id);if(!it)return;const e=document.getElementById('ibn-'+id),txt=e?e.value.trim():'';const patch={};const now=Date.now();if(txt)patch['items.'+id+'.notes.'+now]={who:'Ahnna',text:txt,at:now};if(!noPass){const rt=ibRoute(it);if(rt.length){patch['items.'+id+'.owner']=rt[0];patch['items.'+id+'.route']=rt.slice(1);}else{patch['items.'+id+'.status']='done';patch['items.'+id+'.doneAt']=now;}}if(!Object.keys(patch).length){toast('Write a note first.',true);return;}await ibSave(patch);if(e)e.value='';toast(noPass?'Note saved.':'Passed on.');renderIdeas();},
+  async ibowner(t){await ibSave({['items.'+t.dataset.id+'.owner']:t.value});toast('Updated.');},
+  async ibreopen(t){await ibSave({['items.'+t.dataset.id+'.status']:'open'});toast('Reopened.');},
+  async ibdel(t){if(!tapTwice(t))return;await ibSave({['items.'+t.dataset.id]:firebase.firestore.FieldValue.delete()});toast('Deleted.');},
   async kgdel(t){if(!tapTwice(t))return;await kgSave({[t.dataset.set+'.'+t.dataset.id]:firebase.firestore.FieldValue.delete()});toast('Deleted.');},
   async kgadd(t){const set=t.dataset.set,sp=KG_SETS[set],o={};sp.cols.forEach(c=>{const e=document.getElementById('kga-'+set+'-'+c[0]);if(e)o[c[0]]=kgNorm(set,c[0],e.value);});if(!o[sp.need]){toast('Fill in the '+sp.cols[0][1].toLowerCase()+'.',true);return;}if(set==='gigs'){o.status='still going';o.checked=isoDay(Date.now());}o.createdAt=Date.now();await kgSave({[set+'.k'+Date.now().toString(36)]:o});sp.cols.forEach(c=>{const e=document.getElementById('kga-'+set+'-'+c[0]);if(e&&e.tagName==='INPUT')e.value='';});S.open['kgadd_'+set]=false;toast('Added.');},
   async kgfile(t){const f=t.files&&t.files[0];if(!f)return;const txt=await f.text();const ta=document.getElementById('kgcsv-'+t.dataset.set);if(ta)ta.value=txt;toast('File loaded. Press Import.');},
