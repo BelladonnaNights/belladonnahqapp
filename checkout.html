@@ -201,13 +201,13 @@
       </div>
     </div>
     <div class="field">
-      <label class="field-label">Photo</label>
+      <label class="field-label">Photos (up to 6)</label>
       <div class="photo-upload">
-        <input type="file" accept="image/*" id="photoFile" onchange="handlePhoto(this)">
+        <input type="file" accept="image/*" multiple id="photoFile" onchange="handlePhoto(this)">
         <div style="font-size:1.2rem;margin-bottom:0.4rem;">📎</div>
-        <div class="photo-label">Tap to attach — <span>browse files</span></div>
+        <div class="photo-label">Tap to attach one or more — <span>browse files</span></div>
         <div class="photo-name" id="photoName"></div>
-        <img id="photoPreview" style="display:none;max-width:100%;border-radius:0;margin-top:0.6rem;">
+        <div id="photoPreview" style="display:none;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:0.6rem;"></div>
       </div>
     </div>
     <div class="field" style="margin-bottom:0;">
@@ -256,7 +256,7 @@ function renderVenueChips(){
   filterVenues();
 }
 
-let selectedVenue='',selectedCrowd='',starRating=0,venueBusy='',gotPaid='',currentStatus='Active',selectedPhotoFile=null,gigCanceled=false;
+let selectedVenue='',selectedCrowd='',starRating=0,venueBusy='',gotPaid='',currentStatus='Active',selectedPhotoFiles=[],gigCanceled=false;
 function localDateStr(d){ d=d||new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
 document.getElementById('date').value=localDateStr();
 function setNow(){const n=new Date();document.getElementById('checkoutTime').value=String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0');}
@@ -283,14 +283,29 @@ function setCanceled(val){
   document.getElementById('payTipsCard').style.display=val?'none':'block';
 }
 function handlePhoto(input){
-  if(input.files&&input.files[0]){
-    selectedPhotoFile=input.files[0];
-    document.getElementById('photoName').textContent='✓ '+selectedPhotoFile.name;
-    document.getElementById('photoStatus').textContent='Photo will upload when you submit.';
-    const reader=new FileReader();
-    reader.onload=e=>{const img=document.getElementById('photoPreview');img.src=e.target.result;img.style.display='block';};
-    reader.readAsDataURL(selectedPhotoFile);
-  }
+  const files=Array.from(input.files||[]).filter(f=>/^image\//.test(f.type)||/\.(jpe?g|png|heic|heif|webp)$/i.test(f.name));
+  if(!files.length)return;
+  // each pick adds to the list, so photos can also be added one at a time
+  files.forEach(f=>{if(selectedPhotoFiles.length<6&&!selectedPhotoFiles.some(x=>x.name===f.name&&x.size===f.size&&x.lastModified===f.lastModified))selectedPhotoFiles.push(f);});
+  if(selectedPhotoFiles.length>=6&&files.length>0&&Array.from(input.files).length>files.length)showError('Only the first 6 photos are used.');
+  input.value='';
+  renderPhotoList();
+}
+function removePhoto(i){selectedPhotoFiles.splice(i,1);renderPhotoList();}
+function renderPhotoList(){
+  const n=selectedPhotoFiles.length;
+  document.getElementById('photoName').textContent=n?('✓ '+n+' photo'+(n===1?'':'s')+' ready'):'';
+  document.getElementById('photoStatus').textContent=n?(n+' photo'+(n===1?'':'s')+' will upload when you submit.'):"No photo attached — that's OK if there's nothing to show.";
+  const box=document.getElementById('photoPreview');
+  box.innerHTML='';box.style.display=n?'grid':'none';
+  selectedPhotoFiles.forEach((f,i)=>{
+    const w=document.createElement('div');w.style.cssText='position:relative;';
+    const img=document.createElement('img');img.style.cssText='width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:6px;display:block;';
+    const x=document.createElement('button');x.type='button';x.textContent='✕';x.style.cssText='position:absolute;top:3px;right:3px;background:rgba(0,0,0,.7);color:#fff;border:0;border-radius:50%;width:22px;height:22px;cursor:pointer;z-index:2;';
+    x.onclick=function(ev){ev.stopPropagation();ev.preventDefault();removePhoto(i);};
+    w.appendChild(img);w.appendChild(x);box.appendChild(w);
+    const r=new FileReader();r.onload=e=>{img.src=e.target.result;};r.readAsDataURL(f);
+  });
 }
 // Resizes/compresses the photo in-browser, then uploads it straight to Firebase
 // Storage (no Apps Script, no Google Drive detour) and returns a public URL.
@@ -337,13 +352,23 @@ async function findOpenShiftId(date,venue,host,locationId){
   });
   return best?best.id:snap.docs[0].id;
 }
-async function uploadPhotoIfAny(shiftId,locationId){
-  if(!selectedPhotoFile)return '';
-  const blob=await compressPhoto(selectedPhotoFile);
-  const path='uploads/'+(locationId||'wa-southsound')+'/checkout-photos/'+shiftId+'-'+Date.now()+'.jpg';
-  const ref=storage.ref().child(path);
-  await ref.put(blob,{contentType:'image/jpeg'});
-  return await ref.getDownloadURL();
+async function uploadPhotos(shiftId,locationId,onProgress){
+  const urls=[];let failed=0;
+  for(let i=0;i<selectedPhotoFiles.length;i++){
+    if(onProgress)onProgress(i+1,selectedPhotoFiles.length);
+    let ok=false;
+    for(let tryN=0;tryN<2&&!ok;tryN++){
+      try{
+        const blob=await compressPhoto(selectedPhotoFiles[i]);
+        const path='uploads/'+(locationId||'wa-southsound')+'/checkout-photos/'+shiftId+'-'+Date.now()+'-'+(i+1)+'.jpg';
+        const ref=storage.ref().child(path);
+        await ref.put(blob,{contentType:'image/jpeg'});
+        urls.push(await ref.getDownloadURL());ok=true;
+      }catch(photoErr){console.warn('Photo upload failed:',photoErr);}
+    }
+    if(!ok)failed++;
+  }
+  return {urls:urls,failed:failed};
 }
 async function submitForm(){
   const host=document.getElementById('host').value.trim();
@@ -360,9 +385,13 @@ async function submitForm(){
   try{
     let docId=await findOpenShiftId(date,selectedVenue,host,locationId);
     if(!docId)docId=newShiftDocId(date,selectedVenue,host); // no matching check-in — start a checkout-only record
-    btn.textContent=selectedPhotoFile?'Uploading photo...':'Submitting...';
-    let photoUrl='';
-    try{photoUrl=await uploadPhotoIfAny(docId,locationId);}catch(photoErr){console.warn('Photo upload failed:',photoErr);}
+    let photoUrls=[],photoFailed=0;
+    if(selectedPhotoFiles.length){
+      btn.textContent='Uploading photos...';
+      const up=await uploadPhotos(docId,locationId,(a,b)=>{btn.textContent='Uploading photo '+a+' of '+b+'...';});
+      photoUrls=up.urls;photoFailed=up.failed;
+      if(!photoUrls.length){showError('The photos did not upload, so nothing was submitted. Check your connection and tap Check Out again.');btn.disabled=false;btn.textContent='Check Out';return;}
+    }
     btn.textContent='Submitting...';
     await db.collection('shifts').doc(docId).set({
       hostName:host,venue:selectedVenue,date:date,locationId:locationId,status:'OFF',
@@ -376,7 +405,7 @@ async function submitForm(){
       issues:document.getElementById('issues').value.trim(),
       checkoutNotes:document.getElementById('notes').value.trim(),
       checkoutAvailability:currentStatus,
-      photoUrl:photoUrl,
+      ...(photoUrls.length?{photoUrl:photoUrls[0],photoUrls:photoUrls}:{}),
       cancelled:gigCanceled,
       cancelReason:gigCanceled?document.getElementById('cancelReason').value.trim():'',
       reviewed:false,
@@ -385,6 +414,7 @@ async function submitForm(){
     document.getElementById('successMsg').style.display='block';
     document.getElementById('successMsg').textContent=gigCanceled?"Got it — marked as canceled. Thanks for letting us know. 🖤":"Shift recorded. Thank you for a beautiful night. 🖤";
     btn.textContent='Checked Out ✓';
+    if(photoFailed){showError(photoFailed+' of '+(photoUrls.length+photoFailed)+' photos did not upload. Your check-out is saved. Please text the others to Ahnna.');}
   }catch(e){showError('Submission failed. Please try again.');btn.disabled=false;btn.textContent='Check Out';}
 }
 function showError(msg){const el=document.getElementById('errorMsg');el.textContent=msg;el.style.display='block';}
