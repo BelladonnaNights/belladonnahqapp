@@ -1133,6 +1133,7 @@ html::-webkit-scrollbar-thumb:hover,.modal::-webkit-scrollbar-thumb:hover{backgr
     <div class="vm-sec"><div class="vm-sec-h"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="1.5"/><path d="M3 7l9 6 9-6"/></svg>Outreach log</div><div id="recruitHistory"></div></div>
     <div class="modal-actions vm-actions">
       <button class="modal-cancel" id="recruitDeleteBtn" onclick="deleteRecruit()" style="color:var(--rose);display:none;">Delete</button>
+      <button class="modal-cancel" id="recruitToHostBtn" onclick="recruitToHost(editingRecruitId,this)" style="display:none;">Make a host &rarr;</button>
       <div style="flex:1;"></div>
       <button class="modal-cancel" onclick="closeModal('recruitModal')">Cancel</button>
       <button class="modal-save" onclick="saveRecruit()" style="flex:none;min-width:9rem;">Save Lead</button>
@@ -1396,6 +1397,7 @@ html::-webkit-scrollbar-thumb:hover,.modal::-webkit-scrollbar-thumb:hover{backgr
     <div class="vm-sec"><div class="vm-sec-h"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="1.5"/><path d="M3 7l9 6 9-6"/></svg>Outreach log and emails sent</div><div id="leadHistory"></div></div>
     <div class="modal-actions vm-actions">
       <button class="modal-cancel" id="leadDeleteBtn" onclick="deleteLead()" style="color:var(--rose);display:none;">Delete</button>
+      <button class="modal-cancel" id="leadBackBtn" onclick="hqLeadToProspect(editingLeadId,this)" style="display:none;">&larr; Move back to Prospects</button>
       <div style="flex:1;"></div>
       <button class="modal-cancel" onclick="closeModal('leadModal')">Cancel</button>
       <button class="modal-save" onclick="saveLead()" style="flex:none;min-width:9rem;">Save Lead</button>
@@ -1826,6 +1828,8 @@ match /agent_config/{id}  { allow read, write: if isAdmin(); }</pre>
     </div>
     <div class="vm-sec"><div class="vm-sec-h"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="1.5"/><path d="M3 7l9 6 9-6"/></svg>Recruiting and outreach log</div><div id="rmHistory"></div></div>
     <div class="modal-actions vm-actions">
+      <button class="modal-cancel" id="rmBackBtn" onclick="hostToRecruit(editRosterId,this)" style="display:none;">&larr; Move back to Host Leads</button>
+      <div style="flex:1;"></div>
       <button class="modal-cancel" onclick="closeRosterModal()">Cancel</button>
       <button class="modal-save" onclick="saveRoster()">Save Host</button>
     </div>
@@ -4777,8 +4781,11 @@ function loadRecruits(){
 function renderRecruits(){
   const el=document.getElementById('recruitList');
   if(!el)return;
+  const _nn=x=>String(x||'').toLowerCase().replace(/[^a-z0-9]/g,'');
+  const _isHost=r=>(roster||[]).some(h=>h.recruitId===r.id||_nn(h.name)===_nn(r.name)||_nn((h.name||'')+(h.lastName||''))===_nn(r.name));
+  const _dups=recruits.filter(_isHost);
   if(!recruits.length){el.innerHTML='<div class="empty-state">No leads being tracked yet.</div>';return;}
-  el.innerHTML=recruits.map(r=>{
+  el.innerHTML=(_dups.length?'<div style="font-size:.78rem;opacity:.8;margin-bottom:.6rem;padding:.4rem .7rem;border:1px solid var(--border);border-radius:8px">'+_dups.length+' lead'+(_dups.length>1?'s are':' is')+' hidden because they are already on the Host Roster ('+_dups.slice(0,6).map(r=>r.name||'').join(', ')+'). Nothing was deleted.</div>':'')+recruits.filter(r=>!_isHost(r)).map(r=>{
     const done=RECRUIT_MILESTONES.filter(m=>r.milestones&&r.milestones[m.key]).length;
     const contactBits=[r.phone,r.email].filter(Boolean).join(' · ')||r.contact||'';
     return `<div class="acct-card" style="cursor:pointer;" onclick="openRecruitModal('${r.id}')">
@@ -4807,6 +4814,7 @@ function openRecruitModal(id){
   locSel.value=(r&&r.locationId)?r.locationId:(currentLocationScope!=='ALL'?currentLocationScope:((locations[0]&&locations[0].code)||''));
   document.getElementById('recruitNotes').value=r?r.notes||'':'';
   document.getElementById('recruitDeleteBtn').style.display=r?'':'none';
+  {const tb=document.getElementById('recruitToHostBtn');if(tb){tb.style.display=r?'':'none';tb.disabled=false;}}
   {const h=document.getElementById('recruitHistory');if(h)h.innerHTML=(r&&window.hqHistoryHtml)?window.hqHistoryHtml(r,'host'):'<div style="font-size:.8rem;opacity:.7">Save the lead first, then reopen it.</div>';}
   document.getElementById('recruitMilestoneChecks').innerHTML=RECRUIT_MILESTONES.map(m=>`
     <label style="display:flex;align-items:center;gap:0.5rem;font-size:0.8rem;cursor:pointer;">
@@ -5042,7 +5050,7 @@ function renderLeads(){
         ${l.usingCompetitor?'<div style="color:var(--rose);">Currently using a competitor</div>':''}
         ${l.notes?`<div><b>Notes:</b> ${l.notes}</div>`:''}
         <div style="display:flex;gap:0.5rem;margin-top:0.4rem;">
-          <button class="btn-sm" onclick="openLeadModal('${l.id}')">Edit</button>
+          <button class="btn-sm" onclick="openLeadModal('${l.id}')">Edit</button>${(!lv&&l.stage!=='signed'&&l.stage!=='active'&&l.stage!=='transferred'&&window.hqLeadToProspect)?`<button class="btn-sm" onclick="hqLeadToProspect('${l.id}',this)">&larr; Move back to Prospects</button>`:''}
           ${(!lv&&(l.stage==='signed'||l.stage==='active'))?`<button class="btn-sm btn-gold" onclick="transferLeadToVenue('${l.id}')">Transfer to Our Venues →</button>`:''}${(lv&&(curStage==='contract'))?`<button class="btn-sm btn-gold" onclick="setLeadStage('${l.id}','active',event)">They won't sign: working anyway</button>`:''}${lv?`<button class="btn-sm" onclick="openVenueModal('${lv.id}')">Open in Our Venues</button>`:''}
         </div>
       </div>`:''}
@@ -5117,6 +5125,7 @@ function openLeadModal(id){
   {const h=document.getElementById('leadHistory');if(h)h.innerHTML=(l&&window.hqHistoryHtml)?window.hqLogPanel('ld',l,'venue'):'<div style="font-size:.8rem;opacity:.7">Save the lead first, then reopen it. Every touch and email sent shows here, including the ones from when it was a prospect.</div>';}
   {const o=document.getElementById('leadOffers');if(o)o.innerHTML=(l&&typeof offersBlock==='function')?offersBlock(l.id,l.name,'ld'):'<div style="font-size:.8rem;opacity:.7">Save the lead first, then reopen it to fill in what it offers.</div>';}
   document.getElementById('leadDeleteBtn').style.display=l?'':'none';
+  {const bb=document.getElementById('leadBackBtn');if(bb){bb.style.display=(l&&l.stage!=='signed'&&l.stage!=='active'&&l.stage!=='transferred'&&!venueForLead(l))?'':'none';bb.disabled=false;}}
   document.getElementById('leadModal').classList.add('open');
 }
 function saveLead(){
@@ -6144,6 +6153,7 @@ function openRosterModal(id=null){
   previewTipPhoto();
   setTipDraft(!!tip.enabled);
   {const h=document.getElementById('rmHistory');if(h)h.innerHTML=(host&&window.hqHistoryHtml)?window.hqHistoryHtml(host,'host'):'<div style="font-size:.8rem;opacity:.7">Save the host first, then reopen. Whatever we had on them as a recruit shows here.</div>';}
+  {const bb=document.getElementById('rmBackBtn');if(bb){bb.style.display=host?'':'none';bb.disabled=false;}}
   document.getElementById('rosterModal').classList.add('open');
 }
 function toggleChip(el,type){el.classList.toggle(type==='skill'?'selected-skill':'selected-venue');}
@@ -6172,6 +6182,46 @@ function saveRoster(){
   persist('host-roster',roster,'rosterSave');
   renderRoster();filterRoster();closeRosterModal();
   syncTipHosts([savedId]);
+}
+// A person is either a host lead (Host Progress) or a host (Host Roster), never both. Everything moves with them.
+async function recruitToHost(rid,btn){
+  try{
+    if(!rosterLoadedFromServer){alert('Still loading the host list from the cloud. Give it a second and try again.');return;}
+    const r=recruits.find(x=>x.id===rid);if(!r){alert('Could not find that lead.');return;}
+    const nn=x=>String(x||'').toLowerCase().replace(/[^a-z0-9]/g,'');
+    if(btn)btn.disabled=true;
+    const full=Object.assign({},r);delete full.id;
+    const ri={phone:r.phone||'',email:r.email||'',notes:r.notes||'',milestones:r.milestones||{},createdAt:r.createdAt||'',locationId:r.locationId||''};
+    let h=roster.find(x=>x.recruitId===rid||nn(((x.name||'')+(x.lastName||'')))===nn(r.name)||nn(x.name)===nn(r.name));
+    if(h){h.recruitId=rid;h.recruitInfo=ri;if(!h.phone)h.phone=r.phone||'';if(!h.email)h.email=r.email||'';if(r.notes&&String(h.notes||'').indexOf(r.notes)<0)h.notes=[h.notes,r.notes].filter(Boolean).join('\n');}
+    else if(r.hostInfo&&typeof r.hostInfo==='object'){h=Object.assign({},r.hostInfo,{recruitId:rid,recruitInfo:ri});if(!h.id)h.id=Date.now().toString();if(!h.phone)h.phone=r.phone||'';if(!h.email)h.email=r.email||'';roster.push(h);}
+    else{const parts=String(r.name||'').trim().split(/\s+/);h={id:Date.now().toString(),name:parts[0]||r.name,lastName:parts.slice(1).join(' '),skills:[],venues:[],rankId:null,locationId:r.locationId||'',tip:{enabled:false,photo:'',payments:[]},hostId:'',gatewayEmail:String(r.email||'').toLowerCase(),phone:r.phone||'',email:r.email||'',notes:r.notes||'',recruitId:rid,recruitInfo:ri};roster.push(h);}
+    persist('host-roster',roster,'rosterSave');
+    await db.collection('recruits').doc(rid).delete();
+    renderRoster();filterRoster();loadRecruits();
+    try{closeModal('recruitModal');}catch(e){}
+    try{hqToast('Moved to the Host Roster. Their notes, contact info and progress came with them.');}catch(e){}
+  }catch(e){alert('Could not move them: '+(e&&e.message||e));if(btn)btn.disabled=false;}
+}
+async function hostToRecruit(hid,btn){
+  try{
+    if(!rosterLoadedFromServer){alert('Still loading the host list from the cloud. Give it a second and try again.');return;}
+    const h=roster.find(x=>x.id===hid);if(!h)return;
+    const full=((h.name||'')+' '+(h.lastName||'')).trim();
+    if(!confirm('Move '+full+' back to Host Leads?\n\nThey come off the Host Roster and the tip-a-host page. Everything we have on them goes with them (notes, contact info, progress, skills, venues, payment links), so if you make them a host again it comes back as it was.'))return;
+    if(btn)btn.disabled=true;
+    const ri=h.recruitInfo||{};
+    const id=h.recruitId||db.collection('recruits').doc().id;
+    const info=Object.assign({},h);
+    const data={name:full,phone:h.phone||ri.phone||'',email:h.email||ri.email||h.gatewayEmail||'',notes:[ri.notes,h.notes].filter((x,i,a)=>x&&a.indexOf(x)===i).join('\n'),milestones:ri.milestones||{},locationId:h.locationId||ri.locationId||'',hostInfo:info,movedBackAt:Date.now(),updatedAt:new Date().toISOString()};
+    if(ri.createdAt)data.createdAt=ri.createdAt;
+    await db.collection('recruits').doc(id).set(data,{merge:true});
+    roster=roster.filter(x=>x.id!==hid);
+    persist('host-roster',roster,'rosterSave');
+    renderRoster();filterRoster();syncTipHosts([hid]);loadRecruits();
+    closeRosterModal();
+    try{hqToast('Moved back to Host Leads. Everything came with them.');}catch(e){}
+  }catch(e){alert('Could not move them: '+(e&&e.message||e));if(btn)btn.disabled=false;}
 }
 function deleteHost(id){if(!rosterLoadedFromServer){alert('Still loading the host list from the cloud — give it a second and try again.');return;}if(!confirm('Remove this host?'))return;roster=roster.filter(h=>h.id!==id);persist('host-roster',roster,'rosterSave');renderRoster();syncTipHosts([id]);}
 
@@ -8813,7 +8863,7 @@ const TASKS=[
   body:`TASK: Lead run.
 0. Read agent_config outreach blocklist (each entry has a name and optional venueId). NEVER addVenue, addLead, draft, email or DM any venue, client or business on it (match the name ignoring capitals, spaces and punctuation), and skip it in every step below. A prospect (agent_venues) with stage "lead" was moved to the Leads list by Ahnna: never draft, email, DM or change it. A lead with stage "skipped" is never worked again. A lead with a skippedAt date was only skipped for now: do not redraft it for 30 days after skippedAt, then it may be offered again.
 1. Search the public web for people and venues in Seattle-Tacoma asking for or likely to need karaoke, trivia, music bingo or themed nights. Score each Hot / Warm / Cold with a one-line reason. Skip anything older than 3 days.
-2. addLead for each (max 8 per run, skip duplicates by link). addVenue for any new bar or venue worth cold-emailing, but FIRST read agent_venues (every stage, including ones Ahnna added by hand), Our Venues (readVenues) and the outreach blocklist, and skip any venue whose name matches one of them when you ignore capitals, spaces, punctuation and "and" versus "&". Never addVenue a duplicate and never overwrite or delete an existing prospect; to add a fact to one, use updateVenue on that id and change only the empty fields.
+2. addLead for each (max 8 per run, skip duplicates by link). addVenue for any new bar or venue worth cold-emailing, but FIRST read agent_venues (every stage, including ones Ahnna added by hand), Our Venues (readVenues), the Leads tab (read collection leads) and the outreach blocklist, and skip any venue whose name matches one of them when you ignore capitals, spaces, punctuation and "and" versus "&". Never addVenue a duplicate and never overwrite or delete an existing prospect; to add a fact to one, use updateVenue on that id and change only the empty fields.
 3. COLD OUTREACH RULES. Read agent_venues, agent_config outreach (touches: every email or Instagram contact, with date and channel) and agent_config curator research. Check agent_drafts first so you never write a draft that already exists, and write at most one draft per venue per run. A "touch" is one cold contact, an email or a DM. A venue gets ONE touch every 4 months and at most 3 touches in total. If they never answer, that is fine: after touch 3 the venue is closed and you write nothing more. Count the touches from agent_config outreach touches (steps email1, email2, email3, cold-email, cold-dm; also count emailedAt, emailed2At and emailed3At on the venue).
    a. Touch 1 (stage "target", no touches): kind "email", tailored to that venue and to the season. If curator research has a dossier for the venue (its key is p plus the venue name lowercased with every non-letter and non-number replaced by an underscore) with a bait line, open with that idea, using only what the dossier says about the venue.
    b. Touch 2 and touch 3: only when the last touch was 4 or more months ago (or the date in notNowUntil has arrived). Write kind "email2" for touch 2 and "email3" for touch 3. Each one needs a NEW angle that fits the timing (the season, a holiday, a slow night, something new from the curator research or Sable). Read the earlier emails and never repeat them. You may write the touch as kind "colddm" (one DM, only if the venue has an instagram handle) instead of an email, never both for the same touch.
@@ -9770,15 +9820,52 @@ window.hqProspectToLead=async function(pid,btn){
     const loc=(typeof currentLocationScope!=='undefined'&&currentLocationScope!=='ALL')?currentLocationScope:((typeof locations!=='undefined'&&locations[0]&&locations[0].code)||'');
     let lid;
     if(ex){lid=ex.id;await db.collection('leads').doc(lid).set({prospectId:v.id,prospectInfo:info,updatedAt:now},{merge:true});}
+    else if(v.leadInfo&&typeof v.leadInfo==='object'){
+      // it was a lead before: bring that lead back exactly as it was, with anything newer from Prospects filled in
+      lid=v.leadInfoId||db.collection('leads').doc().id;const L=Object.assign({},v.leadInfo);
+      const pick=(a,b)=>String(b||'').trim()?b:(a||'');
+      L.name=v.name;L.contactName=pick(L.contactName,v.contactName);L.email=pick(L.email,emailOf(v));L.phone=pick(L.phone,v.phone);L.city=pick(L.city,v.city);L.address=pick(L.address,v.address);L.instagram=pick(L.instagram,v.instagram);L.website=pick(L.website,v.website);L.facebook=pick(L.facebook,v.facebook);
+      if(v.followUpOn){L.nextFollowUp=v.followUpOn;L.followUpNone=false;}
+      if(v.notes&&String(L.notes||'').indexOf(v.notes)<0)L.notes=[L.notes,v.notes].filter(Boolean).join('\n');
+      L.prospectId=v.id;L.prospectInfo=info;L.updatedAt=now;
+      await db.collection('leads').doc(lid).set(L);
+    }
     else{
       lid=db.collection('leads').doc().id;
       const lastCh=T.length&&T[T.length-1].channel==='instagram'?'instagram':'email';
       const notes=[v.evidence?'Why them: '+v.evidence:'',v.pitch?'Pitch: '+v.pitch:''].filter(Boolean).join('\n');
-      await db.collection('leads').doc(lid).set({name:v.name,contactName:v.contactName||'',phone:'',email:emailOf(v)||'',city:v.city||'',locationId:loc,stage:T.length?'contact':'new',temperature:'warm',interests:[],contactMethod:T.length?lastCh:'email',contactMethodOther:'',source:'outbound',foundBy:(v.addedBy==='manual'?'Ahnna':'Raven'),nextFollowUp:v.followUpOn||'',followUpNone:!v.followUpOn,usingCompetitor:false,notes:notes,address:v.address||'',instagram:v.instagram||'',website:v.website||'',facebook:v.facebook||'',prospectId:v.id,prospectInfo:info,createdAt:now,updatedAt:now});
+      await db.collection('leads').doc(lid).set({name:v.name,contactName:v.contactName||'',phone:v.phone||'',email:emailOf(v)||'',city:v.city||'',locationId:loc,stage:T.length?'contact':'new',temperature:'warm',interests:[],contactMethod:T.length?lastCh:'email',contactMethodOther:'',source:'outbound',foundBy:(v.addedBy==='manual'?'Ahnna':'Raven'),nextFollowUp:v.followUpOn||'',followUpNone:!v.followUpOn,usingCompetitor:false,notes:[notes,v.notes].filter(Boolean).join('\n'),address:v.address||'',instagram:v.instagram||'',website:v.website||'',facebook:v.facebook||'',prospectId:v.id,prospectInfo:info,createdAt:now,updatedAt:now});
     }
-    await col('agent_venues').doc(v.id).update({stage:'lead',conversation:true,movedToLeadId:lid,movedToLeadAt:Date.now(),followUpOn:''});
+    await col('agent_venues').doc(v.id).update({stageBeforeLead:(v.stage&&v.stage!=='lead')?v.stage:(v.stageBeforeLead||'target'),conversationBeforeLead:v.stage==='lead'?!!v.conversationBeforeLead:!!v.conversation,stage:'lead',conversation:true,movedToLeadId:lid,movedToLeadAt:Date.now(),followUpOn:'',leadInfo:firebase.firestore.FieldValue.delete(),leadInfoId:firebase.firestore.FieldValue.delete()});
     movedTo(btn,'Moved to Leads');
     toast((ex?'Already a lead, linked it.':'Moved to Leads.')+' Find it on the Leads tab under Venues.');
+    try{if(typeof loadLeads==='function')loadLeads();}catch(e){}
+  }catch(e){toast('Could not move it: '+(e&&e.message||e),true);if(btn)btn.disabled=false;}
+};
+window.hqLeadToProspect=async function(lid,btn){
+  try{
+    const l=hqLeads().find(x=>x.id===lid);if(!l){toast('Could not find that lead.',true);return;}
+    if(l.stage==='transferred'||(typeof venueForLead==='function'&&venueForLead(l))){toast('This one is already in Our Venues, so it cannot go back to Prospects.',true);return;}
+    if(btn&&btn.tagName==='BUTTON')btn.disabled=true;
+    const full=Object.assign({},l);delete full.id;
+    const nm=hxNm(l.name);
+    let v=(l.prospectId&&(S.venues||[]).find(x=>x.id===l.prospectId))||(S.venues||[]).find(x=>hxNm(x.name)===nm)||null;
+    const T=otTouches(v||{id:l.id,name:l.name,leadId:l.id});
+    const fill=(cur,val)=>String(cur||'').trim()?cur:(val||'');
+    const pi=l.prospectInfo||{};
+    const talking=['interview','negotiation','contract'].indexOf(l.stage)>=0;
+    const u={city:fill(v&&v.city,l.city||pi.city),address:fill(v&&v.address,l.address||pi.address),contactName:fill(v&&v.contactName,l.contactName||pi.contactName),contact:fill(v&&v.contact,l.email||pi.email||pi.contact),phone:fill(v&&v.phone,l.phone),instagram:fill(v&&v.instagram,l.instagram||pi.instagram),facebook:fill(v&&v.facebook,l.facebook||pi.facebook),website:fill(v&&v.website,l.website||pi.website),followUpOn:fill(v&&v.followUpOn,l.nextFollowUp||''),leadInfo:full,leadInfoId:l.id,leadId:l.id,movedBackAt:Date.now(),
+      stage:(v&&v.stageBeforeLead)||(T.length?'followup':'target'),conversation:talking||!!(v&&v.conversationBeforeLead),movedToLeadId:firebase.firestore.FieldValue.delete()};
+    if(l.notes&&String((v&&v.notes)||'').indexOf(l.notes)<0)u.notes=[(v&&v.notes)||'',l.notes].filter(Boolean).join('\n');
+    if(v){await col('agent_venues').doc(v.id).update(u);}
+    else{
+      delete u.movedToLeadId;
+      await col('agent_venues').doc(l.id).set(Object.assign({name:l.name,evidence:pi.evidence||'',pitch:pi.pitch||'',createdAt:Date.now(),addedBy:'moved from Leads'},u));
+    }
+    await db.collection('leads').doc(lid).delete();
+    movedTo(btn,'Moved to Prospects');
+    toast('Moved back to Prospects. Everything came with it, including the outreach log.');
+    try{if(typeof closeModal==='function')closeModal('leadModal');}catch(e){}
     try{if(typeof loadLeads==='function')loadLeads();}catch(e){}
   }catch(e){toast('Could not move it: '+(e&&e.message||e),true);if(btn)btn.disabled=false;}
 };
@@ -10540,6 +10627,7 @@ function thrownLine(v){const t=thrownInfo(v);return t?'<div class="t2"><b>Thrown
 async function addProspectDoc(o){
   if(!o.name||!String(o.name).trim()){toast('Type a name first.',true);return false;}
   if(prospectExists(o.name)){toast(o.name+' is already a prospect.',true);return false;}
+  {const w=window.hqDupWhere(o.name);if(w){toast(o.name+' is already '+w+'. Nobody lives on two lists, so it was not added.',true);return false;}}
   const sent=!!o.emailed;
   const doc={name:String(o.name).trim(),city:o.city||'',address:o.address||'',contact:o.contact||'',contactName:o.contactName||'',evidence:o.evidence||'',pitch:o.pitch||'',stage:sent?'cold':'target',createdAt:Date.now(),addedBy:'manual'};
   if(o.thrownFrom){doc.thrownFrom=o.thrownFrom;doc.thrownIdea=o.thrownIdea||'';doc.thrownAt=Date.now();}
@@ -10555,6 +10643,17 @@ async function addProspect(){
   if(ok){['pa-name','pa-city','pa-addr','pa-email','pa-who','pa-why','pa-pitch','pa-date'].forEach(i=>{const e=document.getElementById(i);if(e)e.value='';});document.getElementById('pa-sent').checked=false;}
 }
 const PR={q:'',stage:'',city:''};
+function hxHref(k,v){v=String(v||'').trim();if(!v)return '';if(/^https?:\/\//i.test(v))return v;
+  if(k==='instagram')return /instagram\.com/i.test(v)?'https://'+v.replace(/^\/+/,''):'https://instagram.com/'+v.replace(/^@/,'').replace(/\/+$/,'');
+  if(k==='facebook')return /facebook\.com|fb\.com/i.test(v)?'https://'+v.replace(/^\/+/,''):'https://facebook.com/'+v.replace(/^\/+/,'');
+  return 'https://'+v.replace(/^\/+/,'');}
+function hxLinks(v){return [['instagram','Instagram'],['facebook','Facebook'],['website','Website']].map(a=>{const h=hxHref(a[0],v[a[0]]);return h?'<a href="'+esc(h)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="font-size:.75rem">'+a[1]+'</a>':'';}).filter(Boolean).join(' &middot; ');}
+window.hqPfSave=async function(id,k,val){try{await col('agent_venues').doc(id).update({[k]:String(val||'').trim()});toast('Saved.');}catch(e){toast('Could not save: '+(e&&e.message||e),true);}};
+// where else a name already lives, so nobody is ever on two lists
+window.hqDupWhere=function(name,exceptPid){const n=hxNm(name);if(!n)return '';
+  try{if(hqLeads().some(l=>l&&hxNm(l.name)===n&&(l.stage||'new')!=='transferred'&&!(exceptPid&&l.prospectId===exceptPid)))return 'a lead (Leads tab)';}catch(e){}
+  try{if((typeof venues!=='undefined'?venues:[]).some(x=>x&&hxNm(x.name)===n))return 'one of Our Venues';}catch(e){}
+  return '';};
 function renderProspects(force){
   const el=document.getElementById('prospectsBody');if(!el)return;
   try{if(S&&!S.started)start();}catch(e){}
@@ -10563,17 +10662,21 @@ function renderProspects(force){
   const all=(S.venues||[]).filter(v=>v&&v.name);
   const cities=[...new Set(all.map(v=>v.city).filter(Boolean))].sort();
   const q=PR.q.toLowerCase();
-  const list=all.filter(v=>(PR.stage?(v.stage||'target')===PR.stage:v.stage!=='lead')&&(!PR.city||v.city===PR.city)&&(!q||[v.name,v.city,v.address,v.contact,v.contactName,v.pitch,v.evidence].join(' ').toLowerCase().indexOf(q)>=0)).sort((a,b)=>String(a.name).localeCompare(String(b.name)));
+  const dupOf=v=>(v.stage!=='lead'&&!PR.showDup)?window.hqDupWhere(v.name,v.id):'';
+  const hiddenDup=all.filter(v=>v.stage!=='lead'&&!isBlocked(v)&&window.hqDupWhere(v.name,v.id));
+  const list=all.filter(v=>v.stage!=='lead'&&(PR.showDup||!window.hqDupWhere(v.name,v.id))&&(PR.stage?(v.stage||'target')===PR.stage:true)&&(!PR.city||v.city===PR.city)&&(!q||[v.name,v.city,v.address,v.contact,v.contactName,v.pitch,v.evidence].join(' ').toLowerCase().indexOf(q)>=0)).sort((a,b)=>String(a.name).localeCompare(String(b.name)));
   const keep=document.activeElement&&document.activeElement.id;
-  const stages=Object.keys(TAGL);
+  const stages=Object.keys(TAGL).filter(k=>k!=='lead');
   let h='<div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.8rem"><input class="form-input" id="prQ" style="flex:1;min-width:180px" placeholder="Search prospects" value="'+esc(PR.q)+'" oninput="PR.q=this.value;renderProspects(1)"><select class="form-input" style="width:auto" onchange="PR.stage=this.value;renderProspects()"><option value="">All stages</option>'+stages.map(k=>'<option value="'+k+'"'+(PR.stage===k?' selected':'')+'>'+TAGL[k]+'</option>').join('')+'</select><select class="form-input" style="width:auto" onchange="PR.city=this.value;renderProspects()"><option value="">All cities</option>'+cities.map(c=>'<option'+(PR.city===c?' selected':'')+'>'+esc(c)+'</option>').join('')+'</select></div>';
   h+='<div style="font-size:.8rem;opacity:.7;margin-bottom:.6rem">'+list.length+' of '+all.length+' prospects. These are the venues Sable finds and Raven works. Do-not-use venues are hidden.</div>';
+  if(hiddenDup.length)h+='<div style="font-size:.78rem;opacity:.8;margin-bottom:.6rem;padding:.4rem .7rem;border:1px solid var(--border,#444);border-radius:8px">'+(PR.showDup?'Showing ':'')+hiddenDup.length+' prospect'+(hiddenDup.length>1?'s':'')+(PR.showDup?' that are':' hidden because they are') +' already a lead or one of Our Venues ('+esc(hiddenDup.slice(0,6).map(v=>v.name).join(', '))+(hiddenDup.length>6?', and more':'')+'). Nothing was deleted. <a href="#" onclick="PR.showDup=!PR.showDup;renderProspects(1);return false">'+(PR.showDup?'Hide them again':'Show them')+'</a></div>';
   if(!all.length)h+='<div style="opacity:.7">'+(S.started?'No prospects yet. Sable adds them as she finds them.':'Loading...')+'</div>';
   list.filter(v=>!isBlocked(v)).forEach(v=>{
     const st=v.stage||'target',T=otTouches(v),em=emailOf(v);
     const line=(t,x)=>x?'<div style="margin:.25rem 0;font-size:.85rem"><b>'+t+':</b> '+esc(x)+'</div>':'';
-    h+='<details data-pk="'+esc(v.id)+'"'+(S.open['pr_'+v.id]?' open':'')+' style="border:1px solid var(--border,#444);border-radius:10px;padding:.55rem .8rem;margin-bottom:.5rem"><summary style="cursor:pointer;display:flex;gap:.5rem;align-items:center;flex-wrap:wrap"><span class="tm-tag '+(TAGC[st]||'')+'">'+esc(TAGL[st]||st)+'</span>'+thrownTag(v)+'<b>'+esc(v.name)+'</b><span style="opacity:.7;font-size:.8rem">'+esc(v.city||'')+'</span>'+(T.length?'<span style="opacity:.7;font-size:.75rem">'+T.length+' email'+(T.length>1?'s':'')+' sent</span>':'')+(v.followUpOn?'<span style="opacity:.7;font-size:.75rem">check back '+esc(v.followUpOn)+'</span>':'')+'</summary><div style="margin-top:.5rem">'+
-      line('Address',v.address)+line('Contact',[v.contactName,v.contact].filter(Boolean).join(' · '))+(em?'':line('Email','not found yet'))+(thrownInfo(v)?line('Thrown to Raven from '+thrownInfo(v).who,thrownInfo(v).title+(thrownInfo(v).at?' ('+fmtDay(thrownInfo(v).at)+')':'')):'')+line('Why them',v.evidence)+line('Pitch',v.pitch)+line("Iris's idea to open with",baitFor(v.name))+
+    h+='<details data-pk="'+esc(v.id)+'"'+(S.open['pr_'+v.id]?' open':'')+' style="border:1px solid var(--border,#444);border-radius:10px;padding:.55rem .8rem;margin-bottom:.5rem"><summary style="cursor:pointer;display:flex;gap:.5rem;align-items:center;flex-wrap:wrap"><span class="tm-tag '+(TAGC[st]||'')+'">'+esc(TAGL[st]||st)+'</span>'+thrownTag(v)+'<b>'+esc(v.name)+'</b><span style="opacity:.7;font-size:.8rem">'+esc(v.city||'')+'</span>'+(hxLinks(v)?'<span>'+hxLinks(v)+'</span>':'')+(T.length?'<span style="opacity:.7;font-size:.75rem">'+T.length+' email'+(T.length>1?'s':'')+' sent</span>':'')+(v.followUpOn?'<span style="opacity:.7;font-size:.75rem">check back '+esc(v.followUpOn)+'</span>':'')+'</summary><div style="margin-top:.5rem">'+
+      '<div class="vm-grid" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr));margin:.3rem 0 .6rem">'+[['instagram','Instagram'],['facebook','Facebook'],['website','Website'],['phone','Phone']].map(a=>'<div class="form-group"><label class="form-label">'+a[1]+'</label><input class="form-input" id="lg-pf-'+esc(v.id)+'-'+a[0]+'" value="'+esc(v[a[0]]||'')+'" onchange="hqPfSave(\''+esc(v.id)+'\',\''+a[0]+'\',this.value)"></div>').join('')+'</div>'+
+      line('Address',v.address)+line('Contact',[v.contactName,v.contact].filter(Boolean).join(' · '))+(em?'':line('Email','not found yet'))+line('Notes',v.notes)+(thrownInfo(v)?line('Thrown to Raven from '+thrownInfo(v).who,thrownInfo(v).title+(thrownInfo(v).at?' ('+fmtDay(thrownInfo(v).at)+')':'')):'')+line('Why them',v.evidence)+line('Pitch',v.pitch)+line("Iris's idea to open with",baitFor(v.name))+
       '<div style="margin:.5rem 0;padding:.4rem .7rem;border:1px solid var(--border,#444);border-radius:8px"><div style="font-size:.7rem;letter-spacing:.2em;text-transform:uppercase;opacity:.7;margin-bottom:.4rem">Outreach log and emails sent</div>'+window.hqLogFormHtml('pr',v)+window.hqHistoryHtml(v,'venue')+'</div>'+
       offersBlock(v.id,v.name,'pr')+'<div style="margin:.6rem 0">'+(st==='lead'?'<span class="tm-tag booked">Moved to Leads</span>':'<button type="button" class="btn-sm btn-gold" onclick="hqProspectToLead(\''+esc(v.id)+'\',this)">Move to Leads</button>')+'</div><div style="font-size:.75rem;opacity:.7">Work this one on Raven\'s desk in My Team.</div></div></details>';
   });
@@ -11242,6 +11345,7 @@ const A={
   },
   async addvenue(){
     const n=val('nv-name');if(!n){toast('Add the venue name.',true);return;}
+    {const w=prospectExists(n)?'a prospect':window.hqDupWhere(n);if(w){toast(n+' is already '+w+'. It was not added again.',true);return;}}
     await col('agent_venues').add({name:n,city:val('nv-city'),address:val('nv-addr'),evidence:val('nv-ev'),pitch:val('nv-pitch'),stage:'target',createdAt:Date.now()});toast('Venue added.');
   },
   async delvenue(t){if(!confirm('Delete this venue?'))return;await col('agent_venues').doc(t.dataset.id).delete();},
