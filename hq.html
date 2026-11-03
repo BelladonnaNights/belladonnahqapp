@@ -1220,10 +1220,10 @@ html::-webkit-scrollbar-thumb:hover,.modal::-webkit-scrollbar-thumb:hover{backgr
 <div class="panel" id="panel-venues">
   <div class="subtabs">
     <button class="subtab active" onclick="showSub('venues','manage',this)">Our Venues</button>
-    <button class="subtab" onclick="showSub('venues','perf',this);loadVenueStats()">Performance</button>
     <button class="subtab" onclick="showSub('venues','leads',this);renderLeads()" id="leadsTabBtn" style="display:none;">Leads</button>
     <button class="subtab" onclick="showSub('venues','prospects',this);renderProspects()">Prospects</button>
     <button class="subtab" onclick="showSub('venues','onboarding',this)">Onboarding</button>
+    <button class="subtab" onclick="showSub('venues','perf',this);loadVenueStats()">Performance</button>
     <button class="subtab" onclick="showSub('venues','stats',this);loadStats()">Stats</button>
     <a href="https://belladonnanights.github.io/belladonna-tools/index.html" class="subtab" target="_blank" style="text-decoration:underline !important;color:var(--text3);">Venue Menu</a>
   </div>
@@ -1833,48 +1833,50 @@ match /agent_config/{id}  { allow read, write: if isAdmin(); }</pre>
 </div>
 
 <!-- GIG SCHEDULE MODAL -->
-<div class="modal-bg" id="gigModal">
-  <div class="modal">
-    <div class="modal-title" id="gigModalTitle">Schedule Gig</div>
-    <div class="form-group"><label class="form-label">Date</label><input type="date" class="form-input" id="gigDate"></div>
-    <div class="form-group" style="display:flex;gap:0.6rem;">
-      <div style="flex:1;"><label class="form-label">Start Time (optional)</label><input type="time" class="form-input" id="gigTime"></div>
-      <div style="flex:1;"><label class="form-label">End Time (optional)</label><input type="time" class="form-input" id="gigEndTime"></div>
+<div class="modal-bg vmx" id="gigModal">
+  <div class="modal vm-wide">
+    <div class="vm-top"><button type="button" class="vm-back" onclick="closeGigModal()">&larr; Schedule</button><div class="vm-ttl"><i></i><span id="gigModalTitle">Schedule Gig</span><i class="r"></i></div><span></span></div>
+    <div class="vm-sec"><div class="vm-sec-h"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="15" rx="1.5"/><path d="M4 10h16M9 3v4M15 3v4"/></svg>When</div>
+      <div class="vm-grid vm-g3">
+        <div class="form-group"><label class="form-label">Date</label><input type="date" class="form-input" id="gigDate" onchange="gigAutoTime()"></div>
+        <div class="form-group"><label class="form-label">Start time</label><input type="time" class="form-input" id="gigTime"></div>
+        <div class="form-group"><label class="form-label">End time</label><input type="time" class="form-input" id="gigEndTime"></div>
+      </div>
+      <div class="vm-hint" style="font-size:0.68rem;color:var(--text3);margin-top:0.6rem;">Times are optional. An end time lets auto sign-out kick in a few hours after the gig actually ends.</div>
     </div>
-    <div class="form-group" style="font-size:0.65rem;color:var(--text3);margin-top:-0.6rem;">Setting an end time lets auto sign-out kick in a few hours after the gig actually ends, instead of guessing from check-in time alone.</div>
-    <div class="form-group"><label class="form-label">Gig Type</label><div class="chip-grid" id="gigKindChips"></div></div>
-    <div class="form-group"><label class="form-label">Venue</label><div class="chip-grid" id="gigVenueChips"></div></div>
-    <div class="form-group"><label class="form-label">Assigned Host</label><div class="chip-grid" id="gigHostChips"></div></div>
-    <div class="form-group"><label style="display:flex;gap:0.5rem;align-items:center;cursor:pointer;font-size:0.8rem;"><input type="checkbox" id="gigBig" onchange="document.getElementById('gigBigNameRow').style.display=this.checked?'block':'none'"> Big night: post this on social media (shows in Clio and the Planner)</label>
-      <div id="gigBigNameRow" style="display:none;margin-top:0.4rem;"><input type="text" class="form-input" id="gigBigName" placeholder="Event name for the posts, e.g. Gothic Masquerade (optional)"></div></div>
-    <div class="form-group"><label class="form-label">Notes (optional)</label><textarea class="form-textarea" id="gigNotes" placeholder="Any details about this gig..." style="min-height:60px;"></textarea></div>
-    <div class="form-group" id="gigRepeatRow">
-      <label class="form-label">Repeat</label>
-      <select class="form-input" id="gigRepeatMode" onchange="const v=this.value;document.getElementById('gigRepeatCountRow').style.display=(v==='none'||v.indexOf('forever')!==-1)?'none':'flex';document.getElementById('gigRepeatUnitLabel').textContent=v==='monthly'?'months':(v==='biweekly'?'times (every 2 weeks)':'weeks');">
-        <option value="none">Single (one time only)</option>
-        <option value="weekly">Weekly</option>
-        <option value="biweekly">Bi-weekly (every other week)</option>
-        <option value="monthly">Monthly (same weekday each month)</option>
-        <option value="weekly-forever">Weekly, indefinitely</option>
-        <option value="biweekly-forever">Bi-weekly, indefinitely</option>
-        <option value="monthly-forever">Monthly, indefinitely</option>
-      </select>
-      <div style="font-size:0.65rem;color:var(--text3);margin-top:0.4rem;">"Indefinitely" schedules 2 years out — long enough that you'll never notice it end, without literally being infinite in the database. Re-open this gig later to extend it further whenever you want.</div>
+    <div class="vm-sec"><div class="vm-sec-h"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.200-7-11a7 7 0 0114 0c0 4.800-7 11-7 11z"/><circle cx="12" cy="10" r="2.500"/></svg>What and where</div>
+      <div class="vm-grid vm-g3">
+        <div class="form-group"><label class="form-label">Gig type</label><select class="form-input" id="gigKindSel" onchange="onGigKind(this.value)"></select></div>
+        <div class="form-group"><label class="form-label">Venue</label><select class="form-input" id="gigVenueSel" onchange="onGigVenue(this.value)"></select></div>
+        <div class="form-group"><label class="form-label">Host</label><select class="form-input" id="gigHostSel" onchange="onGigHost(this.value)"></select></div>
+      </div>
     </div>
-    <div class="form-group" id="gigRepeatCountRow" style="display:none;align-items:center;gap:0.6rem;">
-      <label class="form-label" style="margin:0;">For</label><input type="number" class="form-input" id="gigRepeatCount" value="12" min="2" max="52" style="width:70px;"><span id="gigRepeatUnitLabel" style="font-size:0.75rem;color:var(--text3);">weeks</span>
+    <div class="vm-sec" id="gigRepeatRow"><div class="vm-sec-h"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2l4 4-4 4"/><path d="M3 11V9a3 3 0 013-3h15"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v2a3 3 0 01-3 3H3"/></svg>Repeat</div>
+      <div class="vm-grid vm-g3">
+        <div class="form-group"><label class="form-label">How often</label>
+          <select class="form-input" id="gigRepeatMode">
+            <option value="none">One time</option>
+            <option value="weekly">Weekly</option>
+            <option value="biweekly">Every other week</option>
+            <option value="monthly">Monthly (same weekday)</option>
+          </select></div>
+      </div>
+      <div class="vm-hint" style="font-size:0.68rem;color:var(--text3);margin-top:0.6rem;">A repeating gig keeps going with no end date. Regular nights you set up under Edit Venue already show on the calendar on their own, so only add a gig here for something extra or different.</div>
     </div>
-    <div class="form-group" id="gigSeriesNote" style="display:none;font-size:0.7rem;color:var(--text3);">This gig is part of a repeating series — you'll be asked whether changes apply to just this one or to future gigs too.</div>
-    <div class="form-group" id="gigCancelRow" style="display:none;">
-      <label style="display:flex;align-items:center;gap:0.5rem;font-size:0.75rem;color:var(--text2);cursor:pointer;">
-        <input type="checkbox" id="gigCancelCheckbox" style="accent-color:var(--rose);width:16px;height:16px;cursor:pointer;">
-        Mark this gig as cancelled
-      </label>
+    <div class="vm-sec" id="gigSeriesNote" style="display:none;"><div class="vm-hint" style="font-size:0.74rem;color:var(--text2);">This gig is part of a repeating series. When you save, you'll be asked whether the change applies to just this one or to future gigs too.</div></div>
+    <div class="vm-sec"><div class="vm-sec-h"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.800 5.800 6.200.9-4.500 4.400 1.100 6.200L12 17.300 6.400 20.300l1.100-6.200L3 9.700l6.200-.9z"/></svg>Options</div>
+      <div class="vm-grid vm-g3">
+        <div class="form-group"><label style="display:flex;gap:0.5rem;align-items:center;cursor:pointer;font-size:0.8rem;color:var(--text2);"><input type="checkbox" id="gigBig" onchange="document.getElementById('gigBigNameRow').style.display=this.checked?'block':'none'"> Big night: post on social media (shows in Clio and the Planner)</label>
+          <div id="gigBigNameRow" style="display:none;margin-top:0.5rem;"><label class="form-label">Event name for the posts</label><input type="text" class="form-input" id="gigBigName"></div></div>
+        <div class="form-group" id="gigCancelRow" style="display:none;"><label style="display:flex;align-items:center;gap:0.5rem;font-size:0.8rem;color:var(--text2);cursor:pointer;"><input type="checkbox" id="gigCancelCheckbox" style="accent-color:var(--rose);width:16px;height:16px;cursor:pointer;"> Mark this gig as cancelled</label></div>
+      </div>
     </div>
-    <div class="modal-actions">
-      <button class="modal-cancel" id="gigDeleteBtn" style="display:none;border-color:var(--rose);color:var(--rose);" onclick="deleteGig()">Delete</button>
+    <div class="vm-sec"><div class="vm-sec-h"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h9l4 4v14H6zM14 3v5h5M9 12h7M9 16h7"/></svg>Notes</div><div class="form-group"><textarea class="form-textarea" id="gigNotes" style="min-height:80px;"></textarea></div></div>
+    <div class="modal-actions vm-actions">
+      <button class="modal-cancel" id="gigDeleteBtn" style="display:none;color:var(--rose);" onclick="deleteGig()">Delete</button>
+      <div style="flex:1;"></div>
       <button class="modal-cancel" onclick="closeGigModal()">Cancel</button>
-      <button class="modal-save" onclick="saveGig()">Save Gig</button>
+      <button class="modal-save" onclick="saveGig()" style="flex:none;min-width:9rem;">Save Gig</button>
     </div>
   </div>
 </div>
@@ -3102,7 +3104,28 @@ function getExternalGigsForDate(dk,dow){
     });
   });
   out.push(...fetchBingoGigsForDate(dk,dow).filter(it=>!hqVenuesForDate.has(normVenueName(it.venue)+'|Bingo')));
+  // Regular nights set up in Edit Venue (each venue's own schedule) show here by themselves, so nothing
+  // has to be typed in twice. A night the Planner / Bingo already lists, or one HQ has its own gig for, is skipped.
+  try{
+    const seen=new Set(out.map(it=>normVenueName(it.venue)+'|'+(plannerKindKey(it.kind)||it.kind)));
+    (venues||[]).forEach(hv=>{
+      if(!hv||!hv.name||hv.inactive)return;
+      venueEditorSlots(hv).forEach(sl=>{
+        if(!sl.kind||!sl.day||!vmxLive(sl.status))return;
+        const kk=plannerKindKey(sl.kind)||sl.kind,key=normVenueName(hv.name)+'|'+kk;
+        if(seen.has(key)||hqVenuesForDate.has(key))return;
+        if(!plannerVenueRunsOn({day:vmxAbbr(sl.day),cadence:sl.cadence||'weekly',cadenceAnchor:sl.anchor||'',status:sl.status||'active'},dk))return;
+        seen.add(key);
+        out.push({venue:hv.name,host:hv.host||'Unassigned',regularHost:hv.host||'',time:sl.time||'',dk,kindKey:kk,kind:sl.kind,cancelled:false,source:'Venue schedule',venueNote:'',notes:''});
+      });
+    });
+  }catch(e){}
   return out;
+}
+// a night that comes only from a venue's schedule has no HQ record yet; changing or cancelling one date makes a real HQ gig for it
+function materializeSlotGig(it,over){
+  const e=Object.assign({id:Date.now().toString()+'_'+Math.random().toString(36).slice(2,6),date:it.dk,timeLocked:false,time:time24(it.time)||'',endTime:'',kind:it.kind,venue:it.venue,host:it.host||'Unassigned',status:'scheduled',notes:'',bigNight:false,bigName:'',seriesId:null,cadence:null,cadenceAnchor:''},over||{});
+  gigSchedule.push(e);persistGig(e,false);return e;
 }
 function dashNote(it){return it.notes||((it.kind||'').toLowerCase()==='karaoke'&&!it.cancelled?'Regular karaoke':'');}
 function getDashboardGigsForDate(dk,dow){
@@ -3285,7 +3308,7 @@ function editFullGigFromDash(idx,fromSchedule){
   document.getElementById('gigEndTime').value='';
   populateGigKindChips(it.kind||null);
   populateGigVenueChips(it.venue||null);
-  document.getElementById('gigCancelRow').style.display='block';
+  document.getElementById('gigCancelRow').style.display='';
   document.getElementById('gigCancelCheckbox').checked=!!it.cancelled;
   // This gig lives in the Planner, not in HQ's own schedule — it can still be deleted from here.
   editingExternalGig=it;
@@ -3417,6 +3440,7 @@ async function confirmHostChange(scope){
 }
 async function applyHostChange(it,newHost,scope){
   const hostVal=newHost==='Unassigned'?null:newHost;
+  if(!it.hqGigId&&!it.pVenueId&&it.source==='Venue schedule'){materializeSlotGig(it,{host:newHost});return;}
   if(it.hqGigId){
     const g=gigSchedule.find(x=>x.id===it.hqGigId);if(!g)return;
     if(scope==='always'){
@@ -4269,31 +4293,44 @@ function renderGigCalendar(){
   scroll.innerHTML=html;
 }
 function renderScheduleAll(){renderScheduleSpreadsheet();renderGigCalendar();}
+function gigOpts(list,cur,ph){
+  const arr=list.slice();if(cur&&arr.indexOf(cur)<0)arr.push(cur);
+  return (ph?'<option value="">'+ph+'</option>':'')+arr.map(n=>`<option value="${escAttr(n)}"${n===cur?' selected':''}>${esc(n)}</option>`).join('');
+}
 function populateGigVenueChips(sel){
   selectedGigVenue=sel||'';
-  document.getElementById('gigVenueChips').innerHTML=getVenueNames().map(v=>`<div class="chip${v===selectedGigVenue?' selected-skill':''}" onclick="selectGigVenue(this,'${v}')">${v}</div>`).join('');
+  document.getElementById('gigVenueSel').innerHTML=gigOpts(getVenueNames(),selectedGigVenue,'Choose a venue');
 }
-function selectGigVenue(el,v){
+function onGigVenue(v){
   selectedGigVenue=v;
-  document.querySelectorAll('#gigVenueChips .chip').forEach(c=>c.classList.remove('selected-skill'));
-  el.classList.add('selected-skill');
   // New gig, no host picked yet (including via "+ Assign Gig" from Host
   // Roster, which already set one) — fall back to this venue's default host.
   if(!editingGigId&&selectedGigHost==='Unassigned'){
     const venueObj=venues.find(x=>x.name===v);
     if(venueObj&&venueObj.host)populateGigHostChips(venueObj.host);
   }
+  gigAutoTime();
 }
 function populateGigHostChips(sel){
   selectedGigHost=sel||'Unassigned';
-  document.getElementById('gigHostChips').innerHTML=['Unassigned',...roster.map(h=>h.name)].map(n=>`<div class="chip${n===selectedGigHost?' selected-skill':''}" onclick="selectGigHost(this,'${n}')">${n}</div>`).join('');
+  document.getElementById('gigHostSel').innerHTML=gigOpts(['Unassigned',...roster.map(h=>h.name)],selectedGigHost);
 }
-function selectGigHost(el,n){selectedGigHost=n;document.querySelectorAll('#gigHostChips .chip').forEach(c=>c.classList.remove('selected-skill'));el.classList.add('selected-skill');}
+function onGigHost(n){selectedGigHost=n;}
 function populateGigKindChips(sel){
   selectedGigKind=sel||'';
-  document.getElementById('gigKindChips').innerHTML=SKILLS.map(k=>`<div class="chip${k===selectedGigKind?' selected-skill':''}" onclick="selectGigKind(this,'${k}')">${k}</div>`).join('');
+  document.getElementById('gigKindSel').innerHTML=gigOpts(SKILLS,selectedGigKind,'Choose a type');
 }
-function selectGigKind(el,k){selectedGigKind=k;document.querySelectorAll('#gigKindChips .chip').forEach(c=>c.classList.remove('selected-skill'));el.classList.add('selected-skill');}
+function onGigKind(k){selectedGigKind=k;gigAutoTime();}
+// a new gig fills in the venue's usual start time for that night, until you type one yourself
+function gigAutoTime(){
+  try{
+    if(editingGigId)return;
+    const t=document.getElementById('gigTime');const d=document.getElementById('gigDate').value;
+    if(!t||t.value||!d||!selectedGigKind||!selectedGigVenue)return;
+    const u=vmxUsualTime(selectedGigKind,selectedGigVenue,new Date(d+'T12:00:00').getDay());
+    if(u)t.value=time24(u);
+  }catch(e){}
+}
 function openGigModal(id,presetHost){
   editingGigId=id||null;editingExternalGig=null;
   const g=id?gigSchedule.find(x=>x.id===id):null;
@@ -4306,16 +4343,13 @@ function openGigModal(id,presetHost){
   populateGigKindChips(g?g.kind:null);
   populateGigVenueChips(g?g.venue:null);
   populateGigHostChips(g?g.host:(presetHost||null));
-  document.getElementById('gigCancelRow').style.display=id?'block':'none';
+  document.getElementById('gigCancelRow').style.display=id?'':'none';
   document.getElementById('gigCancelCheckbox').checked=!!(g&&g.status==='cancelled');
   document.getElementById('gigDeleteBtn').style.display=id?'inline-block':'none';
   // Repeat options only make sense when creating a brand new gig
-  document.getElementById('gigRepeatRow').style.display=(id&&g&&g.seriesId)?'none':'block';
+  document.getElementById('gigRepeatRow').style.display=(id&&g&&g.seriesId)?'none':'';
   document.getElementById('gigRepeatMode').value='none';
-  document.getElementById('gigRepeatCountRow').style.display='none';
-  document.getElementById('gigRepeatCount').value=12;
-  document.getElementById('gigRepeatUnitLabel').textContent='weeks';
-  document.getElementById('gigSeriesNote').style.display=(id&&g&&g.seriesId)?'block':'none';
+  document.getElementById('gigSeriesNote').style.display=(id&&g&&g.seriesId)?'':'none';
   pendingGigDate=null;
   document.getElementById('gigModal').classList.add('open');
 }
@@ -4355,20 +4389,25 @@ function saveGig(){
     Object.assign(g,changes);
     const rm=document.getElementById('gigRepeatMode').value;
     if(rm!=='none'&&!g.seriesId){
-      const cnt=parseInt(document.getElementById('gigRepeatCount').value)||12;
-      createGigEntry({date,time,endTime,bigNight,bigName,kind:selectedGigKind,venue:selectedGigVenue,host:selectedGigHost,notes},rm,cnt,g);
+      createGigEntry({date,time,endTime,bigNight,bigName,kind:selectedGigKind,venue:selectedGigVenue,host:selectedGigHost,notes},rm+'-forever',0,g);
     }else persistGig(g,false);
     renderScheduleAll();closeGigModal();
   }else{
     const repeatMode=document.getElementById('gigRepeatMode').value;
-    const count=parseInt(document.getElementById('gigRepeatCount').value)||12;
-    createGigEntry({date,time,endTime,timeLocked,bigNight,bigName,kind:selectedGigKind,venue:selectedGigVenue,host:selectedGigHost,notes},repeatMode,count);
+    createGigEntry({date,time,endTime,timeLocked,bigNight,bigName,kind:selectedGigKind,venue:selectedGigVenue,host:selectedGigHost,notes},repeatMode==='none'?'none':repeatMode+'-forever',0);
     renderScheduleAll();closeGigModal();
   }
 }
 // Delete a gig that exists only in the Planner / Bingo app (it has no HQ record of its own).
 function deleteExternalGig(it){
   if(!it||!it.kind||!it.venue||!it.dk)return;
+  if(it.source==='Venue schedule'){
+    if(!confirm('Cancel '+it.kind+' at '+it.venue+' on '+it.dk+'?\n\nThis cancels this one night only. To stop the night for good, change or remove it in Edit Venue.'))return;
+    materializeSlotGig(it,{status:'cancelled'});
+    editingExternalGig=null;closeGigModal();document.getElementById('dashGigDetailModal').classList.remove('open');
+    setTimeout(()=>{try{renderScheduleAll();renderDashboardWeek();}catch(e){}},300);
+    return;
+  }
   const kind=plannerKindKey(it.kind);
   const dow=new Date(it.dk+'T12:00:00').getDay();
   const match=(kind&&kind!=='Bingo')?findPlannerVenue(it.kind,it.venue,dow):null;
@@ -7657,6 +7696,7 @@ sable:{
   ['Pick the top 5 opportunities, each with one Belladonna event idea','With the digest','Sable'],
   ['List every event by date, with source links','With the digest','Sable'],
   ['Competitor watch: other karaoke, trivia and bingo nights, by venue, day and host','First Monday of each month only','Sable'],
+  ['Gig check: re-check the gigs in Gigs run by others (still running or not) and add new ones she finds in the area','Wednesdays, 6:30 AM','Sable'],
   ['List dates to avoid for traffic or competing draws','With the digest','Sable'],
   ['Pursue or skip each top idea. Pursue hands the idea to Quill for pitch copy','Monday, after the digest lands','You']
  ],
@@ -8762,7 +8802,7 @@ Ops:
  {"op":"addVenue","fields":{name,city,contactName,contact,notes}}
  {"op":"updateVenue","id":"...","fields":{...}}
  {"op":"updateSite","id":"...","fields":{...}}
- {"op":"setConfig","doc":"sable|sigil|warden|coach|care|curator|social|ads|ideabox|sports","data":{...}}
+ {"op":"setConfig","doc":"sable|sigil|warden|coach|care|curator|social|ads|ideabox|sports|knowngigs","data":{...}}
 
 First read agent_config (voice, pricing, outreach) and follow it exactly. In the voice doc, the field email is the EMAIL VOICE: every email, DM, reply and message you write for Ahnna follows it exactly, including how to sign off (the other voice fields are for captions and general tone). Never invent prices, dates, or facts. Check agent_drafts first so you never write a draft that already exists.
 
@@ -8771,7 +8811,7 @@ RUN NOTE (LAST STEP OF EVERY RUN, even a quiet one, even if something blocked yo
 const TASKS=[
  {name:'Lead run',who:'Raven and Quill',when:'Weekdays, 7:00 am',plain:'Looks for people and venues asking for karaoke, trivia or bingo, scores them hot / warm / cold, drafts cold emails and day-5 follow-ups for venues you have not heard back from, and drafts replies to the good leads.',ids:['raven','quill'],lib:true,
   body:`TASK: Lead run.
-0. Read agent_config outreach blocklist (each entry has a name and optional venueId). NEVER addVenue, addLead, draft, email or DM any venue, client or business on it (match the name ignoring capitals, spaces and punctuation), and skip it in every step below. A lead with stage "skipped" is never worked again. A lead with a skippedAt date was only skipped for now: do not redraft it for 30 days after skippedAt, then it may be offered again.
+0. Read agent_config outreach blocklist (each entry has a name and optional venueId). NEVER addVenue, addLead, draft, email or DM any venue, client or business on it (match the name ignoring capitals, spaces and punctuation), and skip it in every step below. A prospect (agent_venues) with stage "lead" was moved to the Leads list by Ahnna: never draft, email, DM or change it. A lead with stage "skipped" is never worked again. A lead with a skippedAt date was only skipped for now: do not redraft it for 30 days after skippedAt, then it may be offered again.
 1. Search the public web for people and venues in Seattle-Tacoma asking for or likely to need karaoke, trivia, music bingo or themed nights. Score each Hot / Warm / Cold with a one-line reason. Skip anything older than 3 days.
 2. addLead for each (max 8 per run, skip duplicates by link). addVenue for any new bar or venue worth cold-emailing, but FIRST read agent_venues (every stage, including ones Ahnna added by hand), Our Venues (readVenues) and the outreach blocklist, and skip any venue whose name matches one of them when you ignore capitals, spaces, punctuation and "and" versus "&". Never addVenue a duplicate and never overwrite or delete an existing prospect; to add a fact to one, use updateVenue on that id and change only the empty fields.
 3. COLD OUTREACH RULES. Read agent_venues, agent_config outreach (touches: every email or Instagram contact, with date and channel) and agent_config curator research. Check agent_drafts first so you never write a draft that already exists, and write at most one draft per venue per run. A "touch" is one cold contact, an email or a DM. A venue gets ONE touch every 4 months and at most 3 touches in total. If they never answer, that is fine: after touch 3 the venue is closed and you write nothing more. Count the touches from agent_config outreach touches (steps email1, email2, email3, cold-email, cold-dm; also count emailedAt, emailed2At and emailed3At on the venue).
@@ -8884,6 +8924,14 @@ FACEBOOK AND INSTAGRAM: Meta's robots.txt blocks automated readers on both, so n
 3. Recruits with unfinished milestones and no update in 7 days: setConfig is not needed, just list them with the next step and a nudge text.
 4. Venue survey answers received by email: setConfig doc "coach" under feedback{newId:{venue,score,note,date}}.
 Never message anyone.`},
+ {name:'Gig check',who:'Sable',when:'Wednesdays, 6:30 am',plain:'Every week she re-checks the oldest gigs in Gigs run by others (websites, Facebook, Instagram, event pages) to see if they are still running, and looks around Auburn, Kent, Puyallup, Tacoma and the rest of the area for other karaoke, trivia and bingo nights to add.',ids:['sable'],
+  body:`TASK: Gig check. Writes only agent_config knowngigs (plus your run note). Read-only everywhere else. Never contact anyone.
+1. Read agent_config and find the doc knowngigs. Fields: gigs (a map of id to {venue, night, kind, runBy, social, status (still going, ended or not sure), checked (YYYY-MM-DD), notes}) and people (a map of id to {name, kind, instagram, facebook, website, notes}). Also read Our Venues ({"op":"readVenues"}) so you never add a night we already run.
+2. RE-CHECK. Pick up to 15 gigs to check this run: first every gig with no checked date, then the ones with the oldest checked date. Skip a gig checked in the last 28 days. For each, look at every place you can find on the public web: the venue's own website and event page, its Facebook page and events, its Instagram, Google listing, the runBy business or host's own pages (the people list holds their social pages; use them), and local event calendars. Decide: "still going" when you find a recent post, event or listing (within about 6 weeks) showing that night; "ended" when a page says it stopped, the venue closed, or the night was replaced by something else; "not sure" when you cannot tell. Never guess. A night with no recent sign is "not sure", not "ended".
+3. Write each result with setConfig doc "knowngigs" data {gigs:{<id>:{status:"...",checked:"<today YYYY-MM-DD>",social:"<the best link you found, if the field was empty>",notes:"<what you saw and where, with the date of the post, in one line>"}}}. Keep the existing notes by putting them first, then yours. Set checked only on gigs you really looked at. If a night ended, say so in the notes, add "venue may want a new night" and never delete anything. If you find the runBy has a website or social page that is not in people, add it to people.
+4. FIND NEW GIGS. Search the public web for karaoke, trivia and music bingo nights at bars, breweries, restaurants and clubs within about 30 miles of Auburn WA: Auburn, Kent, Federal Way, Renton, Tukwila, Des Moines, Burien, Sumner, Bonney Lake, Puyallup, South Hill, Spanaway, Fife, Tacoma, Orting, Enumclaw and Buckley. Use venue pages, Facebook events, Instagram, Google listings, Yelp and local event calendars. Add up to 10 new rows per run that are not already in gigs (match venue and night ignoring capitals and punctuation) and are not a night we run (Our Venues gigs and slots). Each new row: gigs{<new id like g + ms + index>:{venue, night (a weekday), kind (Karaoke, Trivia, Music bingo or Other), runBy (the business or host, if you can find it), social (the link where you saw it), status "still going", checked "<today>", notes (what you saw and where, with a date), addedBy "sable", createdAt <ms>}}. Only add a night you actually found on a page from the last 6 weeks. If a runBy business or host is new, add them to people{<new id>:{name, kind "Business" or "Host", instagram, facebook, website, notes, createdAt}}.
+5. Never remove or overwrite a field Ahnna typed (venue, night, kind, runBy) on a row that already exists, and never change a row that is not in your list of 15.
+6. Report in plain words: how many you checked, which ones ended, which ones you could not confirm, and the new gigs you added with the venue and night. Mention any venue whose night ended, because it may be open to one of ours.`},
  {name:'Event scout',who:'Sable',when:'Mondays, 6:30 am',plain:'Finds local events in the next 12 weeks that fit Belladonna, marks each start now, tight or too late, and fills Sable\'s digest.',ids:['sable'],
   body:`TASK: Event scout. Find public Seattle-Tacoma events in the next 12 weeks that fit Belladonna (holidays, festivals, game days, venue anniversaries). TIMING: from today's date, mark every event with a timing word. "start now" if it is 8 to 12 weeks away, "tight" if it is 4 to 8 weeks away, "too late" if it is under 4 weeks away. Put it in a "timing" field on every top5 and all entry, and say it in the bullet. Prefer "start now" events for the top 5, because Ahnna needs 8 to 12 weeks to find a venue, plan and promote. setConfig doc "sable" with digest{...} and decisions{...} in the same shape as the existing sable doc. Read it first and keep the format.`},
  {name:'Game days',who:'Sable',when:'Sundays, 6:00 am',plain:'Looks up the rest of the season for the big Pacific Northwest teams and fills the Game Days section of your Gazette.',ids:['sable'],
@@ -9146,8 +9194,8 @@ const TERMS_SHORT="We do a free trial night: full host, equipment, music and pri
 const VOICE_SHORT="Warm, witty and confident: a charming troublemaker with impeccable taste. Conversational, short punchy sentences, dry humor that teases the experience and never the person. Honest and self-aware when something goes wrong, firm and clear when it matters. Gothic in look, not in language: no spells, potions or Victorian theatrics. No corporate filler, no manufactured urgency, no bubbly positivity. At most one emoji, and exclamation points only when earned.";
 function terms(){return (S.cfg.outreach&&S.cfg.outreach.terms)||TERMS_FULL;}
 function termsShort(){return (S.cfg.outreach&&S.cfg.outreach.short)||TERMS_SHORT;}
-const TAGC={target:'new',followup:'quoted',cold:'quoted',closed:'lost',yes:'booked',no:'lost',onboarding:'booked'};
-const TAGL={target:'target',followup:'in progress',cold:'in progress',closed:'closed (no answer)',yes:'yes',no:'no',onboarding:'handed off'};
+const TAGC={lead:'booked',target:'new',followup:'quoted',cold:'quoted',closed:'lost',yes:'booked',no:'lost',onboarding:'booked'};
+const TAGL={lead:'moved to Leads',target:'target',followup:'in progress',cold:'in progress',closed:'closed (no answer)',yes:'yes',no:'no',onboarding:'handed off'};
 function eligibleTrip(){
   const _all=eligibleTripRaw();return _all.filter(v=>!isBlocked(v));
 }
@@ -9326,6 +9374,7 @@ function venueCard(v,fold){
       else if(otExtraDmDue(v)&&otExtraDmDue(v)<=isoDay(now))h+='<button class="tm-b" data-act="emailvenue" data-id="'+esc(v.id)+'" data-kind="dm">Draft the one extra DM</button>';
       if(sent)h+='<button class="tm-b" data-act="vreplied" data-id="'+esc(v.id)+'">They replied</button>';
     }else h+='<button class="tm-b pri" data-act="vresume" data-id="'+esc(v.id)+'">Resume outreach</button>';
+    h+='<button class="tm-b" data-act="prospectlead" data-id="'+esc(v.id)+'">Move to Leads</button>';
     if(sent||st==='followup')h+='<button class="tm-b dim red" data-act="vno" data-id="'+esc(v.id)+'">Said no</button>';
   }
   if(st==='yes')h+='<button class="tm-b pri" data-act="handoff" data-id="'+esc(v.id)+'">Hand to onboarding</button>';
@@ -9342,7 +9391,7 @@ function vRaven(){
 /* ── Gigs run by others + people we know ── */
 const KG_SETS={
  gigs:{title:'Gigs run by others',need:'venue',cols:[['venue','Venue'],['night','Night'],['kind','Type'],['runBy','Run by'],['social','Their social'],['status','Status'],['checked','Last checked'],['notes','Notes']],
-  alias:{venue:['venue','bar','place','location'],night:['night','day','nights','when'],kind:['type','kind','gig','gigtype'],runBy:['runby','host','hostedby','who','business'],social:['theirsocial','social','socials','instagram','link'],status:['status'],checked:['lastchecked','checked'],notes:['notes','note']}},
+  alias:{venue:['venue','venues','bar','place','location'],night:['night','day','nights','when'],kind:['type','kind','gig','gigtype'],runBy:['runby','host','hostedby','who','business'],social:['theirsocial','social','socials','instagram','link'],status:['status'],checked:['lastchecked','checked'],notes:['notes','note']}},
  people:{title:'People we know',need:'name',cols:[['name','Name'],['kind','Business or host'],['instagram','Instagram'],['facebook','Facebook'],['website','Website'],['notes','Notes']],
   alias:{name:['name','person','business','host'],kind:['businessorhost','kind','type'],instagram:['instagram','ig'],facebook:['facebook','fb'],website:['website','site','web','url'],notes:['notes','note']}}
 };
@@ -9356,6 +9405,35 @@ function kgNorm(set,f,v){v=String(v==null?'':v).trim();
   if(f==='checked'){const m=/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/.exec(v);if(m){const y=m[3].length===2?'20'+m[3]:m[3];return y+'-'+m[1].padStart(2,'0')+'-'+m[2].padStart(2,'0');}return v;}
   if(f==='kind'&&set==='gigs'){const l=v.toLowerCase();return /karaoke/.test(l)?'Karaoke':/trivia/.test(l)?'Trivia':/bingo/.test(l)?'Music bingo':v||'Other';}
   return v;}
+// Her weekly breakdown sheet: venues down the side, Monday to Sunday across the top, the person or company running that night in each cell.
+function kgGrid(rows,hd){
+  const WD=['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'],cols={};
+  rows[hd].forEach((c,i)=>{const w=WD.find(x=>x.toLowerCase()===String(c||'').trim().toLowerCase());if(w)cols[i]=w;});
+  const KIND=[[/song quiz|trivia|geeks who drink/i,'Trivia'],[/bingo/i,'Music bingo'],[/mythikal|megastar|karaoke/i,'Karaoke']];
+  const OURS=/^(belladonna|eddy)\b/i,out=[];let city='';
+  rows.slice(hd+1).forEach(r=>{
+    const name=String(r[0]||'').trim();if(!name||/^competitors$/i.test(name))return;
+    const filled=Object.keys(cols).filter(i=>String(r[i]||'').trim());
+    if(!filled.length){if(name===name.toUpperCase()&&/[A-Z]/.test(name)&&name.length<40)city=name.toLowerCase().replace(/(^|[^a-z])([a-z])/g,(m,a,b)=>a+b.toUpperCase());return;}
+    filled.forEach(i=>{
+      const cell=String(r[i]).replace(/[\u{1F000}-\u{1FFFF}\u{2600}-\u{27BF}\uFE0F]/gu,'').trim();
+      (/\s-\s/.test(cell)?[cell]:cell.split('/')).forEach(part=>{
+        let txt=part.trim();if(!txt||(!/[A-Za-z]/.test(txt)&&txt.indexOf('?')<0))return;
+        if(OURS.test(txt))return;
+        const unknown=/^[?\s]+$/.test(txt),unsure=txt.indexOf('?')>=0,notes=[];
+        let runBy=txt.replace(/\?+/g,'').trim(),m;
+        if(unknown){runBy='';notes.push('Marked with a ? in the sheet, nobody named');}
+        else if(m=/^every other\s*-\s*(.+)$/i.exec(runBy)){runBy=m[1].trim();notes.push('Every other week');}
+        else if(m=/^(.+?)\s+-\s+(.+)$/.exec(runBy)){runBy=m[1].trim();notes.push(m[2].trim());}
+        if(unsure&&!unknown)notes.push('Marked with a ? in the sheet');
+        if(city)notes.push('Area: '+city);
+        const k=KIND.find(x=>x[0].test(txt));
+        out.push({venue:name,night:cols[i],kind:k?k[1]:'Other',runBy:runBy,social:'',status:(unsure||unknown)?'not sure':'still going',checked:'',notes:notes.join(' · ')});
+      });
+    });
+  });
+  return out;
+}
 function kgCsvText(set){const sp=KG_SETS[set];return csvOut([sp.cols.map(c=>c[1])].concat(kgRows(set).map(r=>sp.cols.map(c=>r[c[0]]||''))));}
 function kgRow(set,r){
   const sp=KG_SETS[set],key=set==='gigs'?[r.venue,r.night,r.kind].filter(Boolean).join(' · '):[r.name,r.kind].filter(Boolean).join(' · ');
@@ -9369,18 +9447,18 @@ function kgRow(set,r){
     else inp='<input class="tm-in" '+base+' value="'+esc(r[f]||'')+'">';
     return '<div'+(f==='notes'?' class="full"':'')+'><label class="tm-lbl">'+esc(c[1])+'</label>'+inp+'</div>';};
   const links=set==='people'?['instagram','facebook','website'].map(f=>{const u=r[f]||'';const href=/^https?:\/\//i.test(u)?u:(f==='instagram'&&u?'https://instagram.com/'+u.replace(/^@/,''):'');return href?'<a href="'+esc(href)+'" target="_blank" rel="noopener">'+f+'</a>':'';}).filter(Boolean).join(' &middot; '):'';
-  return '<div class="tm-item'+(S.open['c_'+r.id]?'':' folded')+'"><div class="t1 fold" data-act="fold" data-id="'+esc(r.id)+'"><b>'+esc(key||'(blank)')+'</b> '+tag+(r.runBy?'<span class="tm-tag">'+esc(r.runBy)+'</span>':'')+'</div><div class="tm-fg">'+sp.cols.map(fld).join('')+'</div>'+(links?'<div class="t2">'+links+'</div>':'')+
+  return '<div class="tm-item'+(S.open['c_'+r.id]?'':' folded')+'"><div class="t1 fold" data-act="fold" data-id="'+esc(r.id)+'"><b>'+esc(key||'(blank)')+'</b> '+tag+(r.runBy?'<span class="tm-tag">'+esc(r.runBy)+'</span>':'')+(r.addedBy==='sable'?'<span class="tm-tag booked">found by Sable</span>':'')+'</div><div class="tm-fg">'+sp.cols.map(fld).join('')+'</div>'+(links?'<div class="t2">'+links+'</div>':'')+
     '<div class="tm-row">'+(set==='gigs'?'<button class="tm-b pri" data-act="kgchecked" data-id="'+esc(r.id)+'" title="Sets Last checked to today and Status to still going">Checked today, still going</button>':'')+'<button class="tm-b dim red" data-act="kgdel" data-set="'+set+'" data-id="'+esc(r.id)+'">Delete</button></div></div>';
 }
 function kgSection(set){
   const sp=KG_SETS[set],rows=kgRows(set).sort((a,b)=>String(a.venue||a.name||'').localeCompare(String(b.venue||b.name||'')));
   let h='<div class="tm-sec">'+sp.title+' ('+rows.length+')</div>';
-  h+='<div class="tm-hint">'+(set==='gigs'?'Gigs at venues that someone else runs (another business or a host we know). Raven, Iris and Quill never suggest or pitch a night a venue already has. The team re-checks these about every 30 days. Everything here can change: edit any field, or press Checked today.':'The other businesses and hosts we know, with their social pages, so the team can look at them when checking gigs. Add the Run by name on a gig to match.')+'</div>';
+  h+='<div class="tm-hint">'+(set==='gigs'?'Gigs at venues that someone else runs (another business or a host we know). Raven, Iris and Quill never suggest or pitch a night a venue already has. Sable re-checks these on her weekly Gig check, oldest first, and adds gigs she finds nearby. Everything here can change: edit any field, or press Checked today.':'The other businesses and hosts we know, with their social pages, so the team can look at them when checking gigs. Add the Run by name on a gig to match.')+'</div>';
   if(!rows.length)h+='<div class="tm-empty">None added yet.</div>';
   rows.forEach(r=>h+=kgRow(set,r));
   const add='<div class="tm-fg">'+sp.cols.filter(c=>c[0]!=='status'&&c[0]!=='checked').map(c=>{const id='kga-'+set+'-'+c[0];return '<div'+(c[0]==='notes'?' class="full"':'')+'><label class="tm-lbl">'+esc(c[1])+'</label>'+(set==='gigs'&&c[0]==='kind'?'<select class="tm-sel" id="'+id+'">'+KG_TYPES.map(o=>'<option>'+o+'</option>').join('')+'</select>':'<input class="tm-in" id="'+id+'">')+'</div>';}).join('')+'</div><div class="tm-row"><button class="tm-b pri" data-act="kgadd" data-set="'+set+'">Add</button></div>';
   h+=det('kgadd_'+set,'Add one',add,false);
-  const csv='<div class="tm-hint">Paste a CSV or choose a file, then press Import. The first row holds the column names: '+esc(sp.cols.map(c=>c[1]).join(', '))+'. Rows already in the list are skipped. Status can be still going, ended or not sure.</div><textarea class="tm-ta" id="kgcsv-'+set+'" style="min-height:90px"></textarea><div class="tm-row"><input type="file" accept=".csv,text/csv,text/plain" data-chg="kgfile" data-set="'+set+'"><button class="tm-b pri" data-act="kgimport" data-set="'+set+'">Import</button><button class="tm-b" data-act="kgcopy" data-set="'+set+'">Copy as CSV</button><button class="tm-b" data-act="kgdl" data-set="'+set+'">Download CSV</button></div>';
+  const csv='<div class="tm-hint">Paste a CSV or choose a file, then press Import. '+(set==='gigs'?'Your weekly sheet (venues down the side, Monday to Sunday across the top) imports as it is: one gig per filled cell, and your own nights are skipped. A plain list works too. ':'')+'The first row holds the column names: '+esc(sp.cols.map(c=>c[1]).join(', '))+'. Rows already in the list are skipped. Status can be still going, ended or not sure.</div><textarea class="tm-ta" id="kgcsv-'+set+'" style="min-height:90px"></textarea><div class="tm-row"><input type="file" accept=".csv,text/csv,text/plain" data-chg="kgfile" data-set="'+set+'"><button class="tm-b pri" data-act="kgimport" data-set="'+set+'">Import</button><button class="tm-b" data-act="kgcopy" data-set="'+set+'">Copy as CSV</button><button class="tm-b" data-act="kgdl" data-set="'+set+'">Download CSV</button><button class="tm-b dim red" data-act="kgclear" data-set="'+set+'">Clear this whole list</button></div>';
   h+=det('kgcsv_'+set,'Import or export CSV',csv,false);
   return h;
 }
@@ -9433,7 +9511,7 @@ function vOutreach(){
     tp.stops.forEach((v,i)=>h+='<div class="t2" style="margin-top:.5rem"><b style="color:var(--text)">'+(i+1)+'. '+esc(v.name)+'</b>'+(v.address?' · '+esc(v.address):'')+'<br>'+esc(v.pitch||'')+'</div>');
     h+='<div class="tm-row"><button class="tm-b pri" data-act="copytrip">Copy trip brief</button></div><div class="tm-hint" style="margin-top:.5rem">Go Tuesday through Thursday, mid-afternoon. Skip Friday and Saturday.</div></div>';
   }
-  const rest=S.venues.filter(v=>due.indexOf(v)<0&&!isBlocked(v)).sort((a,b)=>String(a.city).localeCompare(String(b.city))||String(a.name).localeCompare(String(b.name)));
+  const rest=S.venues.filter(v=>due.indexOf(v)<0&&!isBlocked(v)&&v.stage!=='lead').sort((a,b)=>String(a.city).localeCompare(String(b.city))||String(a.name).localeCompare(String(b.name)));
   h+='<div class="tm-sec">All Prospects ('+S.venues.length+')</div>';
   rest.forEach(v=>h+=venueCard(v,true));
   h+=det('addvenue','Add a venue','<div class="tm-fg"><div><label class="tm-lbl">Name</label><input class="tm-in" id="nv-name"></div><div><label class="tm-lbl">City</label><input class="tm-in" id="nv-city"></div><div class="full"><label class="tm-lbl">Address</label><input class="tm-in" id="nv-addr"></div><div class="full"><label class="tm-lbl">Why them (evidence)</label><textarea class="tm-ta" id="nv-ev" style="min-height:3.2rem;resize:vertical;"></textarea></div><div class="full"><label class="tm-lbl">Pitch: format and night</label><textarea class="tm-ta" id="nv-pitch" style="min-height:3.2rem;resize:vertical;"></textarea></div></div><div class="tm-row"><button class="tm-b pri" data-act="addvenue">Add venue</button></div>',false);
@@ -9627,6 +9705,29 @@ window.hqLogAdd=async function(ctx,rid,btn){
       const h=document.getElementById('leadHistory');if(h)h.innerHTML=window.hqLogPanel('ld',rec,'venue');
     }
   }catch(e){toast('Could not save: '+(e&&e.message||e),true);}
+};
+
+window.hqProspectToLead=async function(pid,btn){
+  try{
+    const v=(S.venues||[]).find(x=>x.id===pid);if(!v){toast('Could not find that prospect.',true);return;}
+    if(btn&&btn.tagName==='BUTTON')btn.disabled=true;
+    const snap=window.hqProspectSnap(v),info=snap?snap.info:{};
+    const ex=hqLeads().find(l=>hxNm(l.name)===hxNm(v.name));
+    const T=otTouches(v),now=new Date().toISOString();
+    const loc=(typeof currentLocationScope!=='undefined'&&currentLocationScope!=='ALL')?currentLocationScope:((typeof locations!=='undefined'&&locations[0]&&locations[0].code)||'');
+    let lid;
+    if(ex){lid=ex.id;await db.collection('leads').doc(lid).set({prospectId:v.id,prospectInfo:info,updatedAt:now},{merge:true});}
+    else{
+      lid=db.collection('leads').doc().id;
+      const lastCh=T.length&&T[T.length-1].channel==='instagram'?'instagram':'email';
+      const notes=[v.evidence?'Why them: '+v.evidence:'',v.pitch?'Pitch: '+v.pitch:''].filter(Boolean).join('\n');
+      await db.collection('leads').doc(lid).set({name:v.name,contactName:v.contactName||'',phone:'',email:emailOf(v)||'',city:v.city||'',locationId:loc,stage:T.length?'contact':'new',temperature:'warm',interests:[],contactMethod:T.length?lastCh:'email',contactMethodOther:'',source:'outbound',foundBy:(v.addedBy==='manual'?'Ahnna':'Raven'),nextFollowUp:v.followUpOn||'',followUpNone:!v.followUpOn,usingCompetitor:false,notes:notes,address:v.address||'',instagram:v.instagram||'',website:v.website||'',facebook:v.facebook||'',prospectId:v.id,prospectInfo:info,createdAt:now,updatedAt:now});
+    }
+    await col('agent_venues').doc(v.id).update({stage:'lead',conversation:true,movedToLeadId:lid,movedToLeadAt:Date.now(),followUpOn:''});
+    movedTo(btn,'Moved to Leads');
+    toast((ex?'Already a lead, linked it.':'Moved to Leads.')+' Find it on the Leads tab under Venues.');
+    try{if(typeof loadLeads==='function')loadLeads();}catch(e){}
+  }catch(e){toast('Could not move it: '+(e&&e.message||e),true);if(btn)btn.disabled=false;}
 };
 window.hqVenueAll=function(v){
   try{if(S&&!S.started)start();}catch(e){}
@@ -10404,11 +10505,12 @@ const PR={q:'',stage:'',city:''};
 function renderProspects(force){
   const el=document.getElementById('prospectsBody');if(!el)return;
   try{if(S&&!S.started)start();}catch(e){}
-  if(!force){const a=document.activeElement;if(a&&el.contains(a)&&a.dataset&&a.dataset.lg)return;if(Array.from(el.querySelectorAll('[data-lg]')).some(x=>x.dataset.lg!=='date'&&x.value!==x.defaultValue))return;}
+  if(!force&&el.querySelector('.offers-box[data-dirty="1"]'))return;
+  const _typed={};el.querySelectorAll('[id^="lg-"]').forEach(x=>{_typed[x.id]=x.value;});
   const all=(S.venues||[]).filter(v=>v&&v.name);
   const cities=[...new Set(all.map(v=>v.city).filter(Boolean))].sort();
   const q=PR.q.toLowerCase();
-  const list=all.filter(v=>(!PR.stage||(v.stage||'target')===PR.stage)&&(!PR.city||v.city===PR.city)&&(!q||[v.name,v.city,v.address,v.contact,v.contactName,v.pitch,v.evidence].join(' ').toLowerCase().indexOf(q)>=0)).sort((a,b)=>String(a.name).localeCompare(String(b.name)));
+  const list=all.filter(v=>(PR.stage?(v.stage||'target')===PR.stage:v.stage!=='lead')&&(!PR.city||v.city===PR.city)&&(!q||[v.name,v.city,v.address,v.contact,v.contactName,v.pitch,v.evidence].join(' ').toLowerCase().indexOf(q)>=0)).sort((a,b)=>String(a.name).localeCompare(String(b.name)));
   const keep=document.activeElement&&document.activeElement.id;
   const stages=Object.keys(TAGL);
   let h='<div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.8rem"><input class="form-input" id="prQ" style="flex:1;min-width:180px" placeholder="Search prospects" value="'+esc(PR.q)+'" oninput="PR.q=this.value;renderProspects(1)"><select class="form-input" style="width:auto" onchange="PR.stage=this.value;renderProspects()"><option value="">All stages</option>'+stages.map(k=>'<option value="'+k+'"'+(PR.stage===k?' selected':'')+'>'+TAGL[k]+'</option>').join('')+'</select><select class="form-input" style="width:auto" onchange="PR.city=this.value;renderProspects()"><option value="">All cities</option>'+cities.map(c=>'<option'+(PR.city===c?' selected':'')+'>'+esc(c)+'</option>').join('')+'</select></div>';
@@ -10420,10 +10522,11 @@ function renderProspects(force){
     h+='<details data-pk="'+esc(v.id)+'"'+(S.open['pr_'+v.id]?' open':'')+' style="border:1px solid var(--border,#444);border-radius:10px;padding:.55rem .8rem;margin-bottom:.5rem"><summary style="cursor:pointer;display:flex;gap:.5rem;align-items:center;flex-wrap:wrap"><span class="tm-tag '+(TAGC[st]||'')+'">'+esc(TAGL[st]||st)+'</span>'+thrownTag(v)+'<b>'+esc(v.name)+'</b><span style="opacity:.7;font-size:.8rem">'+esc(v.city||'')+'</span>'+(T.length?'<span style="opacity:.7;font-size:.75rem">'+T.length+' email'+(T.length>1?'s':'')+' sent</span>':'')+(v.followUpOn?'<span style="opacity:.7;font-size:.75rem">check back '+esc(v.followUpOn)+'</span>':'')+'</summary><div style="margin-top:.5rem">'+
       line('Address',v.address)+line('Contact',[v.contactName,v.contact].filter(Boolean).join(' · '))+(em?'':line('Email','not found yet'))+(thrownInfo(v)?line('Thrown to Raven from '+thrownInfo(v).who,thrownInfo(v).title+(thrownInfo(v).at?' ('+fmtDay(thrownInfo(v).at)+')':'')):'')+line('Why them',v.evidence)+line('Pitch',v.pitch)+line("Iris's idea to open with",baitFor(v.name))+
       '<div style="margin:.5rem 0;padding:.4rem .7rem;border:1px solid var(--border,#444);border-radius:8px"><div style="font-size:.7rem;letter-spacing:.2em;text-transform:uppercase;opacity:.7;margin-bottom:.4rem">Outreach log and emails sent</div>'+window.hqLogFormHtml('pr',v)+window.hqHistoryHtml(v,'venue')+'</div>'+
-      offersBlock(v.id,v.name,'pr')+'<div style="font-size:.75rem;opacity:.7">Work this one on Raven\'s desk in My Team.</div></div></details>';
+      offersBlock(v.id,v.name,'pr')+'<div style="margin:.6rem 0">'+(st==='lead'?'<span class="tm-tag booked">Moved to Leads</span>':'<button type="button" class="btn-sm btn-gold" onclick="hqProspectToLead(\''+esc(v.id)+'\',this)">Move to Leads</button>')+'</div><div style="font-size:.75rem;opacity:.7">Work this one on Raven\'s desk in My Team.</div></div></details>';
   });
   el.innerHTML=h;
-  if(keep==='prQ'){const i=document.getElementById('prQ');if(i){i.focus();const n=i.value.length;i.setSelectionRange(n,n);}}
+  Object.keys(_typed).forEach(id=>{const x=document.getElementById(id);if(x&&x.value!==_typed[id])x.value=_typed[id];});
+  if(keep&&(keep==='prQ'||keep.indexOf('lg-')===0)){const i=document.getElementById(keep);if(i){i.focus();try{const n=i.value.length;i.setSelectionRange(n,n);}catch(e){}}}
 }
 ['input','change'].forEach(ev=>document.addEventListener(ev,function(e){const bx=e.target&&e.target.closest&&e.target.closest('.offers-box');if(!bx)return;bx.dataset.dirty='1';if(ev==='change'&&bx.dataset.ctx==='pr')obSave(bx,true);}));
 function obSaveCtx(ctx){const bx=document.querySelector('.offers-box[data-ctx="'+ctx+'"]');return(bx&&bx.dataset.dirty)?obSave(bx,true):Promise.resolve();}
@@ -11116,6 +11219,7 @@ const A={
   async ibowner(t){await ibSave({['items.'+t.dataset.id+'.owner']:t.value});toast('Updated.');},
   async ibreopen(t){await ibSave({['items.'+t.dataset.id+'.status']:'open'});toast('Reopened.');},
   async ibdel(t){if(!tapTwice(t))return;await ibSave({['items.'+t.dataset.id]:firebase.firestore.FieldValue.delete()});toast('Deleted.');},
+  async kgclear(t){const set=t.dataset.set,n=kgRows(set).length;if(!n){toast('Nothing to clear.',true);return;}if(!tapTwice(t))return;const u={};kgRows(set).forEach(r=>{u[set+'.'+r.id]=firebase.firestore.FieldValue.delete();});await kgSave(u);toast('Cleared '+n+'.');},
   async kgdel(t){if(!tapTwice(t))return;await kgSave({[t.dataset.set+'.'+t.dataset.id]:firebase.firestore.FieldValue.delete()});toast('Deleted.');},
   async kgadd(t){const set=t.dataset.set,sp=KG_SETS[set],o={};sp.cols.forEach(c=>{const e=document.getElementById('kga-'+set+'-'+c[0]);if(e)o[c[0]]=kgNorm(set,c[0],e.value);});if(!o[sp.need]){toast('Fill in the '+sp.cols[0][1].toLowerCase()+'.',true);return;}if(set==='gigs'){o.status='still going';o.checked=isoDay(Date.now());}o.createdAt=Date.now();await kgSave({[set+'.k'+Date.now().toString(36)]:o});sp.cols.forEach(c=>{const e=document.getElementById('kga-'+set+'-'+c[0]);if(e&&e.tagName==='INPUT')e.value='';});S.open['kgadd_'+set]=false;toast('Added.');},
   async kgfile(t){const f=t.files&&t.files[0];if(!f)return;const txt=await f.text();const ta=document.getElementById('kgcsv-'+t.dataset.set);if(ta)ta.value=txt;toast('File loaded. Press Import.');},
@@ -11123,6 +11227,17 @@ const A={
     const set=t.dataset.set,sp=KG_SETS[set],ta=document.getElementById('kgcsv-'+set),rows=csvParse(ta?ta.value:'');
     if(rows.length<1){toast('Paste a CSV first.',true);return;}
     const nz=x=>String(x||'').toLowerCase().replace(/[^a-z0-9]/g,'');
+    if(set==='gigs'){
+      const WDN=['monday','tuesday','wednesday','thursday','friday','saturday','sunday'];
+      const hd=rows.findIndex(r=>r.filter(c=>WDN.indexOf(String(c||'').trim().toLowerCase())>=0).length>=3);
+      if(hd>=0){
+        const g=kgGrid(rows,hd),have=new Set(kgRows('gigs').map(r=>nz(r.venue)+'|'+nz(r.night)+'|'+nz(r.runBy))),patch={};let add=0,skip=0,i=0;
+        g.forEach(o=>{const k=nz(o.venue)+'|'+nz(o.night)+'|'+nz(o.runBy);if(have.has(k)){skip++;return;}have.add(k);o.createdAt=Date.now();patch['gigs.k'+Date.now().toString(36)+(i++)]=o;add++;});
+        if(!add){toast('Nothing new to add'+(skip?' ('+skip+' already there).':'.'),true);return;}
+        await kgSave(patch);if(ta)ta.value='';toast('Read your weekly sheet and added '+add+' gigs'+(skip?', skipped '+skip+' already there.':'.')+' Check the Type column: it only knows trivia, bingo and the Mythikal karaoke nights by name.');
+        return;
+      }
+    }
     const head=rows[0].map(nz),map={};
     sp.cols.forEach(c=>{const names=[nz(c[1]),nz(c[0])].concat((sp.alias[c[0]]||[]).map(nz));const i=head.findIndex(h=>names.indexOf(h)>=0);if(i>=0)map[c[0]]=i;});
     let data=rows;
@@ -11177,6 +11292,7 @@ const A={
     await col('agent_venues').doc(v.id).update({conversation:true,followUpOn:''});
     await otSave({['touches.'+otId()]:otDoc({kind:'venue',tid:v.id,name:v.name,step:'reply',channel:'email'})});toast('Logged. The cold-outreach schedule is paused for this venue.');
   },
+  async prospectlead(t){window.hqProspectToLead(t.dataset.id,t);},
   async vresume(t){const v=S.venues.find(x=>x.id===t.dataset.id);if(!v)return;await col('agent_venues').doc(v.id).update({conversation:false,stage:'followup',followUpOn:'',notNowUntil:''});toast('Outreach resumed. The next touch follows the 4-month schedule.');},
   async vno(t){
     const v=S.venues.find(x=>x.id===t.dataset.id);if(!v||!confirm(v.name+' said no? Outreach to them stops.'))return;
