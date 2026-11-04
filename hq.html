@@ -11998,15 +11998,15 @@ function slug(a){return String(a||'all').toLowerCase().replace(/[^a-z0-9]/g,'')|
 function wkKey(m,i){return m+'_'+slug(sponArea())+'_'+i;}
 function tpl(){return sponD().template||TPL_DEFAULT;}
 function norm(p){const q={...p};q.answer=p.answer||(p.status==='Said yes'?'yes':p.status==='Said no'?'no':'');q.emailedAt=p.emailedAt||(p.status==='Asked'?'earlier':'');q.desc=p.desc||'';q.kind=p.kind||'';return q;}
-function stage(p){return p.goneCold?'Gone cold':p.answer==='yes'?'Said yes':p.answer==='no'?'Said no':p.emailedAt?'In progress':'To ask';}
-function rank(p){return p.goneCold?4:p.answer==='yes'?0:p.answer==='no'?3:p.emailedAt?1:2;}
+function stage(p){return p.hidden?'Not using':p.goneCold?'Gone cold':p.answer==='yes'?'Said yes':p.answer==='no'?'Said no':p.emailedAt?'In progress':'To ask';}
+function rank(p){return p.hidden?5:p.goneCold?4:p.answer==='yes'?0:p.answer==='no'?3:p.emailedAt?1:2;}
 function dayTxt(x){return x&&x!=='earlier'?niceDay(x):'';}
 function all(m){const a=sponArea();return Object.values(sponD().prospects).filter(p=>p&&p.month===m&&(!a||p.area===a)).map(norm);}
 function pass(p){const q=F.q.toLowerCase();
   if(q&&[p.name,p.kind,p.contactName,p.email,p.city,p.address,p.desc,p.fit,p.notes].join(' ').toLowerCase().indexOf(q)<0)return false;
   if(F.kind&&String(p.kind||'')!==F.kind)return false;if(F.city&&String(p.city||'')!==F.city)return false;if(F.stage&&stage(p)!==F.stage)return false;if(F.ds&&String(p.ds||'')!==F.ds)return false;
   if(F.has==='email'&&!p.email)return false;if(F.has==='noemail'&&p.email)return false;if(F.has==='social'&&!(p.ig||p.fb))return false;return true;}
-function list(m){return all(m).filter(pass).sort((x,y)=>(rank(x)-rank(y))||String(x.name).localeCompare(String(y.name)));}
+function list(m){return all(m).filter(p=>F.stage==='Not using'?!!p.hidden:!p.hidden).filter(pass).sort((x,y)=>(rank(x)-rank(y))||String(x.name).localeCompare(String(y.name)));}
 /* month themes: saved first, otherwise read from the monthly announcement posts Clio made */
 function derivedTheme(m){
   const Lg=monthLong(m),prev=addMonths(m,-1);
@@ -12058,14 +12058,14 @@ function sponEdit(id,m){
   <div class="form-group"><label class="form-label">Notes</label><textarea class="form-textarea" id="cp-notes" style="min-height:70px">${v('notes')}</textarea></div>
   <div class="cp-g2"><div class="form-group"><label class="form-label">Their answer</label><select class="form-input" id="cp-ans"><option value="">No answer yet</option><option value="yes" ${p&&p.answer==='yes'?'selected':''}>Said yes</option><option value="no" ${p&&p.answer==='no'?'selected':''}>Said no</option></select></div>
   <div class="form-group"><label class="form-label">We emailed them on</label><input class="form-input" type="date" id="cp-emdate" value="${p&&p.emailedAt&&p.emailedAt!=='earlier'?esc(p.emailedAt):''}"></div></div>
-  <div style="display:flex;gap:1.4rem;flex-wrap:wrap;margin:.2rem 0 1rem"><label class="cp-chk"><input type="checkbox" id="cp-em" ${p&&p.emailedAt?'checked':''}> We emailed (in progress)</label><label class="cp-chk"><input type="checkbox" id="cp-cold" ${p&&p.goneCold?'checked':''}> Gone cold</label></div>
+  <div style="display:flex;gap:1.4rem;flex-wrap:wrap;margin:.2rem 0 1rem"><label class="cp-chk"><input type="checkbox" id="cp-em" ${p&&p.emailedAt?'checked':''}> We emailed (in progress)</label><label class="cp-chk"><input type="checkbox" id="cp-cold" ${p&&p.goneCold?'checked':''}> Gone cold</label><label class="cp-chk"><input type="checkbox" id="cp-hide" ${p&&p.hidden?'checked':''}> Not using for this (keep saved, hide from the list and sponsor choices)</label></div>
   <div class="cp-acts">${p?`<button class="btn-sm cp-red" data-cp="del" data-arg="${esc(id)}">Remove</button>`:''}<button class="btn-sm" data-cp="close">Cancel</button><button class="btn-sm btn-gold" data-cp="editsave" data-arg="${esc(id)}" data-m="${esc(mm)}">Save</button></div>`,640);
 }
 function sponEditSave(id,m){
   const name=V('cp-name');if(!name){toast('Add the business name',true);return;}
   const d=sponD(),pr={...d.prospects},old=id?norm(pr[id]||{}):null,nid=id||'s'+Date.now().toString(36);
   const em=$('cp-em').checked,dt=V('cp-emdate');
-  const rec={...(pr[id]||{}),id:nid,month:m,area:old?old.area:sponArea(),name:name,contactName:V('cp-who'),email:V('cp-email'),phone:V('cp-phone'),address:V('cp-addr'),city:V('cp-city'),ig:V('cp-ig'),fb:V('cp-fb'),web:V('cp-web'),kind:V('cp-kind'),desc:V('cp-desc'),ds:V('cp-ds'),fit:V('cp-fit'),notes:V('cp-notes'),answer:V('cp-ans'),goneCold:$('cp-cold').checked,status:''};
+  const rec={...(pr[id]||{}),id:nid,month:m,area:old?old.area:sponArea(),name:name,contactName:V('cp-who'),email:V('cp-email'),phone:V('cp-phone'),address:V('cp-addr'),city:V('cp-city'),ig:V('cp-ig'),fb:V('cp-fb'),web:V('cp-web'),kind:V('cp-kind'),desc:V('cp-desc'),ds:V('cp-ds'),fit:V('cp-fit'),notes:V('cp-notes'),answer:V('cp-ans'),goneCold:$('cp-cold').checked,hidden:$('cp-hide').checked,status:''};
   rec.emailedAt=em?(dt||(old&&old.emailedAt&&old.emailedAt!=='earlier'?old.emailedAt:(old&&old.emailedAt==='earlier'?'earlier':todayStr()))):'';
   pr[nid]=rec;closeOv();save({prospects:pr});
 }
@@ -12073,14 +12073,14 @@ async function save(patch,quiet){await saveLib('sponsors',patch,quiet);render();
 function sponDel(id){if(!confirm('Remove this sponsor prospect from the list?'))return;const pr={...sponD().prospects};delete pr[id];closeOv();save({prospects:pr});}
 async function toggle(id,field){
   const pr={...sponD().prospects},p=pr[id];if(!p)return;const q=norm(p);
-  if(field==='em'){p.emailedAt=q.emailedAt?'':todayStr();}else{p.goneCold=!p.goneCold;}
+  if(field==='hide'){p.hidden=!p.hidden;}else if(field==='em'){p.emailedAt=q.emailedAt?'':todayStr();}else{p.goneCold=!p.goneCold;}
   p.status='';p.answer=q.answer;p.desc=q.desc;p.kind=q.kind;
   await save({prospects:pr},true);
 }
 /* ── weekly sponsor popup ── */
 function wkEdit(m,i){
   const d=sponD(),w=d.weeks[wkKey(m,i)]||{},A=list(m),mon=mondaysOf(m)[i];
-  const pool=all(m).sort((x,y)=>String(x.name).localeCompare(String(y.name)));
+  const pool=all(m).filter(p=>!p.hidden||w.sponsorId===p.id).sort((x,y)=>String(x.name).localeCompare(String(y.name)));
   ov(`<div class="section-title" style="margin-bottom:.4rem">Week ${i+1} sponsor</div><div style="font-size:.74rem;color:var(--text3);margin-bottom:.9rem">${esc(mon?new Date(mon+'T12:00:00').toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'}):'')} · ${esc(sponArea()||'All areas')}</div>
   <div class="form-group"><label class="form-label">Sponsor from the prospect list</label><select class="form-input" id="cp-pick"><option value="">Not from the list (type a name below)</option>${pool.map(p=>`<option value="${esc(p.id)}" ${w.sponsorId===p.id?'selected':''}>${esc(p.name)}${p.kind?' · '+esc(p.kind):''}</option>`).join('')}</select></div>
   <div class="form-group"><label class="form-label">Sponsor name (if not from the list)</label><input class="form-input" id="cp-wname" value="${esc(w.sponsorId?'':(w.name||''))}"></div>
@@ -12238,7 +12238,7 @@ function monthCard(m){
   const prRows=Lp.length?Lp.map(p=>{const lk=[p.ig&&'IG',p.fb&&'FB',p.web&&'Web'].filter(Boolean).join(' ');
     return `<div class="cp-row cp-click" data-cp="pedit" data-arg="${esc(p.id)}"><div class="cp-rt">${esc(p.name)}<small>${esc([p.kind,stage(p)+(p.emailedAt&&p.emailedAt!=='earlier'?' (emailed '+dayTxt(p.emailedAt)+')':''),p.city,p.contactName,lk,p.ds?'info: '+p.ds:''].filter(Boolean).join(' · '))}</small>${p.fit?`<small>Fit: ${esc(p.fit)}</small>`:''}</div>
       <label class="cp-chk" data-cp="stop"><input type="checkbox" data-cp="em" data-arg="${esc(p.id)}" ${p.emailedAt?'checked':''}> Emailed</label><label class="cp-chk" data-cp="stop"><input type="checkbox" data-cp="cold" data-arg="${esc(p.id)}" ${p.goneCold?'checked':''}> Gone cold</label>
-      <button class="btn-sm" data-cp="mailp" data-arg="${esc(p.id)}">Email</button>${pen('pedit',p.id,'Edit this sponsor')}</div>`;}).join(''):`<div class="cp-none">${tot?'No sponsor prospects match the filters.':'No sponsor prospects for '+esc(area||'this month')+' yet.'}</div>`;
+      <button class="btn-sm" data-cp="hide" data-arg="${esc(p.id)}" title="${p.hidden?'Put back on the list':'Keep saved but hide from the list and sponsor choices'}">${p.hidden?'Bring back':'Not using'}</button><button class="btn-sm" data-cp="mailp" data-arg="${esc(p.id)}">Email</button>${pen('pedit',p.id,'Edit this sponsor')}</div>`;}).join(''):`<div class="cp-none">${tot?'No sponsor prospects match the filters.':'No sponsor prospects for '+esc(area||'this month')+' yet.'}</div>`;
   const open=foldOpen('c_'+m,m===cur);
   const bu=bannerUrl(m);
   const banner=showBanners()?`<div class="cp-ban">${bu?`<img src="${esc(bu)}" alt="">`:'<div class="cp-noban">No banner yet</div>'}<button class="btn-sm cp-pen cp-banpen" title="Edit banner" data-cp="banedit" data-arg="${esc(m)}">&#9998;</button></div>`:'';
@@ -12271,7 +12271,7 @@ function render(){
   <div class="cp-bar"><span class="cp-lbl">Filter prospects</span><input class="form-input" id="cp-q" value="${esc(F.q)}" style="max-width:200px">
     <select class="roster-filter-select" data-cpsel="kind">${opt('','All kinds of business',F.kind)}${kinds.map(c=>opt(c,c,F.kind)).join('')}</select>
     <select class="roster-filter-select" data-cpsel="city">${opt('','All cities',F.city)}${cities.map(c=>opt(c,c,F.city)).join('')}</select>
-    <select class="roster-filter-select" data-cpsel="stage">${opt('','Any progress',F.stage)}${['To ask','In progress','Said yes','Said no','Gone cold'].map(c=>opt(c,c,F.stage)).join('')}</select>
+    <select class="roster-filter-select" data-cpsel="stage">${opt('','Any progress',F.stage)}${['To ask','In progress','Said yes','Said no','Gone cold','Not using'].map(c=>opt(c,c,F.stage)).join('')}</select>
     <select class="roster-filter-select" data-cpsel="ds">${opt('','Any info found',F.ds)}${dss.map(c=>opt(c,c,F.ds)).join('')}</select>
     <select class="roster-filter-select" data-cpsel="has">${opt('','Any contact',F.has)}${opt('email','Has email',F.has)}${opt('noemail','No email yet',F.has)}${opt('social','Has Instagram or Facebook',F.has)}</select>
     <button class="btn-sm" data-cp="clearf">Clear filters</button></div>
@@ -12303,6 +12303,7 @@ function onClick(e){
     case 'del':sponDel(arg);break;
     case 'em':toggle(arg,'em');break;
     case 'cold':toggle(arg,'cold');break;
+    case 'hide':toggle(arg,'hide');break;
     case 'bulk':bulkEdit(arg);break;
     case 'bulkfile':bulkFile();break;
     case 'bulkadd':bulkAdd(arg);break;
