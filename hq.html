@@ -11948,6 +11948,10 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 .cp-chk{display:inline-flex;gap:.35rem;align-items:center;font-size:.74rem;color:var(--text2);cursor:pointer}
 .cp-click{cursor:pointer}
 .cp-click:hover{border-color:var(--border-gold)}
+.cp-tk{width:100%;border-collapse:collapse;font-size:.82rem}
+.cp-tk th,.cp-tk td{padding:.35rem .5rem;border-bottom:1px solid var(--border);text-align:center}
+.cp-tk td:first-child{text-align:left}
+.cp-tk small{color:var(--text3)}
 .cp-none{font-size:.8rem;color:var(--text3);margin:.3rem 0}
 .cp-tools{display:flex;gap:.5rem;margin-top:.6rem;flex-wrap:wrap}
 .cp-acts{display:flex;gap:.5rem;justify-content:flex-end;flex-wrap:wrap}
@@ -11969,7 +11973,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 const COL='socialLibrary';
 const L={sponsors:{},banners:{},campaigns:{},settings:{},venueCities:{}};
 let loaded={},monthly=[],started=false,unsubs=[],pend=false,loadErr='',filterMode='up',dr=null;
-let F={q:'',kind:'',city:'',stage:'',ds:'',has:''};
+let F={q:'',kind:'',city:'',tag:'',stage:'',ds:'',has:''},M={q:'',kind:'',city:'',tag:''},migDone=false;
 const SPON_STATUS_WK=['Needed','Asked','Confirmed','Prizes in','Paid'];
 const TPL_DEFAULT={subject:'Sponsor a night with Belladonna: {theme} in {month}',body:"Hi {contact},\n\nI'm Ahnna with Belladonna Entertainment. Each week this month we're teaming up with one local business for a special night at {venue}, and I'd love for {sponsor} to be a featured sponsor.\n\nHere's the idea: {month}'s theme is {theme}. The venue makes a four-cocktail flight inspired by it, we sell tickets, and your business is the star of the night. You provide the prizes, and the sponsor fee is just ${fee}.\n\nWould you be open to hearing more?\n\nAhnna\nBelladonna Entertainment\n[logo + link]\nwww.belladonnanights.com"};
 const $=id=>document.getElementById(id);
@@ -11990,7 +11994,7 @@ async function saveLib(id,patch,quiet){
   catch(e){toast('Could not save: '+(e&&e.message||e),true);}
 }
 /* ── data ── */
-function sponD(){const d=L.sponsors||{};return {areas:d.areas||[],area:d.area||'',prospects:d.prospects||{},weeks:d.weeks||{},template:d.template||null,fee:d.fee||100,fold:d.fold||{},showBanners:d.showBanners};}
+function sponD(){const d=L.sponsors||{};return {areas:d.areas||[],area:d.area||'',prospects:d.prospects||{},weeks:d.weeks||{},prog:d.prog||{},rules:d.rules||{},masterV2:!!d.masterV2,template:d.template||null,fee:d.fee||100,fold:d.fold||{},showBanners:d.showBanners};}
 function cityMap(){return (L.venueCities||{}).map||{};}
 function sponAreas(){const d=sponD();if(d.areas.length)return d.areas;return [...new Set(Object.values(cityMap()).map(x=>String(x||'').trim()).filter(Boolean))];}
 function sponArea(){const d=sponD(),A=sponAreas();return A.indexOf(d.area)>=0?d.area:(A[0]||'');}
@@ -11998,13 +12002,28 @@ function slug(a){return String(a||'all').toLowerCase().replace(/[^a-z0-9]/g,'')|
 function wkKey(m,i){return m+'_'+slug(sponArea())+'_'+i;}
 function tpl(){return sponD().template||TPL_DEFAULT;}
 function norm(p){const q={...p};q.answer=p.answer||(p.status==='Said yes'?'yes':p.status==='Said no'?'no':'');q.emailedAt=p.emailedAt||(p.status==='Asked'?'earlier':'');q.desc=p.desc||'';q.kind=p.kind||'';return q;}
+/* tags: typed with commas. Linked locations: prospects with the same group id are the same business in different places */
+function tagsOf(p){return String(p.tags||'').split(',').map(x=>x.trim().toLowerCase()).filter(Boolean);}
+const SHARED=['contactName','email','ig','fb','web','kind','desc','fit'];
+function sibs(p){const g=p.group;if(!g)return [];return Object.values(sponD().prospects).filter(x=>x&&x.id!==p.id&&x.group===g);}
 function stage(p){return p.hidden?'Not using':p.goneCold?'Gone cold':p.answer==='yes'?'Said yes':p.answer==='no'?'Said no':p.emailedAt?'In progress':'To ask';}
 function rank(p){return p.hidden?5:p.goneCold?4:p.answer==='yes'?0:p.answer==='no'?3:p.emailedAt?1:2;}
 function dayTxt(x){return x&&x!=='earlier'?niceDay(x):'';}
-function all(m){const a=sponArea();return Object.values(sponD().prospects).filter(p=>p&&p.month===m&&(!a||p.area===a)).map(norm);}
+/* ONE master list of every business (sponsors.prospects). What happens with a business in a given month
+   (on the list, emailed, answer, gone cold, not using, saved email draft) is kept per month in sponsors.prog["YYYY-MM|id"]. */
+const PK=(m,id)=>m+'|'+id;
+const PROGF=['answer','emailedAt','goneCold','hidden','draft','pinned','status','month'];
+function view(p,m){const g=sponD().prog[PK(m,p.id)]||{};return norm({...p,month:m,status:'',answer:g.answer||'',emailedAt:g.emailedAt||'',goneCold:!!g.goneCold,hidden:!!g.hidden,draft:g.draft,pinned:!!g.pinned});}
+function onList(p,m){const g=sponD().prog[PK(m,p.id)];return !!(g&&(g.pinned||g.answer||g.emailedAt||g.goneCold||g.hidden));}
+function areaOK(p){const a=sponArea();return !a||p.area===a;}
+function tokens(p){const o=[];const k=String(p.kind||'').trim().toLowerCase();if(k)o.push('k:'+k);tagsOf(p).forEach(t=>o.push('t:'+t));return o;}
+function rule(m){const r=sponD().rules[m]||{};return {inc:r.inc||[],exc:r.exc||[]};}
+function fits(p,m){const r=rule(m),tk=tokens(p);return r.inc.length>0&&r.inc.some(t=>tk.indexOf(t)>=0)&&!r.exc.some(t=>tk.indexOf(t)>=0);}
+function all(m){return Object.values(sponD().prospects).filter(p=>p&&areaOK(p)&&onList(p,m)).map(p=>view(p,m));}
+function sug(m){return Object.values(sponD().prospects).filter(p=>p&&areaOK(p)&&!onList(p,m)&&fits(p,m)).map(p=>view(p,m)).filter(pass).sort((x,y)=>String(x.name).localeCompare(String(y.name)));}
 function pass(p){const q=F.q.toLowerCase();
-  if(q&&[p.name,p.kind,p.contactName,p.email,p.city,p.address,p.desc,p.fit,p.notes].join(' ').toLowerCase().indexOf(q)<0)return false;
-  if(F.kind&&String(p.kind||'')!==F.kind)return false;if(F.city&&String(p.city||'')!==F.city)return false;if(F.stage&&stage(p)!==F.stage)return false;if(F.ds&&String(p.ds||'')!==F.ds)return false;
+  if(q&&[p.name,p.kind,p.tags,p.contactName,p.email,p.city,p.address,p.desc,p.fit,p.notes].join(' ').toLowerCase().indexOf(q)<0)return false;
+  if(F.kind&&String(p.kind||'')!==F.kind)return false;if(F.city&&String(p.city||'')!==F.city)return false;if(F.tag&&tagsOf(p).indexOf(F.tag)<0)return false;if(F.stage&&stage(p)!==F.stage)return false;if(F.ds&&String(p.ds||'')!==F.ds)return false;
   if(F.has==='email'&&!p.email)return false;if(F.has==='noemail'&&p.email)return false;if(F.has==='social'&&!(p.ig||p.fb))return false;return true;}
 function list(m){return all(m).filter(p=>F.stage==='Not using'?!!p.hidden:!p.hidden).filter(pass).sort((x,y)=>(rank(x)-rank(y))||String(x.name).localeCompare(String(y.name)));}
 /* month themes: saved first, otherwise read from the monthly announcement posts Clio made */
@@ -12043,40 +12062,61 @@ function ctx(p,wk){
 }
 /* ── prospect popup ── */
 function sponEdit(id,m){
-  const raw=id?sponD().prospects[id]:null;if(id&&!raw)return;const p=raw?norm(raw):null,mm=p?p.month:m;
+  const raw=id?sponD().prospects[id]:null;if(id&&!raw)return;const mm=m||'',p=raw?(mm?view(raw,mm):norm(raw)):null;
   const v=k=>esc(p?(p[k]||''):'');
-  const kinds=[...new Set(all(mm).map(x=>x.kind).filter(Boolean))].sort();
-  ov(`<div class="section-title" style="margin-bottom:.4rem">${p?'Edit sponsor prospect':'New sponsor prospect'}</div><div style="font-size:.74rem;color:var(--text3);margin-bottom:.9rem">${esc(monthName(mm))} · ${esc(p?(p.area||'All areas'):(sponArea()||'All areas'))}</div>
+  const kinds=[...new Set(Object.values(sponD().prospects).map(x=>x&&String(x.kind||'').trim()).filter(Boolean))].sort();
+  ov(`<div class="section-title" style="margin-bottom:.4rem">${p?'Edit business':'New business'}</div><div style="font-size:.74rem;color:var(--text3);margin-bottom:.9rem">${mm?esc(monthName(mm))+' · this business is on '+esc(monthName(mm))+"'s list":'Master list (every business, every area)'}</div>
   <div class="cp-g2"><div class="form-group"><label class="form-label">Business name</label><input class="form-input" id="cp-name" value="${v('name')}"></div><div class="form-group"><label class="form-label">Contact name</label><input class="form-input" id="cp-who" value="${v('contactName')}"></div></div>
   <div class="cp-g2"><div class="form-group"><label class="form-label">Email</label><input class="form-input" id="cp-email" value="${v('email')}"></div><div class="form-group"><label class="form-label">Phone</label><input class="form-input" id="cp-phone" value="${v('phone')}"></div></div>
   <div class="cp-g2"><div class="form-group"><label class="form-label">Address</label><input class="form-input" id="cp-addr" value="${v('address')}"></div><div class="form-group"><label class="form-label">City</label><input class="form-input" id="cp-city" value="${v('city')}"></div></div>
   <div class="cp-g2"><div class="form-group"><label class="form-label">Instagram</label><input class="form-input" id="cp-ig" value="${v('ig')}"></div><div class="form-group"><label class="form-label">Facebook</label><input class="form-input" id="cp-fb" value="${v('fb')}"></div></div>
   <div class="cp-g2"><div class="form-group"><label class="form-label">Website</label><input class="form-input" id="cp-web" value="${v('web')}"></div><div class="form-group"><label class="form-label">Info found (found, partial, not found...)</label><input class="form-input" id="cp-ds" value="${v('ds')}"></div></div>
-  <div class="form-group"><label class="form-label">Kind of business (stand, shop/cafe, mobile... it can change per campaign)</label><input class="form-input" id="cp-kind" list="cp-kinds" value="${v('kind')}"><datalist id="cp-kinds">${kinds.map(k=>`<option value="${esc(k)}">`).join('')}</datalist></div>
+  <div class="cp-g2"><div class="form-group"><label class="form-label">Kind of business (Coffee Shop, Mobile Coffee Stand...)</label><input class="form-input" id="cp-kind" list="cp-kinds" value="${v('kind')}"><datalist id="cp-kinds">${kinds.map(k=>`<option value="${esc(k)}">`).join('')}</datalist></div><div class="form-group"><label class="form-label">Area</label><select class="form-input" id="cp-area"><option value="">No area</option>${sponAreas().map(a=>`<option ${p&&p.area===a?'selected':(!p&&a===sponArea()?'selected':'')}>${esc(a)}</option>`).join('')}</select></div></div>
+  <div class="cp-g2"><div class="form-group"><label class="form-label">Tags (separate with commas)</label><input class="form-input" id="cp-tags" value="${v('tags')}"></div><div class="form-group"><label class="form-label">Same business as (another location)</label><select class="form-input" id="cp-link"><option value="">Not linked</option>${Object.values(sponD().prospects).filter(x=>x&&x.id!==id).sort((a,b)=>String(a.name).localeCompare(String(b.name))).map(x=>`<option value="${esc(x.id)}" ${p&&p.group&&x.group===p.group?'selected':''}>${esc(x.name)}${x.city?' · '+esc(x.city):''}</option>`).join('')}</select></div></div>
   <div class="form-group"><label class="form-label">What this place is</label><textarea class="form-textarea" id="cp-desc" style="min-height:70px">${v('desc')}</textarea></div>
   <div class="form-group"><label class="form-label">How they fit the theme</label><textarea class="form-textarea" id="cp-fit" style="min-height:70px">${v('fit')}</textarea></div>
   <div class="form-group"><label class="form-label">Notes</label><textarea class="form-textarea" id="cp-notes" style="min-height:70px">${v('notes')}</textarea></div>
-  <div class="cp-g2"><div class="form-group"><label class="form-label">Their answer</label><select class="form-input" id="cp-ans"><option value="">No answer yet</option><option value="yes" ${p&&p.answer==='yes'?'selected':''}>Said yes</option><option value="no" ${p&&p.answer==='no'?'selected':''}>Said no</option></select></div>
+  ${mm?`<div class="cp-g2"><div class="form-group"><label class="form-label">Their answer (${esc(monthName(mm))})</label><select class="form-input" id="cp-ans"><option value="">No answer yet</option><option value="yes" ${p&&p.answer==='yes'?'selected':''}>Said yes</option><option value="no" ${p&&p.answer==='no'?'selected':''}>Said no</option></select></div>
   <div class="form-group"><label class="form-label">We emailed them on</label><input class="form-input" type="date" id="cp-emdate" value="${p&&p.emailedAt&&p.emailedAt!=='earlier'?esc(p.emailedAt):''}"></div></div>
-  <div style="display:flex;gap:1.4rem;flex-wrap:wrap;margin:.2rem 0 1rem"><label class="cp-chk"><input type="checkbox" id="cp-em" ${p&&p.emailedAt?'checked':''}> We emailed (in progress)</label><label class="cp-chk"><input type="checkbox" id="cp-cold" ${p&&p.goneCold?'checked':''}> Gone cold</label><label class="cp-chk"><input type="checkbox" id="cp-hide" ${p&&p.hidden?'checked':''}> Not using for this (keep saved, hide from the list and sponsor choices)</label></div>
-  <div class="cp-acts">${p?`<button class="btn-sm cp-red" data-cp="del" data-arg="${esc(id)}">Remove</button>`:''}<button class="btn-sm" data-cp="close">Cancel</button><button class="btn-sm btn-gold" data-cp="editsave" data-arg="${esc(id)}" data-m="${esc(mm)}">Save</button></div>`,640);
+  <div style="display:flex;gap:1.4rem;flex-wrap:wrap;margin:.2rem 0 1rem"><label class="cp-chk"><input type="checkbox" id="cp-em" ${p&&p.emailedAt?'checked':''}> We emailed (in progress)</label><label class="cp-chk"><input type="checkbox" id="cp-cold" ${p&&p.goneCold?'checked':''}> Gone cold</label><label class="cp-chk"><input type="checkbox" id="cp-hide" ${p&&p.hidden?'checked':''}> Not using for this theme (keep saved, hide it from this month's list and sponsor choices)</label></div>`:''}
+  <div class="cp-acts">${p?`<button class="btn-sm cp-red" data-cp="del" data-arg="${esc(id)}">Remove everywhere</button>`:''}<button class="btn-sm" data-cp="close">Cancel</button><button class="btn-sm btn-gold" data-cp="editsave" data-arg="${esc(id)}" data-m="${esc(mm)}">Save</button></div>`,640);
 }
 function sponEditSave(id,m){
   const name=V('cp-name');if(!name){toast('Add the business name',true);return;}
-  const d=sponD(),pr={...d.prospects},old=id?norm(pr[id]||{}):null,nid=id||'s'+Date.now().toString(36);
-  const em=$('cp-em').checked,dt=V('cp-emdate');
-  const rec={...(pr[id]||{}),id:nid,month:m,area:old?old.area:sponArea(),name:name,contactName:V('cp-who'),email:V('cp-email'),phone:V('cp-phone'),address:V('cp-addr'),city:V('cp-city'),ig:V('cp-ig'),fb:V('cp-fb'),web:V('cp-web'),kind:V('cp-kind'),desc:V('cp-desc'),ds:V('cp-ds'),fit:V('cp-fit'),notes:V('cp-notes'),answer:V('cp-ans'),goneCold:$('cp-cold').checked,hidden:$('cp-hide').checked,status:''};
-  rec.emailedAt=em?(dt||(old&&old.emailedAt&&old.emailedAt!=='earlier'?old.emailedAt:(old&&old.emailedAt==='earlier'?'earlier':todayStr()))):'';
-  pr[nid]=rec;closeOv();save({prospects:pr});
+  const d=sponD(),pr={...d.prospects},prog={...d.prog},oldRaw=id?pr[id]||{}:null,old=oldRaw?norm(oldRaw):null,nid=id||'s'+Date.now().toString(36)+Math.floor(Math.random()*1e4).toString(36);
+  const rec={...(oldRaw||{}),id:nid,area:V('cp-area'),name:name,contactName:V('cp-who'),email:V('cp-email'),phone:V('cp-phone'),address:V('cp-addr'),city:V('cp-city'),ig:V('cp-ig'),fb:V('cp-fb'),web:V('cp-web'),kind:V('cp-kind'),desc:V('cp-desc'),ds:V('cp-ds'),fit:V('cp-fit'),notes:V('cp-notes'),tags:V('cp-tags')};
+  PROGF.forEach(k=>{delete rec[k];});
+  if(m){const g={...(prog[PK(m,nid)]||{})},em=$('cp-em').checked,dt=V('cp-emdate'),oe=g.emailedAt||'';
+    g.pinned=true;g.answer=V('cp-ans');g.goneCold=$('cp-cold').checked;g.hidden=$('cp-hide').checked;
+    g.emailedAt=em?(dt||(oe&&oe!=='earlier'?oe:(oe==='earlier'?'earlier':todayStr()))):'';
+    prog[PK(m,nid)]=g;}
+  /* linked locations: join/leave the group, then share the common details between all locations */
+  const link=V('cp-link'),oldG=(oldRaw||{}).group||'';
+  if(link&&pr[link]){const g=pr[link].group||link;pr[link]={...pr[link],group:g};rec.group=g;}else{rec.group='';}
+  pr[nid]=rec;
+  if(rec.group){
+    Object.values(pr).filter(x=>x&&x.id!==nid&&x.group===rec.group).forEach(x=>{const y={...x};
+      SHARED.forEach(k=>{
+        if(oldG===rec.group&&String(rec[k]||'')!==String((old||{})[k]||'')){y[k]=rec[k];}
+        else{ if(!rec[k]&&y[k])rec[k]=y[k]; if(rec[k]&&!y[k])y[k]=rec[k]; }
+      });
+      pr[y.id]=y;});
+    pr[nid]=rec;
+  }
+  if(oldG&&!rec.group){const left=Object.values(pr).filter(x=>x&&x.group===oldG&&x.id!==nid);if(left.length===1)pr[left[0].id]={...left[0],group:''};}
+  closeOv();save({prospects:pr,prog:prog});
 }
 async function save(patch,quiet){await saveLib('sponsors',patch,quiet);render();}
-function sponDel(id){if(!confirm('Remove this sponsor prospect from the list?'))return;const pr={...sponD().prospects};delete pr[id];closeOv();save({prospects:pr});}
-async function toggle(id,field){
-  const pr={...sponD().prospects},p=pr[id];if(!p)return;const q=norm(p);
-  if(field==='hide'){p.hidden=!p.hidden;}else if(field==='em'){p.emailedAt=q.emailedAt?'':todayStr();}else{p.goneCold=!p.goneCold;}
-  p.status='';p.answer=q.answer;p.desc=q.desc;p.kind=q.kind;
-  await save({prospects:pr},true);
+function sponDel(id){if(!confirm('Remove this business from the master list and from every month? (To only skip it for one theme, use Not using instead.)'))return;const pr={...sponD().prospects},prog={...sponD().prog};delete pr[id];Object.keys(prog).forEach(k=>{if(k.split('|')[1]===id)delete prog[k];});closeOv();save({prospects:pr,prog:prog});}
+async function toggle(m,id,field){
+  const d=sponD(),p=d.prospects[id];if(!p)return;const v=view(p,m),prog={...d.prog},g={...(prog[PK(m,id)]||{})};
+  if(field==='hide')g.hidden=!v.hidden;else if(field==='em')g.emailedAt=v.emailedAt?'':todayStr();else if(field==='cold')g.goneCold=!v.goneCold;
+  g.pinned=true;
+  if(field==='em'&&!v.emailedAt){/* nothing else */}
+  prog[PK(m,id)]=g;
+  await save({prog:prog},true);
 }
+async function pin(m,id){const prog={...sponD().prog};prog[PK(m,id)]={...(prog[PK(m,id)]||{}),pinned:true};await save({prog:prog},true);}
 /* ── weekly sponsor popup ── */
 function wkEdit(m,i){
   const d=sponD(),w=d.weeks[wkKey(m,i)]||{},A=list(m),mon=mondaysOf(m)[i];
@@ -12135,20 +12175,20 @@ function banUpload(m){
 function draftOpen(base,wk,id){
   const t=tpl(),c=ctx(base,wk);
   if(wk){c.venue=wk.venue||c.venue;c.fee=String(wk.fee||c.fee);c.sponsor=wk.name||c.sponsor;if(wk.week)c.week=wk.week;}
-  const saved=id&&sponD().prospects[id]&&sponD().prospects[id].draft;
-  dr={id:id||'',def:{subject:fill(t.subject,c),body:fill(t.body,c)}};
+  const saved=id&&((sponD().prog[PK(base.month,id)]||{}).draft);
+  dr={id:id||'',m:base.month,def:{subject:fill(t.subject,c),body:fill(t.body,c)}};
   ov(`<div class="section-title" style="margin-bottom:.4rem">Email to ${esc(base.name||'sponsor')}</div><div style="font-size:.74rem;color:var(--text3);margin-bottom:.9rem">${saved?'Your saved draft for this sponsor.':'Built from your default draft. Change anything, it only changes this email.'}</div>
   <div class="form-group"><label class="form-label">To</label><input class="form-input" id="cp-to" value="${esc(base.email||'')}"></div>
   <div class="form-group"><label class="form-label">Subject</label><input class="form-input" id="cp-sub" value="${esc(saved?saved.subject:dr.def.subject)}"></div>
   <div class="form-group"><label class="form-label">Email</label><textarea class="form-textarea" id="cp-body" style="min-height:320px">${esc(saved?saved.body:dr.def.body)}</textarea></div>
   <div class="cp-acts"><button class="btn-sm" data-cp="drreset">Back to default</button>${id?'<button class="btn-sm" data-cp="drsave">Save this draft</button>':''}<button class="btn-sm" data-cp="drcopy">Copy</button><button class="btn-sm" data-cp="drmail">Open in my email</button>${id?'<button class="btn-sm btn-gold" data-cp="drsent">We sent it</button>':''}<button class="btn-sm" data-cp="close">Close</button></div>`,700);
 }
-function mailP(id){const p=sponD().prospects[id];if(!p)return;draftOpen(norm(p),null,id);}
+function mailP(m,id){const p=sponD().prospects[id];if(!p)return;draftOpen(view(p,m),null,id);}
 function mailWk(m,i){const w=sponD().weeks[wkKey(m,i)];if(!w)return;const p=w.sponsorId&&sponD().prospects[w.sponsorId];
-  const base=p?norm(p):{id:'',name:w.name,month:m,area:sponArea(),contactName:'',email:''};const mon=mondaysOf(m)[i];
+  const base=p?view(p,m):{id:'',name:w.name,month:m,area:sponArea(),contactName:'',email:''};const mon=mondaysOf(m)[i];
   draftOpen(base,{venue:w.venue,fee:w.fee,name:w.name,week:mon?new Date(mon+'T12:00:00').toLocaleDateString('en-US',{month:'long',day:'numeric'}):''},p?p.id:'');}
-function drSave(){if(!dr||!dr.id)return;const pr={...sponD().prospects},q=pr[dr.id];if(!q)return;q.draft={subject:V('cp-sub'),body:$('cp-body').value};toast('Draft saved');save({prospects:pr},true);}
-function drSent(){if(!dr||!dr.id)return;const pr={...sponD().prospects},q=pr[dr.id];if(!q)return;q.emailedAt=q.emailedAt&&q.emailedAt!=='earlier'?q.emailedAt:todayStr();q.draft={subject:V('cp-sub'),body:$('cp-body').value};closeOv();save({prospects:pr},true).then(()=>toast('Marked as emailed (in progress)'));}
+function drSave(){if(!dr||!dr.id)return;const prog={...sponD().prog},k=PK(dr.m,dr.id);prog[k]={...(prog[k]||{}),pinned:true,draft:{subject:V('cp-sub'),body:$('cp-body').value}};toast('Draft saved');save({prog:prog},true);}
+function drSent(){if(!dr||!dr.id)return;const prog={...sponD().prog},k=PK(dr.m,dr.id),g={...(prog[k]||{})};g.pinned=true;g.emailedAt=g.emailedAt&&g.emailedAt!=='earlier'?g.emailedAt:todayStr();g.draft={subject:V('cp-sub'),body:$('cp-body').value};prog[k]=g;closeOv();save({prog:prog},true).then(()=>toast('Marked as emailed (in progress)'));}
 /* ── default draft at the top of the page ── */
 function defSave(){const t={subject:V('cp-dsub'),body:$('cp-dbody').value.replace(/\s+$/,'')};save({template:t},true).then(()=>toast('Default draft saved'));}
 function defReset(){$('cp-dsub').value=TPL_DEFAULT.subject;$('cp-dbody').value=TPL_DEFAULT.body;}
@@ -12160,7 +12200,7 @@ function csvRows(text,delim){const rows=[];let row=[],cur='',q=false;
     else if(c==='\n'||c==='\r'){if(c==='\r'&&text[i+1]==='\n')i++;row.push(cur);cur='';rows.push(row);row=[];}else cur+=c;}
   if(cur!==''||row.length){row.push(cur);rows.push(row);}
   return rows.filter(r=>r.some(x=>String(x).trim()));}
-const COLS={name:['name','business','businessname','company','sponsor'],contactName:['contact','contactname','owner','person','contactperson'],email:['email','emailaddress','emailorphone'],phone:['phone','phonenumber','tel','telephone','mobile'],address:['address','street','streetaddress'],city:['city','town'],ig:['instagram','ig','insta'],fb:['facebook','fb'],web:['website','web','url','site'],kind:['kind','kindofbusiness','businesstype','type','category'],desc:['whatthisplaceis','description','about','what','whotheyare'],fit:['howtheyfit','fit','themefit','why','howtheyfitthetheme'],notes:['notes','note','comments'],ds:['status','infostatus','infofound','researchstatus']};
+const COLS={name:['name','business','businessname','company','sponsor'],contactName:['contact','contactname','owner','person','contactperson'],email:['email','emailaddress','emailorphone'],phone:['phone','phonenumber','tel','telephone','mobile'],address:['address','street','streetaddress'],city:['city','town'],ig:['instagram','ig','insta'],fb:['facebook','fb'],web:['website','web','url','site'],kind:['kind','kindofbusiness','businesstype','type','category'],desc:['whatthisplaceis','description','about','what','whotheyare'],fit:['howtheyfit','fit','themefit','why','howtheyfitthetheme'],notes:['notes','note','comments'],tags:['tags','tag','labels'],ds:['status','infostatus','infofound','researchstatus']};
 function headerMap(cells){const map={};cells.forEach((c,i)=>{const k=String(c).toLowerCase().replace(/[^a-z]/g,'');for(const f in COLS){if(map[f]===undefined&&COLS[f].indexOf(k)>=0){map[f]=i;break;}}});return map.name!==undefined?map:null;}
 function parseEntry(txt){
   let t=String(txt),o={};
@@ -12186,7 +12226,7 @@ function parseBulk(text){
   }else{text.split(/\r?\n/).map(x=>x.trim()).filter(Boolean).forEach(l=>{const o=parseEntry(l);if(o.name)out.push(o);});}
   return out;}
 function bulkEdit(m){
-  ov(`<div class="section-title" style="margin-bottom:.4rem">Add sponsors in bulk</div><div style="font-size:.74rem;color:var(--text3);line-height:1.55;margin-bottom:.8rem">${esc(monthName(m))} · ${esc(sponArea()||'All areas')}. Paste a CSV (first row = column names like Name, Contact, Email, Phone, Address, City, Instagram, Facebook, Website, Kind of business, What this place is, How they fit, Notes, Status) or just type a paragraph: one business per line, or a blank line between businesses. Emails, phones, Instagram, Facebook and websites are picked out automatically. A Status column is kept as Info found. If a business's city matches one of your areas, it goes into that area, otherwise into the one selected.</div>
+  ov(`<div class="section-title" style="margin-bottom:.4rem">Add sponsors in bulk</div><div style="font-size:.74rem;color:var(--text3);line-height:1.55;margin-bottom:.8rem">${m?esc(monthName(m))+' · ':'Master list · '}${esc(sponArea()||'All areas')}. Paste a CSV (first row = column names like Name, Contact, Email, Phone, Address, City, Instagram, Facebook, Website, Kind of business, What this place is, How they fit, Notes, Status) or just type a paragraph: one business per line, or a blank line between businesses. Emails, phones, Instagram, Facebook and websites are picked out automatically. A Status column is kept as Info found. If a business's city matches one of your areas, it goes into that area, otherwise into the one selected.</div>
   <div style="margin-bottom:.6rem"><button class="btn-sm" data-cp="bulkfile">Choose a CSV file</button></div>
   <div class="form-group"><textarea class="form-textarea" id="cp-btext" style="min-height:220px"></textarea></div>
   <div style="font-size:.76rem;color:var(--text2);min-height:1.2rem;margin-bottom:.8rem" id="cp-bprev"></div>
@@ -12201,34 +12241,72 @@ function bulkFile(){
 const NK=x=>String(x||'').toLowerCase().replace(/[^a-z0-9]/g,'');
 function mergeInto(rec,o){
   let ch=false;
-  ['contactName','email','phone','address','city','ig','fb','web','kind','desc','fit','ds'].forEach(k=>{if(o[k]&&!String(rec[k]||'').trim()){rec[k]=o[k];ch=true;}});
+  ['contactName','email','phone','address','city','ig','fb','web','kind','tags','desc','fit','ds'].forEach(k=>{if(o[k]&&!String(rec[k]||'').trim()){rec[k]=o[k];ch=true;}});
   if(o.notes){const n=String(rec.notes||'').trim();if(!n){rec.notes=o.notes;ch=true;}else if(n.indexOf(o.notes)<0){rec.notes=n+'\n'+o.notes;ch=true;}}
   return ch;
 }
-/* adds new sponsors; a sponsor already on the list (same month, same name) gets its blank details filled in instead of a copy */
-function addMany(Ls,m,pr){
+/* adds new businesses to the master list (and puts them on month m's list when m is given); a business already in the master list (same name and city) gets its blank details filled in instead of a copy */
+function addMany(Ls,m,pr,prog){
   const cur=sponArea(),AL=sponAreas();
   const areaFor=o=>{const c=String(o.city||'').toLowerCase();return AL.find(a=>c&&c.indexOf(String(a).toLowerCase())>=0)||cur;};
-  const byName={};Object.values(pr).forEach(p=>{if(p&&p.month===m)byName[NK(p.name)]=p;});
+  const byName={};Object.values(pr).forEach(p=>{if(p)(byName[NK(p.name)]=byName[NK(p.name)]||[]).push(p);});
+  const pinTo=id=>{if(m)prog[PK(m,id)]={...(prog[PK(m,id)]||{}),pinned:true};};
   let n=0,up=0;
   Ls.forEach((o,i)=>{const k=NK(o.name);if(!k)return;
-    const ex=byName[k];
-    if(ex){if(mergeInto(ex,o))up++;return;}
+    const c=byName[k]||[],oc=NK(o.city);
+    const ex=c.find(x=>NK(x.city)===oc)||(oc?c.find(x=>!NK(x.city)):c[0]);
+    if(ex){if(mergeInto(ex,o))up++;pinTo(ex.id);return;}
     const id='s'+Date.now().toString(36)+i+Math.floor(Math.random()*1e4).toString(36);
-    const rec={id:id,month:m,area:areaFor(o),name:o.name,contactName:'',email:'',phone:'',address:'',city:'',ig:'',fb:'',web:'',kind:'',desc:'',fit:'',notes:'',ds:'',answer:'',emailedAt:'',goneCold:false};
-    mergeInto(rec,o);pr[id]=rec;byName[k]=rec;n++;});
+    const rec={id:id,area:areaFor(o),name:o.name,contactName:'',email:'',phone:'',address:'',city:'',ig:'',fb:'',web:'',kind:'',tags:'',desc:'',fit:'',notes:'',ds:''};
+    mergeInto(rec,o);pr[id]=rec;(byName[k]=byName[k]||[]).push(rec);pinTo(id);n++;});
   return {n:n,up:up};
 }
 function bulkAdd(m){
   const Ls=parseBulk($('cp-btext').value);if(!Ls.length){toast('Nothing to add yet',true);return;}
-  const pr={...sponD().prospects},r=addMany(Ls,m,pr);
-  closeOv();save({prospects:pr}).then(()=>toast('Added '+r.n+(r.up?', filled in details on '+r.up+' already on the list':'')));
+  const pr={...sponD().prospects},prog={...sponD().prog},r=addMany(Ls,m,pr,prog);
+  closeOv();save({prospects:pr,prog:prog}).then(()=>toast('Added '+r.n+(r.up?', filled in details on '+r.up+' already on the list':'')));
 }
 /* ── folding (saved) ── */
 function foldOpen(key,def){const f=sponD().fold||{};return f[key]===undefined?def:!!f[key];}
 function foldToggle(key,def){const f={...(sponD().fold||{})};f[key]=!foldOpen(key,def);return saveLib('sponsors',{fold:f},true).then(render);}
 /* ── page ── */
 function pen(act,arg,tt){return `<button class="btn-sm cp-pen" title="${tt}" data-cp="${act}" data-arg="${esc(arg)}">&#9998;</button>`;}
+function tokLabel(t){const k=t.charAt(0),v=t.slice(2);const map=tokNames();return (map[t]||v)+(k==='t'?' (tag)':'');}
+function tokNames(){const o={};Object.values(sponD().prospects).forEach(p=>{if(!p)return;const k=String(p.kind||'').trim();if(k)o['k:'+k.toLowerCase()]=k;tagsOf(p).forEach(t=>{o['t:'+t]=t;});});return o;}
+/* which businesses fit a month's theme: include by kind or tag, leave out by kind or tag */
+function rulesEdit(m){
+  const names=tokNames(),r=rule(m),cnt={};
+  Object.values(sponD().prospects).forEach(p=>{if(p)tokens(p).forEach(t=>{cnt[t]=(cnt[t]||0)+1;});});
+  const keys=Object.keys(names).sort((a,b)=>(a.charAt(0)===b.charAt(0)?0:(a.charAt(0)==='k'?-1:1))||names[a].localeCompare(names[b]));
+  const rows=keys.map(t=>`<tr><td>${esc(names[t])}<small> ${t.charAt(0)==='t'?'tag':'kind'} · ${cnt[t]||0}</small></td><td><input type="checkbox" data-tk="${esc(t)}" data-side="inc" ${r.inc.indexOf(t)>=0?'checked':''}></td><td><input type="checkbox" data-tk="${esc(t)}" data-side="exc" ${r.exc.indexOf(t)>=0?'checked':''}></td></tr>`).join('');
+  ov(`<div class="section-title" style="margin-bottom:.4rem">Which businesses fit ${esc(monthName(m))}</div><div style="font-size:.74rem;color:var(--text3);line-height:1.55;margin-bottom:.9rem">A business is suggested when it matches anything ticked under Include and nothing ticked under Leave out. Example: Include "Coffee Shop", Leave out "Mobile Coffee Stand". Kinds and tags come from your master list.</div>
+  ${keys.length?`<div style="max-height:50vh;overflow:auto"><table class="cp-tk"><thead><tr><th style="text-align:left">Kind or tag</th><th>Include</th><th>Leave out</th></tr></thead><tbody>${rows}</tbody></table></div>`:'<div class="cp-none">Add a Kind or tags to some businesses first.</div>'}
+  <div class="cp-acts"><button class="btn-sm" data-cp="close">Cancel</button><button class="btn-sm btn-gold" data-cp="rulessave" data-arg="${esc(m)}">Save</button></div>`,520);
+}
+function rulesSave(m){
+  const inc=[],exc=[];document.querySelectorAll('#cpBox [data-tk]').forEach(e=>{if(e.checked)(e.dataset.side==='inc'?inc:exc).push(e.dataset.tk);});
+  const rules={...sponD().rules};rules[m]={inc:inc,exc:exc};closeOv();save({rules:rules});
+}
+/* ── master list of all businesses ── */
+function masterList(){
+  const q=M.q.toLowerCase();
+  return Object.values(sponD().prospects).filter(p=>p&&(!q||[p.name,p.kind,p.tags,p.contactName,p.email,p.city,p.area,p.address,p.desc,p.notes].join(' ').toLowerCase().indexOf(q)>=0)&&(!M.kind||String(p.kind||'')===M.kind)&&(!M.city||String(p.city||'')===M.city)&&(!M.tag||tagsOf(p).indexOf(M.tag)>=0)).sort((a,b)=>String(a.name).localeCompare(String(b.name)));
+}
+function masterCard(){
+  const open=foldOpen('master',false),A=Object.values(sponD().prospects).filter(Boolean);
+  const kinds=[...new Set(A.map(p=>String(p.kind||'')).filter(Boolean))].sort(),cities=[...new Set(A.map(p=>String(p.city||'')).filter(Boolean))].sort(),tg=[...new Set(A.flatMap(tagsOf))].sort();
+  const opt=(v,l,c)=>`<option value="${esc(v)}" ${c===v?'selected':''}>${esc(l)}</option>`;
+  let body='';
+  if(open){const Ls=masterList();
+    const mons=id=>[...new Set(Object.keys(sponD().prog).filter(k=>k.split('|')[1]===id).map(k=>k.split('|')[0]))].sort();
+    body=`<div class="cp-body"><div class="cp-bar" style="margin-top:0"><input class="form-input" id="cp-mq" value="${esc(M.q)}" style="max-width:220px">
+      <select class="roster-filter-select" data-cpmsel="kind">${opt('','All kinds of business',M.kind)}${kinds.map(c=>opt(c,c,M.kind)).join('')}</select>
+      <select class="roster-filter-select" data-cpmsel="city">${opt('','All cities',M.city)}${cities.map(c=>opt(c,c,M.city)).join('')}</select>
+      ${tg.length?`<select class="roster-filter-select" data-cpmsel="tag">${opt('','All tags',M.tag)}${tg.map(c=>opt(c,c,M.tag)).join('')}</select>`:''}
+      <button class="btn-sm" data-cp="mclear">Clear</button><div style="flex:1"></div><button class="btn-sm" data-cp="padd" data-arg="">+ Add business</button><button class="btn-sm" data-cp="bulk" data-arg="">Add in bulk</button></div>
+      ${Ls.length?Ls.map(p=>{const ms=mons(p.id);return `<div class="cp-row cp-click" data-cp="pedit" data-arg="|${esc(p.id)}"><div class="cp-rt">${esc(p.name)}<small>${esc([p.kind,p.city,p.area&&p.area!==p.city?'area: '+p.area:'',sibs(p).length?'also at '+sibs(p).map(x=>x.city||x.area||x.name).join(', '):'',tagsOf(p).length?'tags: '+tagsOf(p).join(', '):'',ms.length?'on: '+ms.map(x=>monthName(x)).join(', '):''].filter(Boolean).join(' · '))}</small></div>${pen('pedit','|'+p.id,'Edit this business')}</div>`;}).join(''):'<div class="cp-none">No businesses match.</div>'}</div>`;}
+  return `<div class="cp-card"><div class="cp-fold cp-head" data-cp="fold" data-arg="master" data-def="0"><span class="cp-car">${open?'&#9662;':'&#9656;'}</span><span class="cp-mt">All businesses (${A.length})</span></div>${body}</div>`;
+}
 function monthCard(m){
   const cur=todayStr().slice(0,7),d=sponD(),area=sponArea(),Lp=list(m),tot=all(m).length,th=theme(m);
   const sec=(key,title,body)=>{const o=foldOpen(key,true);return `<div class="cp-sec"><div class="cp-fold" data-cp="fold" data-arg="${esc(key)}" data-def="1"><span class="cp-car">${o?'&#9662;':'&#9656;'}</span><span class="cp-lbl">${title}</span></div>${o?`<div class="cp-body">${body}</div>`:''}</div>`;};
@@ -12236,9 +12314,14 @@ function monthCard(m){
   const wkRows=[0,1,2,3].map(i=>{const w=d.weeks[wkKey(m,i)]||{};
     return `<div class="cp-row cp-click" data-cp="wkedit" data-arg="${esc(m)}|${i}"><div class="cp-rt">Week ${i+1}${mons[i]?' · '+niceDay(mons[i]):''}</div><div class="cp-rs">${w.name?esc(w.name)+(w.venue?' at '+esc(w.venue):'')+' · '+esc(w.status||'Needed')+(w.fee?' · $'+esc(w.fee):''):'No sponsor yet'}</div>${w.name?`<button class="btn-sm" data-cp="mailwk" data-arg="${esc(m)}|${i}">Email</button>`:''}${pen('wkedit',m+'|'+i,'Edit this week')}</div>`;}).join('');
   const prRows=Lp.length?Lp.map(p=>{const lk=[p.ig&&'IG',p.fb&&'FB',p.web&&'Web'].filter(Boolean).join(' ');
-    return `<div class="cp-row cp-click" data-cp="pedit" data-arg="${esc(p.id)}"><div class="cp-rt">${esc(p.name)}<small>${esc([p.kind,stage(p)+(p.emailedAt&&p.emailedAt!=='earlier'?' (emailed '+dayTxt(p.emailedAt)+')':''),p.city,p.contactName,lk,p.ds?'info: '+p.ds:''].filter(Boolean).join(' · '))}</small>${p.fit?`<small>Fit: ${esc(p.fit)}</small>`:''}</div>
-      <label class="cp-chk" data-cp="stop"><input type="checkbox" data-cp="em" data-arg="${esc(p.id)}" ${p.emailedAt?'checked':''}> Emailed</label><label class="cp-chk" data-cp="stop"><input type="checkbox" data-cp="cold" data-arg="${esc(p.id)}" ${p.goneCold?'checked':''}> Gone cold</label>
-      <button class="btn-sm" data-cp="hide" data-arg="${esc(p.id)}" title="${p.hidden?'Put back on the list':'Keep saved but hide from the list and sponsor choices'}">${p.hidden?'Bring back':'Not using'}</button><button class="btn-sm" data-cp="mailp" data-arg="${esc(p.id)}">Email</button>${pen('pedit',p.id,'Edit this sponsor')}</div>`;}).join(''):`<div class="cp-none">${tot?'No sponsor prospects match the filters.':'No sponsor prospects for '+esc(area||'this month')+' yet.'}</div>`;
+    return `<div class="cp-row cp-click" data-cp="pedit" data-arg="${esc(m)}|${esc(p.id)}"><div class="cp-rt">${esc(p.name)}<small>${esc([p.kind,stage(p)+(p.emailedAt&&p.emailedAt!=='earlier'?' (emailed '+dayTxt(p.emailedAt)+')':''),p.city,sibs(p).length?'also at '+sibs(p).map(x=>x.city||x.area||x.name).join(', '):'',tagsOf(p).length?'tags: '+tagsOf(p).join(', '):'',p.contactName,lk,p.ds?'info: '+p.ds:''].filter(Boolean).join(' · '))}</small>${p.fit?`<small>Fit: ${esc(p.fit)}</small>`:''}</div>
+      <label class="cp-chk" data-cp="stop"><input type="checkbox" data-cp="em" data-arg="${esc(m)}|${esc(p.id)}" ${p.emailedAt?'checked':''}> Emailed</label><label class="cp-chk" data-cp="stop"><input type="checkbox" data-cp="cold" data-arg="${esc(m)}|${esc(p.id)}" ${p.goneCold?'checked':''}> Gone cold</label>
+      <button class="btn-sm" data-cp="hide" data-arg="${esc(m)}|${esc(p.id)}" title="${p.hidden?'Put back on this theme':'Keep saved but hide it from this theme'}">${p.hidden?'Bring back':'Not using'}</button><button class="btn-sm" data-cp="mailp" data-arg="${esc(m)}|${esc(p.id)}">Email</button>${pen('pedit',m+'|'+p.id,'Edit this business')}</div>`;}).join(''):`<div class="cp-none">${tot?'No sponsor prospects match the filters.':'No sponsor prospects for '+esc(area||'this month')+' yet.'}</div>`;
+  const Sg=sug(m),rl=rule(m),hasRule=rl.inc.length>0;
+  const sgRows=Sg.map(p=>{const lk=[p.ig&&'IG',p.fb&&'FB',p.web&&'Web'].filter(Boolean).join(' ');
+    return `<div class="cp-row cp-click" data-cp="pedit" data-arg="|${esc(p.id)}"><div class="cp-rt">${esc(p.name)}<small>${esc([p.kind,p.city,sibs(p).length?'also at '+sibs(p).map(x=>x.city||x.area||x.name).join(', '):'',tagsOf(p).length?'tags: '+tagsOf(p).join(', '):'',p.contactName,lk].filter(Boolean).join(' · '))}</small></div>
+      <button class="btn-sm btn-gold" data-cp="pin" data-arg="${esc(m)}|${esc(p.id)}">Add to list</button><button class="btn-sm" data-cp="hide" data-arg="${esc(m)}|${esc(p.id)}" title="Keep saved but never suggest it for this theme">Not using</button></div>`;}).join('');
+  const sgBody=`<div style="font-size:.76rem;color:var(--text2);margin-bottom:.6rem">${hasRule?'Fits: '+esc(rl.inc.map(tokLabel).join(', '))+(rl.exc.length?' · leaving out: '+esc(rl.exc.map(tokLabel).join(', ')):''):'No rule yet. Choose which kinds of business and tags fit this theme and matching businesses will show up here.'}</div>`+(Sg.length?sgRows:(hasRule?'<div class="cp-none">Nothing else matches right now.</div>':''))+`<div class="cp-tools"><button class="btn-sm" data-cp="rules" data-arg="${esc(m)}">Choose which businesses fit</button></div>`;
   const open=foldOpen('c_'+m,m===cur);
   const bu=bannerUrl(m);
   const banner=showBanners()?`<div class="cp-ban">${bu?`<img src="${esc(bu)}" alt="">`:'<div class="cp-noban">No banner yet</div>'}<button class="btn-sm cp-pen cp-banpen" title="Edit banner" data-cp="banedit" data-arg="${esc(m)}">&#9998;</button></div>`:'';
@@ -12246,6 +12329,7 @@ function monthCard(m){
   ${open?`<div class="cp-body">${banner}
   ${sec('t_'+m,'Month theme',`<input class="form-input" data-cptheme="${esc(m)}" value="${esc(th)}">`)}
   ${sec('w_'+m,'Weekly sponsors'+(area?' · '+esc(area):''),wkRows)}
+  ${sec('g_'+m,'Suggested for this theme'+(area?' · '+esc(area):'')+' ('+Sg.length+')',sgBody)}
   ${sec('p_'+m,'Sponsor prospects for this theme'+(area?' · '+esc(area):'')+' ('+(Lp.length===tot?Lp.length:Lp.length+' of '+tot)+')',prRows+`<div class="cp-tools"><button class="btn-sm" data-cp="padd" data-arg="${esc(m)}">+ Add sponsor prospect</button><button class="btn-sm" data-cp="bulk" data-arg="${esc(m)}">Add in bulk</button></div>`)}</div>`:''}</div>`;
 }
 function render(){
@@ -12258,10 +12342,10 @@ function render(){
   else{const s=new Set();for(let i=1;i<=6;i++)s.add(addMonths(cur,-i));
     const add=m=>{if(m&&m<cur)s.add(m);};
     Object.keys((L.campaigns||{}).map||{}).forEach(add);Object.keys((L.banners||{}).map||{}).forEach(add);
-    Object.values(sponD().prospects).forEach(p=>p&&add(p.month));Object.keys(sponD().weeks).forEach(k=>add(k.slice(0,7)));
+    Object.keys(sponD().prog).forEach(k=>add(k.split('|')[0]));Object.keys(sponD().rules).forEach(add);Object.keys(sponD().weeks).forEach(k=>add(k.slice(0,7)));
     months=[...s].sort().reverse();}
   const areas=sponAreas(),area=sponArea(),t=tpl(),prs=Object.values(sponD().prospects).filter(p=>p&&(!area||p.area===area)).map(norm);
-  const kinds=[...new Set(prs.map(p=>String(p.kind||'')).filter(Boolean))].sort(),cities=[...new Set(prs.map(p=>String(p.city||'')).filter(Boolean))].sort(),dss=[...new Set(prs.map(p=>String(p.ds||'')).filter(Boolean))].sort();
+  const tagList=[...new Set(prs.flatMap(tagsOf))].sort(),kinds=[...new Set(prs.map(p=>String(p.kind||'')).filter(Boolean))].sort(),cities=[...new Set(prs.map(p=>String(p.city||'')).filter(Boolean))].sort(),dss=[...new Set(prs.map(p=>String(p.ds||'')).filter(Boolean))].sort();
   const opt=(v,l,c)=>`<option value="${esc(v)}" ${c===v?'selected':''}>${esc(l)}</option>`;
   const defOpen=foldOpen('def',true);
   root.innerHTML=(loadErr?`<div class="cp-err">${esc(loadErr)}</div>`:'')+
@@ -12271,6 +12355,7 @@ function render(){
   <div class="cp-bar"><span class="cp-lbl">Filter prospects</span><input class="form-input" id="cp-q" value="${esc(F.q)}" style="max-width:200px">
     <select class="roster-filter-select" data-cpsel="kind">${opt('','All kinds of business',F.kind)}${kinds.map(c=>opt(c,c,F.kind)).join('')}</select>
     <select class="roster-filter-select" data-cpsel="city">${opt('','All cities',F.city)}${cities.map(c=>opt(c,c,F.city)).join('')}</select>
+    ${tagList.length?`<select class="roster-filter-select" data-cpsel="tag">${opt('','All tags',F.tag)}${tagList.map(c=>opt(c,c,F.tag)).join('')}</select>`:''}
     <select class="roster-filter-select" data-cpsel="stage">${opt('','Any progress',F.stage)}${['To ask','In progress','Said yes','Said no','Gone cold','Not using'].map(c=>opt(c,c,F.stage)).join('')}</select>
     <select class="roster-filter-select" data-cpsel="ds">${opt('','Any info found',F.ds)}${dss.map(c=>opt(c,c,F.ds)).join('')}</select>
     <select class="roster-filter-select" data-cpsel="has">${opt('','Any contact',F.has)}${opt('email','Has email',F.has)}${opt('noemail','No email yet',F.has)}${opt('social','Has Instagram or Facebook',F.has)}</select>
@@ -12280,7 +12365,7 @@ function render(){
     <div class="form-group"><label class="form-label">Subject</label><input class="form-input" id="cp-dsub" value="${esc(t.subject)}"></div>
     <div class="form-group"><label class="form-label">Email</label><textarea class="form-textarea" id="cp-dbody" style="min-height:240px">${esc(t.body)}</textarea></div>
     <div class="cp-acts"><button class="btn-sm" data-cp="defreset">Back to the starter version</button><button class="btn-sm btn-gold" data-cp="defsave">Save default draft</button></div></div>`:''}</div>`+
-  (months.length?months.map(monthCard).join(''):`<div class="cp-none">${filterMode==='prev'?'No previous months yet.':'No months ahead yet.'}</div>`);
+  masterCard()+(months.length?months.map(monthCard).join(''):`<div class="cp-none">${filterMode==='prev'?'No previous months yet.':'No months ahead yet.'}</div>`);
 }
 function onClick(e){
   const a=e.target.closest('[data-cp]');
@@ -12296,21 +12381,25 @@ function onClick(e){
     case 'areas':areasEdit();break;
     case 'areassave':areasSave();break;
     case 'bantoggle':saveLib('sponsors',{showBanners:!showBanners()},true).then(render);break;
-    case 'clearf':F={q:'',kind:'',city:'',stage:'',ds:'',has:''};render();break;
+    case 'clearf':F={q:'',kind:'',city:'',tag:'',stage:'',ds:'',has:''};render();break;
     case 'padd':sponEdit('',arg);break;
-    case 'pedit':sponEdit(arg);break;
+    case 'pedit':sponEdit(mo[1]||'',mo[0]);break;
+    case 'rules':rulesEdit(arg);break;
+    case 'rulessave':rulesSave(arg);break;
+    case 'pin':pin(mo[0],mo[1]);break;
+    case 'mclear':M={q:'',kind:'',city:'',tag:''};render();break;
     case 'editsave':sponEditSave(arg,a.dataset.m);break;
     case 'del':sponDel(arg);break;
-    case 'em':toggle(arg,'em');break;
-    case 'cold':toggle(arg,'cold');break;
-    case 'hide':toggle(arg,'hide');break;
+    case 'em':toggle(mo[0],mo[1],'em');break;
+    case 'cold':toggle(mo[0],mo[1],'cold');break;
+    case 'hide':toggle(mo[0],mo[1],'hide');break;
     case 'bulk':bulkEdit(arg);break;
     case 'bulkfile':bulkFile();break;
     case 'bulkadd':bulkAdd(arg);break;
     case 'wkedit':wkEdit(mo[0],+mo[1]);break;
     case 'wksave':wkSave(mo[0],+mo[1]);break;
     case 'wkclear':wkClear(mo[0],+mo[1]);break;
-    case 'mailp':mailP(arg);break;
+    case 'mailp':mailP(mo[0],mo[1]);break;
     case 'mailwk':mailWk(mo[0],+mo[1]);break;
     case 'drreset':if(dr){$('cp-sub').value=dr.def.subject;$('cp-body').value=dr.def.body;}break;
     case 'drsave':drSave();break;
@@ -12328,21 +12417,36 @@ function onClick(e){
 /* ── the coffee list, added once (details fill into sponsors already on the list, the rest are added to December) ── */
 const COFFEE=[["Rainier Valley Coffee","","","(425) 572-5073","12670 164th Ave E","Renton","","","https://rvccoffee.com/","partial","MapQuest details; site blocked fetch so email/socials unchecked. In Renton despite the name."],["Enchanted Espresso","","","","516 S Meridian","Puyallup","","","","partial","MapQuest address only; open status unconfirmed."],["Good Vibes Espresso (GV Espresso)","","","","1216 A St SE (Auburn, closest). Also Fife 1338 54th Ave E; Puyallup 925 S Meridian, 11811 Canyon Rd E, 1403 E Main, 11802 Meridian Ave E; Kent 631 Central Ave N, 18010 E Valley Hwy; Lakewood 10020 Lakeview Ave SW; Tacoma 15008 & 13320 Pacific Ave S, 2924 112th St E; Lynnwood 14523 Hwy 99; Spanaway 20027 Mountain Hwy E; Woodinville 23128 SR 9 SE; Lacey 8904 Martin Way E; Olympia 6501 Martin Way E","Auburn / multiple","","","https://gvespresso.com/","partial","Chain of 17 drive-thrus serving Dillanos. Contact form only: https://gvespresso.com/contact-us/"],["For The Road Coffee","","","253-531-7051","7203 Canyon Rd E","Puyallup","https://instagram.com/fortheroadcoffee","","","partial","Crema listing; Instagram link not independently opened."],["Rescue Me Coffee","","","(253) 446-6542","1303 E Main Ave","Puyallup","","","https://rescuemecoffee.square.site/","partial","MapQuest; Square site showed only the name."],["Woodland Expresso","","","","11108 Woodland Ave E","Puyallup","","","","closed?","MapQuest lists permanently closed."],["Cool Bean Espresso","","","(253) 435-9100","14201 Meridian E","Puyallup","","http://www.facebook.com/CoolBeanEspresso","","partial","Crema listing; Facebook link not opened."],["Steamy Shots Espresso","","","(206) 499-8744","10020 Lakeview Ave SW","Lakewood","","","","partial","Crema listing, maybe outdated; same address as a Good Vibes stand (possible rebrand)."],["Kassie's Korner","","","","9618 224th St E","Graham","","","","partial","MapQuest; a registry shows a Puyallup 98375 address."],["Mocha Stop","","","","","","","","","not found","No WA listing found."],["Homestead Brew","","","","1111 Fryar Ave","Sumner","","","","partial","MapQuest address only; open status unverified."],["TLC Espresso","","","","","","","","","not found","No WA listing found."],["Ebony and Ivory Coffee (Tacoma)","","","(253) 292-9442","1145 Broadway Plaza","Tacoma","https://www.instagram.com/ebonyandivorycoffee/","https://www.facebook.com/ebonyandivorycoffee","https://ebonyandivorycoffee.squarespace.com","found","No email or owner name on site."],["Ebony and Ivory Coffee (Federal Way)","","","(253) 444-0071","33930 Weyerhaeuser Way S","Federal Way","https://www.instagram.com/ebonyandivorycoffee/","https://www.facebook.com/ebonyandivorycoffee","https://ebonyandivorycoffee.squarespace.com","found","Second location."],["Ebony and Ivory Coffee (Lacey)","","","(360) 450-3186","676 Woodland Square Loop SE a105","Lacey","https://www.instagram.com/ebonyandivorycoffee/","https://www.facebook.com/ebonyandivorycoffee","https://ebonyandivorycoffee.squarespace.com","found","Third location."],["Asensio Coffee","","","(253) 517-9904","33610 21st Ave SW","Federal Way","https://www.instagram.com/asensiocoffee/","https://www.facebook.com/AsensioCoffeeShop","https://asensio-coffee.pages.dev/","found","Founders listed as Jeff and Amy only; no email shown."],["XO Expresso","","","","504 W Stewart Ave","Puyallup","","https://www.facebook.com/xoexpresso","","partial","From atly.com listing; Facebook not opened."],["Screamin' Bean","","","(253) 535-2541","10411 Canyon Rd E","Puyallup","","","https://screamin-bean-espresso.edan.io","partial","Third-party directory page; may not be official."],["Southern Charm Espresso & Catering","","","(253) 314-8191","2615 E Main Ave","Puyallup","","https://facebook.com/SouthernCharmEspresso","","partial","Older registry address 1710 E Main; may have moved. Facebook not opened."],["Fox Hollow Coffee Shop","","","(253) 475-0933","4020 S 56th St","Tacoma","","","","partial","Crema listing, unconfirmed."],["Coffee Cabin","","","(253) 539-0414","10418 Canyon Rd E","Puyallup","","","","partial","Crema listing; no site or socials."],["Viva Drive Thru Espresso","","","(253) 294-0698","1403 E Main","Puyallup","","","","partial","MapQuest; M-F 5am-5pm."],["White Rabbit Espresso","","","","","","","","","not found","Seen on FOX 13 Seattle Sips (Apr 2025), no city given. Needs a Google Maps/Facebook check."],["Bean Hut Espresso","","","(206) 909-8906","22307 Dock Ave","Des Moines","","","","partial","MapQuest; may be mobile/seasonal, may be a different Bean Hut."],["Canyon Espresso Co.","","","","","","","","","not found","No match. Possibly a mis-entry for Coffee Cabin (Canyon Rd E)."],["Wanted Espresso (possible match)","Tessa and Bryan Wyrsch (2013 article)","","","742 SW Mount Si Blvd","North Bend","","","","closed?","2013 article only; unconfirmed, name differs."],["Pink Sugar Espresso","","","","10020 Lakeview Ave SW (also listed 924 E Main, Puyallup)","Lakewood","","","","partial","Possibly multiple locations; none confirmed."],["Racer's Roast Coffee Co.","","","","","","","","","not found","No WA results."],["Martin Henry Coffee Roasters","","","","2531 Inter Ave Ste B","Puyallup","","","","partial","MapQuest. Sister cafe Martin Henry Espresso in Tacoma."],["Dillanos Coffee Roasters","","","(253) 826-1807","1620 45th Street E","Sumner","https://instagram.com/dillanos/","https://www.facebook.com/dillanos/","https://www.dillanos.com","partial","Contact form only. Also owns Batdorf & Bronson and Dancing Goats."],["The Woods Coffee (HQ)","","info@woodscoffee.com","(360) 933-1855","191 18th St","Lynden","https://instagram.com/woodscoffee","https://facebook.com/woodscoffee","https://www.woodscoffee.com","found","Chain with shops in Whatcom, Skagit, Snohomish, King, Pierce counties. donations@woodscoffee.com for donations."],["La'Art Coffee Roasters","","laart.coffee@gmail.com","(253) 826-1146","20077 WA-410","Bonney Lake","https://www.instagram.com/laart.coffee/","https://www.facebook.com/people/LaArtcoffee/61583287444112/","https://laartcoffee.com","found","Phone from Crema listing. Facebook page looks new."],["BrownDog Coffee Roasters","","","","","","","","","not found","No WA business found."],["Mount Rainier Coffee Company","","","","","","","","","not found","Only trademark filings found."],["Batdorf & Bronson (Legacy Cafe)","","","","111 Market St NE Ste 102","Olympia","","","https://batdorfcoffee.com/","partial","Owned by Dillanos (253-826-1807). Site would not load; details unverified."],["ANTHEM Coffee & Tea","","","(253) 572-9705","1911 Pacific Ave","Tacoma","","","https://www.myanthemcoffee.com","partial","Six locations in Tacoma and Puyallup; others not retrieved."],["Fika (at Farm 12)","","fika@farm12.org","(253) 466-3198","3303 8th Ave SE #C","Puyallup","https://www.instagram.com/farm12puyallup/","https://www.facebook.com/farm12puyallup/","http://www.farm12.org/fika","found","Socials are Farm 12's."],["Dulce Café","","dulcecafeofficial@gmail.com","","333 S Meridian Unit 111","Puyallup","https://www.instagram.com/dulcecafeofficial","https://www.facebook.com/profile.php?id=61577495280792","http://dulcecafewa.com/","found","No phone listed. Facebook looks new; confirm still open."],["Holiday Cafe","Nichole Thacker (chamber article)","nicholle@holidaycafewa.com","(253) 213-3162","103 W Pioneer","Puyallup","https://www.instagram.com/holidaycafewa/","https://www.facebook.com/holidaycafewa","https://holidaycafewa.com","found","Email spelling 'nicholle' differs from owner name; verify."],["Three Coffee House","","","","202 7th St SW","Puyallup","https://instagram.com/oslc253","https://facebook.com/oslc253","https://oslc.com/three-coffee/","partial","Socials may be the parent org's (oslc253)."],["The Bean Tree","","","","745 River Rd","Puyallup","","https://www.facebook.com/The-Bean-Tree-233515760000309/","","partial","Open status unconfirmed."],["Rivers Edge Cafe & Brews","","","(253) 826-2326","13624 Valley Ave E","Sumner","","","","partial","Third-party listings; daily 6am-6pm."],["Volcano Coffee","","","(253) 840-1040","9909 168th Ave E Ste 101","South Hill (Puyallup)","","","","partial","MapQuest only; reviewer says address was a private house. Verify."],["Electric Coffee House","Christina and Pawandeep (first names, 2018 article)","","(253) 447-8621","905 Main St","Sumner","","","","partial","Also serves tacos, beer, wine."],["Cat Café","","","","","","","","","not found","Name too generic; maybe a duplicate of #45."],["5 Rivers Café","","","","","","","","","not found","Only an Oregon business found."],["Catffeinated","","Info@catffeinated.net","253-999-0060","212 S Meridian","Puyallup","https://www.instagram.com/_catffeinated_","https://www.facebook.com/catffeinatedtacoma/","http://catffeinated.net/","found","Cat cafe, moved from Tacoma to Puyallup."],["Fortitude Coffee Cart","","","","","","","","","not found","Only DC/Virginia results."],["The Village Perk Espresso","","","(253) 888-5326","","Puyallup (unconfirmed)","","","https://www.seattlefoodtruck.com/food-trucks/the-village-perk-espresso","partial","Mobile espresso trailer; website is a directory listing, not their own."],["Wandering Cowgirl Mobile Coffee","","","","","","","","","not found","No WA business found."],["Daybreak Coffee Cart","","","","","","","","","not found","No match."],["Alongside Coffee","","","","","","","","","not found","No WA business found."],["Jittery Tiggrr Espresso Catering","","","","","","","","","not found","No results."],["Moss & Ember Coffee","","","","","","","","","not found","Only Ember Goods in Olympia, a different business."],["Greenlefe Cafe Services Inc.","","","","823 Main St Ste 20","Sumner","","","","partial","Looks like espresso equipment service, not a cafe."]];
 let seeded=false;
+/* one-time move to the master list: each month's prospects become master records (same business, same city and area = one record);
+   what happened with them that month (on the list, emailed, answer, gone cold, not using, draft) moves to sponsors.prog */
+function migrate(){
+  const d=sponD();migDone=true;
+  const old=Object.values(d.prospects).filter(Boolean).sort((a,b)=>String(a.month||'').localeCompare(String(b.month||'')));
+  const pr={},prog={...d.prog},idmap={},canon={};
+  old.forEach(p0=>{
+    const q=norm(p0),key=NK(p0.name)+'|'+NK(p0.city)+'|'+NK(p0.area);
+    let c=canon[key];
+    if(!c){c={...p0};PROGF.forEach(k=>{delete c[k];});c.desc=q.desc;c.kind=q.kind;canon[key]=c;pr[c.id]=c;}
+    else{mergeInto(c,{contactName:p0.contactName,email:p0.email,phone:p0.phone,address:p0.address,city:p0.city,ig:p0.ig,fb:p0.fb,web:p0.web,kind:p0.kind,tags:p0.tags,desc:p0.desc,fit:p0.fit,ds:p0.ds,notes:p0.notes});}
+    idmap[p0.id]=c.id;
+    if(p0.month){const g={pinned:true};if(q.answer)g.answer=q.answer;if(q.emailedAt)g.emailedAt=q.emailedAt;if(p0.goneCold)g.goneCold=true;if(p0.hidden)g.hidden=true;if(p0.draft)g.draft=p0.draft;prog[PK(p0.month,c.id)]=g;}
+  });
+  Object.values(pr).forEach(c=>{if(c.group){c.group=idmap[c.group]||c.group;}});
+  const weeks={...d.weeks};Object.keys(weeks).forEach(k=>{const w=weeks[k];if(w&&w.sponsorId&&idmap[w.sponsorId])weeks[k]={...w,sponsorId:idmap[w.sponsorId]};});
+  return saveLib('sponsors',{prospects:pr,prog:prog,weeks:weeks,masterV2:true},true).then(()=>{render();seedCoffee();});
+}
 function seedCoffee(){
   if(seeded||!loaded.sponsors)return;seeded=true;
   if(sponD().seedCoffee1)return;
   const Ls=COFFEE.map(r=>({name:r[0],contactName:r[1],email:r[2],phone:r[3],address:r[4],city:r[5],ig:r[6],fb:r[7],web:r[8],ds:r[9],notes:r[10]}));
-  const pr={...sponD().prospects},all={};
-  Object.values(pr).forEach(p=>{if(p)(all[NK(p.name)]=all[NK(p.name)]||[]).push(p);});
-  let n=0,up=0;const fresh=[];
-  Ls.forEach(o=>{const ex=all[NK(o.name)];if(ex){let ch=false;ex.forEach(p=>{if(mergeInto(p,o))ch=true;});if(ch)up++;}else fresh.push(o);});
-  const r=addMany(fresh,'2026-12',pr);n=r.n;
-  saveLib('sponsors',{prospects:pr,seedCoffee1:true},true).then(()=>{render();if(n||up)toast('Coffee list added: '+n+' new, '+up+' filled in');});
+  const pr={...sponD().prospects},prog={...sponD().prog};
+  const r=addMany(Ls,'2026-12',pr,prog);
+  saveLib('sponsors',{prospects:pr,prog:prog,seedCoffee1:true},true).then(()=>{render();if(r.n||r.up)toast('Coffee list added: '+r.n+' new, '+r.up+' filled in');});
 }
 function start(){
   if(started)return;started=true;
   ['sponsors','banners','campaigns','settings','venueCities'].forEach(id=>{
-    unsubs.push(db.collection(COL).doc(id).onSnapshot(s=>{L[id]=s.exists?s.data():{};loaded[id]=true;loadErr='';render();if(id==='sponsors')seedCoffee();},err=>{loadErr='Could not read the campaigns data ('+id+'): '+(err&&err.message||err);render();}));});
+    unsubs.push(db.collection(COL).doc(id).onSnapshot(s=>{L[id]=s.exists?s.data():{};loaded[id]=true;loadErr='';render();if(id==='sponsors'){if(!sponD().masterV2&&!migDone)migrate();else if(sponD().masterV2)seedCoffee();}},err=>{loadErr='Could not read the campaigns data ('+id+'): '+(err&&err.message||err);render();}));});
   loadMonthly();
 }
 function loadMonthly(){
@@ -12353,8 +12457,9 @@ function init(){
   root.addEventListener('click',onClick);
   root.addEventListener('change',e=>{const t=e.target;
     if(t.dataset&&t.dataset.cpsel){F[t.dataset.cpsel]=t.value;render();}
+    else if(t.dataset&&t.dataset.cpmsel){M[t.dataset.cpmsel]=t.value;render();}
     else if(t.dataset&&t.dataset.cptheme){saveTheme(t.dataset.cptheme,t.value);}});
-  root.addEventListener('input',e=>{if(e.target.id==='cp-q'){F.q=e.target.value;const pos=e.target.value.length;render();const q=$('cp-q');if(q){q.focus();try{q.setSelectionRange(pos,pos);}catch(x){}}}});
+  root.addEventListener('input',e=>{if(e.target.id==='cp-q'||e.target.id==='cp-mq'){const id=e.target.id;(id==='cp-q'?F:M).q=e.target.value;const pos=e.target.value.length;render();const q=$(id);if(q){q.focus();try{q.setSelectionRange(pos,pos);}catch(x){}}}});
   root.addEventListener('focusout',()=>setTimeout(()=>{const a=document.activeElement;if(a&&root.contains(a)&&a.matches&&a.matches('#cp-dsub,#cp-dbody,[data-cptheme]'))return;if(pend){pend=false;render();}},60));
 }
 window.campOpen=function(){init();start();render();};
