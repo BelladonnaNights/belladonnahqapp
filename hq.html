@@ -830,6 +830,18 @@ html::-webkit-scrollbar-thumb:hover,.modal::-webkit-scrollbar-thumb:hover{backgr
 #panel-team .np-date.kind{flex-basis:5.2rem;display:flex;align-items:center;justify-content:center;min-height:3.2rem;background:#f6efdd;}
 #panel-team .np-date.kind b{font-size:1.05rem;letter-spacing:.1em;line-height:1.1;padding:.2rem;color:#7a1f2b;}
 </style>
+<script>try{var t=localStorage.getItem('bn_clio_theme');if(t==='light')document.documentElement.setAttribute('data-theme','light');}catch(e){}</script>
+<style>
+:root[data-theme="light"]{color-scheme:light;--bg:#faf6ec;--surface:#ffffff;--surface2:#f6efe0;--surface3:#ede2c8;--surface4:#e4d7b6;--border:rgba(40,30,10,.10);--border2:rgba(40,30,10,.18);--border-gold:rgba(169,127,34,.5);--gold:#a97f22;--gold2:#8c6a1e;--gold-dim:rgba(169,127,34,.12);--live:#2f7a47;--live-dim:rgba(47,122,71,.14);--rose:#a43a45;--text:#2a2118;--text2:#5c4f3e;--text3:#8a7a63;--text4:#b8a98c}
+:root[data-theme="light"] .modal-bg{background:rgba(60,45,20,.35)}
+:root[data-theme="light"] .modal-bg.vmx{background:#faf6ec}
+:root[data-theme="light"] .modal-bg.vmx input,:root[data-theme="light"] .modal-bg.vmx select,:root[data-theme="light"] .modal-bg.vmx textarea{background:#fff!important;color:#2a2118!important;border-color:rgba(40,30,10,.18)!important}
+:root[data-theme="light"] .vm-actions{background:#faf6ec}
+:root[data-theme="light"] #vmAll details{background:#fff}
+:root[data-theme="light"] #hqToast{background:#fff!important;color:#2a2118!important;border:1px solid rgba(40,30,10,.18)}
+:root[data-theme="light"] .kgg-t th{background:#ede2c8}
+:root[data-theme="light"] input,:root[data-theme="light"] select,:root[data-theme="light"] textarea{color-scheme:light}
+</style>
 </head>
 <body>
 
@@ -841,6 +853,7 @@ html::-webkit-scrollbar-thumb:hover,.modal::-webkit-scrollbar-thumb:hover{backgr
     <span class="header-tagline">Command center for hosts, venues &amp; operations</span>
   </div>
   <div class="hq-nav-right">
+    <button class="hq-btn-ghost" id="themeBtn" onclick="hqToggleTheme()">&#9728; Light mode</button>
     <span id="gatewayUserBar" class="gateway-user-label"></span>
     <a href="https://belladonnanights.github.io/belladonna-gateway/accounts.html?view=account" class="hq-btn-ghost">My Account</a>
     <button class="hq-btn-ghost" onclick="gatewaySignOut()">Sign Out</button>
@@ -11933,6 +11946,8 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 .cp-rt small{display:block;color:var(--text3);font-size:.72rem;margin-top:.15rem;letter-spacing:.02em}
 .cp-rs{font-size:.78rem;color:var(--text2);flex:1;min-width:160px}
 .cp-chk{display:inline-flex;gap:.35rem;align-items:center;font-size:.74rem;color:var(--text2);cursor:pointer}
+.cp-click{cursor:pointer}
+.cp-click:hover{border-color:var(--border-gold)}
 .cp-none{font-size:.8rem;color:var(--text3);margin:.3rem 0}
 .cp-tools{display:flex;gap:.5rem;margin-top:.6rem;flex-wrap:wrap}
 .cp-acts{display:flex;gap:.5rem;justify-content:flex-end;flex-wrap:wrap}
@@ -11953,7 +11968,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 'use strict';
 const COL='socialLibrary';
 const L={sponsors:{},banners:{},campaigns:{},settings:{},venueCities:{}};
-let monthly=[],started=false,unsubs=[],pend=false,loadErr='',filterMode='up',dr=null;
+let loaded={},monthly=[],started=false,unsubs=[],pend=false,loadErr='',filterMode='up',dr=null;
 let F={q:'',kind:'',city:'',stage:'',ds:'',has:''};
 const SPON_STATUS_WK=['Needed','Asked','Confirmed','Prizes in','Paid'];
 const TPL_DEFAULT={subject:'Sponsor a night with Belladonna: {theme} in {month}',body:"Hi {contact},\n\nI'm Ahnna with Belladonna Entertainment. Each week this month we're teaming up with one local business for a special night at {venue}, and I'd love for {sponsor} to be a featured sponsor.\n\nHere's the idea: {month}'s theme is {theme}. The venue makes a four-cocktail flight inspired by it, we sell tickets, and your business is the star of the night. You provide the prizes, and the sponsor fee is just ${fee}.\n\nWould you be open to hearing more?\n\nAhnna\nBelladonna Entertainment\n[logo + link]\nwww.belladonnanights.com"};
@@ -12087,7 +12102,10 @@ function areasEdit(){
   <div class="form-group"><label class="form-label">Areas</label><textarea class="form-textarea" id="cp-areas" style="min-height:130px">${esc(sponAreas().join('\n'))}</textarea></div>
   <div class="cp-acts"><button class="btn-sm" data-cp="close">Cancel</button><button class="btn-sm btn-gold" data-cp="areassave">Save areas</button></div>`,480);
 }
-function areasSave(){const A=[...new Set(V('cp-areas').split('\n').map(x=>x.trim()).filter(Boolean))],d=sponD();closeOv();save({areas:A,area:A.indexOf(d.area)>=0?d.area:(A[0]||'')});}
+function areasSave(){const A=[...new Set(V('cp-areas').split('\n').map(x=>x.trim()).filter(Boolean))],d=sponD();
+  const pr={...d.prospects},keep=A.indexOf(d.area)>=0?d.area:(A[0]||'');
+  Object.values(pr).forEach(p=>{if(p&&!String(p.area||'').trim()&&A.length){const c=String(p.city||'').toLowerCase();p.area=A.find(a=>c&&c.indexOf(a.toLowerCase())>=0)||keep;}});
+  closeOv();save({areas:A,area:keep,prospects:pr});}
 /* ── banner popup ── */
 function banEdit(m){
   const u=bannerUrl(m);
@@ -12180,15 +12198,31 @@ function bulkFile(){
   let f=$('cp-bfile');if(!f){f=document.createElement('input');f.type='file';f.id='cp-bfile';f.accept='.csv,.tsv,.txt,text/csv,text/plain';f.style.display='none';
     f.onchange=()=>{const file=f.files[0];f.value='';if(!file)return;const r=new FileReader();r.onload=()=>{const t=$('cp-btext');if(t){t.value=String(r.result||'');bulkPrev();}};r.readAsText(file);};document.body.appendChild(f);}
   f.click();}
+const NK=x=>String(x||'').toLowerCase().replace(/[^a-z0-9]/g,'');
+function mergeInto(rec,o){
+  let ch=false;
+  ['contactName','email','phone','address','city','ig','fb','web','kind','desc','fit','ds'].forEach(k=>{if(o[k]&&!String(rec[k]||'').trim()){rec[k]=o[k];ch=true;}});
+  if(o.notes){const n=String(rec.notes||'').trim();if(!n){rec.notes=o.notes;ch=true;}else if(n.indexOf(o.notes)<0){rec.notes=n+'\n'+o.notes;ch=true;}}
+  return ch;
+}
+/* adds new sponsors; a sponsor already on the list (same month, same name) gets its blank details filled in instead of a copy */
+function addMany(Ls,m,pr){
+  const cur=sponArea(),AL=sponAreas();
+  const areaFor=o=>{const c=String(o.city||'').toLowerCase();return AL.find(a=>c&&c.indexOf(String(a).toLowerCase())>=0)||cur;};
+  const byName={};Object.values(pr).forEach(p=>{if(p&&p.month===m)byName[NK(p.name)]=p;});
+  let n=0,up=0;
+  Ls.forEach((o,i)=>{const k=NK(o.name);if(!k)return;
+    const ex=byName[k];
+    if(ex){if(mergeInto(ex,o))up++;return;}
+    const id='s'+Date.now().toString(36)+i+Math.floor(Math.random()*1e4).toString(36);
+    const rec={id:id,month:m,area:areaFor(o),name:o.name,contactName:'',email:'',phone:'',address:'',city:'',ig:'',fb:'',web:'',kind:'',desc:'',fit:'',notes:'',ds:'',answer:'',emailedAt:'',goneCold:false};
+    mergeInto(rec,o);pr[id]=rec;byName[k]=rec;n++;});
+  return {n:n,up:up};
+}
 function bulkAdd(m){
   const Ls=parseBulk($('cp-btext').value);if(!Ls.length){toast('Nothing to add yet',true);return;}
-  const d=sponD(),pr={...d.prospects},cur=sponArea(),AL=sponAreas();
-  const areaFor=o=>{const c=String(o.city||'').toLowerCase();return AL.find(a=>c&&c.indexOf(String(a).toLowerCase())>=0)||cur;};
-  const have=new Set(Object.values(pr).filter(p=>p&&p.month===m).map(p=>String(p.area)+'|'+String(p.name).toLowerCase().trim()));
-  let n=0,dup=0;
-  Ls.forEach((o,i)=>{const ar=areaFor(o),k=ar+'|'+String(o.name).toLowerCase().trim();if(have.has(k)){dup++;return;}have.add(k);const id='s'+Date.now().toString(36)+i;
-    pr[id]={id:id,month:m,area:ar,name:o.name,contactName:o.contactName||'',email:o.email||'',phone:o.phone||'',address:o.address||'',city:o.city||'',ig:o.ig||'',fb:o.fb||'',web:o.web||'',kind:o.kind||'',desc:o.desc||'',fit:o.fit||'',notes:o.notes||'',ds:o.ds||'',answer:'',emailedAt:'',goneCold:false};n++;});
-  closeOv();save({prospects:pr}).then(()=>toast('Added '+n+(dup?', skipped '+dup+' already on the list':'')));
+  const pr={...sponD().prospects},r=addMany(Ls,m,pr);
+  closeOv();save({prospects:pr}).then(()=>toast('Added '+r.n+(r.up?', filled in details on '+r.up+' already on the list':'')));
 }
 /* ── folding (saved) ── */
 function foldOpen(key,def){const f=sponD().fold||{};return f[key]===undefined?def:!!f[key];}
@@ -12200,10 +12234,10 @@ function monthCard(m){
   const sec=(key,title,body)=>{const o=foldOpen(key,true);return `<div class="cp-sec"><div class="cp-fold" data-cp="fold" data-arg="${esc(key)}" data-def="1"><span class="cp-car">${o?'&#9662;':'&#9656;'}</span><span class="cp-lbl">${title}</span></div>${o?`<div class="cp-body">${body}</div>`:''}</div>`;};
   const mons=mondaysOf(m);
   const wkRows=[0,1,2,3].map(i=>{const w=d.weeks[wkKey(m,i)]||{};
-    return `<div class="cp-row"><div class="cp-rt">Week ${i+1}${mons[i]?' · '+niceDay(mons[i]):''}</div><div class="cp-rs">${w.name?esc(w.name)+(w.venue?' at '+esc(w.venue):'')+' · '+esc(w.status||'Needed')+(w.fee?' · $'+esc(w.fee):''):'No sponsor yet'}</div>${w.name?`<button class="btn-sm" data-cp="mailwk" data-arg="${esc(m)}|${i}">Email</button>`:''}${pen('wkedit',m+'|'+i,'Edit this week')}</div>`;}).join('');
+    return `<div class="cp-row cp-click" data-cp="wkedit" data-arg="${esc(m)}|${i}"><div class="cp-rt">Week ${i+1}${mons[i]?' · '+niceDay(mons[i]):''}</div><div class="cp-rs">${w.name?esc(w.name)+(w.venue?' at '+esc(w.venue):'')+' · '+esc(w.status||'Needed')+(w.fee?' · $'+esc(w.fee):''):'No sponsor yet'}</div>${w.name?`<button class="btn-sm" data-cp="mailwk" data-arg="${esc(m)}|${i}">Email</button>`:''}${pen('wkedit',m+'|'+i,'Edit this week')}</div>`;}).join('');
   const prRows=Lp.length?Lp.map(p=>{const lk=[p.ig&&'IG',p.fb&&'FB',p.web&&'Web'].filter(Boolean).join(' ');
-    return `<div class="cp-row"><div class="cp-rt">${esc(p.name)}<small>${esc([p.kind,stage(p)+(p.emailedAt&&p.emailedAt!=='earlier'?' (emailed '+dayTxt(p.emailedAt)+')':''),p.city,p.contactName,lk,p.ds?'info: '+p.ds:''].filter(Boolean).join(' · '))}</small>${p.fit?`<small>Fit: ${esc(p.fit)}</small>`:''}</div>
-      <label class="cp-chk"><input type="checkbox" data-cp="em" data-arg="${esc(p.id)}" ${p.emailedAt?'checked':''}> Emailed</label><label class="cp-chk"><input type="checkbox" data-cp="cold" data-arg="${esc(p.id)}" ${p.goneCold?'checked':''}> Gone cold</label>
+    return `<div class="cp-row cp-click" data-cp="pedit" data-arg="${esc(p.id)}"><div class="cp-rt">${esc(p.name)}<small>${esc([p.kind,stage(p)+(p.emailedAt&&p.emailedAt!=='earlier'?' (emailed '+dayTxt(p.emailedAt)+')':''),p.city,p.contactName,lk,p.ds?'info: '+p.ds:''].filter(Boolean).join(' · '))}</small>${p.fit?`<small>Fit: ${esc(p.fit)}</small>`:''}</div>
+      <label class="cp-chk" data-cp="stop"><input type="checkbox" data-cp="em" data-arg="${esc(p.id)}" ${p.emailedAt?'checked':''}> Emailed</label><label class="cp-chk" data-cp="stop"><input type="checkbox" data-cp="cold" data-arg="${esc(p.id)}" ${p.goneCold?'checked':''}> Gone cold</label>
       <button class="btn-sm" data-cp="mailp" data-arg="${esc(p.id)}">Email</button>${pen('pedit',p.id,'Edit this sponsor')}</div>`;}).join(''):`<div class="cp-none">${tot?'No sponsor prospects match the filters.':'No sponsor prospects for '+esc(area||'this month')+' yet.'}</div>`;
   const open=foldOpen('c_'+m,m===cur);
   const bu=bannerUrl(m);
@@ -12254,6 +12288,7 @@ function onClick(e){
   const act=a.dataset.cp,arg=a.dataset.arg||'';
   const mo=arg.split('|');
   switch(act){
+    case 'stop':break;
     case 'close':closeOv();break;
     case 'fold':foldToggle(arg,arg.charAt(0)==='c'?arg.slice(2)===todayStr().slice(0,7):true);break;
     case 'mode':filterMode=arg;render();break;
@@ -12289,10 +12324,24 @@ function onClick(e){
     case 'banlink':{const u=V('cp-bnurl');if(u&&!/^https?:\/\//.test(u)){toast('That does not look like an image link',true);break;}setBanner(arg,u);break;}
   }
 }
+/* ── the coffee list, added once (details fill into sponsors already on the list, the rest are added to December) ── */
+const COFFEE=[["Rainier Valley Coffee","","","(425) 572-5073","12670 164th Ave E","Renton","","","https://rvccoffee.com/","partial","MapQuest details; site blocked fetch so email/socials unchecked. In Renton despite the name."],["Enchanted Espresso","","","","516 S Meridian","Puyallup","","","","partial","MapQuest address only; open status unconfirmed."],["Good Vibes Espresso (GV Espresso)","","","","1216 A St SE (Auburn, closest). Also Fife 1338 54th Ave E; Puyallup 925 S Meridian, 11811 Canyon Rd E, 1403 E Main, 11802 Meridian Ave E; Kent 631 Central Ave N, 18010 E Valley Hwy; Lakewood 10020 Lakeview Ave SW; Tacoma 15008 & 13320 Pacific Ave S, 2924 112th St E; Lynnwood 14523 Hwy 99; Spanaway 20027 Mountain Hwy E; Woodinville 23128 SR 9 SE; Lacey 8904 Martin Way E; Olympia 6501 Martin Way E","Auburn / multiple","","","https://gvespresso.com/","partial","Chain of 17 drive-thrus serving Dillanos. Contact form only: https://gvespresso.com/contact-us/"],["For The Road Coffee","","","253-531-7051","7203 Canyon Rd E","Puyallup","https://instagram.com/fortheroadcoffee","","","partial","Crema listing; Instagram link not independently opened."],["Rescue Me Coffee","","","(253) 446-6542","1303 E Main Ave","Puyallup","","","https://rescuemecoffee.square.site/","partial","MapQuest; Square site showed only the name."],["Woodland Expresso","","","","11108 Woodland Ave E","Puyallup","","","","closed?","MapQuest lists permanently closed."],["Cool Bean Espresso","","","(253) 435-9100","14201 Meridian E","Puyallup","","http://www.facebook.com/CoolBeanEspresso","","partial","Crema listing; Facebook link not opened."],["Steamy Shots Espresso","","","(206) 499-8744","10020 Lakeview Ave SW","Lakewood","","","","partial","Crema listing, maybe outdated; same address as a Good Vibes stand (possible rebrand)."],["Kassie's Korner","","","","9618 224th St E","Graham","","","","partial","MapQuest; a registry shows a Puyallup 98375 address."],["Mocha Stop","","","","","","","","","not found","No WA listing found."],["Homestead Brew","","","","1111 Fryar Ave","Sumner","","","","partial","MapQuest address only; open status unverified."],["TLC Espresso","","","","","","","","","not found","No WA listing found."],["Ebony and Ivory Coffee (Tacoma)","","","(253) 292-9442","1145 Broadway Plaza","Tacoma","https://www.instagram.com/ebonyandivorycoffee/","https://www.facebook.com/ebonyandivorycoffee","https://ebonyandivorycoffee.squarespace.com","found","No email or owner name on site."],["Ebony and Ivory Coffee (Federal Way)","","","(253) 444-0071","33930 Weyerhaeuser Way S","Federal Way","https://www.instagram.com/ebonyandivorycoffee/","https://www.facebook.com/ebonyandivorycoffee","https://ebonyandivorycoffee.squarespace.com","found","Second location."],["Ebony and Ivory Coffee (Lacey)","","","(360) 450-3186","676 Woodland Square Loop SE a105","Lacey","https://www.instagram.com/ebonyandivorycoffee/","https://www.facebook.com/ebonyandivorycoffee","https://ebonyandivorycoffee.squarespace.com","found","Third location."],["Asensio Coffee","","","(253) 517-9904","33610 21st Ave SW","Federal Way","https://www.instagram.com/asensiocoffee/","https://www.facebook.com/AsensioCoffeeShop","https://asensio-coffee.pages.dev/","found","Founders listed as Jeff and Amy only; no email shown."],["XO Expresso","","","","504 W Stewart Ave","Puyallup","","https://www.facebook.com/xoexpresso","","partial","From atly.com listing; Facebook not opened."],["Screamin' Bean","","","(253) 535-2541","10411 Canyon Rd E","Puyallup","","","https://screamin-bean-espresso.edan.io","partial","Third-party directory page; may not be official."],["Southern Charm Espresso & Catering","","","(253) 314-8191","2615 E Main Ave","Puyallup","","https://facebook.com/SouthernCharmEspresso","","partial","Older registry address 1710 E Main; may have moved. Facebook not opened."],["Fox Hollow Coffee Shop","","","(253) 475-0933","4020 S 56th St","Tacoma","","","","partial","Crema listing, unconfirmed."],["Coffee Cabin","","","(253) 539-0414","10418 Canyon Rd E","Puyallup","","","","partial","Crema listing; no site or socials."],["Viva Drive Thru Espresso","","","(253) 294-0698","1403 E Main","Puyallup","","","","partial","MapQuest; M-F 5am-5pm."],["White Rabbit Espresso","","","","","","","","","not found","Seen on FOX 13 Seattle Sips (Apr 2025), no city given. Needs a Google Maps/Facebook check."],["Bean Hut Espresso","","","(206) 909-8906","22307 Dock Ave","Des Moines","","","","partial","MapQuest; may be mobile/seasonal, may be a different Bean Hut."],["Canyon Espresso Co.","","","","","","","","","not found","No match. Possibly a mis-entry for Coffee Cabin (Canyon Rd E)."],["Wanted Espresso (possible match)","Tessa and Bryan Wyrsch (2013 article)","","","742 SW Mount Si Blvd","North Bend","","","","closed?","2013 article only; unconfirmed, name differs."],["Pink Sugar Espresso","","","","10020 Lakeview Ave SW (also listed 924 E Main, Puyallup)","Lakewood","","","","partial","Possibly multiple locations; none confirmed."],["Racer's Roast Coffee Co.","","","","","","","","","not found","No WA results."],["Martin Henry Coffee Roasters","","","","2531 Inter Ave Ste B","Puyallup","","","","partial","MapQuest. Sister cafe Martin Henry Espresso in Tacoma."],["Dillanos Coffee Roasters","","","(253) 826-1807","1620 45th Street E","Sumner","https://instagram.com/dillanos/","https://www.facebook.com/dillanos/","https://www.dillanos.com","partial","Contact form only. Also owns Batdorf & Bronson and Dancing Goats."],["The Woods Coffee (HQ)","","info@woodscoffee.com","(360) 933-1855","191 18th St","Lynden","https://instagram.com/woodscoffee","https://facebook.com/woodscoffee","https://www.woodscoffee.com","found","Chain with shops in Whatcom, Skagit, Snohomish, King, Pierce counties. donations@woodscoffee.com for donations."],["La'Art Coffee Roasters","","laart.coffee@gmail.com","(253) 826-1146","20077 WA-410","Bonney Lake","https://www.instagram.com/laart.coffee/","https://www.facebook.com/people/LaArtcoffee/61583287444112/","https://laartcoffee.com","found","Phone from Crema listing. Facebook page looks new."],["BrownDog Coffee Roasters","","","","","","","","","not found","No WA business found."],["Mount Rainier Coffee Company","","","","","","","","","not found","Only trademark filings found."],["Batdorf & Bronson (Legacy Cafe)","","","","111 Market St NE Ste 102","Olympia","","","https://batdorfcoffee.com/","partial","Owned by Dillanos (253-826-1807). Site would not load; details unverified."],["ANTHEM Coffee & Tea","","","(253) 572-9705","1911 Pacific Ave","Tacoma","","","https://www.myanthemcoffee.com","partial","Six locations in Tacoma and Puyallup; others not retrieved."],["Fika (at Farm 12)","","fika@farm12.org","(253) 466-3198","3303 8th Ave SE #C","Puyallup","https://www.instagram.com/farm12puyallup/","https://www.facebook.com/farm12puyallup/","http://www.farm12.org/fika","found","Socials are Farm 12's."],["Dulce Café","","dulcecafeofficial@gmail.com","","333 S Meridian Unit 111","Puyallup","https://www.instagram.com/dulcecafeofficial","https://www.facebook.com/profile.php?id=61577495280792","http://dulcecafewa.com/","found","No phone listed. Facebook looks new; confirm still open."],["Holiday Cafe","Nichole Thacker (chamber article)","nicholle@holidaycafewa.com","(253) 213-3162","103 W Pioneer","Puyallup","https://www.instagram.com/holidaycafewa/","https://www.facebook.com/holidaycafewa","https://holidaycafewa.com","found","Email spelling 'nicholle' differs from owner name; verify."],["Three Coffee House","","","","202 7th St SW","Puyallup","https://instagram.com/oslc253","https://facebook.com/oslc253","https://oslc.com/three-coffee/","partial","Socials may be the parent org's (oslc253)."],["The Bean Tree","","","","745 River Rd","Puyallup","","https://www.facebook.com/The-Bean-Tree-233515760000309/","","partial","Open status unconfirmed."],["Rivers Edge Cafe & Brews","","","(253) 826-2326","13624 Valley Ave E","Sumner","","","","partial","Third-party listings; daily 6am-6pm."],["Volcano Coffee","","","(253) 840-1040","9909 168th Ave E Ste 101","South Hill (Puyallup)","","","","partial","MapQuest only; reviewer says address was a private house. Verify."],["Electric Coffee House","Christina and Pawandeep (first names, 2018 article)","","(253) 447-8621","905 Main St","Sumner","","","","partial","Also serves tacos, beer, wine."],["Cat Café","","","","","","","","","not found","Name too generic; maybe a duplicate of #45."],["5 Rivers Café","","","","","","","","","not found","Only an Oregon business found."],["Catffeinated","","Info@catffeinated.net","253-999-0060","212 S Meridian","Puyallup","https://www.instagram.com/_catffeinated_","https://www.facebook.com/catffeinatedtacoma/","http://catffeinated.net/","found","Cat cafe, moved from Tacoma to Puyallup."],["Fortitude Coffee Cart","","","","","","","","","not found","Only DC/Virginia results."],["The Village Perk Espresso","","","(253) 888-5326","","Puyallup (unconfirmed)","","","https://www.seattlefoodtruck.com/food-trucks/the-village-perk-espresso","partial","Mobile espresso trailer; website is a directory listing, not their own."],["Wandering Cowgirl Mobile Coffee","","","","","","","","","not found","No WA business found."],["Daybreak Coffee Cart","","","","","","","","","not found","No match."],["Alongside Coffee","","","","","","","","","not found","No WA business found."],["Jittery Tiggrr Espresso Catering","","","","","","","","","not found","No results."],["Moss & Ember Coffee","","","","","","","","","not found","Only Ember Goods in Olympia, a different business."],["Greenlefe Cafe Services Inc.","","","","823 Main St Ste 20","Sumner","","","","partial","Looks like espresso equipment service, not a cafe."]];
+let seeded=false;
+function seedCoffee(){
+  if(seeded||!loaded.sponsors)return;seeded=true;
+  if(sponD().seedCoffee1)return;
+  const Ls=COFFEE.map(r=>({name:r[0],contactName:r[1],email:r[2],phone:r[3],address:r[4],city:r[5],ig:r[6],fb:r[7],web:r[8],ds:r[9],notes:r[10]}));
+  const pr={...sponD().prospects},all={};
+  Object.values(pr).forEach(p=>{if(p)(all[NK(p.name)]=all[NK(p.name)]||[]).push(p);});
+  let n=0,up=0;const fresh=[];
+  Ls.forEach(o=>{const ex=all[NK(o.name)];if(ex){let ch=false;ex.forEach(p=>{if(mergeInto(p,o))ch=true;});if(ch)up++;}else fresh.push(o);});
+  const r=addMany(fresh,'2026-12',pr);n=r.n;
+  saveLib('sponsors',{prospects:pr,seedCoffee1:true},true).then(()=>{render();if(n||up)toast('Coffee list added: '+n+' new, '+up+' filled in');});
+}
 function start(){
   if(started)return;started=true;
   ['sponsors','banners','campaigns','settings','venueCities'].forEach(id=>{
-    unsubs.push(db.collection(COL).doc(id).onSnapshot(s=>{L[id]=s.exists?s.data():{};loadErr='';render();},err=>{loadErr='Could not read the campaigns data ('+id+'): '+(err&&err.message||err);render();}));});
+    unsubs.push(db.collection(COL).doc(id).onSnapshot(s=>{L[id]=s.exists?s.data():{};loaded[id]=true;loadErr='';render();if(id==='sponsors')seedCoffee();},err=>{loadErr='Could not read the campaigns data ('+id+'): '+(err&&err.message||err);render();}));});
   loadMonthly();
 }
 function loadMonthly(){
@@ -12309,7 +12358,11 @@ function init(){
 }
 window.campOpen=function(){init();start();render();};
 })();
-
+</script>
+<script>
+function hqApplyTheme(t){var d=document.documentElement;if(t==='light')d.setAttribute('data-theme','light');else d.removeAttribute('data-theme');try{localStorage.setItem('bn_clio_theme',t==='light'?'light':'dark');}catch(e){}var b=document.getElementById('themeBtn');if(b)b.innerHTML=t==='light'?'&#9790; Dark mode':'&#9728; Light mode';}
+function hqToggleTheme(){hqApplyTheme(document.documentElement.getAttribute('data-theme')==='light'?'dark':'light');}
+document.addEventListener('DOMContentLoaded',function(){hqApplyTheme(document.documentElement.getAttribute('data-theme')==='light'?'light':'dark');});
 </script>
 </body>
 </html>
