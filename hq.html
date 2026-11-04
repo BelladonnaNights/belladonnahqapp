@@ -12358,7 +12358,7 @@ function render(){
   root.innerHTML=(loadErr?`<div class="cp-err">${esc(loadErr)}</div>`:'')+
   `<div class="cp-bar"><label class="cp-chk"><input type="checkbox" data-cp="bantoggle" ${showBanners()?'checked':''}> Show campaign banners</label><div style="flex:1"></div>
     <button class="cp-chip ${filterMode==='up'?'on':''}" data-cp="mode" data-arg="up">This month and ahead</button><button class="cp-chip ${filterMode==='prev'?'on':''}" data-cp="mode" data-arg="prev">Previous month</button></div>
-  <div class="cp-bar"><span class="cp-lbl">Area</span>${areas.length?areas.map(x=>`<button class="cp-chip ${x===area?'on':''}" data-cp="area" data-arg="${esc(x)}">${esc(x)}</button>`).join(''):'<span class="cp-none" style="margin:0">No areas yet</span>'}${pen('areas','','Edit areas')}</div>
+  <div class="cp-bar"><span class="cp-lbl">Area</span>${areas.length?areas.map(x=>`<button class="cp-chip ${x===area?'on':''}" data-cp="area" data-arg="${esc(x)}">${esc(x)}</button>`).join(''):'<span class="cp-none" style="margin:0">No areas yet</span>'}<button class="btn-sm" data-cp="areas">+ Add or edit areas</button></div>
   <div class="cp-bar"><span class="cp-lbl">Filter prospects</span><input class="form-input" id="cp-q" value="${esc(F.q)}" style="max-width:200px">
     <select class="roster-filter-select" data-cpsel="kind">${opt('','All kinds of business',F.kind)}${kinds.map(c=>opt(c,c,F.kind)).join('')}</select>
     <select class="roster-filter-select" data-cpsel="city">${opt('','All cities',F.city)}${cities.map(c=>opt(c,c,F.city)).join('')}</select>
