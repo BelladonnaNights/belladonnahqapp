@@ -11954,6 +11954,9 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 .cp-tk small{color:var(--text3)}
 .cp-heart{font-size:1.25rem;line-height:1;padding:.25rem .55rem;color:var(--text3)}
 .cp-heart.on{color:var(--rose);border-color:var(--rose)}
+body.cp-lock,html.cp-lock{overflow:hidden!important}
+#cpOv{overscroll-behavior:contain}
+#cpBox{overscroll-behavior:contain}
 .cp-none{font-size:.8rem;color:var(--text3);margin:.3rem 0}
 .cp-tools{display:flex;gap:.5rem;margin-top:.6rem;flex-wrap:wrap}
 .cp-acts{display:flex;gap:.5rem;justify-content:flex-end;flex-wrap:wrap}
@@ -12017,13 +12020,21 @@ function dayTxt(x){return x&&x!=='earlier'?niceDay(x):'';}
    (on the list, emailed, answer, gone cold, not using, saved email draft) is kept per month in sponsors.prog["YYYY-MM|id"]. */
 const PK=(m,id)=>m+'|'+id;
 const PROGF=['answer','emailedAt','goneCold','hidden','draft','pinned','status','month'];
-function view(p,m){const g=sponD().prog[PK(m,p.id)]||{};return norm({...p,month:m,status:'',answer:g.answer||'',emailedAt:g.emailedAt||'',goneCold:!!g.goneCold,hidden:!!g.hidden,heart:!!g.heart,draft:g.draft,pinned:!!g.pinned});}
+/* a business with no area shows in every area. 'Not using in this location' hides it in the areas switched on at the time; 'Not using in this campaign' hides it for the month everywhere. */
+function locHid(p,g){const S=selAreas(),h=g.hiddenAreas||[];return !p.area&&h.length>0&&S.length>0&&S.every(a=>h.indexOf(a)>=0);}
+function nuBtns(m,p,withMail){
+  const a=`${esc(m)}|${esc(p.id)}`;
+  if(p.hidCamp)return `<button class="btn-sm" data-cp="hide" data-arg="${a}" title="Put it back on this campaign">Bring back</button>`;
+  if(p.hidLoc)return `<button class="btn-sm" data-cp="hideloc" data-arg="${a}" title="Show it again in this location">Bring back here</button>`;
+  return `<button class="btn-sm" data-cp="hide" data-arg="${a}" title="Keep saved but hide it from this campaign, in every location">Not using in this campaign</button>`+(p.area?'':`<button class="btn-sm" data-cp="hideloc" data-arg="${a}" title="Keep saved but hide it in the location(s) switched on now">Not using in this location</button>`);
+}
+function view(p,m){const g=sponD().prog[PK(m,p.id)]||{};return norm({...p,month:m,status:'',answer:g.answer||'',emailedAt:g.emailedAt||'',goneCold:!!g.goneCold,hidCamp:!!g.hidden,hidLoc:locHid(p,g),hidden:!!g.hidden||locHid(p,g),heart:!!g.heart,draft:g.draft,pinned:!!g.pinned});}
 function onList(p,m){const g=sponD().prog[PK(m,p.id)];return !!(g&&(g.pinned||g.answer||g.emailedAt||g.goneCold||g.hidden));}
-function areaOK(p){const S=selAreas();return !S.length||S.indexOf(p.area)>=0;}
-function tokens(p){const o=[];const k=String(p.kind||'').trim().toLowerCase();if(k)o.push('k:'+k);tagsOf(p).forEach(t=>o.push('t:'+t));return o;}
+function areaOK(p){const S=selAreas();return !S.length||!p.area||S.indexOf(p.area)>=0;}
+function tokens(p){const o=[];const k=String(p.kind||'').trim().toLowerCase();o.push(k?'k:'+k:'k:(none)');const tg=tagsOf(p);if(tg.length)tg.forEach(t=>o.push('t:'+t));else o.push('t:(none)');return o;}
 function rule(m){const r=sponD().rules[m]||{};return {inc:r.inc||[],exc:r.exc||[]};}
 function fits(p,m){const r=rule(m),tk=tokens(p);return r.inc.length>0&&r.inc.some(t=>tk.indexOf(t)>=0)&&!r.exc.some(t=>tk.indexOf(t)>=0);}
-function all(m){return Object.values(sponD().prospects).filter(p=>p&&areaOK(p)&&onList(p,m)).map(p=>view(p,m));}
+function all(m){return Object.values(sponD().prospects).filter(p=>p&&areaOK(p)&&(onList(p,m)||fits(p,m))).map(p=>view(p,m));}
 function sug(m){return Object.values(sponD().prospects).filter(p=>p&&areaOK(p)&&!onList(p,m)&&fits(p,m)).map(p=>view(p,m)).filter(pass).sort((x,y)=>String(x.name).localeCompare(String(y.name)));}
 function pass(p){const q=F.q.toLowerCase();
   if(q&&[p.name,p.kind,p.tags,p.contactName,p.email,p.city,p.address,p.desc,p.fit,p.notes].join(' ').toLowerCase().indexOf(q)<0)return false;
@@ -12058,9 +12069,9 @@ async function saveTheme(m,val){
 function showBanners(){return sponD().showBanners!==false;}
 function bannerUrl(m){return ((L.banners||{}).map||{})[m]||'';}
 /* ── modal ── */
-function ov(html,w){let el=$('cpOv');if(!el){el=document.createElement('div');el.id='cpOv';el.className='modal-bg';el.innerHTML='<div class="modal" id="cpBox" style="max-width:640px"></div>';el.addEventListener('click',onClick);el.addEventListener('change',e=>{const t=e.target;if(t&&t.dataset&&t.dataset.campadd&&t.value)campAdd(t.dataset.campadd,t.value,t);});document.body.appendChild(el);}
-  const b=$('cpBox');b.style.maxWidth=(w||640)+'px';b.innerHTML=html;el.classList.add('open');}
-function closeOv(){const el=$('cpOv');if(el)el.classList.remove('open');}
+function ov(html,w){let el=$('cpOv');if(!el){el=document.createElement('div');el.id='cpOv';el.className='modal-bg';el.innerHTML='<div class="modal" id="cpBox" style="max-width:640px"></div>';el.addEventListener('click',onClick);el.addEventListener('change',e=>{const t=e.target;if(t&&t.dataset&&t.dataset.campadd&&t.value)campAdd(t.dataset.campadd,t.value);});document.body.appendChild(el);}
+  const b=$('cpBox');b.style.maxWidth=(w||640)+'px';b.innerHTML=html;el.classList.add('open');document.body.classList.add('cp-lock');document.documentElement.classList.add('cp-lock');}
+function closeOv(){const el=$('cpOv');if(el)el.classList.remove('open');document.body.classList.remove('cp-lock');document.documentElement.classList.remove('cp-lock');}
 function V(id){const e=$(id);return e?e.value.trim():'';}
 function fill(txt,c){return String(txt).replace(/\{(\w+)\}/g,(x,k)=>c[k]!==undefined&&c[k]!==''?c[k]:x);}
 function ctx(p,wk){
@@ -12071,17 +12082,28 @@ function ctx(p,wk){
 }
 /* ── prospect popup ── */
 /* in the edit popup: pick a month and the business is put on that campaign's list straight away */
-function campAdder(id){
+function campInner(id,note){
   const cur=todayStr().slice(0,7),ms=[];for(let i=0;i<12;i++)ms.push(addMonths(cur,i));
   const on=ms.filter(m=>onList({id:id},m)),off=ms.filter(m=>!onList({id:id},m));
-  return `<div class="form-group"><label class="form-label">Put on a campaign</label><select class="form-input" id="cp-campadd" data-campadd="${esc(id)}"><option value="">Choose a month to add it to...</option>${off.map(m=>`<option value="${esc(m)}">${esc(monthName(m))}${theme(m)?' · '+esc(theme(m)):''}</option>`).join('')}</select><div id="cp-campon" style="font-size:.74rem;color:var(--text3);margin-top:.3rem">${on.length?'Already on: '+esc(on.map(monthName).join(', ')):'Not on any campaign yet.'}</div></div>`;
+  const chips=on.map(m=>{const g=sponD().prog[PK(m,id)]||{};return `<span style="display:inline-flex;align-items:center;gap:.25rem;margin-right:.7rem">${esc(monthName(m))}${g.hidden?' (Not using)':''}<button type="button" title="Take it off ${esc(monthName(m))}" data-cp="campoff" data-arg="${esc(m)}|${esc(id)}" style="background:none;border:none;color:var(--rose);cursor:pointer;font-size:.95rem;line-height:1;padding:0 .1rem">&#10005;</button></span>`;}).join('');
+  return `<label class="form-label">Put on a campaign</label><select class="form-input" id="cp-campadd" data-campadd="${esc(id)}"><option value="">Choose a month to add it to...</option>${off.map(m=>`<option value="${esc(m)}">${esc(monthName(m))}${theme(m)?' · '+esc(theme(m)):''}</option>`).join('')}</select><div id="cp-campon" style="font-size:.76rem;color:var(--text2);margin-top:.35rem">${note?esc(note)+' ':''}${on.length?'Already on: '+chips:'Not on any campaign yet.'}</div>`;
 }
-async function campAdd(id,m,sel){
+function campAdder(id){return `<div class="form-group" id="cp-campwrap">${campInner(id)}</div>`;}
+async function campAdd(id,m){
   const prog={...sponD().prog};prog[PK(m,id)]={...(prog[PK(m,id)]||{}),pinned:true};
   await save({prog:prog},true);
   toast('Added to '+monthName(m));
-  if(sel){const o=sel.querySelector('option[value="'+m+'"]');if(o)o.remove();sel.value='';}
-  const t=$('cp-campon');if(t){const cur=todayStr().slice(0,7),on=[];for(let i=0;i<12;i++){const x=addMonths(cur,i);if(onList({id:id},x))on.push(x);}t.textContent='Already on: '+on.map(monthName).join(', ')+' (just added '+monthName(m)+')';}
+  const pa=(sponD().prospects[id]||{}).area;
+  if(pa&&selAreas().indexOf(pa)<0){const S=sponAreas().filter(x=>x===pa||selAreas().indexOf(x)>=0);await saveLib('sponsors',{areasSel:S},true);render();toast('Switched on the '+pa+' area so you can see it');}
+  const w=$('cp-campwrap');if(w)w.innerHTML=campInner(id,'Added to '+monthName(m)+'.');
+}
+async function campOff(m,id){
+  const prog={...sponD().prog},g=prog[PK(m,id)]||{};
+  if((g.answer||g.emailedAt||g.goneCold||g.hidden||g.heart||g.draft)&&!confirm('This business has progress saved for '+monthName(m)+' (emailed, answer, heart or draft). Take it off '+monthName(m)+' and lose that?'))return;
+  delete prog[PK(m,id)];
+  await save({prog:prog},true);
+  toast('Taken off '+monthName(m));
+  const w=$('cp-campwrap');if(w)w.innerHTML=campInner(id,'Taken off '+monthName(m)+'.');
 }
 function sponEdit(id,m){
   const raw=id?sponD().prospects[id]:null;if(id&&!raw)return;const mm=m||'',p=raw?(mm?view(raw,mm):norm(raw)):null;
@@ -12101,7 +12123,7 @@ function sponEdit(id,m){
   <div class="form-group"><label class="form-label">Notes</label><textarea class="form-textarea" id="cp-notes" style="min-height:70px">${v('notes')}</textarea></div>
   ${mm?`<div class="cp-g2"><div class="form-group"><label class="form-label">Their answer (${esc(monthName(mm))})</label><select class="form-input" id="cp-ans"><option value="">No answer yet</option><option value="yes" ${p&&p.answer==='yes'?'selected':''}>Said yes</option><option value="no" ${p&&p.answer==='no'?'selected':''}>Said no</option></select></div>
   <div class="form-group"><label class="form-label">We emailed them on</label><input class="form-input" type="date" id="cp-emdate" value="${p&&p.emailedAt&&p.emailedAt!=='earlier'?esc(p.emailedAt):''}"></div></div>
-  <div style="display:flex;gap:1.4rem;flex-wrap:wrap;margin:.2rem 0 1rem"><label class="cp-chk"><input type="checkbox" id="cp-em" ${p&&p.emailedAt?'checked':''}> We emailed (in progress)</label><label class="cp-chk"><input type="checkbox" id="cp-cold" ${p&&p.goneCold?'checked':''}> Gone cold</label><label class="cp-chk"><input type="checkbox" id="cp-hide" ${p&&p.hidden?'checked':''}> Not using for this theme (keep saved, hide it from this month's list and sponsor choices)</label></div>`:''}
+  <div style="display:flex;gap:1.4rem;flex-wrap:wrap;margin:.2rem 0 1rem"><label class="cp-chk"><input type="checkbox" id="cp-em" ${p&&p.emailedAt?'checked':''}> We emailed (in progress)</label><label class="cp-chk"><input type="checkbox" id="cp-cold" ${p&&p.goneCold?'checked':''}> Gone cold</label><label class="cp-chk"><input type="checkbox" id="cp-hide" ${p&&p.hidCamp?'checked':''}> Not using in this campaign (keep saved, hide it from this month's list and sponsor choices)</label>${p&&!p.area?`<label class="cp-chk"><input type="checkbox" id="cp-hideloc" ${p.hidLoc?'checked':''}> Not using in this location (hide it in the area(s) switched on now)</label>`:''}</div>`:''}
   <div class="cp-acts">${p?`<button class="btn-sm cp-red" data-cp="del" data-arg="${esc(id)}">Remove everywhere</button>`:''}<button class="btn-sm" data-cp="close">Cancel</button><button class="btn-sm btn-gold" data-cp="editsave" data-arg="${esc(id)}" data-m="${esc(mm)}">Save</button></div>`,640);
 }
 function sponEditSave(id,m){
@@ -12110,7 +12132,7 @@ function sponEditSave(id,m){
   const rec={...(oldRaw||{}),id:nid,area:V('cp-area'),name:name,contactName:V('cp-who'),email:V('cp-email'),phone:V('cp-phone'),address:V('cp-addr'),city:V('cp-city'),ig:V('cp-ig'),fb:V('cp-fb'),web:V('cp-web'),kind:V('cp-kind'),desc:V('cp-desc'),ds:V('cp-ds'),fit:V('cp-fit'),notes:V('cp-notes'),tags:V('cp-tags')};
   PROGF.forEach(k=>{delete rec[k];});
   if(m){const g={...(prog[PK(m,nid)]||{})},em=$('cp-em').checked,dt=V('cp-emdate'),oe=g.emailedAt||'';
-    g.pinned=true;g.answer=V('cp-ans');g.goneCold=$('cp-cold').checked;g.hidden=$('cp-hide').checked;
+    g.pinned=true;g.answer=V('cp-ans');g.goneCold=$('cp-cold').checked;g.hidden=$('cp-hide').checked;if($('cp-hideloc')){const S=selAreas(),h=(g.hiddenAreas||[]).filter(a=>S.indexOf(a)<0);g.hiddenAreas=$('cp-hideloc').checked?[...new Set(h.concat(S))]:h;}
     g.emailedAt=em?(dt||(oe&&oe!=='earlier'?oe:(oe==='earlier'?'earlier':todayStr()))):'';
     prog[PK(m,nid)]=g;}
   /* linked locations: join/leave the group, then share the common details between all locations */
@@ -12133,7 +12155,7 @@ async function save(patch,quiet){await saveLib('sponsors',patch,quiet);render();
 function sponDel(id){if(!confirm('Remove this business from the master list and from every month? (To only skip it for one theme, use Not using instead.)'))return;const pr={...sponD().prospects},prog={...sponD().prog};delete pr[id];Object.keys(prog).forEach(k=>{if(k.split('|')[1]===id)delete prog[k];});closeOv();save({prospects:pr,prog:prog});}
 async function toggle(m,id,field){
   const d=sponD(),p=d.prospects[id];if(!p)return;const v=view(p,m),prog={...d.prog},g={...(prog[PK(m,id)]||{})};
-  if(field==='hide')g.hidden=!v.hidden;else if(field==='em')g.emailedAt=v.emailedAt?'':todayStr();else if(field==='cold')g.goneCold=!v.goneCold;
+  if(field==='hide')g.hidden=!v.hidCamp;else if(field==='hideloc'){const S=selAreas(),h=(g.hiddenAreas||[]).slice();g.hiddenAreas=v.hidLoc?h.filter(a=>S.indexOf(a)<0):[...new Set(h.concat(S))];}else if(field==='em')g.emailedAt=v.emailedAt?'':todayStr();else if(field==='cold')g.goneCold=!v.goneCold;
   g.pinned=true;
   if(field==='em'&&!v.emailedAt){/* nothing else */}
   prog[PK(m,id)]=g;
@@ -12166,7 +12188,7 @@ async function pin(m,id){const prog={...sponD().prog};prog[PK(m,id)]={...(prog[P
 function wkEdit(m,i,ar){
   ar=ar||sponArea();
   const d=sponD(),w=d.weeks[wkKey(m,i,ar)]||{},A=list(m),mon=mondaysOf(m)[i];
-  const pool=all(m).filter(p=>!ar||p.area===ar).filter(p=>!p.hidden||w.sponsorId===p.id).sort((x,y)=>String(x.name).localeCompare(String(y.name)));
+  const pool=all(m).filter(p=>!ar||!p.area||p.area===ar).filter(p=>!p.hidden||w.sponsorId===p.id).sort((x,y)=>String(x.name).localeCompare(String(y.name)));
   ov(`<div class="section-title" style="margin-bottom:.4rem">Week ${i+1} sponsor</div><div style="font-size:.74rem;color:var(--text3);margin-bottom:.9rem">${esc(mon?new Date(mon+'T12:00:00').toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'}):'')} · ${esc(ar||'All areas')}</div>
   <div class="form-group"><label class="form-label">Sponsor from the prospect list</label><select class="form-input" id="cp-pick"><option value="">Not from the list (type a name below)</option>${pool.map(p=>`<option value="${esc(p.id)}" ${w.sponsorId===p.id?'selected':''}>${esc(p.name)}${p.kind?' · '+esc(p.kind):''}</option>`).join('')}</select></div>
   <div class="form-group"><label class="form-label">Sponsor name (if not from the list)</label><input class="form-input" id="cp-wname" value="${esc(w.sponsorId?'':(w.name||''))}"></div>
@@ -12317,16 +12339,16 @@ function foldOpen(key,def){const f=sponD().fold||{};return f[key]===undefined?de
 function foldToggle(key,def){const f={...(sponD().fold||{})};f[key]=!foldOpen(key,def);return saveLib('sponsors',{fold:f},true).then(render);}
 /* ── page ── */
 function pen(act,arg,tt){return `<button class="btn-sm cp-pen" title="${tt}" data-cp="${act}" data-arg="${esc(arg)}">&#9998;</button>`;}
-function tokLabel(t){const k=t.charAt(0),v=t.slice(2);const map=tokNames();return (map[t]||v)+(k==='t'?' (tag)':'');}
-function tokNames(){const o={};Object.values(sponD().prospects).forEach(p=>{if(!p)return;const k=String(p.kind||'').trim();if(k)o['k:'+k.toLowerCase()]=k;tagsOf(p).forEach(t=>{o['t:'+t]=t;});});return o;}
+function tokLabel(t){const k=t.charAt(0),v=t.slice(2);const map=tokNames();return (map[t]||v)+(k==='t'&&v!=='(none)'?' (tag)':'');}
+function tokNames(){const o={};Object.values(sponD().prospects).forEach(p=>{if(!p)return;const k=String(p.kind||'').trim();if(k)o['k:'+k.toLowerCase()]=k;tagsOf(p).forEach(t=>{o['t:'+t]=t;});tokens(p).forEach(t=>{if(t==='k:(none)')o[t]='No kind';if(t==='t:(none)')o[t]='No tags';});});return o;}
 /* which businesses fit a month's theme: include by kind or tag, leave out by kind or tag */
 function rulesEdit(m){
   const names=tokNames(),r=rule(m),cnt={};
   Object.values(sponD().prospects).forEach(p=>{if(p)tokens(p).forEach(t=>{cnt[t]=(cnt[t]||0)+1;});});
   const keys=Object.keys(names).sort((a,b)=>(a.charAt(0)===b.charAt(0)?0:(a.charAt(0)==='k'?-1:1))||names[a].localeCompare(names[b]));
   const rows=keys.map(t=>`<tr><td>${esc(names[t])}<small> ${t.charAt(0)==='t'?'tag':'kind'} · ${cnt[t]||0}</small></td><td><input type="checkbox" data-tk="${esc(t)}" data-side="inc" ${r.inc.indexOf(t)>=0?'checked':''}></td><td><input type="checkbox" data-tk="${esc(t)}" data-side="exc" ${r.exc.indexOf(t)>=0?'checked':''}></td></tr>`).join('');
-  ov(`<div class="section-title" style="margin-bottom:.4rem">Which businesses fit ${esc(monthName(m))}</div><div style="font-size:.74rem;color:var(--text3);line-height:1.55;margin-bottom:.9rem">A business is suggested when it matches anything ticked under Include and nothing ticked under Leave out. Example: Include "Coffee Shop", Leave out "Mobile Coffee Stand". Kinds and tags come from your master list.</div>
-  ${keys.length?`<div style="max-height:50vh;overflow:auto"><table class="cp-tk"><thead><tr><th style="text-align:left">Kind or tag</th><th>Include</th><th>Leave out</th></tr></thead><tbody>${rows}</tbody></table></div>`:'<div class="cp-none">Add a Kind or tags to some businesses first.</div>'}
+  ov(`<div class="section-title" style="margin-bottom:.4rem">Which businesses fit ${esc(monthName(m))}</div><div style="font-size:.74rem;color:var(--text3);line-height:1.55;margin-bottom:.9rem">Every business in the areas switched on that matches anything ticked under Include, and nothing ticked under Leave out, shows on this month's list. Example: Include "Coffee Shop", Leave out "Mobile Coffee Stand". Businesses with no kind or no tags have their own rows (No kind, No tags). Businesses you add yourself stay on the list whatever you tick here.</div>
+  ${keys.length?`<div style="margin-bottom:.5rem"><button class="btn-sm" data-cp="rulesall">Include everything</button> <button class="btn-sm" data-cp="rulesnone">Clear all</button></div><div style="max-height:50vh;overflow:auto"><table class="cp-tk"><thead><tr><th style="text-align:left">Kind or tag</th><th>Include</th><th>Leave out</th></tr></thead><tbody>${rows}</tbody></table></div>`:'<div class="cp-none">Add a Kind or tags to some businesses first.</div>'}
   <div class="cp-acts"><button class="btn-sm" data-cp="close">Cancel</button><button class="btn-sm btn-gold" data-cp="rulessave" data-arg="${esc(m)}">Save</button></div>`,520);
 }
 function rulesSave(m){
@@ -12364,12 +12386,9 @@ function monthCard(m){
   const prRows=Lp.length?Lp.map(p=>{const lk=[p.ig&&'IG',p.fb&&'FB',p.web&&'Web'].filter(Boolean).join(' ');
     return `<div class="cp-row cp-click" data-cp="pedit" data-arg="${esc(m)}|${esc(p.id)}"><div class="cp-rt">${esc(p.name)}<small>${esc([p.heart?'\u2665 hearted':'',p.kind,stage(p)+(p.emailedAt&&p.emailedAt!=='earlier'?' (emailed '+dayTxt(p.emailedAt)+')':''),p.city,sibs(p).length?'also at '+sibs(p).map(x=>x.city||x.area||x.name).join(', '):'',tagsOf(p).length?'tags: '+tagsOf(p).join(', '):'',p.contactName,lk,p.ds?'info: '+p.ds:''].filter(Boolean).join(' · '))}</small>${p.fit?`<small>Fit: ${esc(p.fit)}</small>`:''}</div>
       <label class="cp-chk" data-cp="stop"><input type="checkbox" data-cp="em" data-arg="${esc(m)}|${esc(p.id)}" ${p.emailedAt?'checked':''}> Emailed</label><label class="cp-chk" data-cp="stop"><input type="checkbox" data-cp="cold" data-arg="${esc(m)}|${esc(p.id)}" ${p.goneCold?'checked':''}> Gone cold</label>
-      <button class="btn-sm" data-cp="hide" data-arg="${esc(m)}|${esc(p.id)}" title="${p.hidden?'Put back on this theme':'Keep saved but hide it from this theme'}">${p.hidden?'Bring back':'Not using'}</button><button class="btn-sm" data-cp="mailp" data-arg="${esc(m)}|${esc(p.id)}">Email</button>${pen('pedit',m+'|'+p.id,'Edit this business')}</div>`;}).join(''):`<div class="cp-none">${tot?'No sponsor prospects match the filters.':'No sponsor prospects for '+esc(area||'this month')+' yet.'}</div>`;
-  const Sg=sug(m),rl=rule(m),hasRule=rl.inc.length>0;
-  const sgRows=Sg.map(p=>{const lk=[p.ig&&'IG',p.fb&&'FB',p.web&&'Web'].filter(Boolean).join(' ');
-    return `<div class="cp-row cp-click" data-cp="pedit" data-arg="|${esc(p.id)}"><div class="cp-rt">${esc(p.name)}<small>${esc([p.kind,p.city,sibs(p).length?'also at '+sibs(p).map(x=>x.city||x.area||x.name).join(', '):'',tagsOf(p).length?'tags: '+tagsOf(p).join(', '):'',p.contactName,lk].filter(Boolean).join(' · '))}</small></div>
-      <button class="btn-sm btn-gold" data-cp="pin" data-arg="${esc(m)}|${esc(p.id)}">Add to list</button><button class="btn-sm" data-cp="hide" data-arg="${esc(m)}|${esc(p.id)}" title="Keep saved but never suggest it for this theme">Not using</button></div>`;}).join('');
-  const sgBody=`<div style="font-size:.76rem;color:var(--text2);margin-bottom:.6rem">${hasRule?'Fits: '+esc(rl.inc.map(tokLabel).join(', '))+(rl.exc.length?' · leaving out: '+esc(rl.exc.map(tokLabel).join(', ')):''):'No rule yet. Choose which kinds of business and tags fit this theme and matching businesses will show up here.'}</div>`+(Sg.length?sgRows:(hasRule?'<div class="cp-none">Nothing else matches right now.</div>':''))+`<div class="cp-tools"><button class="btn-sm" data-cp="rules" data-arg="${esc(m)}">Choose which businesses fit</button></div>`;
+      ${nuBtns(m,p)}<button class="btn-sm" data-cp="mailp" data-arg="${esc(m)}|${esc(p.id)}">Email</button>${pen('pedit',m+'|'+p.id,'Edit this business')}</div>`;}).join(''):`<div class="cp-none">${tot?'No sponsor prospects match the filters.':'No sponsor prospects for '+esc(area||'this month')+' yet.'}</div>`;
+  const rl=rule(m),hasRule=rl.inc.length>0;
+  const filtTxt=hasRule?'Filter: '+rl.inc.map(tokLabel).join(', ')+(rl.exc.length?' · leaving out: '+rl.exc.map(tokLabel).join(', '):''):'';
   const open=foldOpen('c_'+m,m===cur);
   const bu=bannerUrl(m);
   const banner=showBanners()?`<div class="cp-ban">${bu?`<img src="${esc(bu)}" alt="">`:'<div class="cp-noban">No banner yet</div>'}<button class="btn-sm cp-pen cp-banpen" title="Edit banner" data-cp="banedit" data-arg="${esc(m)}">&#9998;</button></div>`:'';
@@ -12378,8 +12397,7 @@ function monthCard(m){
   ${sec('t_'+m,'Month theme',`<input class="form-input" data-cptheme="${esc(m)}" value="${esc(th)}">`)}
   ${sec('d_'+m,'Theme description',`<textarea class="form-textarea" data-cpdesc="${esc(m)}" style="min-height:90px">${esc(themeDesc(m))}</textarea>`)}
   ${sec('w_'+m,'Weekly sponsors'+(SA.length?' · '+esc(SA.join(', ')):''),wkRows)}
-  ${sec('g_'+m,'Suggested for this theme'+(SA.length?' · '+esc(SA.join(', ')):'')+' ('+Sg.length+')',sgBody)}
-  ${sec('p_'+m,'Sponsor prospects for this theme'+(SA.length?' · '+esc(SA.join(', ')):'')+' ('+(Lp.length===tot?Lp.length:Lp.length+' of '+tot)+')',prRows+`<div class="cp-tools"><button class="btn-sm btn-gold" data-cp="addex" data-arg="${esc(m)}">+ Add from my businesses</button><button class="btn-sm" data-cp="padd" data-arg="${esc(m)}">+ New business</button><button class="btn-sm" data-cp="bulk" data-arg="${esc(m)}">Add in bulk</button></div>`)}</div>`:''}</div>`;
+  ${sec('p_'+m,'Sponsor prospects for this theme'+(SA.length?' · '+esc(SA.join(', ')):'')+' ('+(Lp.length===tot?Lp.length:Lp.length+' of '+tot)+')',(filtTxt?`<div style="font-size:.76rem;color:var(--text2);margin-bottom:.5rem">${esc(filtTxt)}</div>`:'')+prRows+`<div class="cp-tools"><button class="btn-sm ${hasRule?'btn-gold':''}" data-cp="rules" data-arg="${esc(m)}">Filter by kind and tag</button><button class="btn-sm btn-gold" data-cp="addex" data-arg="${esc(m)}">+ Add from my businesses</button><button class="btn-sm" data-cp="padd" data-arg="${esc(m)}">+ New business</button><button class="btn-sm" data-cp="bulk" data-arg="${esc(m)}">Add in bulk</button></div>`)}</div>`:''}</div>`;
 }
 function render(){
   const root=$('campRoot');if(!root)return;
@@ -12437,7 +12455,10 @@ function onClick(e){
     case 'pedit':sponEdit(mo[1]||'',mo[0]);break;
     case 'rules':rulesEdit(arg);break;
     case 'rulessave':rulesSave(arg);break;
+    case 'rulesall':document.querySelectorAll('#cpBox [data-tk]').forEach(e=>{e.checked=e.dataset.side==='inc';});break;
+    case 'rulesnone':document.querySelectorAll('#cpBox [data-tk]').forEach(e=>{e.checked=false;});break;
     case 'pin':pin(mo[0],mo[1]);break;
+    case 'campoff':campOff(mo[0],mo[1]);break;
     case 'addex':addExEdit(arg);break;
     case 'addexsave':addExSave(arg);break;
     case 'heart':heartToggle(mo[0],mo[1]);break;
@@ -12448,6 +12469,7 @@ function onClick(e){
     case 'em':toggle(mo[0],mo[1],'em');break;
     case 'cold':toggle(mo[0],mo[1],'cold');break;
     case 'hide':toggle(mo[0],mo[1],'hide');break;
+    case 'hideloc':toggle(mo[0],mo[1],'hideloc');break;
     case 'bulk':bulkEdit(arg);break;
     case 'bulkfile':bulkFile();break;
     case 'bulkadd':bulkAdd(arg);break;
