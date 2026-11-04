@@ -886,6 +886,7 @@ html::-webkit-scrollbar-thumb:hover,.modal::-webkit-scrollbar-thumb:hover{backgr
     <button class="tab" onclick="showTab('hosts',this)">Hosts</button>
     <button class="tab" onclick="showTab('venues',this)">Venues</button>
     <button class="tab" onclick="showTab('schedule',this)">Schedule</button>
+    <button class="tab" onclick="showTab('campaigns',this)">Campaigns</button>
     <button class="tab" onclick="showTab('inventory',this);loadInventory()">Inventory</button>
     <button class="tab" onclick="showTab('feedback',this);loadTriviaFeedback()">Trivia Feedback<span id="fbTabBadge" title="Questions with host notes waiting for review" style="display:none;margin-left:0.45rem;min-width:1.1rem;padding:0.05rem 0.4rem;border-radius:999px;background:var(--gold);color:#0a0a0a;font-size:0.6rem;font-weight:700;letter-spacing:0;vertical-align:middle;"></span></button>
     <button class="tab" onclick="showTab('screens',this)">Screens</button>
@@ -1313,7 +1314,7 @@ html::-webkit-scrollbar-thumb:hover,.modal::-webkit-scrollbar-thumb:hover{backgr
     <div class="section-header"><div class="section-title">Prospects</div></div>
     <details style="border:1px solid var(--border,#444);border-radius:10px;padding:.6rem .8rem;margin-bottom:.8rem"><summary style="cursor:pointer;font-weight:600">+ Add a prospect</summary>
       <div class="vm-grid" style="grid-template-columns:repeat(auto-fit,minmax(210px,1fr));margin-top:.7rem">
-        <div class="form-group"><label class="form-label">Venue or business name</label><input class="form-input" id="pa-name"></div><div class="form-group"><label class="form-label">City</label><input class="form-input" id="pa-city"></div><div class="form-group"><label class="form-label">Address</label><input class="form-input" id="pa-addr"></div><div class="form-group"><label class="form-label">Contact name</label><input class="form-input" id="pa-who"></div><div class="form-group"><label class="form-label">Email</label><input class="form-input" id="pa-email"></div><div class="form-group"><label class="form-label">Phone</label><input class="form-input" id="pa-phone"></div><div class="form-group"><label class="form-label">Instagram</label><input class="form-input" id="pa-ig"></div><div class="form-group"><label class="form-label">Facebook</label><input class="form-input" id="pa-fb"></div><div class="form-group"><label class="form-label">Website</label><input class="form-input" id="pa-web"></div><div class="form-group"><label class="form-label">Where we got them from</label><input class="form-input" id="pa-from"></div>
+        <div class="form-group"><label class="form-label">Venue or business name</label><input class="form-input" id="pa-name"></div><div class="form-group"><label class="form-label">City</label><input class="form-input" id="pa-city"></div><div class="form-group"><label class="form-label">Address</label><input class="form-input" id="pa-addr"></div><div class="form-group"><label class="form-label">Contact name</label><input class="form-input" id="pa-who"></div><div class="form-group"><label class="form-label">Email</label><input class="form-input" id="pa-email"></div><div class="form-group"><label class="form-label">Phone</label><input class="form-input" id="pa-phone"></div><div class="form-group"><label class="form-label">Instagram</label><input class="form-input" id="pa-ig"></div><div class="form-group"><label class="form-label">Facebook</label><input class="form-input" id="pa-fb"></div><div class="form-group"><label class="form-label">Website</label><input class="form-input" id="pa-web"></div><div class="form-group"><label class="form-label">Hours of service</label><input class="form-input" id="pa-hours"></div><div class="form-group"><label class="form-label">Where we got them from</label><input class="form-input" id="pa-from"></div>
       </div>
       <div class="vm-grid" style="grid-template-columns:repeat(auto-fit,minmax(260px,1fr));margin-top:.6rem">
         <div class="form-group"><label class="form-label">Why them</label><textarea class="form-textarea" id="pa-why" style="min-height:3.4rem;resize:vertical"></textarea></div><div class="form-group"><label class="form-label">Pitch (format and night)</label><textarea class="form-textarea" id="pa-pitch" style="min-height:3.4rem;resize:vertical"></textarea></div><div class="form-group"><label class="form-label">Notes</label><textarea class="form-textarea" id="pa-notes" style="min-height:3.4rem;resize:vertical"></textarea></div>
@@ -1379,7 +1380,7 @@ html::-webkit-scrollbar-thumb:hover,.modal::-webkit-scrollbar-thumb:hover{backgr
 <div class="form-group"><label class="form-label">Name</label><input type="text" class="form-input" id="leadName"></div><div class="form-group"><label class="form-label">Stage</label><select class="form-input" id="leadStage"><option value="new">New Lead</option><option value="contact">First Contact</option><option value="interview">Interview</option><option value="negotiation">Negotiations</option><option value="contract">Agreement Sent</option><option value="active">Working, no agreement</option><option value="signed">Signed (now a venue)</option><option value="paused">Paused</option></select></div><div class="form-group"><label class="form-label">Temperature</label><select class="form-input" id="leadTemp"><option value="hot">🔥 Hot</option><option value="warm">🌤 Warm</option><option value="cold">❄ Cold</option></select></div>
     </div></div>
     <div class="vm-sec"><div class="vm-sec-h"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-7 8-7s8 3 8 7"/></svg>Contact</div><div class="vm-grid vm-g3">
-<div class="form-group"><label class="form-label">Contact person</label><input type="text" class="form-input" id="leadContactName"></div><div class="form-group"><label class="form-label">Phone</label><input type="tel" class="form-input" id="leadPhone"></div><div class="form-group"><label class="form-label">Email</label><input type="email" class="form-input" id="leadEmail"></div><div class="form-group"><label class="form-label">City</label><input type="text" class="form-input" id="leadCity"></div><div class="form-group"><label class="form-label">Location</label><select class="form-input" id="leadLocation"></select></div><div class="form-group"><label class="form-label">Address</label><input type="text" class="form-input" id="leadAddress"></div><div class="form-group"><label class="form-label">Instagram</label><input type="text" class="form-input" id="leadInstagram"></div><div class="form-group"><label class="form-label">Website</label><input type="text" class="form-input" id="leadWebsite"></div><div class="form-group"><label class="form-label">Facebook</label><input type="text" class="form-input" id="leadFacebook"></div>
+<div class="form-group"><label class="form-label">Contact person</label><input type="text" class="form-input" id="leadContactName"></div><div class="form-group"><label class="form-label">Phone</label><input type="tel" class="form-input" id="leadPhone"></div><div class="form-group"><label class="form-label">Email</label><input type="email" class="form-input" id="leadEmail"></div><div class="form-group"><label class="form-label">City</label><input type="text" class="form-input" id="leadCity"></div><div class="form-group"><label class="form-label">Location</label><select class="form-input" id="leadLocation"></select></div><div class="form-group"><label class="form-label">Address</label><input type="text" class="form-input" id="leadAddress"></div><div class="form-group"><label class="form-label">Hours of service</label><textarea class="form-input" id="leadHours" style="min-height:3.6rem;resize:vertical"></textarea></div><div class="form-group"><label class="form-label">Instagram</label><input type="text" class="form-input" id="leadInstagram"></div><div class="form-group"><label class="form-label">Website</label><input type="text" class="form-input" id="leadWebsite"></div><div class="form-group"><label class="form-label">Facebook</label><input type="text" class="form-input" id="leadFacebook"></div>
     </div></div>
     <div class="vm-sec"><div class="vm-sec-h"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.8 5.800 6.200.9-4.500 4.400 1.100 6.200L12 17.300 6.400 20.300l1.100-6.200L3 9.700l6.200-.9z"/></svg>What they're looking for</div><div id="leadInterestRows" style="display:flex;flex-direction:column;gap:0.4rem;margin-bottom:0.5rem;"></div><button class="btn-sm" onclick="addLeadInterestRow()" type="button">+ Add Night</button></div>
     <div class="vm-sec"><div class="vm-sec-h"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M5 6h11l3 2.500-3 2.500H5zM19 14H8l-3 2.500L8 19h11z"/></svg>How they came to us</div><div class="vm-grid" style="grid-template-columns:repeat(auto-fit,minmax(190px,1fr))">
@@ -1654,6 +1655,17 @@ match /agent_config/{id}  { allow read, write: if isAdmin(); }</pre>
 </div>
 
 <!-- SCREENS (the TV screensaver playlist that Belladonna Unbound pulls) -->
+<!-- CAMPAIGNS -->
+<div class="panel" id="panel-campaigns">
+  <div class="section-header">
+    <div class="section-title">Sponsor campaigns</div>
+  </div>
+  <div style="font-size:0.74rem;color:var(--text3);line-height:1.55;margin-bottom:1rem;max-width:760px;">
+    One theme a month. Each week a different local business sponsors a night at a venue: a four-cocktail flight, tickets, and prizes from the sponsor.
+  </div>
+  <div id="campRoot"></div>
+</div>
+
 <div class="panel" id="panel-screens">
   <div class="section-header">
     <div class="section-title">Screens</div>
@@ -1971,6 +1983,7 @@ match /agent_config/{id}  { allow read, write: if isAdmin(); }</pre>
       <div class="vm-sec-h"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.500"/><path d="M2.500 20c0-3.600 2.900-6 6.500-6s6.500 2.400 6.500 6M16 5a3.500 3.500 0 010 7M18 14.500c2.200.7 3.500 2.500 3.500 5.500"/></svg>Contact &amp; Details</div>
       <div class="vm-grid vm-g2">
         <div class="form-group"><label class="form-label">Address</label><input class="form-input" id="vmAddress" placeholder="Street, city, state"></div>
+        <div class="form-group"><label class="form-label">Hours of service</label><textarea class="form-input" id="vmHours" style="min-height:3.6rem;resize:vertical"></textarea></div>
         <div class="form-group"><label class="form-label">City</label><input class="form-input" id="vmCity"></div>
         <div class="form-group"><label class="form-label">Owner</label><input class="form-input" id="vmOwner" placeholder="Owner name(s)"></div>
         <div class="form-group"><label class="form-label">Manager</label><input class="form-input" id="vmManager" placeholder="Manager name(s)"></div>
@@ -2403,6 +2416,7 @@ function showTab(id,el){
   if(id==='schedule'){populateSchedFilters();loadShiftsData().then(renderScheduleAll);}
   if(id==='accounts'){loadAccounts();loadAccessRequests();}
   if(id==='screens')scrOpen();
+  if(id==='campaigns'&&window.campOpen)window.campOpen();
   if(id==='feedback')loadTriviaFeedback();
 }
 function showLinksPage(){
@@ -5060,7 +5074,7 @@ function renderLeads(){
         <div><b>Contacted us via:</b> ${contactMethodLabel||'—'}</div>
         <div><b>Source:</b> ${l.source==='outbound'?'We found them':'They found us'}${l.foundBy?' · '+l.foundBy:''}</div>
         ${l.usingCompetitor?'<div style="color:var(--rose);">Currently using a competitor</div>':''}
-        ${l.foundFrom?`<div><b>Where we got them:</b> ${l.foundFrom}</div>`:''}${l.notes?`<div><b>Notes:</b> ${l.notes}</div>`:''}
+        ${l.hours?`<div><b>Hours:</b> ${String(l.hours).replace(/</g,'&lt;').replace(/\n/g,'<br>')}</div>`:''}${l.foundFrom?`<div><b>Where we got them:</b> ${l.foundFrom}</div>`:''}${l.notes?`<div><b>Notes:</b> ${l.notes}</div>`:''}
         <div style="display:flex;gap:0.5rem;margin-top:0.4rem;">
           <button class="btn-sm" onclick="openLeadModal('${l.id}')">Edit</button>${(!lv&&l.stage!=='signed'&&l.stage!=='active'&&l.stage!=='transferred'&&window.hqLeadToProspect)?`<button class="btn-sm" onclick="hqLeadToProspect('${l.id}',this)">&larr; Move back to Prospects</button>`:''}
           ${(!lv&&(l.stage==='signed'||l.stage==='active'))?`<button class="btn-sm btn-gold" onclick="transferLeadToVenue('${l.id}')">Transfer to Our Venues →</button>`:''}${(lv&&(curStage==='contract'))?`<button class="btn-sm btn-gold" onclick="setLeadStage('${l.id}','active',event)">They won't sign: working anyway</button>`:''}${lv?`<button class="btn-sm" onclick="openVenueModal('${lv.id}')">Open in Our Venues</button>`:''}
@@ -5133,7 +5147,7 @@ function openLeadModal(id){
   document.getElementById('leadFollowUp').disabled=!!(l&&l.followUpNone);
   document.getElementById('leadCompetitor').checked=!!(l&&l.usingCompetitor);
   document.getElementById('leadNotes').value=l?l.notes||'':'';
-  [['leadFoundFrom','foundFrom'],['leadAddress','address'],['leadInstagram','instagram'],['leadWebsite','website'],['leadFacebook','facebook']].forEach(a=>{const e=document.getElementById(a[0]);if(e)e.value=l?(l[a[1]]||(l.prospectInfo&&l.prospectInfo[a[1]])||''):'';});
+  [['leadFoundFrom','foundFrom'],['leadHours','hours'],['leadAddress','address'],['leadInstagram','instagram'],['leadWebsite','website'],['leadFacebook','facebook']].forEach(a=>{const e=document.getElementById(a[0]);if(e)e.value=l?(l[a[1]]||(l.prospectInfo&&l.prospectInfo[a[1]])||''):'';});
   {const h=document.getElementById('leadHistory');if(h)h.innerHTML=(l&&window.hqHistoryHtml)?window.hqLogPanel('ld',l,'venue'):'<div style="font-size:.8rem;opacity:.7">Save the lead first, then reopen it. Every touch and email sent shows here, including the ones from when it was a prospect.</div>';}
   {const o=document.getElementById('leadOffers');if(o)o.innerHTML=(l&&typeof offersBlock==='function')?offersBlock(l.id,l.name,'ld'):'<div style="font-size:.8rem;opacity:.7">Save the lead first, then reopen it to fill in what it offers.</div>';}
   document.getElementById('leadDeleteBtn').style.display=l?'':'none';
@@ -5156,7 +5170,7 @@ function saveLead(){
     source:document.getElementById('leadSource').value, foundBy:document.getElementById('leadFoundBy').value.trim(),
     nextFollowUp:document.getElementById('leadFollowUp').value, followUpNone:document.getElementById('leadFollowUpNone').checked, usingCompetitor:document.getElementById('leadCompetitor').checked,
     notes:document.getElementById('leadNotes').value.trim(), updatedAt:new Date().toISOString(),
-    foundFrom:document.getElementById('leadFoundFrom').value.trim(),
+    foundFrom:document.getElementById('leadFoundFrom').value.trim(),hours:(document.getElementById('leadHours')||{value:''}).value.trim(),
     address:document.getElementById('leadAddress').value.trim(), instagram:document.getElementById('leadInstagram').value.trim(),
     website:document.getElementById('leadWebsite').value.trim(), facebook:document.getElementById('leadFacebook').value.trim()
   };
@@ -6527,7 +6541,7 @@ function openVenueModal(id=null){
   document.getElementById('vmPerks').value=venue?venue.perks||'':'';
   try{const L=Object.assign({},(venue&&leadForVenue(venue))||{},(venue&&venue.leadInfo)||{});const sv=(i,x)=>{const e=document.getElementById(i);if(e)e.value=x||'';};
     const PI=(venue&&venue.prospectInfo)||{};
-    sv('vmAddress',(venue&&venue.address)||PI.address);sv('vmCity',(venue&&venue.city)||L.city);sv('vmOwner',venue&&venue.owner);sv('vmManager',venue&&venue.manager);sv('vmContactName',(venue&&venue.contactName)||L.contactName);sv('vmPhone',(venue&&venue.phone)||L.phone);sv('vmEmail',(venue&&venue.email)||L.email);sv('vmWebsite',(venue&&venue.website)||PI.website);sv('vmInstagram',(venue&&venue.instagram)||PI.instagram);sv('vmFacebook',(venue&&venue.facebook)||PI.facebook);sv('vmOtherContacts',venue&&venue.otherContacts);}catch(e){}
+    sv('vmAddress',(venue&&venue.address)||PI.address);sv('vmHours',(venue&&venue.hours)||PI.hours||L.hours);sv('vmCity',(venue&&venue.city)||L.city);sv('vmOwner',venue&&venue.owner);sv('vmManager',venue&&venue.manager);sv('vmContactName',(venue&&venue.contactName)||L.contactName);sv('vmPhone',(venue&&venue.phone)||L.phone);sv('vmEmail',(venue&&venue.email)||L.email);sv('vmWebsite',(venue&&venue.website)||PI.website);sv('vmInstagram',(venue&&venue.instagram)||PI.instagram);sv('vmFacebook',(venue&&venue.facebook)||PI.facebook);sv('vmOtherContacts',venue&&venue.otherContacts);}catch(e){}
   try{renderVenueLeadInfo(id);}catch(e){}
   {const o=document.getElementById('vmAll');if(o){o.innerHTML=(venue&&window.hqVenueAll)?window.hqVenueAll(venue):'';o.dataset.vid=venue?venue.id:'';}}
   {const o=document.getElementById('vmOffers');if(o)o.innerHTML=(venue&&typeof offersBlock==='function')?offersBlock(venue.id,venue.name,'vm'):'<div style="font-size:.8rem;opacity:.7">Save the venue first, then reopen it to fill in what it offers.</div>';}
@@ -6663,7 +6677,7 @@ function saveVenue(){
    if(bad){alert('Pick the "Example date it runs" for the '+bad.kind+' night on '+bad.day+'. Every other week and monthly nights need one date they run on, so the calendar knows which weeks to show.');return;}}
   const host=document.getElementById('vmHost').value||null;
   const gv=i=>{const e=document.getElementById(i);return e?e.value.trim():'';};
-  const det={address:gv('vmAddress'),city:gv('vmCity'),owner:gv('vmOwner'),manager:gv('vmManager'),contactName:gv('vmContactName'),phone:gv('vmPhone'),email:gv('vmEmail'),website:gv('vmWebsite'),instagram:gv('vmInstagram'),facebook:gv('vmFacebook'),otherContacts:gv('vmOtherContacts'),billDay:gv('vmBillFreq')==='gig'?'':gv('vmBillDay'),billFreq:gv('vmBillFreq'),billAmount:gv('vmBillAmount'),billNote:gv('vmBillNote'),billStart:gv('vmBillStart')};
+  const det={address:gv('vmAddress'),hours:(function(){const e=document.getElementById('vmHours');return e?e.value.trim():'';})(),city:gv('vmCity'),owner:gv('vmOwner'),manager:gv('vmManager'),contactName:gv('vmContactName'),phone:gv('vmPhone'),email:gv('vmEmail'),website:gv('vmWebsite'),instagram:gv('vmInstagram'),facebook:gv('vmFacebook'),otherContacts:gv('vmOtherContacts'),billDay:gv('vmBillFreq')==='gig'?'':gv('vmBillDay'),billFreq:gv('vmBillFreq'),billAmount:gv('vmBillAmount'),billNote:gv('vmBillNote'),billStart:gv('vmBillStart')};
   const today=new Date().toISOString().slice(0,10);
   if(editVenueId){
     const v=venues.find(x=>x.id===editVenueId);
@@ -8933,7 +8947,7 @@ Do not touch venues you did not just add except to draft.`},
 2. Pick up to 12 venues. ORDER: (a) prospects in agent_venues (stage not lead, no or closed) that have NO dossier yet, newest first, so a prospect Ahnna just added is done the next morning; (b) other venues never researched, venues we work with before venues we want; (c) then oldest researchedAt (only if older than 60 days). Skip a venue researched in the last 60 days. If there is nothing to do, write a run note saying so.
 3. For each, search the web and public social pages (their website, Facebook, Instagram, Google and Yelp listings, local news, event listings). Find: what the place is and its vibe and crowd, what customers and the press say, events and gigs they have hosted (including other karaoke, trivia, bingo or music hosts and nights), outdoor or special spaces, and anything useful for us.
 3b. FEATURES. Work out what the place physically has, from its website, its photo galleries, Google and Yelp photos, Facebook and Instagram posts and photos, and photos other people tagged there. Look at the images, not only the text. Check for: number and size of TVs, outdoor area or patio, stage, dance floor, room capacity (small, medium, large, a number if stated), private room, full kitchen or restaurant, coffee bar, pour-your-own beer taps, arcade or games, pool tables, parking, sound system, karaoke already running. Only list what you actually saw or read, and say how you know it in a few words, for example "stage (photo on Facebook)". If a page or its photos could not be opened (blocked, login wall, empty), do NOT guess: put that item in needsLook, for example "Instagram photos, could not open". Never log in.
-4. Write setConfig doc "curator" with research{<key>:{name,features (list of short strings like "large patio (website photo)"),needsLook (list of things you could not confirm or open),kind ("have" if in Our Venues, otherwise "want"),city,summary (2 to 3 sentences),social (what people say, in your own words with the overall feeling, never long quotes),pastEvents (list, include who ran it if known),likes (what you think this venue would like, and why),ideas (list of 2 to 4 concrete things Belladonna could do there, each one sentence),bait (for venues we do not work with yet: the single most tempting idea for this venue, written as one or two sentences Ahnna can say or email to win them, using only their real features),watch (a competing night on the same day, a bad reputation, or anything risky, empty if none),sources (URLs),links ({website, instagram, facebook}: the venue's OWN official pages only, full https URLs, each checked to be the right business in the right city; leave a key empty rather than guess),researchedAt (ms)}}. The key is the venue name lowercased with every character that is not a letter or number replaced by an underscore, with a p in front, for example "Post & Pour" becomes "ppost___pour".
+4. Write setConfig doc "curator" with research{<key>:{name,features (list of short strings like "large patio (website photo)"),needsLook (list of things you could not confirm or open),kind ("have" if in Our Venues, otherwise "want"),city,summary (2 to 3 sentences),social (what people say, in your own words with the overall feeling, never long quotes),pastEvents (list, include who ran it if known),likes (what you think this venue would like, and why),hours (the venue's hours of service as one string with line breaks, from its website or listings, empty if not found),ideas (list of 2 to 4 concrete things Belladonna could do there, each one sentence),bait (for venues we do not work with yet: the single most tempting idea for this venue, written as one or two sentences Ahnna can say or email to win them, using only their real features),watch (a competing night on the same day, a bad reputation, or anything risky, empty if none),sources (URLs),links ({website, instagram, facebook}: the venue's OWN official pages only, full https URLs, each checked to be the right business in the right city; leave a key empty rather than guess),researchedAt (ms)}}. The key is the venue name lowercased with every character that is not a letter or number replaced by an underscore, with a p in front, for example "Post & Pour" becomes "ppost___pour".
 4c. FILL IN WHAT THE VENUE OFFERS. For every venue you researched, also setConfig doc "curator" with profiles{<profile key>:{...}}. The profile key is "p" plus the venue's own id (the id field from readVenues, or the document id of the lead or agent_venues entry) with every character that is not a letter or number replaced by an underscore. This is NOT the same as the research key. Use these tag ids only: outdoor (outdoor space or patio), screen (screen or projector), tvs (big TVs), stage, dance (dance floor), big (big room, 100+ people), private (private room), kitchen (full kitchen), restaurant (restaurant area), selfpour (pour-your-own beer taps), coffee (coffee bar), games (arcade or other games), pool (pool tables), darts (dart boards), parking (good parking). Also fill poolTables and dartBoards (whole numbers) when you can count them in photos or a listing; leave them out if you cannot tell, and never overwrite a count someone typed. Add a tag only when you actually saw or read it in a photo, the website or a listing. Read the existing profile first. NEVER remove a tag that is already ticked, never overwrite a capacity or notes someone typed, and skip the venue's profile entirely if its manual field is true. Write {name, tags (the existing tags plus the ones you confirmed, as one list), capacity (only if it is empty and the venue states a number, or you can say small, medium or large from photos), notes (the existing notes, then on a new line "Iris: " and a short list of what you saw and where), iris:{at:<ms>}}.
 4e. READY FOR IDEAS (automatic, every researched venue, prospects especially). Every dossier you write MUST also include: checkedAt (ms, always set, even when you found nothing), runsNow (list of the gigs, nights and events this venue already runs or hosts right now, with day and who runs it if known; an EMPTY list [] means you looked and found none), nothingFound (true if you found no features AND no running events, otherwise false), and bestFit {type ("weekly night", "monthly night", "one-time event" or "seasonal event"), what (the specific night or event to pitch, using our real catalog names where one fits), why (one sentence, from their real features and what they do or do not already run, never a night they already have, and also check agent_config knowngigs so you do not pitch a night someone else already runs there)}. Never skip the dossier because little was found: write it with empty lists and a bestFit that needs only a room and a night (for example a weekly trivia or karaoke night on their slowest weekday). HQ shows "Ready for ideas" on the prospect card the moment checkedAt is there, and Curator run, Quill and Raven pick it up from it.
 4d. LINKS. If the venue's website, Instagram or Facebook page is missing from Our Venues, the lead or agent_venues, put the one you found in links in the dossier. HQ copies links into the venue's record when that field is empty. Never replace a link someone already saved.
@@ -9662,7 +9676,7 @@ function vOutreach(){
   const rest=S.venues.filter(v=>due.indexOf(v)<0&&!isBlocked(v)&&v.stage!=='lead').sort((a,b)=>String(a.city).localeCompare(String(b.city))||String(a.name).localeCompare(String(b.name)));
   h+='<div class="tm-sec">All Prospects ('+S.venues.length+')</div>';
   rest.forEach(v=>h+=venueCard(v,true));
-  h+=det('addvenue','Add a venue','<div class="tm-fg"><div><label class="tm-lbl">Name</label><input class="tm-in" id="nv-name"></div><div><label class="tm-lbl">City</label><input class="tm-in" id="nv-city"></div><div class="full"><label class="tm-lbl">Address</label><input class="tm-in" id="nv-addr"></div><div><label class="tm-lbl">Contact name</label><input class="tm-in" id="nv-who"></div><div><label class="tm-lbl">Email</label><input class="tm-in" id="nv-email"></div><div><label class="tm-lbl">Phone</label><input class="tm-in" id="nv-phone"></div><div><label class="tm-lbl">Instagram</label><input class="tm-in" id="nv-ig"></div><div><label class="tm-lbl">Facebook</label><input class="tm-in" id="nv-fb"></div><div><label class="tm-lbl">Website</label><input class="tm-in" id="nv-web"></div><div class="full"><label class="tm-lbl">Where we got them from</label><input class="tm-in" id="nv-from"></div><div class="full"><label class="tm-lbl">Why them (evidence)</label><textarea class="tm-ta" id="nv-ev" style="min-height:3.2rem;resize:vertical;"></textarea></div><div class="full"><label class="tm-lbl">Pitch: format and night</label><textarea class="tm-ta" id="nv-pitch" style="min-height:3.2rem;resize:vertical;"></textarea></div><div class="full"><label class="tm-lbl">Notes</label><textarea class="tm-ta" id="nv-notes" style="min-height:3.2rem;resize:vertical;"></textarea></div></div><div class="tm-row"><button class="tm-b pri" data-act="addvenue">Add venue</button></div>',false);
+  h+=det('addvenue','Add a venue','<div class="tm-fg"><div><label class="tm-lbl">Name</label><input class="tm-in" id="nv-name"></div><div><label class="tm-lbl">City</label><input class="tm-in" id="nv-city"></div><div class="full"><label class="tm-lbl">Address</label><input class="tm-in" id="nv-addr"></div><div><label class="tm-lbl">Contact name</label><input class="tm-in" id="nv-who"></div><div><label class="tm-lbl">Email</label><input class="tm-in" id="nv-email"></div><div><label class="tm-lbl">Phone</label><input class="tm-in" id="nv-phone"></div><div><label class="tm-lbl">Instagram</label><input class="tm-in" id="nv-ig"></div><div><label class="tm-lbl">Facebook</label><input class="tm-in" id="nv-fb"></div><div><label class="tm-lbl">Website</label><input class="tm-in" id="nv-web"></div><div><label class="tm-lbl">Hours of service</label><input class="tm-in" id="nv-hours"></div><div class="full"><label class="tm-lbl">Where we got them from</label><input class="tm-in" id="nv-from"></div><div class="full"><label class="tm-lbl">Why them (evidence)</label><textarea class="tm-ta" id="nv-ev" style="min-height:3.2rem;resize:vertical;"></textarea></div><div class="full"><label class="tm-lbl">Pitch: format and night</label><textarea class="tm-ta" id="nv-pitch" style="min-height:3.2rem;resize:vertical;"></textarea></div><div class="full"><label class="tm-lbl">Notes</label><textarea class="tm-ta" id="nv-notes" style="min-height:3.2rem;resize:vertical;"></textarea></div></div><div class="tm-row"><button class="tm-b pri" data-act="addvenue">Add venue</button></div>',false);
   h+=det('fieldsheet','Field sheet checklist','<div class="tm-hint"><b>Before you go:</b> pick 3 close together. Check each one\'s own page for current event nights. Pitch a night they do not already fill. Know the trial terms cold.<br><br><b>Bring:</b> a stack of cards, the one-page format menu, a phone with a clip of a real night, the trial-night offer sheet, a sample bingo card or trivia round to leave on the bar.<br><br><b>After:</b> log it before you drive away, send the thank-you the same day, put the follow-up on the calendar, hand a yes to onboarding. A no holds for 60 days.</div>',false);
   return h;
 }
@@ -9743,7 +9757,7 @@ window.hqProspectFor=function(rec){
 window.hqProspectSnap=function(rec){
   const p=window.hqProspectFor(rec);if(!p)return null;
   const o={prospectId:p.id,info:{}};
-  ['name','city','address','contact','contactName','phone','notes','foundFrom','instagram','website','facebook','evidence','pitch','stage','emailedAt','emailed2At','emailed3At','createdAt','addedBy','thrownFrom','thrownIdea','followUpOn','igDmAt','lastTouchAt'].forEach(k=>{if(p[k]!=null&&p[k]!=='')o.info[k]=p[k];});
+  ['name','city','address','hours','contact','contactName','phone','notes','foundFrom','instagram','website','facebook','evidence','pitch','stage','emailedAt','emailed2At','emailed3At','createdAt','addedBy','thrownFrom','thrownIdea','followUpOn','igDmAt','lastTouchAt'].forEach(k=>{if(p[k]!=null&&p[k]!=='')o.info[k]=p[k];});
   const em=emailOf(p);if(em)o.info.email=em;
   return o;
 };
@@ -9770,7 +9784,7 @@ window.hqHistoryHtml=function(rec,kind){
     const pi=rec.prospectInfo||(pr&&pr.id!==rec.id?window.hqProspectSnap(rec).info:null);
     if(kind!=='host'&&pi){
       h+='<div style="margin-bottom:.7rem;padding:.55rem .8rem;border:1px solid rgba(201,169,110,.3);border-radius:8px"><div style="font-size:.7rem;letter-spacing:.2em;text-transform:uppercase;opacity:.7;margin-bottom:.3rem">What we knew from Prospects</div>'+
-        ln('Why them',pi.evidence)+ln('Pitch',pi.pitch)+ln('Address',pi.address)+ln('Contact',[pi.contactName,pi.email||pi.contact].filter(Boolean).join(' · '))+ln('Phone',pi.phone)+ln('Instagram',pi.instagram)+ln('Facebook',pi.facebook)+ln('Website',pi.website)+ln('Where we got them',pi.foundFrom)+ln('Notes',pi.notes)+ln('Added by',pi.addedBy)+(pi.thrownFrom?ln('Thrown to Raven from',pi.thrownFrom+(pi.thrownIdea?': '+pi.thrownIdea:'')):'')+'</div>';
+        ln('Why them',pi.evidence)+ln('Pitch',pi.pitch)+ln('Address',pi.address)+ln('Hours',pi.hours)+ln('Contact',[pi.contactName,pi.email||pi.contact].filter(Boolean).join(' · '))+ln('Phone',pi.phone)+ln('Instagram',pi.instagram)+ln('Facebook',pi.facebook)+ln('Website',pi.website)+ln('Where we got them',pi.foundFrom)+ln('Notes',pi.notes)+ln('Added by',pi.addedBy)+(pi.thrownFrom?ln('Thrown to Raven from',pi.thrownFrom+(pi.thrownIdea?': '+pi.thrownIdea:'')):'')+'</div>';
     }
     if(kind==='host'){
       const ri=rec.recruitInfo||recr;
@@ -9869,7 +9883,7 @@ window.hqProspectToLead=async function(pid,btn){
       // it was a lead before: bring that lead back exactly as it was, with anything newer from Prospects filled in
       lid=v.leadInfoId||db.collection('leads').doc().id;const L=Object.assign({},v.leadInfo);
       const pick=(a,b)=>String(b||'').trim()?b:(a||'');
-      L.name=v.name;L.contactName=pick(L.contactName,v.contactName);L.email=pick(L.email,emailOf(v));L.phone=pick(L.phone,v.phone);L.city=pick(L.city,v.city);L.address=pick(L.address,v.address);L.instagram=pick(L.instagram,v.instagram);L.website=pick(L.website,v.website);L.facebook=pick(L.facebook,v.facebook);L.foundFrom=pick(L.foundFrom,v.foundFrom);
+      L.name=v.name;L.contactName=pick(L.contactName,v.contactName);L.email=pick(L.email,emailOf(v));L.phone=pick(L.phone,v.phone);L.city=pick(L.city,v.city);L.address=pick(L.address,v.address);L.hours=pick(L.hours,v.hours);L.instagram=pick(L.instagram,v.instagram);L.website=pick(L.website,v.website);L.facebook=pick(L.facebook,v.facebook);L.foundFrom=pick(L.foundFrom,v.foundFrom);
       if(v.followUpOn){L.nextFollowUp=v.followUpOn;L.followUpNone=false;}
       if(v.notes&&String(L.notes||'').indexOf(v.notes)<0)L.notes=[L.notes,v.notes].filter(Boolean).join('\n');
       L.prospectId=v.id;L.prospectInfo=info;L.updatedAt=now;
@@ -9879,7 +9893,7 @@ window.hqProspectToLead=async function(pid,btn){
       lid=db.collection('leads').doc().id;
       const lastCh=T.length&&T[T.length-1].channel==='instagram'?'instagram':'email';
       const notes=[v.evidence?'Why them: '+v.evidence:'',v.pitch?'Pitch: '+v.pitch:''].filter(Boolean).join('\n');
-      await db.collection('leads').doc(lid).set({name:v.name,contactName:v.contactName||'',phone:v.phone||'',email:emailOf(v)||'',city:v.city||'',locationId:loc,stage:T.length?'contact':'new',temperature:'warm',interests:[],contactMethod:T.length?lastCh:'email',contactMethodOther:'',source:'outbound',foundBy:(v.addedBy==='manual'?'Ahnna':'Raven'),nextFollowUp:v.followUpOn||'',followUpNone:!v.followUpOn,usingCompetitor:false,notes:[notes,v.notes].filter(Boolean).join('\n'),address:v.address||'',instagram:v.instagram||'',website:v.website||'',facebook:v.facebook||'',foundFrom:v.foundFrom||'',prospectId:v.id,prospectInfo:info,createdAt:now,updatedAt:now});
+      await db.collection('leads').doc(lid).set({name:v.name,contactName:v.contactName||'',phone:v.phone||'',email:emailOf(v)||'',city:v.city||'',locationId:loc,stage:T.length?'contact':'new',temperature:'warm',interests:[],contactMethod:T.length?lastCh:'email',contactMethodOther:'',source:'outbound',foundBy:(v.addedBy==='manual'?'Ahnna':'Raven'),nextFollowUp:v.followUpOn||'',followUpNone:!v.followUpOn,usingCompetitor:false,notes:[notes,v.notes].filter(Boolean).join('\n'),address:v.address||'',hours:v.hours||'',instagram:v.instagram||'',website:v.website||'',facebook:v.facebook||'',foundFrom:v.foundFrom||'',prospectId:v.id,prospectInfo:info,createdAt:now,updatedAt:now});
     }
     await col('agent_venues').doc(v.id).update({stageBeforeLead:(v.stage&&v.stage!=='lead')?v.stage:(v.stageBeforeLead||'target'),conversationBeforeLead:v.stage==='lead'?!!v.conversationBeforeLead:!!v.conversation,stage:'lead',conversation:true,movedToLeadId:lid,movedToLeadAt:Date.now(),followUpOn:'',leadInfo:firebase.firestore.FieldValue.delete(),leadInfoId:firebase.firestore.FieldValue.delete()});
     movedTo(btn,'Moved to Leads');
@@ -9899,7 +9913,7 @@ window.hqLeadToProspect=async function(lid,btn){
     const fill=(cur,val)=>String(cur||'').trim()?cur:(val||'');
     const pi=l.prospectInfo||{};
     const talking=['interview','negotiation','contract'].indexOf(l.stage)>=0;
-    const u={city:fill(v&&v.city,l.city||pi.city),address:fill(v&&v.address,l.address||pi.address),contactName:fill(v&&v.contactName,l.contactName||pi.contactName),contact:fill(v&&v.contact,l.email||pi.email||pi.contact),phone:fill(v&&v.phone,l.phone),instagram:fill(v&&v.instagram,l.instagram||pi.instagram),facebook:fill(v&&v.facebook,l.facebook||pi.facebook),website:fill(v&&v.website,l.website||pi.website),foundFrom:fill(v&&v.foundFrom,l.foundFrom||pi.foundFrom),followUpOn:fill(v&&v.followUpOn,l.nextFollowUp||''),leadInfo:full,leadInfoId:l.id,leadId:l.id,movedBackAt:Date.now(),
+    const u={city:fill(v&&v.city,l.city||pi.city),address:fill(v&&v.address,l.address||pi.address),hours:fill(v&&v.hours,l.hours||pi.hours),contactName:fill(v&&v.contactName,l.contactName||pi.contactName),contact:fill(v&&v.contact,l.email||pi.email||pi.contact),phone:fill(v&&v.phone,l.phone),instagram:fill(v&&v.instagram,l.instagram||pi.instagram),facebook:fill(v&&v.facebook,l.facebook||pi.facebook),website:fill(v&&v.website,l.website||pi.website),foundFrom:fill(v&&v.foundFrom,l.foundFrom||pi.foundFrom),followUpOn:fill(v&&v.followUpOn,l.nextFollowUp||''),leadInfo:full,leadInfoId:l.id,leadId:l.id,movedBackAt:Date.now(),
       stage:(v&&v.stageBeforeLead)||(T.length?'followup':'target'),conversation:talking||!!(v&&v.conversationBeforeLead),movedToLeadId:firebase.firestore.FieldValue.delete()};
     if(l.notes&&String((v&&v.notes)||'').indexOf(l.notes)<0)u.notes=[(v&&v.notes)||'',l.notes].filter(Boolean).join('\n');
     if(v){await col('agent_venues').doc(v.id).update(u);}
@@ -10675,7 +10689,7 @@ async function addProspectDoc(o){
   {const w=window.hqDupWhere(o.name);if(w){toast(o.name+' is already '+w+'. Nobody lives on two lists, so it was not added.',true);return false;}}
   const sent=!!o.emailed;
   const doc={name:String(o.name).trim(),city:o.city||'',address:o.address||'',contact:o.contact||'',contactName:o.contactName||'',evidence:o.evidence||'',pitch:o.pitch||'',stage:sent?'followup':'target',createdAt:Date.now(),addedBy:'manual'};
-  ['phone','instagram','facebook','website','notes','foundFrom'].forEach(k=>{if(o[k]&&String(o[k]).trim())doc[k]=String(o[k]).trim();});
+  ['phone','instagram','facebook','website','notes','foundFrom','hours'].forEach(k=>{if(o[k]&&String(o[k]).trim())doc[k]=String(o[k]).trim();});
   if(o.thrownFrom){doc.thrownFrom=o.thrownFrom;doc.thrownIdea=o.thrownIdea||'';doc.thrownAt=Date.now();}
   if(sent){doc.emailedAt=o.emailedAt||Date.now();}
   const ref=await col('agent_venues').add(doc);
@@ -10685,8 +10699,8 @@ async function addProspectDoc(o){
 async function addProspect(){
   const g=i=>{const e=document.getElementById(i);return e?e.value.trim():'';};
   const d=g('pa-date');
-  const ok=await addProspectDoc({name:g('pa-name'),city:g('pa-city'),address:g('pa-addr'),contact:g('pa-email'),contactName:g('pa-who'),evidence:g('pa-why'),pitch:g('pa-pitch'),phone:g('pa-phone'),instagram:g('pa-ig'),facebook:g('pa-fb'),website:g('pa-web'),foundFrom:g('pa-from'),notes:g('pa-notes'),emailed:document.getElementById('pa-sent').checked,emailedAt:d?new Date(d+'T12:00:00').getTime():0});
-  if(ok){['pa-name','pa-city','pa-addr','pa-email','pa-who','pa-why','pa-pitch','pa-date','pa-phone','pa-ig','pa-fb','pa-web','pa-from','pa-notes'].forEach(i=>{const e=document.getElementById(i);if(e)e.value='';});document.getElementById('pa-sent').checked=false;}
+  const ok=await addProspectDoc({name:g('pa-name'),city:g('pa-city'),address:g('pa-addr'),contact:g('pa-email'),contactName:g('pa-who'),evidence:g('pa-why'),pitch:g('pa-pitch'),phone:g('pa-phone'),instagram:g('pa-ig'),facebook:g('pa-fb'),website:g('pa-web'),foundFrom:g('pa-from'),hours:g('pa-hours'),notes:g('pa-notes'),emailed:document.getElementById('pa-sent').checked,emailedAt:d?new Date(d+'T12:00:00').getTime():0});
+  if(ok){['pa-name','pa-city','pa-addr','pa-email','pa-who','pa-why','pa-pitch','pa-date','pa-phone','pa-ig','pa-fb','pa-web','pa-from','pa-hours','pa-notes'].forEach(i=>{const e=document.getElementById(i);if(e)e.value='';});document.getElementById('pa-sent').checked=false;}
 }
 const PR={q:'',stage:'',city:''};
 function hxHref(k,v){v=String(v||'').trim();if(!v)return '';if(/^https?:\/\//i.test(v))return v;
@@ -10694,6 +10708,29 @@ function hxHref(k,v){v=String(v||'').trim();if(!v)return '';if(/^https?:\/\//i.t
   if(k==='facebook')return /facebook\.com|fb\.com/i.test(v)?'https://'+v.replace(/^\/+/,''):'https://facebook.com/'+v.replace(/^\/+/,'');
   return 'https://'+v.replace(/^\/+/,'');}
 function hxLinks(v){return [['instagram','Instagram'],['facebook','Facebook'],['website','Website']].map(a=>{const h=hxHref(a[0],v[a[0]]);return h?'<a href="'+esc(h)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="font-size:.75rem">'+a[1]+'</a>':'';}).filter(Boolean).join(' &middot; ');}
+
+window.hqSeedP1=function(){
+  if(window.__seedP1Run||!S||!S.started||!(S.venues||[]).length)return;window.__seedP1Run=true;
+  const N=x=>String(x||'').toLowerCase().replace(/[^a-z0-9]/g,'');
+  const SEEDS=[
+   {m:'juniperbotanical',f:{city:'Tacoma',address:'5226 S Tacoma Way, Tacoma, WA 98409',contactName:'Al McKee',contact:'hello@juniperbotanicalbar.com',website:'https://www.juniperbotanicalbar.com/',instagram:'https://www.instagram.com/juniperbotanicalbar/',facebook:'https://www.facebook.com/p/Juniper-Botanical-Bar-61557370802071/',hours:'Mon to Wed 4 pm to 11 pm\nThu 4 pm to midnight\nFri and Sat 3 pm to 1 am\nSun 3 pm to 10 pm',foundFrom:'Their website, local press (AOL, South Sound Report) and Iris research',
+    evidence:'Queer-owned cocktail bar on South Tacoma Way, right next to SoberAF. Community-first and event-heavy, with a pop-culture streak (Buffy, Halloween).',
+    pitch:'Do not lead with plain trivia, bingo or karaoke, they already run all three. Pitch a one-time pop-culture sing-along or a themed trivia special edition, and the neighbor trivia crawl with SoberAF and Golden West (same category, a different show at each venue: for example Gilmore Girls at SoberAF, New Girl at Juniper, Bridgerton at Golden West).',
+    notes:'WHAT WE KNOW\n- 5226 S Tacoma Way, right next to SoberAF. Contact email on the site: hello@juniperbotanicalbar.com. Owner: Al McKee (they/them).\n- Homepage: "A new bar for queers in Tacoma". Serves cocktails, beer, wine and a full mocktail list. Cocktails are named for progressive flag colors, with Wizard of Oz and "Friend of Dorothy" references. Build-your-own charcuterie boards and vegetable-forward shareables.\n- Space: about 1,800 sq ft historic brick building (former Opal Lounge), original wooden bar, skylight, plants, local art, leather couch, back patio with a living art wall. All ages until 9 pm, then 21+.\n- Homepage shows six event flyers: Halloween, Buffy, Open Mic Variety Show, Kids Karaoke, Plant Bingo and Trivia. The flyers have no readable days, hosts or frequency, so we do not know how often any run.\n- Found nothing on stage, screen, seating, capacity or a host for trivia or karaoke. Ask before promising a format.\n- Instagram, Facebook and their events page would not open, so their posts and event details are unseen.'}},
+   {m:'soberaf',f:{city:'Tacoma',address:'5222 S Tacoma Way, Tacoma, WA 98409',contactName:'Stephanie Housden',contact:'info@soberAF253.com',phone:'(253) 302-4228',website:'https://www.soberaf253.com',facebook:'https://www.facebook.com/p/Sober-AF-Zero-Proof-Bottle-Shop-61574581706883/',hours:'Wed to Sat 12 pm to 7 pm\nSun 12 pm to 5 pm\nMon and Tue closed',foundFrom:'Their website, Tacoma-Pierce County Chamber, The Sober Curator and Iris research',
+    evidence:'Tacoma\'s only zero-proof tasting room and bottle shop, a social space for sober and sober-curious people, right next to Juniper. Loud, playful tone with Gilmore Girls and Vanderpump Rules references.',
+    pitch:'They already run First Friday Karaoke (6 to 9) and Drag Bingo with Queen Sativa, so skip plain karaoke and bingo. Pitch Gilmore Girls Trivia, Rom-Com Trivia with karaoke of the songs, or a Millennial Mixtape Sing-Along, and the neighbor trivia crawl with Juniper and Golden West. They offered no dates after Nov 25 that we could read, so December looks open. Offer one free night to start.',
+    notes:'WHAT WE KNOW\n- Owner: Stephanie Housden. 5222 S Tacoma Way. Phone (253) 302-4228, email info@soberAF253.com.\n- Calls itself Tacoma\'s only zero-proof tasting room. Open Wed to Sat 12 to 7 and Sun 12 to 5, closed Mon and Tue.\n- Already runs: First Friday Karaoke (6 to 9), Drag Bingo with Queen Sativa, Brushes & Bevees (alcohol-free paint and sip), a Pampered Chef pie workshop, a Lego night, a poetry workshop and a Gilmore Girls Fall Crawl. Pop culture trivia and sober birthday parties are also listed.\n- Space: bright retro look with neon, leopard print, indoor swings, painted jaguar mascot. Found nothing on stage, screen, seating or capacity, so ask Stephanie about the room before promising anything.\n- The calendar we could read ends Nov 25, so December looks open.\n- Instagram and Facebook posts and their About page would not open, so those are unseen.'}}
+  ];
+  SEEDS.forEach(sd=>{try{
+    const v=(S.venues||[]).find(x=>x&&x.id&&N(x.name).indexOf(sd.m)>=0);if(!v||v.seedP1)return;
+    const u={seedP1:true};
+    Object.keys(sd.f).forEach(k=>{if(k==='notes')return;if(!String(v[k]||'').trim())u[k]=sd.f[k];});
+    ['evidence','pitch'].forEach(k=>{if(!String(v[k]||'').trim()&&sd.f[k])u[k]=sd.f[k];});
+    const n=String(v.notes||'').trim();u.notes=n?(n.indexOf('WHAT WE KNOW')>=0?n:n+'\n\n'+sd.f.notes):sd.f.notes;
+    col('agent_venues').doc(v.id).update(u).catch(function(){window.__seedP1Run=false;});
+  }catch(e){}});
+};
 window.hqPfSave=async function(id,k,val){if(k==='name'&&!String(val||'').trim()){toast('A prospect needs a name.',true);renderProspects(1);return;}try{await col('agent_venues').doc(id).update({[k]:String(val||'').trim()});toast('Saved.');}catch(e){toast('Could not save: '+(e&&e.message||e),true);}};
 // where else a name already lives, so nobody is ever on two lists
 window.hqDupWhere=function(name,exceptPid){const n=hxNm(name);if(!n)return '';
@@ -10701,6 +10738,7 @@ window.hqDupWhere=function(name,exceptPid){const n=hxNm(name);if(!n)return '';
   try{if((typeof venues!=='undefined'?venues:[]).some(x=>x&&hxNm(x.name)===n))return 'one of Our Venues';}catch(e){}
   return '';};
 function renderProspects(force){
+  try{window.hqSeedP1();}catch(e){}
   const el=document.getElementById('prospectsBody');if(!el)return;
   try{if(S&&!S.started)start();}catch(e){}
   if(!force&&el.querySelector('.offers-box[data-dirty="1"]'))return;
@@ -10722,7 +10760,7 @@ function renderProspects(force){
     const line=(t,x)=>x?'<div style="margin:.25rem 0;font-size:.85rem"><b>'+t+':</b> '+esc(x)+'</div>':'';
     h+='<details data-pk="'+esc(v.id)+'"'+(S.open['pr_'+v.id]?' open':'')+' style="border:1px solid var(--border,#444);border-radius:10px;padding:.55rem .8rem;margin-bottom:.5rem"><summary style="cursor:pointer;display:flex;gap:.5rem;align-items:center;flex-wrap:wrap"><span class="tm-tag '+(TAGC[st]||'')+'">'+esc(TAGL[st]||st)+'</span>'+thrownTag(v)+(irisDossier(v.name)?'<span class="tm-tag booked" title="Iris has researched this venue">Ready for ideas</span>':'<span class="tm-tag" title="Iris researches new prospects every morning">Iris queued</span>')+'<b>'+esc(v.name)+'</b><span style="opacity:.7;font-size:.8rem">'+esc(v.city||'')+'</span>'+(hxLinks(v)?'<span>'+hxLinks(v)+'</span>':'')+(T.length?'<span style="opacity:.7;font-size:.75rem">'+T.length+' email'+(T.length>1?'s':'')+' sent</span>':'')+(v.followUpOn?'<span style="opacity:.7;font-size:.75rem">check back '+esc(v.followUpOn)+'</span>':'')+'</summary><div style="margin-top:.5rem">'+
       '<div class="vm-grid" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr));margin:.3rem 0 .6rem">'+[['name','Name'],['city','City'],['address','Address'],['contactName','Contact name'],['contact',em?'Email or phone':'Email or phone (none found yet)'],['phone','Phone'],['instagram','Instagram'],['facebook','Facebook'],['website','Website'],['foundFrom','Where we got them from']].map(a=>'<div class="form-group"><label class="form-label">'+a[1]+'</label><input class="form-input" id="lg-pf-'+esc(v.id)+'-'+a[0]+'" value="'+esc(v[a[0]]||'')+'" onchange="hqPfSave(\''+esc(v.id)+'\',\''+a[0]+'\',this.value)"></div>').join('')+'</div>'+
-      [['evidence','Why them'],['pitch','Pitch (format and night)']].map(a=>'<div class="form-group" style="margin:.3rem 0 .6rem"><label class="form-label">'+a[1]+'</label><textarea class="form-textarea" id="lg-pf-'+esc(v.id)+'-'+a[0]+'" style="min-height:3.4rem;resize:vertical" onchange="hqPfSave(\''+esc(v.id)+'\',\''+a[0]+'\',this.value)">'+esc(v[a[0]]||'')+'</textarea></div>').join('')+'<div class="form-group" style="margin:.3rem 0 .6rem"><label class="form-label">Notes</label><textarea class="form-textarea" id="lg-pf-'+esc(v.id)+'-notes" style="min-height:3.4rem;resize:vertical" onchange="hqPfSave(\''+esc(v.id)+'\',\'notes\',this.value)">'+esc(v.notes||'')+'</textarea></div>'+(thrownInfo(v)?line('Thrown to Raven from '+thrownInfo(v).who,thrownInfo(v).title+(thrownInfo(v).at?' ('+fmtDay(thrownInfo(v).at)+')':'')):'')+line("Iris's idea to open with",baitFor(v.name))+line("Iris's best pitch",bestFitText(v.name))+line('Already runs',(function(){const r=irisDossier(v.name);if(!r)return '';const a=[].concat(r.runsNow||[]).filter(Boolean);return a.length?a.join('; '):(r.checkedAt?'Nothing found running':'');})())+
+      [['hours','Hours of service'],['evidence','Why them'],['pitch','Pitch (format and night)']].map(a=>'<div class="form-group" style="margin:.3rem 0 .6rem"><label class="form-label">'+a[1]+'</label><textarea class="form-textarea" id="lg-pf-'+esc(v.id)+'-'+a[0]+'" style="min-height:3.4rem;resize:vertical" onchange="hqPfSave(\''+esc(v.id)+'\',\''+a[0]+'\',this.value)">'+esc(v[a[0]]||'')+'</textarea></div>').join('')+'<div class="form-group" style="margin:.3rem 0 .6rem"><label class="form-label">Notes</label><textarea class="form-textarea" id="lg-pf-'+esc(v.id)+'-notes" style="min-height:3.4rem;resize:vertical" onchange="hqPfSave(\''+esc(v.id)+'\',\'notes\',this.value)">'+esc(v.notes||'')+'</textarea></div>'+(thrownInfo(v)?line('Thrown to Raven from '+thrownInfo(v).who,thrownInfo(v).title+(thrownInfo(v).at?' ('+fmtDay(thrownInfo(v).at)+')':'')):'')+line("Iris's idea to open with",baitFor(v.name))+line("Iris's best pitch",bestFitText(v.name))+(v.hours?'':line('Hours Iris found',(irisDossier(v.name)||{}).hours))+line('Already runs',(function(){const r=irisDossier(v.name);if(!r)return '';const a=[].concat(r.runsNow||[]).filter(Boolean);return a.length?a.join('; '):(r.checkedAt?'Nothing found running':'');})())+
       '<details data-pk="log_'+esc(v.id)+'"'+(S.open['pr_log_'+v.id]?' open':'')+' style="margin:.5rem 0;padding:.4rem .7rem;border:1px solid var(--border,#444);border-radius:8px"><summary style="cursor:pointer;font-size:.7rem;letter-spacing:.2em;text-transform:uppercase;opacity:.85">Outreach log and emails sent'+(T.length?' ('+T.length+')':'')+'</summary><div style="margin-top:.5rem">'+window.hqLogFormHtml('pr',v)+window.hqHistoryHtml(v,'venue')+'</div></details>'+
       offersBlock(v.id,v.name,'pr')+'<div style="margin:.6rem 0;display:flex;gap:1rem;flex-wrap:wrap;align-items:center">'+((st==='target'||st==='followup')?'<label style="font-size:.85rem;display:inline-flex;gap:.4rem;align-items:center;cursor:'+(T.length?'default':'pointer')+'"'+(T.length?' title="Outreach has been logged, so this is in progress automatically"':'')+'><input type="checkbox"'+(st==='followup'?' checked':'')+(T.length?' disabled':'')+' onchange="hqPfProg(\''+esc(v.id)+'\',this.checked)" style="width:16px;height:16px"> In progress</label>':'')+'<label style="font-size:.85rem;display:inline-flex;gap:.4rem;align-items:center;cursor:pointer"><input type="checkbox"'+(v.goneCold?' checked':'')+' onchange="hqPfCold(\''+esc(v.id)+'\',this.checked)" style="width:16px;height:16px"> Gone cold</label>'+(st==='lead'?'<span class="tm-tag booked">Moved to Leads</span>':'<button type="button" class="btn-sm btn-gold" onclick="hqProspectToLead(\''+esc(v.id)+'\',this)">Move to Leads</button>')+'</div><div style="font-size:.75rem;opacity:.7">Work this one on Raven\'s desk in My Team.</div></div></details>';
   });
@@ -10820,7 +10858,7 @@ function dossierCard(d){
     sec('What it is',d.summary)+sec('What people say online',d.social)+list('Events and gigs they have done',d.pastEvents)+list('What the place has',d.features)+list('Needs a look from you',d.needsLook)+sec('What Iris thinks they would like',d.likes)+
     (L(d.ideas).length?'<div class="t2"><b>What we could do there:</b></div>'+L(d.ideas).map((x,i)=>'<div class="t2">&bull; '+esc(x)+' <button class="tm-b dim" data-act="dossidea" data-id="'+esc(d.id)+'" data-i="'+i+'">Save as idea</button></div>').join(''):'')+
     (function(){const lk=d.links||{},o=[];['website','instagram','facebook'].forEach(k=>{const u=safeUrl(lk[k]);if(u)o.push('<a href="'+esc(u)+'" target="_blank" rel="noopener">'+k+'</a>');});return o.length?'<div class="t2"><b>Links:</b> '+o.join(' &middot; ')+'</div>':'';})()+
-    sec('Best pitch',d.bestFit?((d.bestFit.type?d.bestFit.type+': ':'')+(d.bestFit.what||'')+(d.bestFit.why?' ('+d.bestFit.why+')':'')):'')+(d.checkedAt?list('Already runs',(d.runsNow&&d.runsNow.length)?d.runsNow:['Nothing found running']):'')+sec('Bait for the pitch (Raven and Quill use this)',d.bait)+sec('Watch out for',d.watch)+
+    sec('Hours',d.hours)+sec('Best pitch',d.bestFit?((d.bestFit.type?d.bestFit.type+': ':'')+(d.bestFit.what||'')+(d.bestFit.why?' ('+d.bestFit.why+')':'')):'')+(d.checkedAt?list('Already runs',(d.runsNow&&d.runsNow.length)?d.runsNow:['Nothing found running']):'')+sec('Bait for the pitch (Raven and Quill use this)',d.bait)+sec('Watch out for',d.watch)+
     (L(d.sources).length?'<div class="t2">'+L(d.sources).filter(u=>safeUrl(u)).slice(0,6).map((u,i)=>'<a href="'+esc(safeUrl(u))+'" target="_blank" rel="noopener">source '+(i+1)+'</a>').join(' &middot; ')+'</div>':'')+
     (d.kind!=='have'&&!prospectExists(d.name)?'<div class="tm-row"><button class="tm-b" data-act="addprospect" data-name="'+esc(d.name)+'" data-why="'+esc(d.summary||'')+'" data-pitch="'+esc(d.bait||'')+'" data-city="'+esc(d.city||'')+'">Add to prospects</button></div>':'')+
     '<div class="t2">Researched '+esc(fmtDay(d.researchedAt))+'</div></div>';
@@ -11391,8 +11429,8 @@ const A={
   },
   async addvenue(){
     const n=val('nv-name');if(!n){toast('Add the venue name.',true);return;}
-    const ok=await addProspectDoc({name:n,city:val('nv-city'),address:val('nv-addr'),contactName:val('nv-who'),contact:val('nv-email'),phone:val('nv-phone'),instagram:val('nv-ig'),facebook:val('nv-fb'),website:val('nv-web'),foundFrom:val('nv-from'),evidence:val('nv-ev'),pitch:val('nv-pitch'),notes:val('nv-notes')});
-    if(ok)['nv-name','nv-city','nv-addr','nv-who','nv-email','nv-phone','nv-ig','nv-fb','nv-web','nv-from','nv-ev','nv-pitch','nv-notes'].forEach(i=>{const e=document.getElementById(i);if(e)e.value='';});
+    const ok=await addProspectDoc({name:n,city:val('nv-city'),address:val('nv-addr'),contactName:val('nv-who'),contact:val('nv-email'),phone:val('nv-phone'),instagram:val('nv-ig'),facebook:val('nv-fb'),website:val('nv-web'),hours:val('nv-hours'),foundFrom:val('nv-from'),evidence:val('nv-ev'),pitch:val('nv-pitch'),notes:val('nv-notes')});
+    if(ok)['nv-name','nv-city','nv-addr','nv-who','nv-email','nv-phone','nv-ig','nv-fb','nv-web','nv-hours','nv-from','nv-ev','nv-pitch','nv-notes'].forEach(i=>{const e=document.getElementById(i);if(e)e.value='';});
   },
   async delvenue(t){if(!confirm('Delete this venue?'))return;await col('agent_venues').doc(t.dataset.id).delete();},
   async savesnap(t){const e=document.querySelector('[data-snap="'+t.dataset.id+'"]'),v=e?e.value.trim():'';await col('agent_sites').doc(t.dataset.id).update({snapshot:v,snapshotAt:Date.now()});toast('Saved for Mirror.');},
@@ -11875,6 +11913,402 @@ function viDecide(id,v){
   try{viFs().collection('venueFeedback').doc(id).update({decision:v,status:v==='pending'?'new':'read'}).catch(function(e){alert('Could not save: '+e.message);});}catch(e){}
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',viStart);else viStart();
+
+</script>
+<style>
+/* Campaigns tab */
+.cp-bar{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;margin-bottom:.8rem}
+.cp-chip{padding:.35rem .9rem;border-radius:999px;font-size:.65rem;letter-spacing:.12em;text-transform:uppercase;border:1px solid var(--border);background:none;color:var(--text2);cursor:pointer;font-family:inherit}
+.cp-chip.on{border-color:var(--gold);color:var(--gold);background:var(--gold-dim)}
+.cp-card{border:1px solid var(--border2);border-radius:10px;padding:.8rem 1rem;margin-bottom:.8rem;background:var(--surface)}
+.cp-fold{cursor:pointer;display:flex;gap:.5rem;align-items:center}
+.cp-car{color:var(--gold2);width:12px;flex:none}
+.cp-lbl{font-size:.6rem;letter-spacing:.2em;text-transform:uppercase;color:var(--text3)}
+.cp-mt{font-size:.95rem;color:var(--text);letter-spacing:.08em}
+.cp-body{margin-top:.6rem}
+.cp-sec{margin-top:.8rem}
+.cp-sec>.cp-body{margin-top:.45rem}
+.cp-row{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;padding:.5rem .7rem;border:1px solid var(--border);border-radius:8px;margin-bottom:.35rem;background:var(--surface2)}
+.cp-rt{flex:1;min-width:200px;font-size:.88rem;color:var(--text)}
+.cp-rt small{display:block;color:var(--text3);font-size:.72rem;margin-top:.15rem;letter-spacing:.02em}
+.cp-rs{font-size:.78rem;color:var(--text2);flex:1;min-width:160px}
+.cp-chk{display:inline-flex;gap:.35rem;align-items:center;font-size:.74rem;color:var(--text2);cursor:pointer}
+.cp-none{font-size:.8rem;color:var(--text3);margin:.3rem 0}
+.cp-tools{display:flex;gap:.5rem;margin-top:.6rem;flex-wrap:wrap}
+.cp-acts{display:flex;gap:.5rem;justify-content:flex-end;flex-wrap:wrap}
+.cp-g2{display:grid;grid-template-columns:1fr 1fr;gap:.7rem}
+@media(max-width:560px){.cp-g2{grid-template-columns:1fr}}
+.cp-red{border-color:var(--rose);color:var(--rose)}
+.cp-pen{padding:.3rem .7rem}
+.cp-ban{position:relative;margin-bottom:.4rem;max-width:1100px}
+.cp-ban img{width:100%;height:auto;display:block;border-radius:8px}
+.cp-noban{width:100%;height:90px;border:1px dashed var(--border2);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--text3);font-style:italic}
+.cp-banpen{position:absolute;top:8px;right:8px;background:rgba(0,0,0,.65)}
+.cp-err{border:1px solid var(--rose);color:#d98a92;border-radius:8px;padding:.6rem .8rem;margin-bottom:.8rem;font-size:.8rem}
+</style>
+<script>
+/* ── CAMPAIGNS TAB (Sponsor campaigns). Moved here from Clio. Same Firestore documents as before
+   (socialLibrary: sponsors, banners, campaigns, settings, venueCities), so nothing is lost. ── */
+(function(){
+'use strict';
+const COL='socialLibrary';
+const L={sponsors:{},banners:{},campaigns:{},settings:{},venueCities:{}};
+let monthly=[],started=false,unsubs=[],pend=false,loadErr='',filterMode='up',dr=null;
+let F={q:'',kind:'',city:'',stage:'',ds:'',has:''};
+const SPON_STATUS_WK=['Needed','Asked','Confirmed','Prizes in','Paid'];
+const TPL_DEFAULT={subject:'Sponsor a night with Belladonna: {theme} in {month}',body:"Hi {contact},\n\nI'm Ahnna with Belladonna Entertainment. Each week this month we're teaming up with one local business for a special night at {venue}, and I'd love for {sponsor} to be a featured sponsor.\n\nHere's the idea: {month}'s theme is {theme}. The venue makes a four-cocktail flight inspired by it, we sell tickets, and your business is the star of the night. You provide the prizes, and the sponsor fee is just ${fee}.\n\nWould you be open to hearing more?\n\nAhnna\nBelladonna Entertainment\n[logo + link]\nwww.belladonnanights.com"};
+const $=id=>document.getElementById(id);
+const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+const pad=n=>String(n).padStart(2,'0');
+const toast=(m,bad)=>{try{hqToast(m,bad);}catch(e){}};
+function todayStr(){const d=new Date();return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());}
+function monthName(m){return new Date(m+'-15T12:00:00').toLocaleDateString('en-US',{month:'long',year:'numeric'});}
+function monthLong(m){return new Date(m+'-15T12:00:00').toLocaleDateString('en-US',{month:'long'});}
+function addMonths(m,n){const d=new Date(+m.slice(0,4),+m.slice(5)-1+n,1);return d.getFullYear()+'-'+pad(d.getMonth()+1);}
+function mondaysOf(m){const out=[],n=new Date(+m.slice(0,4),+m.slice(5),0).getDate();for(let d=1;d<=n;d++){const ds=m+'-'+pad(d);if(new Date(ds+'T12:00:00').getDay()===1)out.push(ds);}return out;}
+function niceDay(ds){return new Date(ds+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'});}
+function copyTxt(t){if(!t)return;(navigator.clipboard?navigator.clipboard.writeText(t).then(()=>toast('Copied'),()=>toast('Could not copy. Select it and copy by hand',true)):toast('Could not copy. Select it and copy by hand',true));}
+/* ── saving: whole document, same as Clio did ── */
+async function saveLib(id,patch,quiet){
+  const next=JSON.parse(JSON.stringify({...(L[id]||{}),...patch}));L[id]=next;
+  try{await db.collection(COL).doc(id).set(next);if(!quiet)toast('Saved');}
+  catch(e){toast('Could not save: '+(e&&e.message||e),true);}
+}
+/* ── data ── */
+function sponD(){const d=L.sponsors||{};return {areas:d.areas||[],area:d.area||'',prospects:d.prospects||{},weeks:d.weeks||{},template:d.template||null,fee:d.fee||100,fold:d.fold||{},showBanners:d.showBanners};}
+function cityMap(){return (L.venueCities||{}).map||{};}
+function sponAreas(){const d=sponD();if(d.areas.length)return d.areas;return [...new Set(Object.values(cityMap()).map(x=>String(x||'').trim()).filter(Boolean))];}
+function sponArea(){const d=sponD(),A=sponAreas();return A.indexOf(d.area)>=0?d.area:(A[0]||'');}
+function slug(a){return String(a||'all').toLowerCase().replace(/[^a-z0-9]/g,'')||'all';}
+function wkKey(m,i){return m+'_'+slug(sponArea())+'_'+i;}
+function tpl(){return sponD().template||TPL_DEFAULT;}
+function norm(p){const q={...p};q.answer=p.answer||(p.status==='Said yes'?'yes':p.status==='Said no'?'no':'');q.emailedAt=p.emailedAt||(p.status==='Asked'?'earlier':'');q.desc=p.desc||'';q.kind=p.kind||'';return q;}
+function stage(p){return p.goneCold?'Gone cold':p.answer==='yes'?'Said yes':p.answer==='no'?'Said no':p.emailedAt?'In progress':'To ask';}
+function rank(p){return p.goneCold?4:p.answer==='yes'?0:p.answer==='no'?3:p.emailedAt?1:2;}
+function dayTxt(x){return x&&x!=='earlier'?niceDay(x):'';}
+function all(m){const a=sponArea();return Object.values(sponD().prospects).filter(p=>p&&p.month===m&&(!a||p.area===a)).map(norm);}
+function pass(p){const q=F.q.toLowerCase();
+  if(q&&[p.name,p.kind,p.contactName,p.email,p.city,p.address,p.desc,p.fit,p.notes].join(' ').toLowerCase().indexOf(q)<0)return false;
+  if(F.kind&&String(p.kind||'')!==F.kind)return false;if(F.city&&String(p.city||'')!==F.city)return false;if(F.stage&&stage(p)!==F.stage)return false;if(F.ds&&String(p.ds||'')!==F.ds)return false;
+  if(F.has==='email'&&!p.email)return false;if(F.has==='noemail'&&p.email)return false;if(F.has==='social'&&!(p.ig||p.fb))return false;return true;}
+function list(m){return all(m).filter(pass).sort((x,y)=>(rank(x)-rank(y))||String(x.name).localeCompare(String(y.name)));}
+/* month themes: saved first, otherwise read from the monthly announcement posts Clio made */
+function derivedTheme(m){
+  const Lg=monthLong(m),prev=addMonths(m,-1);
+  const c=monthly.filter(x=>String(x.title||'').indexOf('('+Lg+')')>=0);
+  const p=c.find(x=>String(x.date||'').slice(0,7)===prev)||c[0]||monthly.find(x=>x.genKey&&String(x.title||'').endsWith(Lg));
+  if(!p)return '';
+  return String(p.title).split(': ').slice(1).join(': ').replace(/\s*\([A-Za-z]+\)\s*$/,'');
+}
+function theme(m){const o=((L.campaigns||{}).map||{})[m]||{};return o.theme!==undefined?o.theme:derivedTheme(m);}
+async function saveTheme(m,val){
+  val=String(val||'').trim();
+  const map={...((L.campaigns||{}).map||{})},cur=map[m]||{};map[m]={...cur,theme:val};
+  await saveLib('campaigns',{map});
+  try{const Lg=monthLong(m),prev=addMonths(m,-1);
+    const c=monthly.filter(x=>!x.posted&&String(x.title||'').indexOf('('+Lg+')')>=0);
+    const p=c.find(x=>String(x.date||'').slice(0,7)===prev)||c[0]||monthly.find(x=>!x.posted&&x.genKey&&String(x.title||'').endsWith(Lg));
+    if(p&&val){const t='Monthly announcement, 3 slides: '+val+' ('+Lg+')';await db.collection('socialPosts').doc(p.id).update({title:t});p.title=t;}
+  }catch(e){}
+  render();
+}
+function showBanners(){return sponD().showBanners!==false;}
+function bannerUrl(m){return ((L.banners||{}).map||{})[m]||'';}
+/* ── modal ── */
+function ov(html,w){let el=$('cpOv');if(!el){el=document.createElement('div');el.id='cpOv';el.className='modal-bg';el.innerHTML='<div class="modal" id="cpBox" style="max-width:640px"></div>';el.addEventListener('click',onClick);document.body.appendChild(el);}
+  const b=$('cpBox');b.style.maxWidth=(w||640)+'px';b.innerHTML=html;el.classList.add('open');}
+function closeOv(){const el=$('cpOv');if(el)el.classList.remove('open');}
+function V(id){const e=$(id);return e?e.value.trim():'';}
+function fill(txt,c){return String(txt).replace(/\{(\w+)\}/g,(x,k)=>c[k]!==undefined&&c[k]!==''?c[k]:x);}
+function ctx(p,wk){
+  const m=p.month,d=sponD();let w=wk||null,wi=-1;
+  if(!w)[0,1,2,3].forEach(i=>{const x=d.weeks[m+'_'+slug(p.area||sponArea())+'_'+i];if(!w&&x&&x.sponsorId===p.id){w=x;wi=i;}});
+  const mon=wi>=0?mondaysOf(m)[wi]:'';
+  return {sponsor:p.name||'your business',contact:p.contactName||'there',theme:theme(m)||'our monthly theme',month:monthLong(m),area:p.area||sponArea(),fee:String((w&&w.fee)||d.fee),venue:(w&&w.venue)||'a local venue',week:mon?new Date(mon+'T12:00:00').toLocaleDateString('en-US',{month:'long',day:'numeric'}):'this week'};
+}
+/* ── prospect popup ── */
+function sponEdit(id,m){
+  const raw=id?sponD().prospects[id]:null;if(id&&!raw)return;const p=raw?norm(raw):null,mm=p?p.month:m;
+  const v=k=>esc(p?(p[k]||''):'');
+  const kinds=[...new Set(all(mm).map(x=>x.kind).filter(Boolean))].sort();
+  ov(`<div class="section-title" style="margin-bottom:.4rem">${p?'Edit sponsor prospect':'New sponsor prospect'}</div><div style="font-size:.74rem;color:var(--text3);margin-bottom:.9rem">${esc(monthName(mm))} · ${esc(p?(p.area||'All areas'):(sponArea()||'All areas'))}</div>
+  <div class="cp-g2"><div class="form-group"><label class="form-label">Business name</label><input class="form-input" id="cp-name" value="${v('name')}"></div><div class="form-group"><label class="form-label">Contact name</label><input class="form-input" id="cp-who" value="${v('contactName')}"></div></div>
+  <div class="cp-g2"><div class="form-group"><label class="form-label">Email</label><input class="form-input" id="cp-email" value="${v('email')}"></div><div class="form-group"><label class="form-label">Phone</label><input class="form-input" id="cp-phone" value="${v('phone')}"></div></div>
+  <div class="cp-g2"><div class="form-group"><label class="form-label">Address</label><input class="form-input" id="cp-addr" value="${v('address')}"></div><div class="form-group"><label class="form-label">City</label><input class="form-input" id="cp-city" value="${v('city')}"></div></div>
+  <div class="cp-g2"><div class="form-group"><label class="form-label">Instagram</label><input class="form-input" id="cp-ig" value="${v('ig')}"></div><div class="form-group"><label class="form-label">Facebook</label><input class="form-input" id="cp-fb" value="${v('fb')}"></div></div>
+  <div class="cp-g2"><div class="form-group"><label class="form-label">Website</label><input class="form-input" id="cp-web" value="${v('web')}"></div><div class="form-group"><label class="form-label">Info found (found, partial, not found...)</label><input class="form-input" id="cp-ds" value="${v('ds')}"></div></div>
+  <div class="form-group"><label class="form-label">Kind of business (stand, shop/cafe, mobile... it can change per campaign)</label><input class="form-input" id="cp-kind" list="cp-kinds" value="${v('kind')}"><datalist id="cp-kinds">${kinds.map(k=>`<option value="${esc(k)}">`).join('')}</datalist></div>
+  <div class="form-group"><label class="form-label">What this place is</label><textarea class="form-textarea" id="cp-desc" style="min-height:70px">${v('desc')}</textarea></div>
+  <div class="form-group"><label class="form-label">How they fit the theme</label><textarea class="form-textarea" id="cp-fit" style="min-height:70px">${v('fit')}</textarea></div>
+  <div class="form-group"><label class="form-label">Notes</label><textarea class="form-textarea" id="cp-notes" style="min-height:70px">${v('notes')}</textarea></div>
+  <div class="cp-g2"><div class="form-group"><label class="form-label">Their answer</label><select class="form-input" id="cp-ans"><option value="">No answer yet</option><option value="yes" ${p&&p.answer==='yes'?'selected':''}>Said yes</option><option value="no" ${p&&p.answer==='no'?'selected':''}>Said no</option></select></div>
+  <div class="form-group"><label class="form-label">We emailed them on</label><input class="form-input" type="date" id="cp-emdate" value="${p&&p.emailedAt&&p.emailedAt!=='earlier'?esc(p.emailedAt):''}"></div></div>
+  <div style="display:flex;gap:1.4rem;flex-wrap:wrap;margin:.2rem 0 1rem"><label class="cp-chk"><input type="checkbox" id="cp-em" ${p&&p.emailedAt?'checked':''}> We emailed (in progress)</label><label class="cp-chk"><input type="checkbox" id="cp-cold" ${p&&p.goneCold?'checked':''}> Gone cold</label></div>
+  <div class="cp-acts">${p?`<button class="btn-sm cp-red" data-cp="del" data-arg="${esc(id)}">Remove</button>`:''}<button class="btn-sm" data-cp="close">Cancel</button><button class="btn-sm btn-gold" data-cp="editsave" data-arg="${esc(id)}" data-m="${esc(mm)}">Save</button></div>`,640);
+}
+function sponEditSave(id,m){
+  const name=V('cp-name');if(!name){toast('Add the business name',true);return;}
+  const d=sponD(),pr={...d.prospects},old=id?norm(pr[id]||{}):null,nid=id||'s'+Date.now().toString(36);
+  const em=$('cp-em').checked,dt=V('cp-emdate');
+  const rec={...(pr[id]||{}),id:nid,month:m,area:old?old.area:sponArea(),name:name,contactName:V('cp-who'),email:V('cp-email'),phone:V('cp-phone'),address:V('cp-addr'),city:V('cp-city'),ig:V('cp-ig'),fb:V('cp-fb'),web:V('cp-web'),kind:V('cp-kind'),desc:V('cp-desc'),ds:V('cp-ds'),fit:V('cp-fit'),notes:V('cp-notes'),answer:V('cp-ans'),goneCold:$('cp-cold').checked,status:''};
+  rec.emailedAt=em?(dt||(old&&old.emailedAt&&old.emailedAt!=='earlier'?old.emailedAt:(old&&old.emailedAt==='earlier'?'earlier':todayStr()))):'';
+  pr[nid]=rec;closeOv();save({prospects:pr});
+}
+async function save(patch,quiet){await saveLib('sponsors',patch,quiet);render();}
+function sponDel(id){if(!confirm('Remove this sponsor prospect from the list?'))return;const pr={...sponD().prospects};delete pr[id];closeOv();save({prospects:pr});}
+async function toggle(id,field){
+  const pr={...sponD().prospects},p=pr[id];if(!p)return;const q=norm(p);
+  if(field==='em'){p.emailedAt=q.emailedAt?'':todayStr();}else{p.goneCold=!p.goneCold;}
+  p.status='';p.answer=q.answer;p.desc=q.desc;p.kind=q.kind;
+  await save({prospects:pr},true);
+}
+/* ── weekly sponsor popup ── */
+function wkEdit(m,i){
+  const d=sponD(),w=d.weeks[wkKey(m,i)]||{},A=list(m),mon=mondaysOf(m)[i];
+  const pool=all(m).sort((x,y)=>String(x.name).localeCompare(String(y.name)));
+  ov(`<div class="section-title" style="margin-bottom:.4rem">Week ${i+1} sponsor</div><div style="font-size:.74rem;color:var(--text3);margin-bottom:.9rem">${esc(mon?new Date(mon+'T12:00:00').toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'}):'')} · ${esc(sponArea()||'All areas')}</div>
+  <div class="form-group"><label class="form-label">Sponsor from the prospect list</label><select class="form-input" id="cp-pick"><option value="">Not from the list (type a name below)</option>${pool.map(p=>`<option value="${esc(p.id)}" ${w.sponsorId===p.id?'selected':''}>${esc(p.name)}${p.kind?' · '+esc(p.kind):''}</option>`).join('')}</select></div>
+  <div class="form-group"><label class="form-label">Sponsor name (if not from the list)</label><input class="form-input" id="cp-wname" value="${esc(w.sponsorId?'':(w.name||''))}"></div>
+  <div class="cp-g2"><div class="form-group"><label class="form-label">Venue</label><input class="form-input" id="cp-venue" value="${esc(w.venue||'')}"></div><div class="form-group"><label class="form-label">Sponsor fee ($)</label><input class="form-input" inputmode="numeric" id="cp-fee" value="${esc(w.fee!==undefined?w.fee:d.fee)}"></div></div>
+  <div class="form-group"><label class="form-label">Status</label><select class="form-input" id="cp-wstatus">${SPON_STATUS_WK.map(x=>`<option ${(w.status||'Needed')===x?'selected':''}>${x}</option>`).join('')}</select></div>
+  <div class="form-group"><label class="form-label">Prizes the sponsor is providing</label><textarea class="form-textarea" id="cp-prizes" style="min-height:70px">${esc(w.prizes||'')}</textarea></div>
+  <div class="form-group"><label class="form-label">Notes (cocktail flight, ticket price, anything else)</label><textarea class="form-textarea" id="cp-wnotes" style="min-height:70px">${esc(w.notes||'')}</textarea></div>
+  <div class="cp-acts">${w.name?`<button class="btn-sm cp-red" data-cp="wkclear" data-arg="${esc(m)}|${i}">Clear this week</button>`:''}<button class="btn-sm" data-cp="close">Cancel</button><button class="btn-sm btn-gold" data-cp="wksave" data-arg="${esc(m)}|${i}">Save</button></div>`,560);
+}
+function wkSave(m,i){
+  const d=sponD(),pid=V('cp-pick'),pp=pid&&d.prospects[pid],name=pp?pp.name:V('cp-wname'),wk={...d.weeks};
+  wk[wkKey(m,i)]={sponsorId:pp?pid:'',name:name,venue:V('cp-venue'),fee:parseInt(V('cp-fee').replace(/[^\d]/g,''))||0,status:V('cp-wstatus'),prizes:V('cp-prizes'),notes:V('cp-wnotes')};
+  closeOv();save({weeks:wk});
+}
+function wkClear(m,i){const wk={...sponD().weeks};delete wk[wkKey(m,i)];closeOv();save({weeks:wk});}
+/* ── areas ── */
+function areasEdit(){
+  ov(`<div class="section-title" style="margin-bottom:.4rem">Areas</div><div style="font-size:.74rem;color:var(--text3);line-height:1.55;margin-bottom:.9rem">One area per line (a city or part of town). The weekly sponsors and the sponsor prospect list are kept separately for each area. Renaming an area does not move its sponsors.</div>
+  <div class="form-group"><label class="form-label">Areas</label><textarea class="form-textarea" id="cp-areas" style="min-height:130px">${esc(sponAreas().join('\n'))}</textarea></div>
+  <div class="cp-acts"><button class="btn-sm" data-cp="close">Cancel</button><button class="btn-sm btn-gold" data-cp="areassave">Save areas</button></div>`,480);
+}
+function areasSave(){const A=[...new Set(V('cp-areas').split('\n').map(x=>x.trim()).filter(Boolean))],d=sponD();closeOv();save({areas:A,area:A.indexOf(d.area)>=0?d.area:(A[0]||'')});}
+/* ── banner popup ── */
+function banEdit(m){
+  const u=bannerUrl(m);
+  ov(`<div class="section-title" style="margin-bottom:.9rem">${esc(monthName(m))} banner</div>
+  <div class="form-group"><label class="form-label">Image link</label><input class="form-input" id="cp-bnurl" value="${esc(u)}"></div>
+  <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1rem"><button class="btn-sm" data-cp="banupload" data-arg="${esc(m)}">${u?'Upload a new banner':'Upload a banner'}</button>${u?`<button class="btn-sm cp-red" data-cp="banremove" data-arg="${esc(m)}">Remove banner</button>`:''}</div>
+  <div class="cp-acts"><button class="btn-sm" data-cp="close">Cancel</button><button class="btn-sm btn-gold" data-cp="banlink" data-arg="${esc(m)}">Save link</button></div>`,520);
+}
+async function setBanner(m,u){const mp={...((L.banners||{}).map||{})};if(u)mp[m]=u;else delete mp[m];closeOv();await saveLib('banners',{map:mp});render();}
+function shrink(file,max){return new Promise((ok,no)=>{const im=new Image(),u=URL.createObjectURL(file);
+  im.onload=()=>{const k=Math.min(1,(max||2000)/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);c.getContext('2d').drawImage(im,0,0,c.width,c.height);URL.revokeObjectURL(u);const png=file.type==='image/png';c.toBlob(b=>b?ok(b):no(new Error('Could not read image')),png?'image/png':'image/jpeg',.9);};
+  im.onerror=()=>no(new Error('Could not read image'));im.src=u;});}
+function banUpload(m){
+  let f=$('cp-banfile');
+  if(!f){f=document.createElement('input');f.type='file';f.id='cp-banfile';f.accept='image/jpeg,image/png,image/webp';f.style.display='none';document.body.appendChild(f);}
+  f.onchange=async()=>{const file=f.files[0];f.value='';if(!file)return;
+    const base=String((L.settings||{}).apiBase||'').replace(/\/+$/,'');
+    if(!base){toast('Uploading needs the Clio Worker address, which is not saved yet. Paste an image link instead.',true);return;}
+    try{const u=authInst&&authInst.currentUser;if(!u)throw new Error('Sign in first');toast('Uploading...');
+      const blob=await shrink(file,2000),tok=await u.getIdToken();
+      const res=await fetch(base+'/upload',{method:'POST',headers:{'Content-Type':blob.type||'image/jpeg',Authorization:'Bearer '+tok},body:blob});
+      const d=await res.json().catch(()=>({}));if(!res.ok)throw new Error(d.error||('Error '+res.status));
+      await setBanner(m,d.url);}catch(e){toast('Upload failed: '+(e&&e.message||e),true);}};
+  f.click();
+}
+/* ── email draft popup (clicking Email on a sponsor) ── */
+function draftOpen(base,wk,id){
+  const t=tpl(),c=ctx(base,wk);
+  if(wk){c.venue=wk.venue||c.venue;c.fee=String(wk.fee||c.fee);c.sponsor=wk.name||c.sponsor;if(wk.week)c.week=wk.week;}
+  const saved=id&&sponD().prospects[id]&&sponD().prospects[id].draft;
+  dr={id:id||'',def:{subject:fill(t.subject,c),body:fill(t.body,c)}};
+  ov(`<div class="section-title" style="margin-bottom:.4rem">Email to ${esc(base.name||'sponsor')}</div><div style="font-size:.74rem;color:var(--text3);margin-bottom:.9rem">${saved?'Your saved draft for this sponsor.':'Built from your default draft. Change anything, it only changes this email.'}</div>
+  <div class="form-group"><label class="form-label">To</label><input class="form-input" id="cp-to" value="${esc(base.email||'')}"></div>
+  <div class="form-group"><label class="form-label">Subject</label><input class="form-input" id="cp-sub" value="${esc(saved?saved.subject:dr.def.subject)}"></div>
+  <div class="form-group"><label class="form-label">Email</label><textarea class="form-textarea" id="cp-body" style="min-height:320px">${esc(saved?saved.body:dr.def.body)}</textarea></div>
+  <div class="cp-acts"><button class="btn-sm" data-cp="drreset">Back to default</button>${id?'<button class="btn-sm" data-cp="drsave">Save this draft</button>':''}<button class="btn-sm" data-cp="drcopy">Copy</button><button class="btn-sm" data-cp="drmail">Open in my email</button>${id?'<button class="btn-sm btn-gold" data-cp="drsent">We sent it</button>':''}<button class="btn-sm" data-cp="close">Close</button></div>`,700);
+}
+function mailP(id){const p=sponD().prospects[id];if(!p)return;draftOpen(norm(p),null,id);}
+function mailWk(m,i){const w=sponD().weeks[wkKey(m,i)];if(!w)return;const p=w.sponsorId&&sponD().prospects[w.sponsorId];
+  const base=p?norm(p):{id:'',name:w.name,month:m,area:sponArea(),contactName:'',email:''};const mon=mondaysOf(m)[i];
+  draftOpen(base,{venue:w.venue,fee:w.fee,name:w.name,week:mon?new Date(mon+'T12:00:00').toLocaleDateString('en-US',{month:'long',day:'numeric'}):''},p?p.id:'');}
+function drSave(){if(!dr||!dr.id)return;const pr={...sponD().prospects},q=pr[dr.id];if(!q)return;q.draft={subject:V('cp-sub'),body:$('cp-body').value};toast('Draft saved');save({prospects:pr},true);}
+function drSent(){if(!dr||!dr.id)return;const pr={...sponD().prospects},q=pr[dr.id];if(!q)return;q.emailedAt=q.emailedAt&&q.emailedAt!=='earlier'?q.emailedAt:todayStr();q.draft={subject:V('cp-sub'),body:$('cp-body').value};closeOv();save({prospects:pr},true).then(()=>toast('Marked as emailed (in progress)'));}
+/* ── default draft at the top of the page ── */
+function defSave(){const t={subject:V('cp-dsub'),body:$('cp-dbody').value.replace(/\s+$/,'')};save({template:t},true).then(()=>toast('Default draft saved'));}
+function defReset(){$('cp-dsub').value=TPL_DEFAULT.subject;$('cp-dbody').value=TPL_DEFAULT.body;}
+/* ── bulk add: CSV or paragraph ── */
+function csvRows(text,delim){const rows=[];let row=[],cur='',q=false;
+  for(let i=0;i<text.length;i++){const c=text[i];
+    if(q){if(c==='"'){if(text[i+1]==='"'){cur+='"';i++;}else q=false;}else cur+=c;}
+    else if(c==='"')q=true;else if(c===delim){row.push(cur);cur='';}
+    else if(c==='\n'||c==='\r'){if(c==='\r'&&text[i+1]==='\n')i++;row.push(cur);cur='';rows.push(row);row=[];}else cur+=c;}
+  if(cur!==''||row.length){row.push(cur);rows.push(row);}
+  return rows.filter(r=>r.some(x=>String(x).trim()));}
+const COLS={name:['name','business','businessname','company','sponsor'],contactName:['contact','contactname','owner','person','contactperson'],email:['email','emailaddress','emailorphone'],phone:['phone','phonenumber','tel','telephone','mobile'],address:['address','street','streetaddress'],city:['city','town'],ig:['instagram','ig','insta'],fb:['facebook','fb'],web:['website','web','url','site'],kind:['kind','kindofbusiness','businesstype','type','category'],desc:['whatthisplaceis','description','about','what','whotheyare'],fit:['howtheyfit','fit','themefit','why','howtheyfitthetheme'],notes:['notes','note','comments'],ds:['status','infostatus','infofound','researchstatus']};
+function headerMap(cells){const map={};cells.forEach((c,i)=>{const k=String(c).toLowerCase().replace(/[^a-z]/g,'');for(const f in COLS){if(map[f]===undefined&&COLS[f].indexOf(k)>=0){map[f]=i;break;}}});return map.name!==undefined?map:null;}
+function parseEntry(txt){
+  let t=String(txt),o={};
+  const em=t.match(/[\w.+-]+@[\w-]+(\.[\w-]+)+/);if(em){o.email=em[0];t=t.replace(em[0],' ');}
+  const ph=t.match(/(\+?1[\s.-]?)?\(?\d{3}\)?[\s.-]\d{3}[\s.-]\d{4}/);if(ph){o.phone=ph[0].trim();t=t.replace(ph[0],' ');}
+  (t.match(/(https?:\/\/|www\.)[^\s,;|]+/gi)||[]).forEach(u=>{const url=/^www\./i.test(u)?'https://'+u:u;
+    if(/instagram\.com/i.test(u))o.ig=url;else if(/facebook\.com|fb\.com/i.test(u))o.fb=url;else if(!o.web)o.web=url;t=t.replace(u,' ');});
+  const at=t.match(/(^|\s)@([\w.]+)/);if(at&&!o.ig){o.ig='https://www.instagram.com/'+at[2]+'/';t=t.replace(at[0],' ');}
+  const parts=t.split(/\s*[|;]\s*|\s+[-–—]\s+|,\s*/).map(x=>x.replace(/^[\s\-–—,;|]+|[\s\-–—,;|]+$/g,'')).filter(x=>/[A-Za-z0-9]/.test(x));
+  o.name=(parts.shift()||'').replace(/^[\-\*•\d.)]+\s*/,'');
+  if(parts.length)o.desc=parts.join(', ');
+  return o;}
+function parseBulk(text){
+  text=String(text||'').replace(/^﻿/,'').trim();if(!text)return [];
+  const first=text.split(/\r?\n/)[0],delim=first.indexOf('\t')>=0?'\t':',';
+  const rows=csvRows(text,delim),hm=rows.length&&rows[0].length>1?headerMap(rows[0]):null;let out=[];
+  if(hm){rows.slice(1).forEach(r=>{const o={};for(const f in hm)o[f]=String(r[hm[f]]||'').trim();if(o.name)out.push(o);});return out;}
+  const blocks=text.split(/\r?\n\s*\r?\n/).map(x=>x.trim()).filter(Boolean);
+  if(blocks.length>1&&blocks.some(b=>b.split(/\r?\n/).length>1)){
+    blocks.forEach(b=>{const Ls=b.split(/\r?\n/).map(x=>x.trim()).filter(Boolean),o=parseEntry(Ls[0]),rest=parseEntry(Ls.slice(1).join(' ; '));
+      ['email','phone','ig','fb','web'].forEach(k=>{if(rest[k]&&!o[k])o[k]=rest[k];});
+      const more=[o.desc,rest.name,rest.desc].filter(Boolean).join('. ');if(more)o.desc=more;if(o.name)out.push(o);});
+  }else{text.split(/\r?\n/).map(x=>x.trim()).filter(Boolean).forEach(l=>{const o=parseEntry(l);if(o.name)out.push(o);});}
+  return out;}
+function bulkEdit(m){
+  ov(`<div class="section-title" style="margin-bottom:.4rem">Add sponsors in bulk</div><div style="font-size:.74rem;color:var(--text3);line-height:1.55;margin-bottom:.8rem">${esc(monthName(m))} · ${esc(sponArea()||'All areas')}. Paste a CSV (first row = column names like Name, Contact, Email, Phone, Address, City, Instagram, Facebook, Website, Kind of business, What this place is, How they fit, Notes, Status) or just type a paragraph: one business per line, or a blank line between businesses. Emails, phones, Instagram, Facebook and websites are picked out automatically. A Status column is kept as Info found. If a business's city matches one of your areas, it goes into that area, otherwise into the one selected.</div>
+  <div style="margin-bottom:.6rem"><button class="btn-sm" data-cp="bulkfile">Choose a CSV file</button></div>
+  <div class="form-group"><textarea class="form-textarea" id="cp-btext" style="min-height:220px"></textarea></div>
+  <div style="font-size:.76rem;color:var(--text2);min-height:1.2rem;margin-bottom:.8rem" id="cp-bprev"></div>
+  <div class="cp-acts"><button class="btn-sm" data-cp="close">Cancel</button><button class="btn-sm btn-gold" data-cp="bulkadd" data-arg="${esc(m)}">Add them</button></div>`,640);
+  $('cp-btext').addEventListener('input',bulkPrev);
+}
+function bulkPrev(){const Ls=parseBulk($('cp-btext').value),e=$('cp-bprev');if(e)e.textContent=Ls.length?Ls.length+' found: '+Ls.slice(0,6).map(x=>x.name).join(', ')+(Ls.length>6?', and '+(Ls.length-6)+' more':''):'Nothing found yet.';}
+function bulkFile(){
+  let f=$('cp-bfile');if(!f){f=document.createElement('input');f.type='file';f.id='cp-bfile';f.accept='.csv,.tsv,.txt,text/csv,text/plain';f.style.display='none';
+    f.onchange=()=>{const file=f.files[0];f.value='';if(!file)return;const r=new FileReader();r.onload=()=>{const t=$('cp-btext');if(t){t.value=String(r.result||'');bulkPrev();}};r.readAsText(file);};document.body.appendChild(f);}
+  f.click();}
+function bulkAdd(m){
+  const Ls=parseBulk($('cp-btext').value);if(!Ls.length){toast('Nothing to add yet',true);return;}
+  const d=sponD(),pr={...d.prospects},cur=sponArea(),AL=sponAreas();
+  const areaFor=o=>{const c=String(o.city||'').toLowerCase();return AL.find(a=>c&&c.indexOf(String(a).toLowerCase())>=0)||cur;};
+  const have=new Set(Object.values(pr).filter(p=>p&&p.month===m).map(p=>String(p.area)+'|'+String(p.name).toLowerCase().trim()));
+  let n=0,dup=0;
+  Ls.forEach((o,i)=>{const ar=areaFor(o),k=ar+'|'+String(o.name).toLowerCase().trim();if(have.has(k)){dup++;return;}have.add(k);const id='s'+Date.now().toString(36)+i;
+    pr[id]={id:id,month:m,area:ar,name:o.name,contactName:o.contactName||'',email:o.email||'',phone:o.phone||'',address:o.address||'',city:o.city||'',ig:o.ig||'',fb:o.fb||'',web:o.web||'',kind:o.kind||'',desc:o.desc||'',fit:o.fit||'',notes:o.notes||'',ds:o.ds||'',answer:'',emailedAt:'',goneCold:false};n++;});
+  closeOv();save({prospects:pr}).then(()=>toast('Added '+n+(dup?', skipped '+dup+' already on the list':'')));
+}
+/* ── folding (saved) ── */
+function foldOpen(key,def){const f=sponD().fold||{};return f[key]===undefined?def:!!f[key];}
+function foldToggle(key,def){const f={...(sponD().fold||{})};f[key]=!foldOpen(key,def);return saveLib('sponsors',{fold:f},true).then(render);}
+/* ── page ── */
+function pen(act,arg,tt){return `<button class="btn-sm cp-pen" title="${tt}" data-cp="${act}" data-arg="${esc(arg)}">&#9998;</button>`;}
+function monthCard(m){
+  const cur=todayStr().slice(0,7),d=sponD(),area=sponArea(),Lp=list(m),tot=all(m).length,th=theme(m);
+  const sec=(key,title,body)=>{const o=foldOpen(key,true);return `<div class="cp-sec"><div class="cp-fold" data-cp="fold" data-arg="${esc(key)}" data-def="1"><span class="cp-car">${o?'&#9662;':'&#9656;'}</span><span class="cp-lbl">${title}</span></div>${o?`<div class="cp-body">${body}</div>`:''}</div>`;};
+  const mons=mondaysOf(m);
+  const wkRows=[0,1,2,3].map(i=>{const w=d.weeks[wkKey(m,i)]||{};
+    return `<div class="cp-row"><div class="cp-rt">Week ${i+1}${mons[i]?' · '+niceDay(mons[i]):''}</div><div class="cp-rs">${w.name?esc(w.name)+(w.venue?' at '+esc(w.venue):'')+' · '+esc(w.status||'Needed')+(w.fee?' · $'+esc(w.fee):''):'No sponsor yet'}</div>${w.name?`<button class="btn-sm" data-cp="mailwk" data-arg="${esc(m)}|${i}">Email</button>`:''}${pen('wkedit',m+'|'+i,'Edit this week')}</div>`;}).join('');
+  const prRows=Lp.length?Lp.map(p=>{const lk=[p.ig&&'IG',p.fb&&'FB',p.web&&'Web'].filter(Boolean).join(' ');
+    return `<div class="cp-row"><div class="cp-rt">${esc(p.name)}<small>${esc([p.kind,stage(p)+(p.emailedAt&&p.emailedAt!=='earlier'?' (emailed '+dayTxt(p.emailedAt)+')':''),p.city,p.contactName,lk,p.ds?'info: '+p.ds:''].filter(Boolean).join(' · '))}</small>${p.fit?`<small>Fit: ${esc(p.fit)}</small>`:''}</div>
+      <label class="cp-chk"><input type="checkbox" data-cp="em" data-arg="${esc(p.id)}" ${p.emailedAt?'checked':''}> Emailed</label><label class="cp-chk"><input type="checkbox" data-cp="cold" data-arg="${esc(p.id)}" ${p.goneCold?'checked':''}> Gone cold</label>
+      <button class="btn-sm" data-cp="mailp" data-arg="${esc(p.id)}">Email</button>${pen('pedit',p.id,'Edit this sponsor')}</div>`;}).join(''):`<div class="cp-none">${tot?'No sponsor prospects match the filters.':'No sponsor prospects for '+esc(area||'this month')+' yet.'}</div>`;
+  const open=foldOpen('c_'+m,m===cur);
+  const bu=bannerUrl(m);
+  const banner=showBanners()?`<div class="cp-ban">${bu?`<img src="${esc(bu)}" alt="">`:'<div class="cp-noban">No banner yet</div>'}<button class="btn-sm cp-pen cp-banpen" title="Edit banner" data-cp="banedit" data-arg="${esc(m)}">&#9998;</button></div>`:'';
+  return `<div class="cp-card"><div class="cp-fold cp-head" data-cp="fold" data-arg="c_${esc(m)}" data-def="${m===cur?1:0}"><span class="cp-car">${open?'&#9662;':'&#9656;'}</span><span class="cp-mt">${esc(monthName(m))}${m===cur?' · now':''}${th?' · '+esc(th):''}</span></div>
+  ${open?`<div class="cp-body">${banner}
+  ${sec('t_'+m,'Month theme',`<input class="form-input" data-cptheme="${esc(m)}" value="${esc(th)}">`)}
+  ${sec('w_'+m,'Weekly sponsors'+(area?' · '+esc(area):''),wkRows)}
+  ${sec('p_'+m,'Sponsor prospects for this theme'+(area?' · '+esc(area):'')+' ('+(Lp.length===tot?Lp.length:Lp.length+' of '+tot)+')',prRows+`<div class="cp-tools"><button class="btn-sm" data-cp="padd" data-arg="${esc(m)}">+ Add sponsor prospect</button><button class="btn-sm" data-cp="bulk" data-arg="${esc(m)}">Add in bulk</button></div>`)}</div>`:''}</div>`;
+}
+function render(){
+  const root=$('campRoot');if(!root)return;
+  const a=document.activeElement;
+  if(a&&root.contains(a)&&a.matches&&a.matches('#cp-dsub,#cp-dbody,[data-cptheme]')){pend=true;return;}
+  const cur=todayStr().slice(0,7);
+  let months;
+  if(filterMode==='up'){months=[];for(let i=0;i<12;i++)months.push(addMonths(cur,i));}
+  else{const s=new Set();for(let i=1;i<=6;i++)s.add(addMonths(cur,-i));
+    const add=m=>{if(m&&m<cur)s.add(m);};
+    Object.keys((L.campaigns||{}).map||{}).forEach(add);Object.keys((L.banners||{}).map||{}).forEach(add);
+    Object.values(sponD().prospects).forEach(p=>p&&add(p.month));Object.keys(sponD().weeks).forEach(k=>add(k.slice(0,7)));
+    months=[...s].sort().reverse();}
+  const areas=sponAreas(),area=sponArea(),t=tpl(),prs=Object.values(sponD().prospects).filter(p=>p&&(!area||p.area===area)).map(norm);
+  const kinds=[...new Set(prs.map(p=>String(p.kind||'')).filter(Boolean))].sort(),cities=[...new Set(prs.map(p=>String(p.city||'')).filter(Boolean))].sort(),dss=[...new Set(prs.map(p=>String(p.ds||'')).filter(Boolean))].sort();
+  const opt=(v,l,c)=>`<option value="${esc(v)}" ${c===v?'selected':''}>${esc(l)}</option>`;
+  const defOpen=foldOpen('def',true);
+  root.innerHTML=(loadErr?`<div class="cp-err">${esc(loadErr)}</div>`:'')+
+  `<div class="cp-bar"><label class="cp-chk"><input type="checkbox" data-cp="bantoggle" ${showBanners()?'checked':''}> Show campaign banners</label><div style="flex:1"></div>
+    <button class="cp-chip ${filterMode==='up'?'on':''}" data-cp="mode" data-arg="up">This month and ahead</button><button class="cp-chip ${filterMode==='prev'?'on':''}" data-cp="mode" data-arg="prev">Previous month</button></div>
+  <div class="cp-bar"><span class="cp-lbl">Area</span>${areas.length?areas.map(x=>`<button class="cp-chip ${x===area?'on':''}" data-cp="area" data-arg="${esc(x)}">${esc(x)}</button>`).join(''):'<span class="cp-none" style="margin:0">No areas yet</span>'}${pen('areas','','Edit areas')}</div>
+  <div class="cp-bar"><span class="cp-lbl">Filter prospects</span><input class="form-input" id="cp-q" value="${esc(F.q)}" style="max-width:200px">
+    <select class="roster-filter-select" data-cpsel="kind">${opt('','All kinds of business',F.kind)}${kinds.map(c=>opt(c,c,F.kind)).join('')}</select>
+    <select class="roster-filter-select" data-cpsel="city">${opt('','All cities',F.city)}${cities.map(c=>opt(c,c,F.city)).join('')}</select>
+    <select class="roster-filter-select" data-cpsel="stage">${opt('','Any progress',F.stage)}${['To ask','In progress','Said yes','Said no','Gone cold'].map(c=>opt(c,c,F.stage)).join('')}</select>
+    <select class="roster-filter-select" data-cpsel="ds">${opt('','Any info found',F.ds)}${dss.map(c=>opt(c,c,F.ds)).join('')}</select>
+    <select class="roster-filter-select" data-cpsel="has">${opt('','Any contact',F.has)}${opt('email','Has email',F.has)}${opt('noemail','No email yet',F.has)}${opt('social','Has Instagram or Facebook',F.has)}</select>
+    <button class="btn-sm" data-cp="clearf">Clear filters</button></div>
+  <div class="cp-card"><div class="cp-fold" data-cp="fold" data-arg="def" data-def="1"><span class="cp-car">${defOpen?'&#9662;':'&#9656;'}</span><span class="cp-lbl">Default email draft (every sponsor email starts from this)</span></div>
+    ${defOpen?`<div class="cp-body"><div style="font-size:.74rem;color:var(--text3);margin-bottom:.7rem">These words fill in automatically: {sponsor} {contact} {theme} {month} {area} {venue} {week} {fee}</div>
+    <div class="form-group"><label class="form-label">Subject</label><input class="form-input" id="cp-dsub" value="${esc(t.subject)}"></div>
+    <div class="form-group"><label class="form-label">Email</label><textarea class="form-textarea" id="cp-dbody" style="min-height:240px">${esc(t.body)}</textarea></div>
+    <div class="cp-acts"><button class="btn-sm" data-cp="defreset">Back to the starter version</button><button class="btn-sm btn-gold" data-cp="defsave">Save default draft</button></div></div>`:''}</div>`+
+  (months.length?months.map(monthCard).join(''):`<div class="cp-none">${filterMode==='prev'?'No previous months yet.':'No months ahead yet.'}</div>`);
+}
+function onClick(e){
+  const a=e.target.closest('[data-cp]');
+  if(!a){if(e.target.id==='cpOv')closeOv();return;}
+  const act=a.dataset.cp,arg=a.dataset.arg||'';
+  const mo=arg.split('|');
+  switch(act){
+    case 'close':closeOv();break;
+    case 'fold':foldToggle(arg,arg.charAt(0)==='c'?arg.slice(2)===todayStr().slice(0,7):true);break;
+    case 'mode':filterMode=arg;render();break;
+    case 'area':saveLib('sponsors',{area:arg},true).then(render);break;
+    case 'areas':areasEdit();break;
+    case 'areassave':areasSave();break;
+    case 'bantoggle':saveLib('sponsors',{showBanners:!showBanners()},true).then(render);break;
+    case 'clearf':F={q:'',kind:'',city:'',stage:'',ds:'',has:''};render();break;
+    case 'padd':sponEdit('',arg);break;
+    case 'pedit':sponEdit(arg);break;
+    case 'editsave':sponEditSave(arg,a.dataset.m);break;
+    case 'del':sponDel(arg);break;
+    case 'em':toggle(arg,'em');break;
+    case 'cold':toggle(arg,'cold');break;
+    case 'bulk':bulkEdit(arg);break;
+    case 'bulkfile':bulkFile();break;
+    case 'bulkadd':bulkAdd(arg);break;
+    case 'wkedit':wkEdit(mo[0],+mo[1]);break;
+    case 'wksave':wkSave(mo[0],+mo[1]);break;
+    case 'wkclear':wkClear(mo[0],+mo[1]);break;
+    case 'mailp':mailP(arg);break;
+    case 'mailwk':mailWk(mo[0],+mo[1]);break;
+    case 'drreset':if(dr){$('cp-sub').value=dr.def.subject;$('cp-body').value=dr.def.body;}break;
+    case 'drsave':drSave();break;
+    case 'drcopy':copyTxt('Subject: '+V('cp-sub')+'\n\n'+$('cp-body').value);break;
+    case 'drmail':location.href='mailto:'+encodeURIComponent(V('cp-to')).replace(/%40/g,'@')+'?subject='+encodeURIComponent(V('cp-sub'))+'&body='+encodeURIComponent($('cp-body').value);break;
+    case 'drsent':drSent();break;
+    case 'defsave':defSave();break;
+    case 'defreset':defReset();break;
+    case 'banedit':banEdit(arg);break;
+    case 'banupload':banUpload(arg);break;
+    case 'banremove':setBanner(arg,'');break;
+    case 'banlink':{const u=V('cp-bnurl');if(u&&!/^https?:\/\//.test(u)){toast('That does not look like an image link',true);break;}setBanner(arg,u);break;}
+  }
+}
+function start(){
+  if(started)return;started=true;
+  ['sponsors','banners','campaigns','settings','venueCities'].forEach(id=>{
+    unsubs.push(db.collection(COL).doc(id).onSnapshot(s=>{L[id]=s.exists?s.data():{};loadErr='';render();},err=>{loadErr='Could not read the campaigns data ('+id+'): '+(err&&err.message||err);render();}));});
+  loadMonthly();
+}
+function loadMonthly(){
+  try{db.collection('socialPosts').where('type','==','monthly').get().then(s=>{monthly=s.docs.map(d=>({id:d.id,...d.data()}));render();}).catch(()=>{});}catch(e){}
+}
+function init(){
+  const root=$('campRoot');if(!root||root._cpInit)return;root._cpInit=true;
+  root.addEventListener('click',onClick);
+  root.addEventListener('change',e=>{const t=e.target;
+    if(t.dataset&&t.dataset.cpsel){F[t.dataset.cpsel]=t.value;render();}
+    else if(t.dataset&&t.dataset.cptheme){saveTheme(t.dataset.cptheme,t.value);}});
+  root.addEventListener('input',e=>{if(e.target.id==='cp-q'){F.q=e.target.value;const pos=e.target.value.length;render();const q=$('cp-q');if(q){q.focus();try{q.setSelectionRange(pos,pos);}catch(x){}}}});
+  root.addEventListener('focusout',()=>setTimeout(()=>{const a=document.activeElement;if(a&&root.contains(a)&&a.matches&&a.matches('#cp-dsub,#cp-dbody,[data-cptheme]'))return;if(pend){pend=false;render();}},60));
+}
+window.campOpen=function(){init();start();render();};
+})();
 
 </script>
 </body>
