@@ -12034,7 +12034,10 @@ function areaOK(p){const S=selAreas();return !S.length||!p.area||S.indexOf(p.are
 function tokens(p){const o=[];const k=String(p.kind||'').trim().toLowerCase();o.push(k?'k:'+k:'k:(none)');const tg=tagsOf(p);if(tg.length)tg.forEach(t=>o.push('t:'+t));else o.push('t:(none)');return o;}
 function rule(m){const r=sponD().rules[m]||{};return {inc:r.inc||[],exc:r.exc||[]};}
 function fits(p,m){const r=rule(m),tk=tokens(p);return r.inc.length>0&&r.inc.some(t=>tk.indexOf(t)>=0)&&!r.exc.some(t=>tk.indexOf(t)>=0);}
-function all(m){return Object.values(sponD().prospects).filter(p=>p&&areaOK(p)&&(onList(p,m)||fits(p,m))).map(p=>view(p,m));}
+/* members(m): everything connected to the month (added to it, or matching its kind/tag filter).
+   all(m): what the list shows. With a kind/tag filter on, only the businesses that match it; without one, the businesses added to the month. */
+function members(m){return Object.values(sponD().prospects).filter(p=>p&&areaOK(p)&&(onList(p,m)||fits(p,m))).map(p=>view(p,m));}
+function all(m){const on=rule(m).inc.length>0;return Object.values(sponD().prospects).filter(p=>p&&areaOK(p)&&(on?fits(p,m):onList(p,m))).map(p=>view(p,m));}
 function sug(m){return Object.values(sponD().prospects).filter(p=>p&&areaOK(p)&&!onList(p,m)&&fits(p,m)).map(p=>view(p,m)).filter(pass).sort((x,y)=>String(x.name).localeCompare(String(y.name)));}
 function pass(p){const q=F.q.toLowerCase();
   if(q&&[p.name,p.kind,p.tags,p.contactName,p.email,p.city,p.address,p.desc,p.fit,p.notes].join(' ').toLowerCase().indexOf(q)<0)return false;
@@ -12188,7 +12191,7 @@ async function pin(m,id){const prog={...sponD().prog};prog[PK(m,id)]={...(prog[P
 function wkEdit(m,i,ar){
   ar=ar||sponArea();
   const d=sponD(),w=d.weeks[wkKey(m,i,ar)]||{},A=list(m),mon=mondaysOf(m)[i];
-  const pool=all(m).filter(p=>!ar||!p.area||p.area===ar).filter(p=>!p.hidden||w.sponsorId===p.id).sort((x,y)=>String(x.name).localeCompare(String(y.name)));
+  const pool=members(m).filter(p=>!ar||!p.area||p.area===ar).filter(p=>!p.hidden||w.sponsorId===p.id).sort((x,y)=>String(x.name).localeCompare(String(y.name)));
   ov(`<div class="section-title" style="margin-bottom:.4rem">Week ${i+1} sponsor</div><div style="font-size:.74rem;color:var(--text3);margin-bottom:.9rem">${esc(mon?new Date(mon+'T12:00:00').toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'}):'')} · ${esc(ar||'All areas')}</div>
   <div class="form-group"><label class="form-label">Sponsor from the prospect list</label><select class="form-input" id="cp-pick"><option value="">Not from the list (type a name below)</option>${pool.map(p=>`<option value="${esc(p.id)}" ${w.sponsorId===p.id?'selected':''}>${esc(p.name)}${p.kind?' · '+esc(p.kind):''}</option>`).join('')}</select></div>
   <div class="form-group"><label class="form-label">Sponsor name (if not from the list)</label><input class="form-input" id="cp-wname" value="${esc(w.sponsorId?'':(w.name||''))}"></div>
@@ -12347,7 +12350,7 @@ function rulesEdit(m){
   Object.values(sponD().prospects).forEach(p=>{if(p)tokens(p).forEach(t=>{cnt[t]=(cnt[t]||0)+1;});});
   const keys=Object.keys(names).sort((a,b)=>(a.charAt(0)===b.charAt(0)?0:(a.charAt(0)==='k'?-1:1))||names[a].localeCompare(names[b]));
   const rows=keys.map(t=>`<tr><td>${esc(names[t])}<small> ${t.charAt(0)==='t'?'tag':'kind'} · ${cnt[t]||0}</small></td><td><input type="checkbox" data-tk="${esc(t)}" data-side="inc" ${r.inc.indexOf(t)>=0?'checked':''}></td><td><input type="checkbox" data-tk="${esc(t)}" data-side="exc" ${r.exc.indexOf(t)>=0?'checked':''}></td></tr>`).join('');
-  ov(`<div class="section-title" style="margin-bottom:.4rem">Which businesses fit ${esc(monthName(m))}</div><div style="font-size:.74rem;color:var(--text3);line-height:1.55;margin-bottom:.9rem">Every business in the areas switched on that matches anything ticked under Include, and nothing ticked under Leave out, shows on this month's list. Example: Include "Coffee Shop", Leave out "Mobile Coffee Stand". Businesses with no kind or no tags have their own rows (No kind, No tags). Businesses you add yourself stay on the list whatever you tick here.</div>
+  ov(`<div class="section-title" style="margin-bottom:.4rem">Which businesses fit ${esc(monthName(m))}</div><div style="font-size:.74rem;color:var(--text3);line-height:1.55;margin-bottom:.9rem">This filters this month's list. It shows every business in the areas switched on that matches anything ticked under Include and nothing ticked under Leave out, whether or not you added it to the month. Example: Include "Coffee Shop", Leave out "Mobile Coffee Stand". Businesses with no kind or no tags have their own rows (No kind, No tags). With nothing ticked the filter is off and the list shows the businesses added to the month.</div>
   ${keys.length?`<div style="margin-bottom:.5rem"><button class="btn-sm" data-cp="rulesall">Include everything</button> <button class="btn-sm" data-cp="rulesnone">Clear all</button></div><div style="max-height:50vh;overflow:auto"><table class="cp-tk"><thead><tr><th style="text-align:left">Kind or tag</th><th>Include</th><th>Leave out</th></tr></thead><tbody>${rows}</tbody></table></div>`:'<div class="cp-none">Add a Kind or tags to some businesses first.</div>'}
   <div class="cp-acts"><button class="btn-sm" data-cp="close">Cancel</button><button class="btn-sm btn-gold" data-cp="rulessave" data-arg="${esc(m)}">Save</button></div>`,520);
 }
@@ -12376,7 +12379,7 @@ function masterCard(){
   return `<div class="cp-card"><div class="cp-fold cp-head" data-cp="fold" data-arg="master" data-def="0"><span class="cp-car">${open?'&#9662;':'&#9656;'}</span><span class="cp-mt">All businesses (${A.length})</span></div>${body}</div>`;
 }
 function monthCard(m){
-  const cur=todayStr().slice(0,7),d=sponD(),area=sponArea(),Lp=list(m),tot=all(m).length,th=theme(m);
+  const cur=todayStr().slice(0,7),d=sponD(),area=sponArea(),Lp=list(m),tot=members(m).length,th=theme(m);
   const sec=(key,title,body)=>{const o=foldOpen(key,true);return `<div class="cp-sec"><div class="cp-fold" data-cp="fold" data-arg="${esc(key)}" data-def="1"><span class="cp-car">${o?'&#9662;':'&#9656;'}</span><span class="cp-lbl">${title}</span></div>${o?`<div class="cp-body">${body}</div>`:''}</div>`;};
   const mons=mondaysOf(m);
   const wkBlock=ar=>[0,1,2,3].map(i=>{const w=d.weeks[wkKey(m,i,ar)]||{},ak=esc(m)+'|'+i+'|'+esc(ar);
@@ -12388,7 +12391,7 @@ function monthCard(m){
       <label class="cp-chk" data-cp="stop"><input type="checkbox" data-cp="em" data-arg="${esc(m)}|${esc(p.id)}" ${p.emailedAt?'checked':''}> Emailed</label><label class="cp-chk" data-cp="stop"><input type="checkbox" data-cp="cold" data-arg="${esc(m)}|${esc(p.id)}" ${p.goneCold?'checked':''}> Gone cold</label>
       ${nuBtns(m,p)}<button class="btn-sm" data-cp="mailp" data-arg="${esc(m)}|${esc(p.id)}">Email</button>${pen('pedit',m+'|'+p.id,'Edit this business')}</div>`;}).join(''):`<div class="cp-none">${tot?'No sponsor prospects match the filters.':'No sponsor prospects for '+esc(area||'this month')+' yet.'}</div>`;
   const rl=rule(m),hasRule=rl.inc.length>0;
-  const filtTxt=hasRule?'Filter: '+rl.inc.map(tokLabel).join(', ')+(rl.exc.length?' · leaving out: '+rl.exc.map(tokLabel).join(', '):''):'';
+  const filtTxt=hasRule?'Kind and tag filter is on: showing only businesses that match '+rl.inc.map(tokLabel).join(', ')+(rl.exc.length?', leaving out '+rl.exc.map(tokLabel).join(', '):''):'';
   const open=foldOpen('c_'+m,m===cur);
   const bu=bannerUrl(m);
   const banner=showBanners()?`<div class="cp-ban">${bu?`<img src="${esc(bu)}" alt="">`:'<div class="cp-noban">No banner yet</div>'}<button class="btn-sm cp-pen cp-banpen" title="Edit banner" data-cp="banedit" data-arg="${esc(m)}">&#9998;</button></div>`:'';
@@ -12397,7 +12400,7 @@ function monthCard(m){
   ${sec('t_'+m,'Month theme',`<input class="form-input" data-cptheme="${esc(m)}" value="${esc(th)}">`)}
   ${sec('d_'+m,'Theme description',`<textarea class="form-textarea" data-cpdesc="${esc(m)}" style="min-height:90px">${esc(themeDesc(m))}</textarea>`)}
   ${sec('w_'+m,'Weekly sponsors'+(SA.length?' · '+esc(SA.join(', ')):''),wkRows)}
-  ${sec('p_'+m,'Sponsor prospects for this theme'+(SA.length?' · '+esc(SA.join(', ')):'')+' ('+(Lp.length===tot?Lp.length:Lp.length+' of '+tot)+')',(filtTxt?`<div style="font-size:.76rem;color:var(--text2);margin-bottom:.5rem">${esc(filtTxt)}</div>`:'')+prRows+`<div class="cp-tools"><button class="btn-sm ${hasRule?'btn-gold':''}" data-cp="rules" data-arg="${esc(m)}">Filter by kind and tag</button><button class="btn-sm btn-gold" data-cp="addex" data-arg="${esc(m)}">+ Add from my businesses</button><button class="btn-sm" data-cp="padd" data-arg="${esc(m)}">+ New business</button><button class="btn-sm" data-cp="bulk" data-arg="${esc(m)}">Add in bulk</button></div>`)}</div>`:''}</div>`;
+  ${sec('p_'+m,'Sponsor prospects for this theme'+(SA.length?' · '+esc(SA.join(', ')):'')+' ('+(Lp.length===tot?Lp.length:Lp.length+' of '+tot)+')',`<div class="cp-tools" style="margin:0 0 .6rem"><button class="btn-sm ${hasRule?'btn-gold':''}" data-cp="rules" data-arg="${esc(m)}">Filter by kind and tag</button><button class="btn-sm btn-gold" data-cp="addex" data-arg="${esc(m)}">+ Add from my businesses</button><button class="btn-sm" data-cp="padd" data-arg="${esc(m)}">+ New business</button><button class="btn-sm" data-cp="bulk" data-arg="${esc(m)}">Add in bulk</button></div>`+(filtTxt?`<div style="font-size:.76rem;color:var(--text2);margin-bottom:.5rem">${esc(filtTxt)} <button class="btn-sm" data-cp="rulesclear" data-arg="${esc(m)}">Turn filter off</button></div>`:'')+prRows)}</div>`:''}</div>`;
 }
 function render(){
   const root=$('campRoot');if(!root)return;
@@ -12455,6 +12458,7 @@ function onClick(e){
     case 'pedit':sponEdit(mo[1]||'',mo[0]);break;
     case 'rules':rulesEdit(arg);break;
     case 'rulessave':rulesSave(arg);break;
+    case 'rulesclear':{const rules={...sponD().rules};rules[arg]={inc:[],exc:[]};save({rules:rules},true);break;}
     case 'rulesall':document.querySelectorAll('#cpBox [data-tk]').forEach(e=>{e.checked=e.dataset.side==='inc';});break;
     case 'rulesnone':document.querySelectorAll('#cpBox [data-tk]').forEach(e=>{e.checked=false;});break;
     case 'pin':pin(mo[0],mo[1]);break;
