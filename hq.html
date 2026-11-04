@@ -12039,6 +12039,11 @@ function derivedTheme(m){
   return String(p.title).split(': ').slice(1).join(': ').replace(/\s*\([A-Za-z]+\)\s*$/,'');
 }
 function theme(m){const o=((L.campaigns||{}).map||{})[m]||{};return o.theme!==undefined?o.theme:derivedTheme(m);}
+function themeDesc(m){return String((((L.campaigns||{}).map||{})[m]||{}).desc||'');}
+async function saveDesc(m,val){
+  const map={...((L.campaigns||{}).map||{})},cur=map[m]||{};map[m]={...cur,desc:val.replace(/\s+$/,'')};
+  await saveLib('campaigns',{map});render();
+}
 async function saveTheme(m,val){
   val=String(val||'').trim();
   const map={...((L.campaigns||{}).map||{})},cur=map[m]||{};map[m]={...cur,theme:val};
@@ -12053,7 +12058,7 @@ async function saveTheme(m,val){
 function showBanners(){return sponD().showBanners!==false;}
 function bannerUrl(m){return ((L.banners||{}).map||{})[m]||'';}
 /* ── modal ── */
-function ov(html,w){let el=$('cpOv');if(!el){el=document.createElement('div');el.id='cpOv';el.className='modal-bg';el.innerHTML='<div class="modal" id="cpBox" style="max-width:640px"></div>';el.addEventListener('click',onClick);document.body.appendChild(el);}
+function ov(html,w){let el=$('cpOv');if(!el){el=document.createElement('div');el.id='cpOv';el.className='modal-bg';el.innerHTML='<div class="modal" id="cpBox" style="max-width:640px"></div>';el.addEventListener('click',onClick);el.addEventListener('change',e=>{const t=e.target;if(t&&t.dataset&&t.dataset.campadd&&t.value)campAdd(t.dataset.campadd,t.value,t);});document.body.appendChild(el);}
   const b=$('cpBox');b.style.maxWidth=(w||640)+'px';b.innerHTML=html;el.classList.add('open');}
 function closeOv(){const el=$('cpOv');if(el)el.classList.remove('open');}
 function V(id){const e=$(id);return e?e.value.trim():'';}
@@ -12065,6 +12070,19 @@ function ctx(p,wk){
   return {sponsor:p.name||'your business',contact:p.contactName||'there',theme:theme(m)||'our monthly theme',month:monthLong(m),area:p.area||sponArea(),fee:String((w&&w.fee)||d.fee),venue:(w&&w.venue)||'a local venue',week:mon?new Date(mon+'T12:00:00').toLocaleDateString('en-US',{month:'long',day:'numeric'}):'this week'};
 }
 /* ── prospect popup ── */
+/* in the edit popup: pick a month and the business is put on that campaign's list straight away */
+function campAdder(id){
+  const cur=todayStr().slice(0,7),ms=[];for(let i=0;i<12;i++)ms.push(addMonths(cur,i));
+  const on=ms.filter(m=>onList({id:id},m)),off=ms.filter(m=>!onList({id:id},m));
+  return `<div class="form-group"><label class="form-label">Put on a campaign</label><select class="form-input" id="cp-campadd" data-campadd="${esc(id)}"><option value="">Choose a month to add it to...</option>${off.map(m=>`<option value="${esc(m)}">${esc(monthName(m))}${theme(m)?' · '+esc(theme(m)):''}</option>`).join('')}</select><div id="cp-campon" style="font-size:.74rem;color:var(--text3);margin-top:.3rem">${on.length?'Already on: '+esc(on.map(monthName).join(', ')):'Not on any campaign yet.'}</div></div>`;
+}
+async function campAdd(id,m,sel){
+  const prog={...sponD().prog};prog[PK(m,id)]={...(prog[PK(m,id)]||{}),pinned:true};
+  await save({prog:prog},true);
+  toast('Added to '+monthName(m));
+  if(sel){const o=sel.querySelector('option[value="'+m+'"]');if(o)o.remove();sel.value='';}
+  const t=$('cp-campon');if(t){const cur=todayStr().slice(0,7),on=[];for(let i=0;i<12;i++){const x=addMonths(cur,i);if(onList({id:id},x))on.push(x);}t.textContent='Already on: '+on.map(monthName).join(', ')+' (just added '+monthName(m)+')';}
+}
 function sponEdit(id,m){
   const raw=id?sponD().prospects[id]:null;if(id&&!raw)return;const mm=m||'',p=raw?(mm?view(raw,mm):norm(raw)):null;
   const v=k=>esc(p?(p[k]||''):'');
@@ -12077,6 +12095,7 @@ function sponEdit(id,m){
   <div class="cp-g2"><div class="form-group"><label class="form-label">Website</label><input class="form-input" id="cp-web" value="${v('web')}"></div><div class="form-group"><label class="form-label">Info found (found, partial, not found...)</label><input class="form-input" id="cp-ds" value="${v('ds')}"></div></div>
   <div class="cp-g2"><div class="form-group"><label class="form-label">Kind of business (Coffee Shop, Mobile Coffee Stand...)</label><input class="form-input" id="cp-kind" list="cp-kinds" value="${v('kind')}"><datalist id="cp-kinds">${kinds.map(k=>`<option value="${esc(k)}">`).join('')}</datalist></div><div class="form-group"><label class="form-label">Area</label><select class="form-input" id="cp-area"><option value="">No area</option>${sponAreas().map(a=>`<option ${p&&p.area===a?'selected':(!p&&a===sponArea()?'selected':'')}>${esc(a)}</option>`).join('')}</select></div></div>
   <div class="cp-g2"><div class="form-group"><label class="form-label">Tags (separate with commas)</label><input class="form-input" id="cp-tags" value="${v('tags')}"></div><div class="form-group"><label class="form-label">Same business as (another location)</label><select class="form-input" id="cp-link"><option value="">Not linked</option>${Object.values(sponD().prospects).filter(x=>x&&x.id!==id).sort((a,b)=>String(a.name).localeCompare(String(b.name))).map(x=>`<option value="${esc(x.id)}" ${p&&p.group&&x.group===p.group?'selected':''}>${esc(x.name)}${x.city?' · '+esc(x.city):''}</option>`).join('')}</select></div></div>
+  ${p?campAdder(id):''}
   <div class="form-group"><label class="form-label">What this place is</label><textarea class="form-textarea" id="cp-desc" style="min-height:70px">${v('desc')}</textarea></div>
   <div class="form-group"><label class="form-label">How they fit the theme</label><textarea class="form-textarea" id="cp-fit" style="min-height:70px">${v('fit')}</textarea></div>
   <div class="form-group"><label class="form-label">Notes</label><textarea class="form-textarea" id="cp-notes" style="min-height:70px">${v('notes')}</textarea></div>
@@ -12127,12 +12146,14 @@ async function heartToggle(m,id){
 }
 /* pick businesses from the master list and put them on a month's list */
 function addExEdit(m){
+ try{
   const L2=Object.values(sponD().prospects).filter(p=>p&&!onList(p,m)).sort((a,b)=>String(a.name).localeCompare(String(b.name)));
   ov(`<div class="section-title" style="margin-bottom:.4rem">Add to ${esc(monthName(m))}</div><div style="font-size:.74rem;color:var(--text3);margin-bottom:.7rem">Tick the businesses to put on this month's list. They keep all their details.</div>
   <div class="form-group"><input class="form-input" id="cp-exq"></div>
   <div style="max-height:46vh;overflow:auto" id="cp-exlist">${L2.length?L2.map(p=>`<label class="cp-chk cp-exrow" style="display:flex;padding:.35rem 0;border-bottom:1px solid var(--border)" data-s="${esc([p.name,p.kind,p.city,p.area,p.tags].join(' ').toLowerCase())}"><input type="checkbox" data-ex="${esc(p.id)}"> <span>${esc(p.name)}<small style="color:var(--text3)"> ${esc([p.kind,p.city,p.area&&p.area!==p.city?p.area:''].filter(Boolean).join(' · '))}</small></span></label>`).join(''):'<div class="cp-none">Every business is already on this list.</div>'}</div>
   <div class="cp-acts"><button class="btn-sm" data-cp="close">Cancel</button><button class="btn-sm btn-gold" data-cp="addexsave" data-arg="${esc(m)}">Add ticked businesses</button></div>`,560);
   const q=$('cp-exq');if(q)q.addEventListener('input',()=>{const t=q.value.trim().toLowerCase();document.querySelectorAll('#cp-exlist .cp-exrow').forEach(r=>{r.style.display=(!t||r.dataset.s.indexOf(t)>=0)?'flex':'none';});});
+ }catch(err){toast('Could not open the list: '+(err&&err.message||err),true);}
 }
 function addExSave(m){
   const ids=[...document.querySelectorAll('#cp-exlist [data-ex]')].filter(e=>e.checked).map(e=>e.dataset.ex);
@@ -12355,6 +12376,7 @@ function monthCard(m){
   return `<div class="cp-card"><div class="cp-fold cp-head" data-cp="fold" data-arg="c_${esc(m)}" data-def="${m===cur?1:0}"><span class="cp-car">${open?'&#9662;':'&#9656;'}</span><span class="cp-mt">${esc(monthName(m))}${m===cur?' · now':''}${th?' · '+esc(th):''}</span></div>
   ${open?`<div class="cp-body">${banner}
   ${sec('t_'+m,'Month theme',`<input class="form-input" data-cptheme="${esc(m)}" value="${esc(th)}">`)}
+  ${sec('d_'+m,'Theme description',`<textarea class="form-textarea" data-cpdesc="${esc(m)}" style="min-height:90px">${esc(themeDesc(m))}</textarea>`)}
   ${sec('w_'+m,'Weekly sponsors'+(SA.length?' · '+esc(SA.join(', ')):''),wkRows)}
   ${sec('g_'+m,'Suggested for this theme'+(SA.length?' · '+esc(SA.join(', ')):'')+' ('+Sg.length+')',sgBody)}
   ${sec('p_'+m,'Sponsor prospects for this theme'+(SA.length?' · '+esc(SA.join(', ')):'')+' ('+(Lp.length===tot?Lp.length:Lp.length+' of '+tot)+')',prRows+`<div class="cp-tools"><button class="btn-sm btn-gold" data-cp="addex" data-arg="${esc(m)}">+ Add from my businesses</button><button class="btn-sm" data-cp="padd" data-arg="${esc(m)}">+ New business</button><button class="btn-sm" data-cp="bulk" data-arg="${esc(m)}">Add in bulk</button></div>`)}</div>`:''}</div>`;
@@ -12362,7 +12384,7 @@ function monthCard(m){
 function render(){
   const root=$('campRoot');if(!root)return;
   const a=document.activeElement;
-  if(a&&root.contains(a)&&a.matches&&a.matches('#cp-dsub,#cp-dbody,[data-cptheme]')){pend=true;return;}
+  if(a&&root.contains(a)&&a.matches&&a.matches('#cp-dsub,#cp-dbody,[data-cptheme],[data-cpdesc]')){pend=true;return;}
   const cur=todayStr().slice(0,7);
   let months;
   if(filterMode==='up'){months=[];for(let i=0;i<12;i++)months.push(addMonths(cur,i));}
@@ -12491,9 +12513,10 @@ function init(){
   root.addEventListener('change',e=>{const t=e.target;
     if(t.dataset&&t.dataset.cpsel){F[t.dataset.cpsel]=t.value;render();}
     else if(t.dataset&&t.dataset.cpmsel){M[t.dataset.cpmsel]=t.value;render();}
-    else if(t.dataset&&t.dataset.cptheme){saveTheme(t.dataset.cptheme,t.value);}});
+    else if(t.dataset&&t.dataset.cptheme){saveTheme(t.dataset.cptheme,t.value);}
+    else if(t.dataset&&t.dataset.cpdesc){saveDesc(t.dataset.cpdesc,t.value);}});
   root.addEventListener('input',e=>{if(e.target.id==='cp-q'||e.target.id==='cp-mq'){const id=e.target.id;(id==='cp-q'?F:M).q=e.target.value;const pos=e.target.value.length;render();const q=$(id);if(q){q.focus();try{q.setSelectionRange(pos,pos);}catch(x){}}}});
-  root.addEventListener('focusout',()=>setTimeout(()=>{const a=document.activeElement;if(a&&root.contains(a)&&a.matches&&a.matches('#cp-dsub,#cp-dbody,[data-cptheme]'))return;if(pend){pend=false;render();}},60));
+  root.addEventListener('focusout',()=>setTimeout(()=>{const a=document.activeElement;if(a&&root.contains(a)&&a.matches&&a.matches('#cp-dsub,#cp-dbody,[data-cptheme],[data-cpdesc]'))return;if(pend){pend=false;render();}},60));
 }
 window.campOpen=function(){init();start();render();};
 })();
