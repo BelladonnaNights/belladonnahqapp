@@ -11952,6 +11952,8 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 .cp-tk th,.cp-tk td{padding:.35rem .5rem;border-bottom:1px solid var(--border);text-align:center}
 .cp-tk td:first-child{text-align:left}
 .cp-tk small{color:var(--text3)}
+.cp-heart{font-size:1.25rem;line-height:1;padding:.25rem .55rem;color:var(--text3)}
+.cp-heart.on{color:var(--rose);border-color:var(--rose)}
 .cp-none{font-size:.8rem;color:var(--text3);margin:.3rem 0}
 .cp-tools{display:flex;gap:.5rem;margin-top:.6rem;flex-wrap:wrap}
 .cp-acts{display:flex;gap:.5rem;justify-content:flex-end;flex-wrap:wrap}
@@ -11973,7 +11975,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 const COL='socialLibrary';
 const L={sponsors:{},banners:{},campaigns:{},settings:{},venueCities:{}};
 let loaded={},monthly=[],started=false,unsubs=[],pend=false,loadErr='',filterMode='up',dr=null;
-let F={q:'',kind:'',city:'',tag:'',stage:'',ds:'',has:''},M={q:'',kind:'',city:'',tag:''},migDone=false;
+let F={q:'',kind:'',city:'',tag:'',stage:'',ds:'',has:'',heart:false},M={q:'',kind:'',city:'',tag:''},migDone=false;
 const SPON_STATUS_WK=['Needed','Asked','Confirmed','Prizes in','Paid'];
 const TPL_DEFAULT={subject:'Sponsor a night with Belladonna: {theme} in {month}',body:"Hi {contact},\n\nI'm Ahnna with Belladonna Entertainment. Each week this month we're teaming up with one local business for a special night at {venue}, and I'd love for {sponsor} to be a featured sponsor.\n\nHere's the idea: {month}'s theme is {theme}. The venue makes a four-cocktail flight inspired by it, we sell tickets, and your business is the star of the night. You provide the prizes, and the sponsor fee is just ${fee}.\n\nWould you be open to hearing more?\n\nAhnna\nBelladonna Entertainment\n[logo + link]\nwww.belladonnanights.com"};
 const $=id=>document.getElementById(id);
@@ -11994,7 +11996,7 @@ async function saveLib(id,patch,quiet){
   catch(e){toast('Could not save: '+(e&&e.message||e),true);}
 }
 /* ── data ── */
-function sponD(){const d=L.sponsors||{};return {areas:d.areas||[],area:d.area||'',prospects:d.prospects||{},weeks:d.weeks||{},prog:d.prog||{},rules:d.rules||{},masterV2:!!d.masterV2,template:d.template||null,fee:d.fee||100,fold:d.fold||{},showBanners:d.showBanners};}
+function sponD(){const d=L.sponsors||{};return {areas:d.areas||[],area:d.area||'',prospects:d.prospects||{},weeks:d.weeks||{},prog:d.prog||{},rules:d.rules||{},masterV2:!!d.masterV2,seedCoffee1:!!d.seedCoffee1,template:d.template||null,fee:d.fee||100,fold:d.fold||{},showBanners:d.showBanners};}
 function cityMap(){return (L.venueCities||{}).map||{};}
 function sponAreas(){const d=sponD();if(d.areas.length)return d.areas;return [...new Set(Object.values(cityMap()).map(x=>String(x||'').trim()).filter(Boolean))];}
 function sponArea(){const d=sponD(),A=sponAreas();return A.indexOf(d.area)>=0?d.area:(A[0]||'');}
@@ -12013,7 +12015,7 @@ function dayTxt(x){return x&&x!=='earlier'?niceDay(x):'';}
    (on the list, emailed, answer, gone cold, not using, saved email draft) is kept per month in sponsors.prog["YYYY-MM|id"]. */
 const PK=(m,id)=>m+'|'+id;
 const PROGF=['answer','emailedAt','goneCold','hidden','draft','pinned','status','month'];
-function view(p,m){const g=sponD().prog[PK(m,p.id)]||{};return norm({...p,month:m,status:'',answer:g.answer||'',emailedAt:g.emailedAt||'',goneCold:!!g.goneCold,hidden:!!g.hidden,draft:g.draft,pinned:!!g.pinned});}
+function view(p,m){const g=sponD().prog[PK(m,p.id)]||{};return norm({...p,month:m,status:'',answer:g.answer||'',emailedAt:g.emailedAt||'',goneCold:!!g.goneCold,hidden:!!g.hidden,heart:!!g.heart,draft:g.draft,pinned:!!g.pinned});}
 function onList(p,m){const g=sponD().prog[PK(m,p.id)];return !!(g&&(g.pinned||g.answer||g.emailedAt||g.goneCold||g.hidden));}
 function areaOK(p){const a=sponArea();return !a||p.area===a;}
 function tokens(p){const o=[];const k=String(p.kind||'').trim().toLowerCase();if(k)o.push('k:'+k);tagsOf(p).forEach(t=>o.push('t:'+t));return o;}
@@ -12024,7 +12026,7 @@ function sug(m){return Object.values(sponD().prospects).filter(p=>p&&areaOK(p)&&
 function pass(p){const q=F.q.toLowerCase();
   if(q&&[p.name,p.kind,p.tags,p.contactName,p.email,p.city,p.address,p.desc,p.fit,p.notes].join(' ').toLowerCase().indexOf(q)<0)return false;
   if(F.kind&&String(p.kind||'')!==F.kind)return false;if(F.city&&String(p.city||'')!==F.city)return false;if(F.tag&&tagsOf(p).indexOf(F.tag)<0)return false;if(F.stage&&stage(p)!==F.stage)return false;if(F.ds&&String(p.ds||'')!==F.ds)return false;
-  if(F.has==='email'&&!p.email)return false;if(F.has==='noemail'&&p.email)return false;if(F.has==='social'&&!(p.ig||p.fb))return false;return true;}
+  if(F.heart&&!p.heart)return false;if(F.has==='email'&&!p.email)return false;if(F.has==='noemail'&&p.email)return false;if(F.has==='social'&&!(p.ig||p.fb))return false;return true;}
 function list(m){return all(m).filter(p=>F.stage==='Not using'?!!p.hidden:!p.hidden).filter(pass).sort((x,y)=>(rank(x)-rank(y))||String(x.name).localeCompare(String(y.name)));}
 /* month themes: saved first, otherwise read from the monthly announcement posts Clio made */
 function derivedTheme(m){
@@ -12065,7 +12067,7 @@ function sponEdit(id,m){
   const raw=id?sponD().prospects[id]:null;if(id&&!raw)return;const mm=m||'',p=raw?(mm?view(raw,mm):norm(raw)):null;
   const v=k=>esc(p?(p[k]||''):'');
   const kinds=[...new Set(Object.values(sponD().prospects).map(x=>x&&String(x.kind||'').trim()).filter(Boolean))].sort();
-  ov(`<div class="section-title" style="margin-bottom:.4rem">${p?'Edit business':'New business'}</div><div style="font-size:.74rem;color:var(--text3);margin-bottom:.9rem">${mm?esc(monthName(mm))+' · this business is on '+esc(monthName(mm))+"'s list":'Master list (every business, every area)'}</div>
+  ov(`<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:.6rem"><div class="section-title" style="margin-bottom:.4rem">${p?'Edit business':'New business'}</div>${p&&mm?`<button class="btn-sm cp-heart ${p.heart?'on':''}" id="cp-heartbtn" data-cp="heart" data-arg="${esc(mm)}|${esc(id)}" title="Heart this business for ${esc(monthName(mm))} only">${p.heart?'&#9829;':'&#9825;'}</button>`:''}</div><div style="font-size:.74rem;color:var(--text3);margin-bottom:.9rem">${mm?esc(monthName(mm))+' · this business is on '+esc(monthName(mm))+"'s list":'Master list (every business, every area)'}</div>
   <div class="cp-g2"><div class="form-group"><label class="form-label">Business name</label><input class="form-input" id="cp-name" value="${v('name')}"></div><div class="form-group"><label class="form-label">Contact name</label><input class="form-input" id="cp-who" value="${v('contactName')}"></div></div>
   <div class="cp-g2"><div class="form-group"><label class="form-label">Email</label><input class="form-input" id="cp-email" value="${v('email')}"></div><div class="form-group"><label class="form-label">Phone</label><input class="form-input" id="cp-phone" value="${v('phone')}"></div></div>
   <div class="cp-g2"><div class="form-group"><label class="form-label">Address</label><input class="form-input" id="cp-addr" value="${v('address')}"></div><div class="form-group"><label class="form-label">City</label><input class="form-input" id="cp-city" value="${v('city')}"></div></div>
@@ -12114,6 +12116,11 @@ async function toggle(m,id,field){
   g.pinned=true;
   if(field==='em'&&!v.emailedAt){/* nothing else */}
   prog[PK(m,id)]=g;
+  await save({prog:prog},true);
+}
+async function heartToggle(m,id){
+  const prog={...sponD().prog},g={...(prog[PK(m,id)]||{})};g.heart=!g.heart;g.pinned=true;prog[PK(m,id)]=g;
+  const b=$('cp-heartbtn');if(b){b.innerHTML=g.heart?'&#9829;':'&#9825;';b.classList.toggle('on',g.heart);}
   await save({prog:prog},true);
 }
 async function pin(m,id){const prog={...sponD().prog};prog[PK(m,id)]={...(prog[PK(m,id)]||{}),pinned:true};await save({prog:prog},true);}
@@ -12314,7 +12321,7 @@ function monthCard(m){
   const wkRows=[0,1,2,3].map(i=>{const w=d.weeks[wkKey(m,i)]||{};
     return `<div class="cp-row cp-click" data-cp="wkedit" data-arg="${esc(m)}|${i}"><div class="cp-rt">Week ${i+1}${mons[i]?' · '+niceDay(mons[i]):''}</div><div class="cp-rs">${w.name?esc(w.name)+(w.venue?' at '+esc(w.venue):'')+' · '+esc(w.status||'Needed')+(w.fee?' · $'+esc(w.fee):''):'No sponsor yet'}</div>${w.name?`<button class="btn-sm" data-cp="mailwk" data-arg="${esc(m)}|${i}">Email</button>`:''}${pen('wkedit',m+'|'+i,'Edit this week')}</div>`;}).join('');
   const prRows=Lp.length?Lp.map(p=>{const lk=[p.ig&&'IG',p.fb&&'FB',p.web&&'Web'].filter(Boolean).join(' ');
-    return `<div class="cp-row cp-click" data-cp="pedit" data-arg="${esc(m)}|${esc(p.id)}"><div class="cp-rt">${esc(p.name)}<small>${esc([p.kind,stage(p)+(p.emailedAt&&p.emailedAt!=='earlier'?' (emailed '+dayTxt(p.emailedAt)+')':''),p.city,sibs(p).length?'also at '+sibs(p).map(x=>x.city||x.area||x.name).join(', '):'',tagsOf(p).length?'tags: '+tagsOf(p).join(', '):'',p.contactName,lk,p.ds?'info: '+p.ds:''].filter(Boolean).join(' · '))}</small>${p.fit?`<small>Fit: ${esc(p.fit)}</small>`:''}</div>
+    return `<div class="cp-row cp-click" data-cp="pedit" data-arg="${esc(m)}|${esc(p.id)}"><div class="cp-rt">${esc(p.name)}<small>${esc([p.heart?'\u2665 hearted':'',p.kind,stage(p)+(p.emailedAt&&p.emailedAt!=='earlier'?' (emailed '+dayTxt(p.emailedAt)+')':''),p.city,sibs(p).length?'also at '+sibs(p).map(x=>x.city||x.area||x.name).join(', '):'',tagsOf(p).length?'tags: '+tagsOf(p).join(', '):'',p.contactName,lk,p.ds?'info: '+p.ds:''].filter(Boolean).join(' · '))}</small>${p.fit?`<small>Fit: ${esc(p.fit)}</small>`:''}</div>
       <label class="cp-chk" data-cp="stop"><input type="checkbox" data-cp="em" data-arg="${esc(m)}|${esc(p.id)}" ${p.emailedAt?'checked':''}> Emailed</label><label class="cp-chk" data-cp="stop"><input type="checkbox" data-cp="cold" data-arg="${esc(m)}|${esc(p.id)}" ${p.goneCold?'checked':''}> Gone cold</label>
       <button class="btn-sm" data-cp="hide" data-arg="${esc(m)}|${esc(p.id)}" title="${p.hidden?'Put back on this theme':'Keep saved but hide it from this theme'}">${p.hidden?'Bring back':'Not using'}</button><button class="btn-sm" data-cp="mailp" data-arg="${esc(m)}|${esc(p.id)}">Email</button>${pen('pedit',m+'|'+p.id,'Edit this business')}</div>`;}).join(''):`<div class="cp-none">${tot?'No sponsor prospects match the filters.':'No sponsor prospects for '+esc(area||'this month')+' yet.'}</div>`;
   const Sg=sug(m),rl=rule(m),hasRule=rl.inc.length>0;
@@ -12359,6 +12366,7 @@ function render(){
     <select class="roster-filter-select" data-cpsel="stage">${opt('','Any progress',F.stage)}${['To ask','In progress','Said yes','Said no','Gone cold','Not using'].map(c=>opt(c,c,F.stage)).join('')}</select>
     <select class="roster-filter-select" data-cpsel="ds">${opt('','Any info found',F.ds)}${dss.map(c=>opt(c,c,F.ds)).join('')}</select>
     <select class="roster-filter-select" data-cpsel="has">${opt('','Any contact',F.has)}${opt('email','Has email',F.has)}${opt('noemail','No email yet',F.has)}${opt('social','Has Instagram or Facebook',F.has)}</select>
+    <button class="cp-chip ${F.heart?'on':''}" data-cp="heartf">&#9829; Hearted</button>
     <button class="btn-sm" data-cp="clearf">Clear filters</button></div>
   <div class="cp-card"><div class="cp-fold" data-cp="fold" data-arg="def" data-def="1"><span class="cp-car">${defOpen?'&#9662;':'&#9656;'}</span><span class="cp-lbl">Default email draft (every sponsor email starts from this)</span></div>
     ${defOpen?`<div class="cp-body"><div style="font-size:.74rem;color:var(--text3);margin-bottom:.7rem">These words fill in automatically: {sponsor} {contact} {theme} {month} {area} {venue} {week} {fee}</div>
@@ -12375,18 +12383,20 @@ function onClick(e){
   switch(act){
     case 'stop':break;
     case 'close':closeOv();break;
-    case 'fold':foldToggle(arg,arg.charAt(0)==='c'?arg.slice(2)===todayStr().slice(0,7):true);break;
+    case 'fold':foldToggle(arg,arg==='master'?false:arg.charAt(0)==='c'?arg.slice(2)===todayStr().slice(0,7):true);break;
     case 'mode':filterMode=arg;render();break;
     case 'area':saveLib('sponsors',{area:arg},true).then(render);break;
     case 'areas':areasEdit();break;
     case 'areassave':areasSave();break;
     case 'bantoggle':saveLib('sponsors',{showBanners:!showBanners()},true).then(render);break;
-    case 'clearf':F={q:'',kind:'',city:'',tag:'',stage:'',ds:'',has:''};render();break;
+    case 'clearf':F={q:'',kind:'',city:'',tag:'',stage:'',ds:'',has:'',heart:false};render();break;
     case 'padd':sponEdit('',arg);break;
     case 'pedit':sponEdit(mo[1]||'',mo[0]);break;
     case 'rules':rulesEdit(arg);break;
     case 'rulessave':rulesSave(arg);break;
     case 'pin':pin(mo[0],mo[1]);break;
+    case 'heart':heartToggle(mo[0],mo[1]);break;
+    case 'heartf':F.heart=!F.heart;render();break;
     case 'mclear':M={q:'',kind:'',city:'',tag:''};render();break;
     case 'editsave':sponEditSave(arg,a.dataset.m);break;
     case 'del':sponDel(arg);break;
