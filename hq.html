@@ -9055,7 +9055,7 @@ Never message anyone.`},
   body:`TASK: Gig check. Writes only agent_config knowngigs (plus your run note). Read-only everywhere else. Never contact anyone.
 1. Read agent_config and find the doc knowngigs. Fields: gigs (a map of id to {venue, night, kind, runBy, social, status (still going, ended or not sure), checked (YYYY-MM-DD), notes}) and people (a map of id to {name, kind, instagram, facebook, website, notes}). Also read Our Venues ({"op":"readVenues"}) so you never add a night we already run.
 2. RE-CHECK. Pick up to 15 gigs to check this run: first every gig with no checked date, then the ones with the oldest checked date. Skip a gig checked in the last 28 days. For each, look at every place you can find on the public web: the venue's own website and event page, its Facebook page and events, its Instagram, Google listing, the runBy business or host's own pages (the people list holds their social pages; use them), and local event calendars. Decide: "still going" when you find a recent post, event or listing (within about 6 weeks) showing that night; "ended" when a page says it stopped, the venue closed, or the night was replaced by something else; "not sure" when you cannot tell. Never guess. A night with no recent sign is "not sure", not "ended".
-3. Write each result with setConfig doc "knowngigs" data {gigs:{<id>:{status:"...",checked:"<today YYYY-MM-DD>",social:"<the best link you found, if the field was empty>",notes:"<what you saw and where, with the date of the post, in one line>"}}}. Keep the existing notes by putting them first, then yours. Set checked only on gigs you really looked at. If a night ended, say so in the notes, add "venue may want a new night" and never delete anything. If you find the runBy has a website or social page that is not in people, add it to people.
+3. Write each result with setConfig doc "knowngigs" data {gigs:{<id>:{status:"...",checked:"<today YYYY-MM-DD>",social:"<the best link you found, if the field was empty>",notes:"<what you saw and where, with the date of the post, in one line>"}}}. Keep the existing notes by putting them first, then yours. Set checked only on gigs you really looked at. If a night ended, set status "ended" and endedAt "<today YYYY-MM-DD>", say so in the notes, add "venue may want a new night" and never delete anything (ended gigs move to History in Ahnna's weekly grid). If you find the runBy has a website or social page that is not in people, add it to people.
 4. FIND NEW GIGS. Search the public web for karaoke, trivia and music bingo nights at bars, breweries, restaurants and clubs within about 30 miles of Auburn WA: Auburn, Kent, Federal Way, Renton, Tukwila, Des Moines, Burien, Sumner, Bonney Lake, Puyallup, South Hill, Spanaway, Fife, Tacoma, Orting, Enumclaw and Buckley. Use venue pages, Facebook events, Instagram, Google listings, Yelp and local event calendars. Add up to 10 new rows per run that are not already in gigs (match venue and night ignoring capitals and punctuation) and are not a night we run (Our Venues gigs and slots). Each new row: gigs{<new id like g + ms + index>:{venue, night (a weekday), kind (Karaoke, Trivia, Music bingo or Other), runBy (the business or host, if you can find it), social (the link where you saw it), status "still going", checked "<today>", notes (what you saw and where, with a date), addedBy "sable", createdAt <ms>}}. Only add a night you actually found on a page from the last 6 weeks. If a runBy business or host is new, add them to people{<new id>:{name, kind "Business" or "Host", instagram, facebook, website, notes, createdAt}}.
 5. Never remove or overwrite a field Ahnna typed (venue, night, kind, runBy) on a row that already exists, and never change a row that is not in your list of 15.
 6. Report in plain words: how many you checked, which ones ended, which ones you could not confirm, and the new gigs you added with the venue and night. Mention any venue whose night ended, because it may be open to one of ours.`},
@@ -9170,6 +9170,8 @@ function renderDrawer(force){
   }
   S.pend=false;
   const a=agent(S.cur),body=$('#tmDrB'),top=body.scrollTop;
+  const dKey=d=>{const o=d.closest('.tm-item'),t1=o&&o.querySelector('.t1'),sm=d.querySelector(':scope>summary');return (t1?t1.textContent:'').replace(/\s+/g,' ').trim().slice(0,60)+'|'+(sm?sm.textContent:'').replace(/\s+/g,' ').trim().slice(0,50);};
+  const keepOpen={};try{body.querySelectorAll('details:not([data-k]):not([data-pk])').forEach(d=>{if(d.open)keepOpen[dKey(d)]=1;});}catch(e){}
   const rk=S.cur+'|'+S.view;
   if(S.lastRend===rk){try{body.querySelectorAll('details[data-k]').forEach(d=>{S.open[d.dataset.k]=d.open;});body.querySelectorAll('.tm-item>.t1.fold[data-id]').forEach(t=>{S.open['c_'+t.dataset.id]=!t.parentElement.classList.contains('folded');});}catch(e){}}
   S.lastRend=rk;
@@ -9185,6 +9187,7 @@ function renderDrawer(force){
   const _top=_fold?remFold(S.cur):'',_bot=_fold?notesFold(S.cur):'';
   body.innerHTML=_pre+_top+(_fold?foldSections(_main):_main)+_bot;
   if(_fold)autoFoldItems(body);
+  try{body.querySelectorAll('details:not([data-k]):not([data-pk])').forEach(d=>{if(keepOpen[dKey(d)])d.open=true;});}catch(e){}
   body.scrollTop=top;
 }
 const NOTE_DOC={sable:'sable',sigil:'sigil',warden:'warden',coach:'coach',vesper:'care',herald:'curator',ember:'social',marquee:'ads'};
@@ -9282,7 +9285,7 @@ function unknownPrompt(f){
 function draftCard(dr,withPrice){
   const l=leadsById()[dr.leadId];const OP=optState('d'+dr.id,dr.body);
   const head=l?leadLine(l):'<b>'+esc(dr.label||'Draft')+'</b>';
-  return '<div class="tm-item"><div class="t1">'+head+'</div>'+
+  return '<div class="tm-item'+(S.open['c_dr'+dr.id]?'':' folded')+'"><div class="t1 fold" data-act="fold" data-id="dr'+esc(dr.id)+'">'+head+'</div>'+
     '<div class="t2">'+esc(dr.kind==='n1'?'First nudge':dr.kind==='n2'?'Final nudge':dr.kind==='review'?'Review reply':dr.kind==='thanks'?'Thank-you':dr.kind==='email'?'Cold email (touch 1)':dr.kind==='email2'?'Cold email (touch 2)':dr.kind==='email3'?'Cold email (touch 3)':dr.kind==='cold'?'Cold email':dr.kind==='dm'?'Extra Instagram DM':dr.kind==='colddm'?'Instagram message (touch)':dr.kind==='reviewask'?'Review request':dr.kind==='checkin'?'Venue check-in':dr.kind==='paperwork'?'Paperwork reminder':dr.kind==='seo'?'SEO fix':'Reply and quote')+' · drafted '+fmtDay(dr.createdAt)+'</div>'+
     optBar('d'+dr.id,OP.n,OP.i)+'<textarea class="tm-ta" style="margin-top:.6rem" data-did="'+esc(dr.id)+'">'+esc(OP.text||'')+'</textarea>'+pickBar('d'+dr.id,dr.picks,dr.redraft)+(dr.rewrite?'<div class="t2" style="color:var(--text3)">Rewrite requested '+esc(fmtDay(dr.rewrite.at))+'. '+(dr.agent==='raven'?'Raven writes four new versions on her next Lead run (weekdays 7 am)':'Quill writes four new versions on his next run')+', and the prompt was copied if you want it sooner.</div>':'')+
     '<div class="tm-row">'+(withPrice?'<input class="tm-in s" data-pid="'+esc(dr.id)+'" placeholder="Quoted $" value="'+esc(l&&l.quotedPrice||'')+'">':'')+
@@ -9496,7 +9499,7 @@ function outreachHistory(){
 function venueCard(v,fold){
   const st=v.stage||'target',now=Date.now();
   const last=v.visits?Object.values(v.visits).sort((a,b)=>b.at-a.at)[0]:null;
-  let h='<div class="tm-item'+(fold&&!S.open['c_'+v.id]?' folded':'')+'"><div class="t1'+(fold?' fold':'')+'"'+(fold?' data-act="fold" data-id="'+esc(v.id)+'"':'')+'><span class="tm-tag '+TAGC[st]+'">'+TAGL[st]+'</span>'+thrownTag(v)+'<b>'+esc(v.name)+'</b> · '+esc(v.city||'')+(v.address?' · '+esc(v.address):'')+'</div>'+thrownLine(v);
+  let h='<div class="tm-item'+(fold&&!S.open['c_'+v.id]?' folded':'')+'"><div class="t1'+(fold?' fold':'')+'"'+(fold?' data-act="fold" data-id="'+esc(v.id)+'"':'')+'><span class="tm-tag '+TAGC[st]+'">'+TAGL[st]+'</span><b>'+esc(v.name)+'</b>'+thrownTag(v)+' · '+esc(v.city||'')+(v.address?' · '+esc(v.address):'')+'</div>'+thrownLine(v);
   if(v.verify)h+='<div class="t2"><span class="tm-tag warn">confirm it is open first</span>Check the venue\'s own page, then mark it confirmed.</div>';
   if(v.evidence)h+='<div class="t2">'+esc(v.evidence)+'</div>';
   if(v.pitch)h+='<div class="t2"><b>Pitch:</b> '+esc(v.pitch)+'</div>';
@@ -9598,7 +9601,7 @@ function kgRow(set,r){
     return '<div'+(f==='notes'?' class="full"':'')+'><label class="tm-lbl">'+esc(c[1])+'</label>'+inp+'</div>';};
   const links=set==='people'?['instagram','facebook','website'].map(f=>{const u=r[f]||'';const href=/^https?:\/\//i.test(u)?u:(f==='instagram'&&u?'https://instagram.com/'+u.replace(/^@/,''):'');return href?'<a href="'+esc(href)+'" target="_blank" rel="noopener">'+f+'</a>':'';}).filter(Boolean).join(' &middot; '):'';
   return '<div class="tm-item'+(S.open['c_'+r.id]?'':' folded')+'"><div class="t1 fold" data-act="fold" data-id="'+esc(r.id)+'"><b>'+esc(key||'(blank)')+'</b> '+tag+(r.runBy?'<span class="tm-tag">'+esc(r.runBy)+'</span>':'')+(r.addedBy==='sable'?'<span class="tm-tag booked">found by Sable</span>':'')+'</div><div class="tm-fg">'+sp.cols.map(fld).join('')+'</div>'+(links?'<div class="t2">'+links+'</div>':'')+
-    '<div class="tm-row">'+(set==='gigs'?'<button class="tm-b pri" data-act="kgchecked" data-id="'+esc(r.id)+'" title="Sets Last checked to today and Status to still going">Checked today, still going</button>':'')+'<button class="tm-b dim red" data-act="kgdel" data-set="'+set+'" data-id="'+esc(r.id)+'">Delete</button></div></div>';
+    '<div class="tm-row">'+(set==='gigs'?'<button class="tm-b pri" data-act="kgchecked" data-id="'+esc(r.id)+'" title="Sets Last checked to today and Status to still going">Checked today, still going</button><button class="tm-b dim" data-act="kgended" data-id="'+esc(r.id)+'" title="They no longer run this night here. It leaves the grid and stays in History.">No longer runs this</button>':'')+'<button class="tm-b dim red" data-act="kgdel" data-set="'+set+'" data-id="'+esc(r.id)+'">Delete</button></div></div>';
 }
 function kgSection(set){
   const sp=KG_SETS[set],rows=kgRows(set).sort((a,b)=>String(a.venue||a.name||'').localeCompare(String(b.venue||b.name||'')));
@@ -9615,54 +9618,72 @@ function kgSection(set){
 }
 /* ── Weekly grid: the same layout as her breakdown sheet, built from Gigs run by others + our own nights ── */
 const KGG={type:'',st:'live',q:''},KG_WD=['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+function kggArea(r){const m=/Area:\s*([^·]+)/i.exec(r.notes||'');return m?m[1].trim():'No area yet';}
+function kggMatch(q,r){return !q||[r.venue,r.runBy,r.night,r.kind,r.notes].join(' ').toLowerCase().indexOf(q)>=0;}
 function kggData(){
-  const area=r=>{const m=/Area:\s*([^·]+)/i.exec(r.notes||'');return m?m[1].trim():'No area yet';};
-  const byV={};
+  const byV={},q=KGG.q.toLowerCase().trim();
   const get=(name,ar)=>{const k=blNorm(name);if(!byV[k])byV[k]={name:name,area:ar,cells:{}};else if(ar&&byV[k].area==='No area yet')byV[k].area=ar;return byV[k];};
   kgRows('gigs').forEach(r=>{if(!r.venue||KG_WD.indexOf(r.night)<0)return;
     const st=r.status||'not sure';
     if(KGG.type&&r.kind!==KGG.type)return;
     if(KGG.st==='live'&&st==='ended')return;if(KGG.st&&KGG.st!=='live'&&KGG.st!=='all'&&st!==KGG.st)return;
-    const v=get(r.venue,area(r));(v.cells[r.night]=v.cells[r.night]||[]).push({who:r.runBy||'(nobody named)',kind:r.kind||'Other',st:st,tip:[r.kind,r.notes,r.checked?'Checked '+r.checked:'Never checked',r.social].filter(Boolean).join(' · ')});});
+    if(!kggMatch(q,r))return;
+    const v=get(r.venue,kggArea(r));(v.cells[r.night]=v.cells[r.night]||[]).push({who:r.runBy||'(nobody named)',kind:r.kind||'Other',st:st,venue:r.venue,night:r.night,tip:[r.kind,r.notes,r.checked?'Checked '+r.checked:'Never checked',r.social].filter(Boolean).join(' · ')});});
   try{if(!KGG.st||KGG.st==='live'||KGG.st==='all'){(typeof venues!=='undefined'?venues:[]).filter(v=>v&&v.name&&!v.inactive).forEach(hv=>{
     (venueEditorSlots(hv)||[]).forEach(sl=>{if(!sl.kind||!sl.day||!vmxLive(sl.status))return;const kk=sl.kind==='Private Events'?'Events':sl.kind;const kd=/event/i.test(kk)?'Other':kk;if(KGG.type&&kd!==KGG.type)return;
-      const v=get(hv.name,'Our venues');const day=KG_WD.find(x=>x.toLowerCase()===String(sl.day).toLowerCase());if(!day)return;
-      (v.cells[day]=v.cells[day]||[]).push({who:'Belladonna',kind:kd,st:'ours',tip:'Our night: '+sl.kind+(sl.time?' at '+sl.time:'')});});});}}catch(e){}
-  const q=KGG.q.toLowerCase().trim();
-  let list=Object.values(byV).filter(v=>!q||(v.name+' '+Object.values(v.cells).map(c=>c.map(x=>x.who).join(' ')).join(' ')).toLowerCase().indexOf(q)>=0);
-  list=list.filter(v=>Object.keys(v.cells).length);
+      const day=KG_WD.find(x=>x.toLowerCase()===String(sl.day).toLowerCase());if(!day)return;
+      if(!kggMatch(q,{venue:hv.name,runBy:'Belladonna',night:day,kind:kd,notes:'ours'}))return;
+      const v=get(hv.name,'Our venues');
+      (v.cells[day]=v.cells[day]||[]).push({who:'Belladonna',kind:kd,st:'ours',venue:hv.name,night:day,tip:'Our night: '+sl.kind+(sl.time?' at '+sl.time:'')});});});}}catch(e){}
+  const list=Object.values(byV).filter(v=>Object.keys(v.cells).length);
   const areas={};list.forEach(v=>{(areas[v.area]=areas[v.area]||[]).push(v);});
   return Object.keys(areas).sort((a,b)=>(a==='Our venues'?1:0)-(b==='Our venues'?1:0)||(a==='No area yet'?1:0)-(b==='No area yet'?1:0)||a.localeCompare(b)).map(a=>({area:a,venues:areas[a].sort((x,y)=>x.name.localeCompare(y.name))}));
 }
+// Gigs that used to run and don't anymore. They leave the grid but stay on record here.
+function kggHistory(){const q=KGG.q.toLowerCase().trim();return kgRows('gigs').filter(r=>r.status==='ended'&&(!KGG.type||r.kind===KGG.type)&&kggMatch(q,r)).sort((a,b)=>String(b.endedAt||b.checked||'').localeCompare(String(a.endedAt||a.checked||''))||String(a.venue).localeCompare(String(b.venue)));}
 function kggHtml(){
-  const g=kggData();let n=0;
+  const g=kggData(),hist=kggHistory(),q=KGG.q.trim();let n=0,flat=[];
   let h='<table class="kgg-t"><thead><tr><th class="kgg-v">Venue</th>'+KG_WD.map(d=>'<th>'+d+'</th>').join('')+'</tr></thead><tbody>';
-  if(!g.length)h+='<tr><td colspan="8" style="padding:1.2rem;opacity:.7">Nothing matches. Add gigs or import your sheet in Gigs run by others.</td></tr>';
+  if(!g.length)h+='<tr><td colspan="8" class="kgg-none">Nothing matches.</td></tr>';
   g.forEach(a=>{h+='<tr><td class="kgg-city" colspan="8">'+esc(a.area)+'</td></tr>';
-    a.venues.forEach(v=>{h+='<tr><td class="kgg-v">'+esc(v.name)+'</td>'+KG_WD.map(d=>'<td>'+(v.cells[d]||[]).map(c=>{n++;return '<span class="kgg-c kgg-'+(c.st==='still going'?'on':c.st==='not sure'?'ns':c.st==='ended'?'end':'us')+'" title="'+esc(c.tip)+'">'+esc(c.who)+'<i>'+esc(c.kind==='Music bingo'?'Bingo':c.kind)+'</i></span>';}).join('')+'</td>').join('')+'</tr>';});});
+    a.venues.forEach(v=>{h+='<tr><td class="kgg-v">'+esc(v.name)+'</td>'+KG_WD.map(d=>{const cs=v.cells[d]||[];return '<td data-d="'+d+'"'+(cs.length?'':' class="kgg-e"')+'>'+cs.map(c=>{n++;flat.push(c);return '<span class="kgg-c kgg-'+(c.st==='still going'?'on':c.st==='not sure'?'ns':c.st==='ended'?'end':'us')+'" data-tip="'+esc(c.tip)+'" tabindex="0">'+esc(c.who)+'<i>'+esc(c.kind==='Music bingo'?'Bingo':c.kind)+'</i></span>';}).join('')+'</td>';}).join('')+'</tr>';});});
   h+='</tbody></table>';
-  return '<div class="tm-hint" style="margin:.2rem 0 .8rem">'+n+' nights shown. <span class="kgg-c kgg-on">still going</span> <span class="kgg-c kgg-ns">not sure</span> <span class="kgg-c kgg-end">ended</span> <span class="kgg-c kgg-us">ours</span> Hover a cell for the type, notes and when it was last checked.</div><div class="kgg-wrap">'+h+'</div>';
+  const side=q?'<div class="kgg-side"><div class="kgg-sideh">Results for &ldquo;'+esc(q)+'&rdquo; ('+(flat.length+hist.length)+')</div>'+(flat.length||hist.length?flat.map(c=>'<div class="kgg-li"><b>'+esc(c.venue)+'</b><span>'+esc(c.night)+' &middot; '+esc(c.who)+' &middot; '+esc(c.kind)+'</span><em>'+(c.st==='ours'?'ours':esc(c.st))+'</em></div>').join('')+hist.map(r=>'<div class="kgg-li"><b>'+esc(r.venue)+'</b><span>'+esc(r.night||'')+' &middot; '+esc(r.runBy||'(nobody named)')+' &middot; '+esc(r.kind||'')+'</span><em>no longer runs</em></div>').join(''):'<div class="kgg-li"><span>Nothing found.</span></div>')+'</div>':'';
+  const hh=hist.length?'<div class="kgg-hist"><div class="kgg-hh">History: used to run here, no longer ('+hist.length+')</div>'+hist.map(r=>'<div class="kgg-li"><b>'+esc(r.venue)+'</b><span>'+esc(r.night||'')+' &middot; '+esc(r.runBy||'(nobody named)')+' &middot; '+esc(r.kind||'')+(r.notes?' &middot; '+esc(r.notes):'')+'</span><em>'+(r.endedAt?'ended '+esc(r.endedAt):r.checked?'last seen '+esc(r.checked):'ended')+'</em></div>').join('')+'</div>':'';
+  return '<div class="tm-hint" style="margin:.2rem 0 .8rem">'+n+' nights shown. <span class="kgg-c kgg-on">still going</span> <span class="kgg-c kgg-ns">not sure</span> <span class="kgg-c kgg-us">ours</span> Hover a cell for the type, notes and when it was last checked. Gigs that ended leave the grid and are kept in History below.</div><div class="kgg-main"><div class="kgg-grid"><div class="kgg-wrap">'+h+'</div>'+hh+'</div>'+side+'</div>';
 }
 function kggCsv(){
   const rows=[['Venues'].concat(KG_WD)];
   kggData().forEach(a=>{rows.push([String(a.area).toUpperCase()]);a.venues.forEach(v=>{rows.push([v.name].concat(KG_WD.map(d=>(v.cells[d]||[]).filter(c=>c.st!=='ours'&&c.st!=='ended').map(c=>(c.who==='(nobody named)'?'':c.who)+(c.st==='not sure'?'?':'')).join('/'))));});rows.push([]);});
   return csvOut(rows);
 }
-function kggRender(){const b=document.getElementById('kggBody');if(b)b.innerHTML=kggHtml();}
+let kggLast='';
+function kggRender(force){const b=document.getElementById('kggBody');if(!b)return;const h=kggHtml();if(!force&&h===kggLast)return;kggLast=h;b.innerHTML=h;}
+function kggTip(e){
+  let t=document.getElementById('kggTip');
+  const c=e.target&&e.target.closest?e.target.closest('.kgg-c[data-tip]'):null;
+  if(!c){if(t)t.style.display='none';return;}
+  if(!t){t=document.createElement('div');t.id='kggTip';t.style.cssText='position:fixed;z-index:100000;max-width:22rem;background:#1a1a1a;color:#f0ece0;border:1px solid #c9a96e;border-radius:6px;padding:.45rem .7rem;font-size:.85rem;line-height:1.35;pointer-events:none;box-shadow:0 4px 18px rgba(0,0,0,.6)';document.body.appendChild(t);}
+  t.textContent=c.getAttribute('data-tip')||'No notes';t.style.display='block';
+  const r=c.getBoundingClientRect(),w=t.offsetWidth,hh=t.offsetHeight;
+  t.style.left=Math.max(6,Math.min(innerWidth-w-6,r.left))+'px';t.style.top=(r.bottom+hh+8>innerHeight?Math.max(6,r.top-hh-6):r.bottom+6)+'px';
+}
 window.kgOpenGrid=function(){
-  if(!document.getElementById('kggStyle')){const st=document.createElement('style');st.id='kggStyle';st.textContent='.kgg-wrap{overflow:auto;max-height:calc(100vh - 15rem);border:1px solid rgba(201,169,110,.3);border-radius:8px}.kgg-t{border-collapse:collapse;width:100%;font-size:.78rem}.kgg-t th{position:sticky;top:0;background:#0b0b0b;color:var(--gold);font-weight:600;letter-spacing:.12em;text-transform:uppercase;font-size:.62rem;padding:.55rem .6rem;border-bottom:1px solid rgba(201,169,110,.4);text-align:left;z-index:2}.kgg-t td{border-bottom:1px solid rgba(255,255,255,.06);border-right:1px solid rgba(255,255,255,.05);padding:.35rem .5rem;vertical-align:top;min-width:105px}.kgg-t .kgg-v{position:sticky;left:0;background:#0b0b0b;min-width:170px;font-weight:600;color:var(--text);z-index:1}.kgg-t th.kgg-v{z-index:3}.kgg-city{background:rgba(201,169,110,.12);color:var(--gold);letter-spacing:.22em;text-transform:uppercase;font-size:.65rem;font-weight:600;padding:.45rem .6rem!important}.kgg-c{display:inline-flex;gap:.35rem;align-items:baseline;padding:.12rem .45rem;border-radius:4px;border:1px solid;margin:.1rem .15rem .1rem 0;font-size:.72rem;cursor:default}.kgg-c i{font-style:normal;font-size:.55rem;letter-spacing:.1em;text-transform:uppercase;opacity:.75}.kgg-on{color:var(--live);border-color:var(--live);background:rgba(80,200,120,.08)}.kgg-ns{color:var(--gold);border-color:var(--gold);background:rgba(201,169,110,.08)}.kgg-end{color:var(--rose);border-color:var(--rose);text-decoration:line-through;opacity:.8}.kgg-us{color:#c9a0dc;border-color:#c9a0dc;background:rgba(201,160,220,.08)}';document.head.appendChild(st);}
+  if(!document.getElementById('kggStyle')){const st=document.createElement('style');st.id='kggStyle';st.textContent='.kgg-main{display:flex;gap:1rem;align-items:flex-start}.kgg-grid{flex:1;min-width:0}.kgg-side{width:280px;flex:none;position:sticky;top:0;max-height:calc(100vh - 14rem);overflow:auto;border:1px solid rgba(201,169,110,.4);border-radius:8px;padding:.6rem .8rem;background:#0b0b0b}.kgg-sideh,.kgg-hh{color:var(--gold);letter-spacing:.14em;text-transform:uppercase;font-size:.66rem;font-weight:600;margin-bottom:.5rem}.kgg-hist{margin-top:1rem;border:1px solid rgba(201,169,110,.3);border-radius:8px;padding:.7rem .9rem}.kgg-li{display:flex;flex-direction:column;gap:.1rem;padding:.4rem 0;border-bottom:1px solid rgba(255,255,255,.07);font-size:.85rem}.kgg-li b{color:var(--text)}.kgg-li span{color:var(--text2)}.kgg-li em{font-style:normal;color:var(--gold);font-size:.72rem;letter-spacing:.08em;text-transform:uppercase}.kgg-wrap{overflow-x:hidden;overflow-y:auto;max-height:calc(100vh - 15rem);border:1px solid rgba(201,169,110,.3);border-radius:8px}.kgg-t{border-collapse:collapse;width:100%;table-layout:fixed;font-size:.78rem}.kgg-t th{position:sticky;top:0;background:#0b0b0b;color:var(--gold);font-weight:600;letter-spacing:.1em;text-transform:uppercase;font-size:.62rem;padding:.55rem .5rem;border-bottom:1px solid rgba(201,169,110,.4);text-align:left;z-index:2}.kgg-t th.kgg-v,.kgg-t td.kgg-v{width:15%}.kgg-t td{border-bottom:1px solid rgba(255,255,255,.06);border-right:1px solid rgba(255,255,255,.05);padding:.35rem .4rem;vertical-align:top;overflow-wrap:anywhere}.kgg-t .kgg-v{background:#0b0b0b;font-weight:600;color:var(--text)}.kgg-none{padding:1.2rem;opacity:.7}.kgg-city{background:rgba(201,169,110,.12);color:var(--gold);letter-spacing:.22em;text-transform:uppercase;font-size:.65rem;font-weight:600;padding:.45rem .6rem!important}.kgg-c{display:inline-flex;flex-wrap:wrap;gap:.1rem .35rem;align-items:baseline;padding:.12rem .45rem;border-radius:4px;border:1px solid;margin:.1rem .15rem .1rem 0;font-size:.72rem;cursor:default;overflow-wrap:anywhere}.kgg-c i{font-style:normal;font-size:.55rem;letter-spacing:.1em;text-transform:uppercase;opacity:.75}.kgg-on{color:var(--live);border-color:var(--live);background:rgba(80,200,120,.08)}.kgg-ns{color:var(--gold);border-color:var(--gold);background:rgba(201,169,110,.08)}.kgg-end{color:var(--rose);border-color:var(--rose);text-decoration:line-through;opacity:.8}.kgg-us{color:#c9a0dc;border-color:#c9a0dc;background:rgba(201,160,220,.08)}@media (max-width:600px){#kggModal .vm-actions{flex-wrap:wrap}#kggModal .modal-save{min-width:0!important}}@media (max-width:1100px){.kgg-main{flex-direction:column-reverse}.kgg-side{width:auto;position:static;max-height:none;align-self:stretch}.kgg-t,.kgg-t tbody,.kgg-t tr,.kgg-t td{display:block}.kgg-t thead{display:none}.kgg-t tr{border-bottom:1px solid rgba(201,169,110,.25);padding-bottom:.3rem}.kgg-t th.kgg-v,.kgg-t td.kgg-v{width:auto;padding:.5rem .6rem}.kgg-t td.kgg-e{display:none}.kgg-t td[data-d]{display:flex;gap:.6rem;align-items:flex-start;border-right:none}.kgg-t td[data-d]:before{content:attr(data-d);flex:none;width:6.2rem;color:var(--gold);font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;padding-top:.3rem}.kgg-t td[data-d]>span{flex:0 1 auto}.kgg-wrap{max-height:none}}';document.head.appendChild(st);}
   let m=document.getElementById('kggModal');
   if(!m){m=document.createElement('div');m.className='modal-bg vmx';m.id='kggModal';
-    m.innerHTML='<div class="modal vm-wide" style="max-width:1400px"><div class="vm-top"><button type="button" class="vm-back" onclick="document.getElementById(\'kggModal\').classList.remove(\'open\')">&larr; Gigs run by others</button><div class="vm-ttl"><i></i><span>Weekly grid</span><i class="r"></i></div><span></span></div>'+
-    '<div class="vm-sec"><div class="vm-grid" style="grid-template-columns:repeat(auto-fit,minmax(180px,1fr))"><div class="form-group"><label class="form-label">Search</label><input class="form-input" id="kggQ"></div><div class="form-group"><label class="form-label">Type</label><select class="form-input" id="kggType"><option value="">All types</option><option>Karaoke</option><option>Trivia</option><option>Music bingo</option><option>Other</option></select></div><div class="form-group"><label class="form-label">Show</label><select class="form-input" id="kggSt"><option value="live">Everything except ended</option><option value="still going">Still going only</option><option value="not sure">Not sure only</option><option value="ended">Ended only</option><option value="all">All</option></select></div></div></div>'+
+    m.innerHTML='<div class="modal vm-wide" style="max-width:min(98vw,1700px);overflow-x:hidden"><div class="vm-top"><button type="button" class="vm-back" onclick="document.getElementById(\'kggModal\').classList.remove(\'open\')">&larr; Gigs run by others</button><div class="vm-ttl"><i></i><span>Weekly grid</span><i class="r"></i></div><span></span></div>'+
+    '<div class="vm-sec"><div class="vm-grid" style="grid-template-columns:repeat(auto-fit,minmax(180px,1fr))"><div class="form-group"><label class="form-label">Search</label><input class="form-input" id="kggQ" autocomplete="off"></div><div class="form-group"><label class="form-label">Type</label><select class="form-input" id="kggType"><option value="">All types</option><option>Karaoke</option><option>Trivia</option><option>Music bingo</option><option>Other</option></select></div><div class="form-group"><label class="form-label">Show</label><select class="form-input" id="kggSt"><option value="live">Everything except ended</option><option value="still going">Still going only</option><option value="not sure">Not sure only</option><option value="ended">Ended only</option><option value="all">All</option></select></div></div></div>'+
     '<div class="vm-sec" id="kggBody"></div><div class="modal-actions vm-actions"><div style="flex:1"></div><button class="modal-cancel" id="kggCopy">Copy as CSV</button><button class="modal-cancel" id="kggDl">Download CSV</button><button class="modal-save" style="flex:none;min-width:9rem" onclick="document.getElementById(\'kggModal\').classList.remove(\'open\')">Close</button></div></div>';
     document.body.appendChild(m);
-    m.querySelector('#kggQ').addEventListener('input',e=>{KGG.q=e.target.value;kggRender();});
-    m.querySelector('#kggType').addEventListener('change',e=>{KGG.type=e.target.value;kggRender();});
-    m.querySelector('#kggSt').addEventListener('change',e=>{KGG.st=e.target.value;kggRender();});
+    const qi=m.querySelector('#kggQ'),rq=()=>{KGG.q=qi.value;kggRender(true);};
+    ['input','keyup','change','search'].forEach(ev=>qi.addEventListener(ev,rq));
+    m.querySelector('#kggType').addEventListener('change',e=>{KGG.type=e.target.value;kggRender(true);});
+    m.querySelector('#kggSt').addEventListener('change',e=>{KGG.st=e.target.value;kggRender(true);});
+    m.addEventListener('mouseover',kggTip);m.addEventListener('focusin',kggTip);m.addEventListener('mouseleave',()=>kggTip({}));m.addEventListener('scroll',()=>kggTip({}),true);
     m.querySelector('#kggCopy').addEventListener('click',async()=>{toast(await copy(kggCsv())?'Grid copied as CSV.':'Copy failed.',false);});
     m.querySelector('#kggDl').addEventListener('click',()=>{const b=new Blob([kggCsv()],{type:'text/csv'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='gigs-weekly-grid.csv';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},500);});}
-  kggRender();m.classList.add('open');
+  kggRender(true);m.classList.add('open');
 };
 window.kggRefresh=function(){const m=document.getElementById('kggModal');if(m&&m.classList.contains('open'))kggRender();};
 function knownGigsHtml(){return kgSection('gigs')+kgSection('people');}
@@ -10756,6 +10777,15 @@ async function addProspect(){
   const ok=await addProspectDoc({name:g('pa-name'),city:g('pa-city'),address:g('pa-addr'),contact:g('pa-email'),contactName:g('pa-who'),evidence:g('pa-why'),pitch:g('pa-pitch'),phone:g('pa-phone'),instagram:g('pa-ig'),facebook:g('pa-fb'),website:g('pa-web'),foundFrom:g('pa-from'),hours:g('pa-hours'),notes:g('pa-notes'),emailed:document.getElementById('pa-sent').checked,emailedAt:d?new Date(d+'T12:00:00').getTime():0});
   if(ok){['pa-name','pa-city','pa-addr','pa-email','pa-who','pa-why','pa-pitch','pa-date','pa-phone','pa-ig','pa-fb','pa-web','pa-from','pa-hours','pa-notes'].forEach(i=>{const e=document.getElementById(i);if(e)e.value='';});document.getElementById('pa-sent').checked=false;}
 }
+window.hqAddProspect=addProspectDoc;
+window.hqAddSponsor=async function(o){
+  const n=String(o.business||'').trim();if(!n){toast('Type a name first.',true);return false;}
+  const k=blNorm(n),ex=adsState().sponsors.find(x=>blNorm(x.business)===k&&x.status!=='archived');
+  if(ex){toast(n+' is already on Raven\'s desk under Possible sponsors.',true);return false;}
+  const doc={business:n,kind:o.kind||'',city:o.city||'',url:o.url||'',contact:o.contactName||o.contact||'',email:o.email||'',why:o.why||'',status:'new',createdAt:Date.now(),addedBy:'manual'};
+  await mqSave({['sponsors.b'+Date.now().toString(36)+Math.floor(Math.random()*1e4).toString(36)]:doc});
+  toast('Added to Possible sponsors on Raven\'s desk.');return true;
+};
 const PR={q:'',stage:'',city:''};
 function hxHref(k,v){v=String(v||'').trim();if(!v)return '';if(/^https?:\/\//i.test(v))return v;
   if(k==='instagram')return /instagram\.com/i.test(v)?'https://'+v.replace(/^\/+/,''):'https://instagram.com/'+v.replace(/^@/,'').replace(/\/+$/,'');
@@ -10812,7 +10842,7 @@ function renderProspects(force){
   list.filter(v=>!isBlocked(v)).forEach(v=>{
     const st=prStage(v),T=otTouches(v),em=emailOf(v);
     const line=(t,x)=>x?'<div style="margin:.25rem 0;font-size:.85rem"><b>'+t+':</b> '+esc(x)+'</div>':'';
-    h+='<details data-pk="'+esc(v.id)+'"'+(S.open['pr_'+v.id]?' open':'')+' style="border:1px solid var(--border,#444);border-radius:10px;padding:.55rem .8rem;margin-bottom:.5rem"><summary style="cursor:pointer;display:flex;gap:.5rem;align-items:center;flex-wrap:wrap"><span class="tm-tag '+(TAGC[st]||'')+'">'+esc(TAGL[st]||st)+'</span>'+thrownTag(v)+(irisDossier(v.name)?(prQuillDrafts(v).length?'<span class="tm-tag booked" title="Quill wrote a draft from Iris\'s research. Open this prospect to read it.">Quill draft ready</span>':'<span class="tm-tag booked" title="Iris has researched this venue. Quill writes the first email on the next weekday Lead run.">Researched, Quill writes next</span>'):'<span class="tm-tag" title="Iris researches new prospects every morning">Iris queued</span>')+'<b>'+esc(v.name)+'</b><span style="opacity:.7;font-size:.8rem">'+esc(v.city||'')+'</span>'+(hxLinks(v)?'<span>'+hxLinks(v)+'</span>':'')+(T.length?'<span style="opacity:.7;font-size:.75rem">'+T.length+' email'+(T.length>1?'s':'')+' sent</span>':'')+(v.followUpOn?'<span style="opacity:.7;font-size:.75rem">check back '+esc(v.followUpOn)+'</span>':'')+'</summary><div style="margin-top:.5rem">'+
+    h+='<details data-pk="'+esc(v.id)+'"'+(S.open['pr_'+v.id]?' open':'')+' style="border:1px solid var(--border,#444);border-radius:10px;padding:.55rem .8rem;margin-bottom:.5rem"><summary style="cursor:pointer;display:flex;gap:.5rem;align-items:center;flex-wrap:wrap"><span class="tm-tag '+(TAGC[st]||'')+'">'+esc(TAGL[st]||st)+'</span><b>'+esc(v.name)+'</b>'+thrownTag(v)+(irisDossier(v.name)?(prQuillDrafts(v).length?'<span class="tm-tag booked" title="Quill wrote a draft from Iris\'s research. Open this prospect to read it.">Quill draft ready</span>':'<span class="tm-tag booked" title="Iris has researched this venue. Quill writes the first email on the next weekday Lead run.">Researched, Quill writes next</span>'):'<span class="tm-tag" title="Iris researches new prospects every morning">Iris queued</span>')+'<span style="opacity:.7;font-size:.8rem">'+esc(v.city||'')+'</span>'+(hxLinks(v)?'<span>'+hxLinks(v)+'</span>':'')+(T.length?'<span style="opacity:.7;font-size:.75rem">'+T.length+' email'+(T.length>1?'s':'')+' sent</span>':'')+(v.followUpOn?'<span style="opacity:.7;font-size:.75rem">check back '+esc(v.followUpOn)+'</span>':'')+'</summary><div style="margin-top:.5rem">'+
       '<div class="vm-grid" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr));margin:.3rem 0 .6rem">'+[['name','Name'],['city','City'],['address','Address'],['contactName','Contact name'],['contact',em?'Email or phone':'Email or phone (none found yet)'],['phone','Phone'],['instagram','Instagram'],['facebook','Facebook'],['website','Website'],['foundFrom','Where we got them from']].map(a=>'<div class="form-group"><label class="form-label">'+a[1]+'</label><input class="form-input" id="lg-pf-'+esc(v.id)+'-'+a[0]+'" value="'+esc(v[a[0]]||'')+'" onchange="hqPfSave(\''+esc(v.id)+'\',\''+a[0]+'\',this.value)"></div>').join('')+'</div>'+
       [['hours','Hours of service'],['evidence','Why them'],['pitch','Pitch (format and night)']].map(a=>'<div class="form-group" style="margin:.3rem 0 .6rem"><label class="form-label">'+a[1]+'</label><textarea class="form-textarea" id="lg-pf-'+esc(v.id)+'-'+a[0]+'" style="min-height:3.4rem;resize:vertical" onchange="hqPfSave(\''+esc(v.id)+'\',\''+a[0]+'\',this.value)">'+esc(v[a[0]]||'')+'</textarea></div>').join('')+'<div class="form-group" style="margin:.3rem 0 .6rem"><label class="form-label">Notes</label><textarea class="form-textarea" id="lg-pf-'+esc(v.id)+'-notes" style="min-height:3.4rem;resize:vertical" onchange="hqPfSave(\''+esc(v.id)+'\',\'notes\',this.value)">'+esc(v.notes||'')+'</textarea></div>'+(thrownInfo(v)?line('Thrown to Raven from '+thrownInfo(v).who,thrownInfo(v).title+(thrownInfo(v).at?' ('+fmtDay(thrownInfo(v).at)+')':'')):'')+line("Iris's idea to open with",baitFor(v.name))+line("Iris's best pitch",bestFitText(v.name))+(v.hours?'':line('Hours Iris found',(irisDossier(v.name)||{}).hours))+line('Already runs',(function(){const r=irisDossier(v.name);if(!r)return '';const a=[].concat(r.runsNow||[]).filter(Boolean);return a.length?a.join('; '):(r.checkedAt?'Nothing found running':'');})())+
       prDraftsHtml(v)+
@@ -11374,14 +11404,14 @@ const A={
   open(t){openAgent(t.dataset.agent);},
   async gsec(t){const k='g_'+t.dataset.id,cur=S.open[k]!==undefined?S.open[k]:false;S.open[k]=!cur;renderBrief();},
   async gall(t){const v=t.dataset.v==='1';(S.gids||[]).forEach(id=>{S.open['g_'+id]=v;});renderBrief();},
-  async bsave(){
-    const keys=Object.keys(S.bchk).filter(k=>S.bchk[k]);if(!keys.length){toast('Tick something first.',true);return;}
+  async bsave(t,only){
+    const keys=only?[only]:Object.keys(S.bchk).filter(k=>S.bchk[k]);if(!keys.length){toast('Tick something first.',true);return;}
     const today=isoDay(Date.now()),cur=(S.cfg.briefing&&S.cfg.briefing.done)||{},m={};
     const rk=keys.filter(k=>k.indexOf('rem_')===0),nk=keys.filter(k=>k.indexOf('rem_')!==0);
     Object.keys(cur).forEach(k=>{if(cur[k]===today)m[k]=today;});nk.forEach(k=>{m[k]=today;});
     if(nk.length)await col('agent_config').doc('briefing').set({done:m});
     if(rk.length){const p={};rk.forEach(k=>{p['items.'+k.slice(4)+'.done']=true;p['items.'+k.slice(4)+'.doneAt']=Date.now();});await remSave(p);}
-    keys.forEach(k=>delete S.bchk[k]);toast('Saved. Filed away for today.');
+    keys.forEach(k=>delete S.bchk[k]);toast(only?'Done. Filed away.':'Saved. Filed away for today.');
   },
   async bundo(t){
     if(String(t.dataset.key).indexOf('rem_')===0){await remSave({['items.'+t.dataset.key.slice(4)+'.done']:false});return;}
@@ -11389,7 +11419,7 @@ const A={
     Object.keys(cur).forEach(k=>{if(cur[k]===today&&k!==t.dataset.key)m[k]=today;});
     await col('agent_config').doc('briefing').set({done:m});
   },
-  async bchk(t){S.bchk[t.dataset.key]=t.checked;},
+  async bchk(t){S.bchk[t.dataset.key]=t.checked;if(t.checked)await A.bsave(t,t.dataset.key);},
   async copybrief(){toast(await copy(briefText())?'Briefing copied.':'Copy failed.',false);},
   chavatar(){$('#tmFile').click();},
   toggleinfo(){S.view=S.view==='info'?'work':'info';renderDrawer(true);$('#tmDrB').scrollTop=0;},
@@ -11503,8 +11533,9 @@ const A={
   async unblock(t){await col('agent_config').doc('outreach').set({blocklist:{[t.dataset.id]:firebase.firestore.FieldValue.delete()}},{merge:true});toast('Allowed again.');},
   async blockthis(t){const v=S.venues.find(x=>x.id===t.dataset.id);if(!v)return;const id='b'+Date.now().toString(36);await col('agent_config').doc('outreach').set({blocklist:{[id]:{name:v.name,venueId:v.id,reason:'',at:Date.now()}}},{merge:true});toast(v.name+' is on the Do not use list.');},
   async verified(t){await col('agent_venues').doc(t.dataset.id).update({verify:false});toast('Marked confirmed.');},
-  async kgf(t){const v=kgNorm(t.dataset.set,t.dataset.f,t.value);await kgSave({[t.dataset.set+'.'+t.dataset.id+'.'+t.dataset.f]:v});},
-  async kgchecked(t){await kgSave({['gigs.'+t.dataset.id+'.checked']:isoDay(Date.now()),['gigs.'+t.dataset.id+'.status']:'still going'});toast('Marked checked today.');},
+  async kgf(t){const v=kgNorm(t.dataset.set,t.dataset.f,t.value),pt={[t.dataset.set+'.'+t.dataset.id+'.'+t.dataset.f]:v};if(t.dataset.set==='gigs'&&t.dataset.f==='status'){const cur=(kgRows('gigs').find(r=>r.id===t.dataset.id)||{});pt['gigs.'+t.dataset.id+'.endedAt']=v==='ended'?(cur.endedAt||isoDay(Date.now())):'';}await kgSave(pt);},
+  async kgended(t){await kgSave({['gigs.'+t.dataset.id+'.status']:'ended',['gigs.'+t.dataset.id+'.endedAt']:isoDay(Date.now())});toast('Moved to History. It no longer shows on the grid.');},
+  async kgchecked(t){await kgSave({['gigs.'+t.dataset.id+'.checked']:isoDay(Date.now()),['gigs.'+t.dataset.id+'.status']:'still going',['gigs.'+t.dataset.id+'.endedAt']:''});toast('Marked checked today.');},
   async ventdec(t){try{await col('venueFeedback').doc(t.dataset.id).update({decision:t.dataset.v,status:t.dataset.v==='pending'?'new':'read'});toast(t.dataset.v==='approved'?'Approved.':t.dataset.v==='declined'?'Declined.':'Back to waiting.');}catch(e){toast('Could not save: '+e.message,true);}},
   async ibadd(t){const g=i=>{const e=document.getElementById(i);return e?e.value:'';};const title=g('ib-title').trim();if(!title){toast('Give the idea a title.',true);return;}const id='i'+Date.now().toString(36),rt=[g('ib-r1'),g('ib-r2'),g('ib-r3')].filter(Boolean);await ibSave({['items.'+id]:{title,body:g('ib-body').trim(),owner:g('ib-owner'),route:rt,status:'open',addedBy:'Ahnna',createdAt:Date.now(),notes:{}}});['ib-title','ib-body'].forEach(i=>{const e=document.getElementById(i);if(e)e.value='';});S.open.ibadd=false;toast('Idea added.');renderIdeas();},
   async ibnote(t){await A.ibpass(t,true);},
@@ -12022,7 +12053,7 @@ body.cp-lock,html.cp-lock{overflow:hidden!important}
 const COL='socialLibrary';
 const L={sponsors:{},banners:{},campaigns:{},settings:{},venueCities:{}};
 let REP={},applying=false,loaded={},monthly=[],started=false,unsubs=[],pend=false,loadErr='',filterMode='up',dr=null;
-let F={q:'',kind:'',city:'',tag:'',stage:'',ds:'',has:'',heart:false},M={q:'',kind:'',city:'',tag:''},migDone=false;
+let F={q:'',cat:'',kind:'',city:'',tag:'',stage:'',ds:'',has:'',heart:false},M={q:'',cat:'',kind:'',city:'',tag:''},migDone=false;
 const SPON_STATUS_WK=['Needed','Asked','Confirmed','Prizes in','Paid'];
 const TPL_DEFAULT={subject:'Sponsor a night with Belladonna: {theme} in {month}',body:"Hi {contact},\n\nI'm Ahnna with Belladonna Entertainment. Each week this month we're teaming up with one local business for a special night at {venue}, and I'd love for {sponsor} to be a featured sponsor.\n\nHere's the idea: {month}'s theme is {theme}. The venue makes a four-cocktail flight inspired by it, we sell tickets, and your business is the star of the night. You provide the prizes, and the sponsor fee is just ${fee}.\n\nWould you be open to hearing more?\n\nAhnna\nBelladonna Entertainment\n[logo + link]\nwww.belladonnanights.com"};
 const $=id=>document.getElementById(id);
@@ -12054,8 +12085,13 @@ function wkKey(m,i,a){return m+'_'+slug(a||sponArea())+'_'+i;}
 function tpl(){return sponD().template||TPL_DEFAULT;}
 function norm(p){const q={...p};q.answer=p.answer||(p.status==='Said yes'?'yes':p.status==='Said no'?'no':'');q.emailedAt=p.emailedAt||(p.status==='Asked'?'earlier':'');q.desc=p.desc||'';q.kind=p.kind||'';return q;}
 /* tags: typed with commas. Linked locations: prospects with the same group id are the same business in different places */
+const CATS=[['Coffee',/coffee|espresso|caf[eé]|roast|barista|latte|\btea\b|boba/],['Restaurant',/restaurant|diner|grill|eatery|pizza|taco|burger|sushi|bbq|food truck|kitchen|deli|bistro/],['Bar & Brewery',/\bbar\b|\bpub\b|brewer|tavern|taproom|winery|\bwine\b|distill|cider|lounge/],['Bakery & Sweets',/bakery|donut|dessert|ice cream|candy|chocolate|cake|cookie/],['Salon & Beauty',/salon|barber|\bspa\b|nail|beauty|lash|tattoo/],['Fitness & Health',/\bgym\b|fitness|yoga|dental|dentist|chiropract|clinic|medical|health|pharmacy|massage/],['Auto',/\bauto\b|car wash|\btire|mechanic|detail/],['Retail',/\bshop\b|store|boutique|market|retail|florist|\bgift|book|thrift/],['Services',/insurance|real estate|realtor|\bbank\b|credit union|\blaw\b|attorney|account|plumb|electric|roof|clean|print|storage/]];
+function titleCase(t){return String(t||'').replace(/\w\S*/g,w=>w.charAt(0).toUpperCase()+w.slice(1));}
+function catOf(p){const c=String(p.cat||'').trim();if(c)return c;const k=String(p.kind||'').trim().toLowerCase();if(!k)return '';const h=CATS.find(x=>x[1].test(k));return h?h[0]:titleCase(k);}
+function catList(A){return [...new Set((A||Object.values(sponD().prospects)).filter(Boolean).map(catOf).filter(Boolean))].sort();}
+function kindsIn(cat,A){return [...new Set((A||Object.values(sponD().prospects)).filter(p=>p&&(!cat||catOf(p)===cat)).map(p=>String(p.kind||'').trim()).filter(Boolean))].sort();}
 function tagsOf(p){return String(p.tags||'').split(',').map(x=>x.trim().toLowerCase()).filter(Boolean);}
-const SHARED=['contactName','email','ig','fb','web','kind','desc','fit'];
+const SHARED=['contactName','email','ig','fb','web','kind','cat','desc','fit'];
 function sibs(p){const g=p.group;if(!g)return [];return Object.values(sponD().prospects).filter(x=>x&&x.id!==p.id&&x.group===g);}
 function stage(p){return p.hidden?'Not using':p.goneCold?'Gone cold':p.answer==='yes'?'Said yes':p.answer==='no'?'Said no':p.emailedAt?'In progress':'To ask';}
 function rank(p){return p.hidden?5:p.goneCold?4:p.answer==='yes'?0:p.answer==='no'?3:p.emailedAt?1:2;}
@@ -12075,7 +12111,7 @@ function nuBtns(m,p,withMail){
 function view(p,m){const g=sponD().prog[PK(m,p.id)]||{};return norm({...p,month:m,status:'',answer:g.answer||'',emailedAt:g.emailedAt||'',goneCold:!!g.goneCold,replyNote:g.replyNote||'',hidCamp:!!g.hidden,hidLoc:locHid(p,g),hidden:!!g.hidden||locHid(p,g),heart:!!g.heart,draft:g.draft,pinned:!!g.pinned});}
 function onList(p,m){const g=sponD().prog[PK(m,p.id)];return !!(g&&(g.pinned||g.answer||g.emailedAt||g.goneCold||g.hidden));}
 function areaOK(p){const S=selAreas();return !S.length||!p.area||S.indexOf(p.area)>=0;}
-function tokens(p){const o=[];const k=String(p.kind||'').trim().toLowerCase();o.push(k?'k:'+k:'k:(none)');const tg=tagsOf(p);if(tg.length)tg.forEach(t=>o.push('t:'+t));else o.push('t:(none)');return o;}
+function tokens(p){const o=[];const c=catOf(p).toLowerCase();o.push(c?'c:'+c:'c:(none)');const k=String(p.kind||'').trim().toLowerCase();o.push(k?'k:'+k:'k:(none)');const tg=tagsOf(p);if(tg.length)tg.forEach(t=>o.push('t:'+t));else o.push('t:(none)');return o;}
 function rule(m){const r=sponD().rules[m]||{};return {inc:r.inc||[],exc:r.exc||[]};}
 function fits(p,m){const r=rule(m),tk=tokens(p);return r.inc.length>0&&r.inc.some(t=>tk.indexOf(t)>=0)&&!r.exc.some(t=>tk.indexOf(t)>=0);}
 /* members(m): everything connected to the month (added to it, or matching its kind/tag filter).
@@ -12085,7 +12121,7 @@ function all(m){const on=rule(m).inc.length>0;return Object.values(sponD().prosp
 function sug(m){return Object.values(sponD().prospects).filter(p=>p&&areaOK(p)&&!onList(p,m)&&fits(p,m)).map(p=>view(p,m)).filter(pass).sort((x,y)=>String(x.name).localeCompare(String(y.name)));}
 function pass(p){const q=F.q.toLowerCase();
   if(q&&[p.name,p.kind,p.tags,p.contactName,p.email,p.city,p.address,p.desc,p.fit,p.notes].join(' ').toLowerCase().indexOf(q)<0)return false;
-  if(F.kind&&String(p.kind||'')!==F.kind)return false;if(F.city&&String(p.city||'')!==F.city)return false;if(F.tag&&tagsOf(p).indexOf(F.tag)<0)return false;if(F.stage&&stage(p)!==F.stage)return false;if(F.ds&&String(p.ds||'')!==F.ds)return false;
+  if(F.cat&&catOf(p)!==F.cat)return false;if(F.kind&&String(p.kind||'')!==F.kind)return false;if(F.city&&String(p.city||'')!==F.city)return false;if(F.tag&&tagsOf(p).indexOf(F.tag)<0)return false;if(F.stage&&stage(p)!==F.stage)return false;if(F.ds&&String(p.ds||'')!==F.ds)return false;
   if(F.heart&&!p.heart)return false;if(F.has==='email'&&!p.email)return false;if(F.has==='noemail'&&p.email)return false;if(F.has==='social'&&!(p.ig||p.fb))return false;return true;}
 function list(m){return all(m).filter(p=>F.stage==='Not using'?!!p.hidden:!p.hidden).filter(pass).sort((x,y)=>(rank(x)-rank(y))||String(x.name).localeCompare(String(y.name)));}
 /* month themes: saved first, otherwise read from the monthly announcement posts Clio made */
@@ -12162,8 +12198,9 @@ function sponEdit(id,m){
   <div class="cp-g2"><div class="form-group"><label class="form-label">Address</label><input class="form-input" id="cp-addr" value="${v('address')}"></div><div class="form-group"><label class="form-label">City</label><input class="form-input" id="cp-city" value="${v('city')}"></div></div>
   <div class="cp-g2"><div class="form-group"><label class="form-label">Instagram</label><input class="form-input" id="cp-ig" value="${v('ig')}"></div><div class="form-group"><label class="form-label">Facebook</label><input class="form-input" id="cp-fb" value="${v('fb')}"></div></div>
   <div class="cp-g2"><div class="form-group"><label class="form-label">Website</label><input class="form-input" id="cp-web" value="${v('web')}"></div><div class="form-group"><label class="form-label">Info found (found, partial, not found...)</label><input class="form-input" id="cp-ds" value="${v('ds')}"></div></div>
-  <div class="cp-g2"><div class="form-group"><label class="form-label">Kind of business (Coffee Shop, Mobile Coffee Stand...)</label><input class="form-input" id="cp-kind" list="cp-kinds" value="${v('kind')}"><datalist id="cp-kinds">${kinds.map(k=>`<option value="${esc(k)}">`).join('')}</datalist></div><div class="form-group"><label class="form-label">Area</label><select class="form-input" id="cp-area"><option value="">No area</option>${sponAreas().map(a=>`<option ${p&&p.area===a?'selected':(!p&&a===sponArea()?'selected':'')}>${esc(a)}</option>`).join('')}</select></div></div>
-  <div class="cp-g2"><div class="form-group"><label class="form-label">Tags (separate with commas)</label><input class="form-input" id="cp-tags" value="${v('tags')}"></div><div class="form-group"><label class="form-label">Same business as (another location)</label><select class="form-input" id="cp-link"><option value="">Not linked</option>${Object.values(sponD().prospects).filter(x=>x&&x.id!==id).sort((a,b)=>String(a.name).localeCompare(String(b.name))).map(x=>`<option value="${esc(x.id)}" ${p&&p.group&&x.group===p.group?'selected':''}>${esc(x.name)}${x.city?' · '+esc(x.city):''}</option>`).join('')}</select></div></div>
+  <div class="cp-g2"><div class="form-group"><label class="form-label">Category (Coffee, Restaurant, Salon...)</label><input class="form-input" id="cp-cat" list="cp-cats" value="${esc(p?catOf(p):'')}"><datalist id="cp-cats">${catList().map(k=>`<option value="${esc(k)}">`).join('')}</datalist></div><div class="form-group"><label class="form-label">Type (Coffee Shop, Mobile Coffee Cart, Coffee Stand...)</label><input class="form-input" id="cp-kind" list="cp-kinds" value="${v('kind')}"><datalist id="cp-kinds">${kinds.map(k=>`<option value="${esc(k)}">`).join('')}</datalist></div></div>
+  <div class="cp-g2"><div class="form-group"><label class="form-label">Area</label><select class="form-input" id="cp-area"><option value="">No area</option>${sponAreas().map(a=>`<option ${p&&p.area===a?'selected':(!p&&a===sponArea()?'selected':'')}>${esc(a)}</option>`).join('')}</select></div><div class="form-group"><label class="form-label">Tags (separate with commas)</label><input class="form-input" id="cp-tags" value="${v('tags')}"></div></div>
+  <div class="cp-g2"><div class="form-group"><label class="form-label">Same business as (another location)</label><select class="form-input" id="cp-link"><option value="">Not linked</option>${Object.values(sponD().prospects).filter(x=>x&&x.id!==id).sort((a,b)=>String(a.name).localeCompare(String(b.name))).map(x=>`<option value="${esc(x.id)}" ${p&&p.group&&x.group===p.group?'selected':''}>${esc(x.name)}${x.city?' · '+esc(x.city):''}</option>`).join('')}</select></div></div>
   ${p?campAdder(id):''}
   <div class="form-group"><label class="form-label">What this place is</label><textarea class="form-textarea" id="cp-desc" style="min-height:70px">${v('desc')}</textarea></div>
   <div class="form-group"><label class="form-label">How they fit the theme</label><textarea class="form-textarea" id="cp-fit" style="min-height:70px">${v('fit')}</textarea></div>
@@ -12171,12 +12208,13 @@ function sponEdit(id,m){
   ${mm?`<div class="cp-g2"><div class="form-group"><label class="form-label">Their answer (${esc(monthName(mm))})</label><select class="form-input" id="cp-ans"><option value="">No answer yet</option><option value="yes" ${p&&p.answer==='yes'?'selected':''}>Said yes</option><option value="no" ${p&&p.answer==='no'?'selected':''}>Said no</option></select></div>
   <div class="form-group"><label class="form-label">We emailed them on</label><input class="form-input" type="date" id="cp-emdate" value="${p&&p.emailedAt&&p.emailedAt!=='earlier'?esc(p.emailedAt):''}"></div></div>
   <div style="display:flex;gap:1.4rem;flex-wrap:wrap;margin:.2rem 0 1rem"><label class="cp-chk"><input type="checkbox" id="cp-em" ${p&&p.emailedAt?'checked':''}> We emailed (in progress)</label><label class="cp-chk"><input type="checkbox" id="cp-cold" ${p&&p.goneCold?'checked':''}> Gone cold</label><label class="cp-chk"><input type="checkbox" id="cp-hide" ${p&&p.hidCamp?'checked':''}> Not using in this campaign (keep saved, hide it from this month's list and sponsor choices)</label>${p&&!p.area?`<label class="cp-chk"><input type="checkbox" id="cp-hideloc" ${p.hidLoc?'checked':''}> Not using in this location (hide it in the area(s) switched on now)</label>`:''}</div>`:''}
+  ${p?`<div class="cp-acts" style="justify-content:flex-start;margin-bottom:.6rem">${sendBtns(raw)}</div>`:''}
   <div class="cp-acts">${p?`<button class="btn-sm cp-red" data-cp="del" data-arg="${esc(id)}">Remove everywhere</button>`:''}<button class="btn-sm" data-cp="close">Cancel</button><button class="btn-sm btn-gold" data-cp="editsave" data-arg="${esc(id)}" data-m="${esc(mm)}">Save</button></div>`,640);
 }
 function sponEditSave(id,m){
   const name=V('cp-name');if(!name){toast('Add the business name',true);return;}
   const d=sponD(),pr={...d.prospects},prog={...d.prog},oldRaw=id?pr[id]||{}:null,old=oldRaw?norm(oldRaw):null,nid=id||'s'+Date.now().toString(36)+Math.floor(Math.random()*1e4).toString(36);
-  const rec={...(oldRaw||{}),id:nid,area:V('cp-area'),name:name,contactName:V('cp-who'),email:V('cp-email'),phone:V('cp-phone'),address:V('cp-addr'),city:V('cp-city'),ig:V('cp-ig'),fb:V('cp-fb'),web:V('cp-web'),kind:V('cp-kind'),desc:V('cp-desc'),ds:V('cp-ds'),fit:V('cp-fit'),notes:V('cp-notes'),tags:V('cp-tags')};
+  const rec={...(oldRaw||{}),id:nid,area:V('cp-area'),name:name,contactName:V('cp-who'),email:V('cp-email'),phone:V('cp-phone'),address:V('cp-addr'),city:V('cp-city'),ig:V('cp-ig'),fb:V('cp-fb'),web:V('cp-web'),kind:V('cp-kind'),cat:V('cp-cat'),desc:V('cp-desc'),ds:V('cp-ds'),fit:V('cp-fit'),notes:V('cp-notes'),tags:V('cp-tags')};
   PROGF.forEach(k=>{delete rec[k];});
   if(m){const g={...(prog[PK(m,nid)]||{})},em=$('cp-em').checked,dt=V('cp-emdate'),oe=g.emailedAt||'';
     g.pinned=true;g.answer=V('cp-ans');g.goneCold=$('cp-cold').checked;g.hidden=$('cp-hide').checked;if($('cp-hideloc')){const S=selAreas(),h=(g.hiddenAreas||[]).filter(a=>S.indexOf(a)<0);g.hiddenAreas=$('cp-hideloc').checked?[...new Set(h.concat(S))]:h;}
@@ -12198,6 +12236,20 @@ function sponEditSave(id,m){
   if(oldG&&!rec.group){const left=Object.values(pr).filter(x=>x&&x.group===oldG&&x.id!==nid);if(left.length===1)pr[left[0].id]={...left[0],group:''};}
   closeOv();save({prospects:pr,prog:prog});
 }
+/* send a business from the bank to Prospects (Raven's prospect list) or to Possible sponsors (Raven's desk) */
+async function toProspects(id){
+  const p=sponD().prospects[id];if(!p)return;
+  if(!window.hqAddProspect){toast('Prospects are not loaded yet. Try again in a moment.',true);return;}
+  const ok=await window.hqAddProspect({name:p.name,city:p.city,address:p.address,contact:p.email||p.phone||'',contactName:p.contactName,phone:p.phone,instagram:p.ig,facebook:p.fb,website:p.web,evidence:p.fit||p.desc||'',notes:[p.desc,p.notes].filter(Boolean).join(' \u00b7 '),foundFrom:'Business bank'});
+  if(ok){const pr={...sponD().prospects};pr[id]={...p,toProspects:Date.now()};await save({prospects:pr},true);}
+}
+async function toSponsors(id){
+  const p=sponD().prospects[id];if(!p)return;
+  if(!window.hqAddSponsor){toast('Raven\'s desk is not loaded yet. Try again in a moment.',true);return;}
+  const ok=await window.hqAddSponsor({business:p.name,kind:p.kind||catOf(p),city:p.city,url:p.web,contact:p.contactName,email:p.email,why:p.fit||p.desc||''});
+  if(ok){const pr={...sponD().prospects};pr[id]={...p,toSponsors:Date.now()};await save({prospects:pr},true);}
+}
+function sendBtns(p){return `<button class="btn-sm" data-cp="toprosp" data-arg="${esc(p.id)}" title="Add this business to Prospects">${p.toProspects?'On prospects \u2713':'Add to prospects'}</button><button class="btn-sm" data-cp="tospon" data-arg="${esc(p.id)}" title="Add this business to Possible sponsors on Raven's desk">${p.toSponsors?'On sponsors \u2713':'Add to sponsors'}</button>`;}
 async function save(patch,quiet){await saveLib('sponsors',patch,quiet);render();}
 function sponDel(id){if(!confirm('Remove this business from the master list and from every month? (To only skip it for one theme, use Not using instead.)'))return;const pr={...sponD().prospects},prog={...sponD().prog};delete pr[id];Object.keys(prog).forEach(k=>{if(k.split('|')[1]===id)delete prog[k];});closeOv();save({prospects:pr,prog:prog});}
 async function toggle(m,id,field){
@@ -12387,15 +12439,21 @@ function foldToggle(key,def){const f={...(sponD().fold||{})};f[key]=!foldOpen(ke
 /* ── page ── */
 function pen(act,arg,tt){return `<button class="btn-sm cp-pen" title="${tt}" data-cp="${act}" data-arg="${esc(arg)}">&#9998;</button>`;}
 function tokLabel(t){const k=t.charAt(0),v=t.slice(2);const map=tokNames();return (map[t]||v)+(k==='t'&&v!=='(none)'?' (tag)':'');}
-function tokNames(){const o={};Object.values(sponD().prospects).forEach(p=>{if(!p)return;const k=String(p.kind||'').trim();if(k)o['k:'+k.toLowerCase()]=k;tagsOf(p).forEach(t=>{o['t:'+t]=t;});tokens(p).forEach(t=>{if(t==='k:(none)')o[t]='No kind';if(t==='t:(none)')o[t]='No tags';});});return o;}
+function tokNames(){const o={};Object.values(sponD().prospects).forEach(p=>{if(!p)return;const c=catOf(p);if(c)o['c:'+c.toLowerCase()]=c;const k=String(p.kind||'').trim();if(k)o['k:'+k.toLowerCase()]=k;tagsOf(p).forEach(t=>{o['t:'+t]=t;});tokens(p).forEach(t=>{if(t==='k:(none)')o[t]='No type';if(t==='c:(none)')o[t]='No category';if(t==='t:(none)')o[t]='No tags';});});return o;}
 /* which businesses fit a month's theme: include by kind or tag, leave out by kind or tag */
 function rulesEdit(m){
   const names=tokNames(),r=rule(m),cnt={};
   Object.values(sponD().prospects).forEach(p=>{if(p)tokens(p).forEach(t=>{cnt[t]=(cnt[t]||0)+1;});});
-  const keys=Object.keys(names).sort((a,b)=>(a.charAt(0)===b.charAt(0)?0:(a.charAt(0)==='k'?-1:1))||names[a].localeCompare(names[b]));
-  const rows=keys.map(t=>`<tr><td>${esc(names[t])}<small> ${t.charAt(0)==='t'?'tag':'kind'} · ${cnt[t]||0}</small></td><td><input type="checkbox" data-tk="${esc(t)}" data-side="inc" ${r.inc.indexOf(t)>=0?'checked':''}></td><td><input type="checkbox" data-tk="${esc(t)}" data-side="exc" ${r.exc.indexOf(t)>=0?'checked':''}></td></tr>`).join('');
-  ov(`<div class="section-title" style="margin-bottom:.4rem">Which businesses fit ${esc(monthName(m))}</div><div style="font-size:.74rem;color:var(--text3);line-height:1.55;margin-bottom:.9rem">This filters this month's list. It shows every business in the areas switched on that matches anything ticked under Include and nothing ticked under Leave out, whether or not you added it to the month. Example: Include "Coffee Shop", Leave out "Mobile Coffee Stand". Businesses with no kind or no tags have their own rows (No kind, No tags). With nothing ticked the filter is off and the list shows the businesses added to the month.</div>
-  ${keys.length?`<div style="margin-bottom:.5rem"><button class="btn-sm" data-cp="rulesall">Include everything</button> <button class="btn-sm" data-cp="rulesnone">Clear all</button></div><div style="max-height:50vh;overflow:auto"><table class="cp-tk"><thead><tr><th style="text-align:left">Kind or tag</th><th>Include</th><th>Leave out</th></tr></thead><tbody>${rows}</tbody></table></div>`:'<div class="cp-none">Add a Kind or tags to some businesses first.</div>'}
+  const keys=Object.keys(names);
+  const ck=(t,side,arr)=>`<td><input type="checkbox" data-tk="${esc(t)}" data-side="${side}" ${arr.indexOf(t)>=0?'checked':''}></td>`;
+  const trow=(t,label,sub)=>`<tr><td style="padding-left:${sub?'1.5rem':'0'}">${sub?esc(label):'<b>'+esc(label)+'</b>'}<small> ${cnt[t]||0}</small></td>${ck(t,'inc',r.inc)}${ck(t,'exc',r.exc)}</tr>`;
+  const A0=Object.values(sponD().prospects).filter(Boolean);
+  let rows=catList(A0).map(c=>trow('c:'+c.toLowerCase(),c,false)+kindsIn(c,A0).filter(k=>k.toLowerCase()!==c.toLowerCase()).map(k=>trow('k:'+k.toLowerCase(),k,true)).join('')).join('');
+  if(cnt['c:(none)'])rows+=trow('c:(none)','No category',false);
+  const tgs=keys.filter(t=>t.charAt(0)==='t'&&t!=='t:(none)').sort();
+  if(tgs.length||cnt['t:(none)'])rows+=`<tr><td colspan="3" style="padding-top:.8rem"><span class="cp-lbl">Tags</span></td></tr>`+tgs.map(t=>trow(t,names[t],true)).join('')+(cnt['t:(none)']?trow('t:(none)','No tags',true):'');
+  ov(`<div class="section-title" style="margin-bottom:.4rem">Which businesses fit ${esc(monthName(m))}</div><div style="font-size:.74rem;color:var(--text3);line-height:1.55;margin-bottom:.9rem">This filters this month's list. It shows every business in the areas switched on that matches anything ticked under Include and nothing ticked under Leave out, whether or not you added it to the month. Example: Include the category "Coffee" and Leave out its type "Mobile Coffee Cart". Businesses with no category or no tags have their own rows (No category, No tags). With nothing ticked the filter is off and the list shows the businesses added to the month.</div>
+  ${keys.length?`<div style="margin-bottom:.5rem"><button class="btn-sm" data-cp="rulesall">Include everything</button> <button class="btn-sm" data-cp="rulesnone">Clear all</button></div><div style="max-height:50vh;overflow:auto"><table class="cp-tk"><thead><tr><th style="text-align:left">Category, type or tag</th><th>Include</th><th>Leave out</th></tr></thead><tbody>${rows}</tbody></table></div>`:'<div class="cp-none">Add a Kind or tags to some businesses first.</div>'}
   <div class="cp-acts"><button class="btn-sm" data-cp="close">Cancel</button><button class="btn-sm btn-gold" data-cp="rulessave" data-arg="${esc(m)}">Save</button></div>`,520);
 }
 function rulesSave(m){
@@ -12405,21 +12463,21 @@ function rulesSave(m){
 /* ── master list of all businesses ── */
 function masterList(){
   const q=M.q.toLowerCase();
-  return Object.values(sponD().prospects).filter(p=>p&&(!q||[p.name,p.kind,p.tags,p.contactName,p.email,p.city,p.area,p.address,p.desc,p.notes].join(' ').toLowerCase().indexOf(q)>=0)&&(!M.kind||String(p.kind||'')===M.kind)&&(!M.city||String(p.city||'')===M.city)&&(!M.tag||tagsOf(p).indexOf(M.tag)>=0)).sort((a,b)=>String(a.name).localeCompare(String(b.name)));
+  return Object.values(sponD().prospects).filter(p=>p&&(!q||[p.name,p.kind,p.tags,p.contactName,p.email,p.city,p.area,p.address,p.desc,p.notes].join(' ').toLowerCase().indexOf(q)>=0)&&(!M.cat||catOf(p)===M.cat)&&(!M.kind||String(p.kind||'')===M.kind)&&(!M.city||String(p.city||'')===M.city)&&(!M.tag||tagsOf(p).indexOf(M.tag)>=0)).sort((a,b)=>String(a.name).localeCompare(String(b.name)));
 }
 function masterCard(){
   const open=foldOpen('master',false),A=Object.values(sponD().prospects).filter(Boolean);
-  const kinds=[...new Set(A.map(p=>String(p.kind||'')).filter(Boolean))].sort(),cities=[...new Set(A.map(p=>String(p.city||'')).filter(Boolean))].sort(),tg=[...new Set(A.flatMap(tagsOf))].sort();
+  const cats=catList(A),cities=[...new Set(A.map(p=>String(p.city||'')).filter(Boolean))].sort(),tg=[...new Set(A.flatMap(tagsOf))].sort();
   const opt=(v,l,c)=>`<option value="${esc(v)}" ${c===v?'selected':''}>${esc(l)}</option>`;
   let body='';
   if(open){const Ls=masterList();
     const mons=id=>[...new Set(Object.keys(sponD().prog).filter(k=>k.split('|')[1]===id).map(k=>k.split('|')[0]))].sort();
     body=`<div class="cp-body"><div class="cp-bar" style="margin-top:0"><input class="form-input" id="cp-mq" value="${esc(M.q)}" style="max-width:220px">
-      <select class="roster-filter-select" data-cpmsel="kind">${opt('','All kinds of business',M.kind)}${kinds.map(c=>opt(c,c,M.kind)).join('')}</select>
+      <select class="roster-filter-select" data-cpmsel="cat">${opt('','All kinds of business',M.cat)}${cats.map(c=>opt(c,c+' ('+A.filter(p=>catOf(p)===c).length+')',M.cat)).join('')}</select>${M.cat?`<select class="roster-filter-select" data-cpmsel="kind">${opt('','All '+M.cat+' types',M.kind)}${kindsIn(M.cat,A).map(c=>opt(c,c,M.kind)).join('')}</select>`:''}
       <select class="roster-filter-select" data-cpmsel="city">${opt('','All cities',M.city)}${cities.map(c=>opt(c,c,M.city)).join('')}</select>
       ${tg.length?`<select class="roster-filter-select" data-cpmsel="tag">${opt('','All tags',M.tag)}${tg.map(c=>opt(c,c,M.tag)).join('')}</select>`:''}
       <button class="btn-sm" data-cp="mclear">Clear</button><div style="flex:1"></div><button class="btn-sm" data-cp="padd" data-arg="">+ Add business</button><button class="btn-sm" data-cp="bulk" data-arg="">Add in bulk</button></div>
-      ${Ls.length?Ls.map(p=>{const ms=mons(p.id);return `<div class="cp-row cp-click" data-cp="pedit" data-arg="|${esc(p.id)}"><div class="cp-rt">${esc(p.name)}<small>${esc([p.kind,p.city,p.area&&p.area!==p.city?'area: '+p.area:'',sibs(p).length?'also at '+sibs(p).map(x=>x.city||x.area||x.name).join(', '):'',tagsOf(p).length?'tags: '+tagsOf(p).join(', '):'',ms.length?'on: '+ms.map(x=>monthName(x)).join(', '):''].filter(Boolean).join(' · '))}</small></div>${pen('pedit','|'+p.id,'Edit this business')}</div>`;}).join(''):'<div class="cp-none">No businesses match.</div>'}</div>`;}
+      ${Ls.length?Ls.map(p=>{const ms=mons(p.id);return `<div class="cp-row cp-click" data-cp="pedit" data-arg="|${esc(p.id)}"><div class="cp-rt">${esc(p.name)}<small>${esc([p.kind,p.city,p.area&&p.area!==p.city?'area: '+p.area:'',sibs(p).length?'also at '+sibs(p).map(x=>x.city||x.area||x.name).join(', '):'',tagsOf(p).length?'tags: '+tagsOf(p).join(', '):'',ms.length?'on: '+ms.map(x=>monthName(x)).join(', '):''].filter(Boolean).join(' · '))}</small></div>${sendBtns(p)}${pen('pedit','|'+p.id,'Edit this business')}</div>`;}).join(''):'<div class="cp-none">No businesses match.</div>'}</div>`;}
   return `<div class="cp-card"><div class="cp-fold cp-head" data-cp="fold" data-arg="master" data-def="0"><span class="cp-car">${open?'&#9662;':'&#9656;'}</span><span class="cp-mt">All businesses (${A.length})</span></div>${body}</div>`;
 }
 function monthCard(m){
@@ -12459,7 +12517,7 @@ function render(){
     Object.keys(sponD().prog).forEach(k=>add(k.split('|')[0]));Object.keys(sponD().rules).forEach(add);Object.keys(sponD().weeks).forEach(k=>add(k.slice(0,7)));
     months=[...s].sort().reverse();}
   const areas=sponAreas(),area=sponArea(),t=tpl(),prs=Object.values(sponD().prospects).filter(p=>p&&areaOK(p)).map(norm),SAr=selAreas();
-  const tagList=[...new Set(prs.flatMap(tagsOf))].sort(),kinds=[...new Set(prs.map(p=>String(p.kind||'')).filter(Boolean))].sort(),cities=[...new Set(prs.map(p=>String(p.city||'')).filter(Boolean))].sort(),dss=[...new Set(prs.map(p=>String(p.ds||'')).filter(Boolean))].sort();
+  const tagList=[...new Set(prs.flatMap(tagsOf))].sort(),cats=catList(prs),cities=[...new Set(prs.map(p=>String(p.city||'')).filter(Boolean))].sort(),dss=[...new Set(prs.map(p=>String(p.ds||'')).filter(Boolean))].sort();
   const opt=(v,l,c)=>`<option value="${esc(v)}" ${c===v?'selected':''}>${esc(l)}</option>`;
   const defOpen=foldOpen('def',true);
   root.innerHTML=(loadErr?`<div class="cp-err">${esc(loadErr)}</div>`:'')+
@@ -12467,7 +12525,7 @@ function render(){
     <button class="cp-chip ${filterMode==='up'?'on':''}" data-cp="mode" data-arg="up">This month and ahead</button><button class="cp-chip ${filterMode==='prev'?'on':''}" data-cp="mode" data-arg="prev">Previous month</button></div>
   <div class="cp-bar"><span class="cp-lbl">Area</span>${areas.length?(areas.length>1?`<button class="cp-chip ${SAr.length===areas.length?'on':''}" data-cp="areaall">All</button>`:'')+areas.map(x=>`<button class="cp-chip ${SAr.indexOf(x)>=0?'on':''}" data-cp="area" data-arg="${esc(x)}">${esc(x)}</button>`).join(''):'<span class="cp-none" style="margin:0">No areas yet</span>'}<button class="btn-sm" data-cp="areas">+ Add or edit areas</button></div>
   <div class="cp-bar"><span class="cp-lbl">Filter prospects</span><input class="form-input" id="cp-q" value="${esc(F.q)}" style="max-width:200px">
-    <select class="roster-filter-select" data-cpsel="kind">${opt('','All kinds of business',F.kind)}${kinds.map(c=>opt(c,c,F.kind)).join('')}</select>
+    <select class="roster-filter-select" data-cpsel="cat">${opt('','All kinds of business',F.cat)}${cats.map(c=>opt(c,c,F.cat)).join('')}</select>${F.cat?`<select class="roster-filter-select" data-cpsel="kind">${opt('','All '+F.cat+' types',F.kind)}${kindsIn(F.cat,prs).map(c=>opt(c,c,F.kind)).join('')}</select>`:''}
     <select class="roster-filter-select" data-cpsel="city">${opt('','All cities',F.city)}${cities.map(c=>opt(c,c,F.city)).join('')}</select>
     ${tagList.length?`<select class="roster-filter-select" data-cpsel="tag">${opt('','All tags',F.tag)}${tagList.map(c=>opt(c,c,F.tag)).join('')}</select>`:''}
     <select class="roster-filter-select" data-cpsel="stage">${opt('','Any progress',F.stage)}${['To ask','In progress','Said yes','Said no','Gone cold','Not using'].map(c=>opt(c,c,F.stage)).join('')}</select>
@@ -12489,6 +12547,8 @@ function onClick(e){
   const mo=arg.split('|');
   switch(act){
     case 'stop':break;
+    case 'toprosp':toProspects(arg);break;
+    case 'tospon':toSponsors(arg);break;
     case 'close':closeOv();break;
     case 'fold':foldToggle(arg,arg==='master'?false:arg.charAt(0)==='c'?arg.slice(2)===todayStr().slice(0,7):true);break;
     case 'mode':filterMode=arg;render();break;
@@ -12497,7 +12557,7 @@ function onClick(e){
     case 'areas':areasEdit();break;
     case 'areassave':areasSave();break;
     case 'bantoggle':saveLib('sponsors',{showBanners:!showBanners()},true).then(render);break;
-    case 'clearf':F={q:'',kind:'',city:'',tag:'',stage:'',ds:'',has:'',heart:false};render();break;
+    case 'clearf':F={q:'',cat:'',kind:'',city:'',tag:'',stage:'',ds:'',has:'',heart:false};render();break;
     case 'padd':sponEdit('',arg);break;
     case 'pedit':sponEdit(mo[1]||'',mo[0]);break;
     case 'rules':rulesEdit(arg);break;
@@ -12511,7 +12571,7 @@ function onClick(e){
     case 'addexsave':addExSave(arg);break;
     case 'heart':heartToggle(mo[0],mo[1]);break;
     case 'heartf':F.heart=!F.heart;render();break;
-    case 'mclear':M={q:'',kind:'',city:'',tag:''};render();break;
+    case 'mclear':M={q:'',cat:'',kind:'',city:'',tag:''};render();break;
     case 'editsave':sponEditSave(arg,a.dataset.m);break;
     case 'del':sponDel(arg);break;
     case 'em':toggle(mo[0],mo[1],'em');break;
@@ -12611,8 +12671,8 @@ function init(){
   const root=$('campRoot');if(!root||root._cpInit)return;root._cpInit=true;
   root.addEventListener('click',onClick);
   root.addEventListener('change',e=>{const t=e.target;
-    if(t.dataset&&t.dataset.cpsel){F[t.dataset.cpsel]=t.value;render();}
-    else if(t.dataset&&t.dataset.cpmsel){M[t.dataset.cpmsel]=t.value;render();}
+    if(t.dataset&&t.dataset.cpsel){F[t.dataset.cpsel]=t.value;if(t.dataset.cpsel==='cat')F.kind='';render();}
+    else if(t.dataset&&t.dataset.cpmsel){M[t.dataset.cpmsel]=t.value;if(t.dataset.cpmsel==='cat')M.kind='';render();}
     else if(t.dataset&&t.dataset.cptheme){saveTheme(t.dataset.cptheme,t.value);}
     else if(t.dataset&&t.dataset.cpdesc){saveDesc(t.dataset.cpdesc,t.value);}});
   root.addEventListener('input',e=>{if(e.target.id==='cp-q'||e.target.id==='cp-mq'){const id=e.target.id;(id==='cp-q'?F:M).q=e.target.value;const pos=e.target.value.length;render();const q=$(id);if(q){q.focus();try{q.setSelectionRange(pos,pos);}catch(x){}}}});
