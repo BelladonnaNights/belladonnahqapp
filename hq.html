@@ -12091,7 +12091,7 @@ function catOf(p){const c=String(p.cat||'').trim();if(c)return c;const k=String(
 function catList(A){return [...new Set((A||Object.values(sponD().prospects)).filter(Boolean).map(catOf).filter(Boolean))].sort();}
 function kindsIn(cat,A){return [...new Set((A||Object.values(sponD().prospects)).filter(p=>p&&(!cat||catOf(p)===cat)).map(p=>String(p.kind||'').trim()).filter(Boolean))].sort();}
 function tagsOf(p){return String(p.tags||'').split(',').map(x=>x.trim().toLowerCase()).filter(Boolean);}
-const SHARED=['contactName','email','ig','fb','web','kind','cat','desc','fit'];
+const SHARED=['contactName','email','ig','fb','igf','fbf','web','kind','cat','desc','fit'];
 function sibs(p){const g=p.group;if(!g)return [];return Object.values(sponD().prospects).filter(x=>x&&x.id!==p.id&&x.group===g);}
 function stage(p){return p.hidden?'Not using':p.goneCold?'Gone cold':p.answer==='yes'?'Said yes':p.answer==='no'?'Said no':p.emailedAt?'In progress':'To ask';}
 function rank(p){return p.hidden?5:p.goneCold?4:p.answer==='yes'?0:p.answer==='no'?3:p.emailedAt?1:2;}
@@ -12197,6 +12197,7 @@ function sponEdit(id,m){
   <div class="cp-g2"><div class="form-group"><label class="form-label">Email</label><input class="form-input" id="cp-email" value="${v('email')}"></div><div class="form-group"><label class="form-label">Phone</label><input class="form-input" id="cp-phone" value="${v('phone')}"></div></div>
   <div class="cp-g2"><div class="form-group"><label class="form-label">Address</label><input class="form-input" id="cp-addr" value="${v('address')}"></div><div class="form-group"><label class="form-label">City</label><input class="form-input" id="cp-city" value="${v('city')}"></div></div>
   <div class="cp-g2"><div class="form-group"><label class="form-label">Instagram</label><input class="form-input" id="cp-ig" value="${v('ig')}"></div><div class="form-group"><label class="form-label">Facebook</label><input class="form-input" id="cp-fb" value="${v('fb')}"></div></div>
+  <div class="cp-g2"><div class="form-group"><label class="form-label">Instagram followers</label><input class="form-input" id="cp-igf" value="${v('igf')}"></div><div class="form-group"><label class="form-label">Facebook followers</label><input class="form-input" id="cp-fbf" value="${v('fbf')}"></div></div>
   <div class="cp-g2"><div class="form-group"><label class="form-label">Website</label><input class="form-input" id="cp-web" value="${v('web')}"></div><div class="form-group"><label class="form-label">Info found (found, partial, not found...)</label><input class="form-input" id="cp-ds" value="${v('ds')}"></div></div>
   <div class="cp-g2"><div class="form-group"><label class="form-label">Category (Coffee, Restaurant, Salon...)</label><input class="form-input" id="cp-cat" list="cp-cats" value="${esc(p?catOf(p):'')}"><datalist id="cp-cats">${catList().map(k=>`<option value="${esc(k)}">`).join('')}</datalist></div><div class="form-group"><label class="form-label">Type (Coffee Shop, Mobile Coffee Cart, Coffee Stand...)</label><input class="form-input" id="cp-kind" list="cp-kinds" value="${v('kind')}"><datalist id="cp-kinds">${kinds.map(k=>`<option value="${esc(k)}">`).join('')}</datalist></div></div>
   <div class="cp-g2"><div class="form-group"><label class="form-label">Area</label><select class="form-input" id="cp-area"><option value="">No area</option>${sponAreas().map(a=>`<option ${p&&p.area===a?'selected':(!p&&a===sponArea()?'selected':'')}>${esc(a)}</option>`).join('')}</select></div><div class="form-group"><label class="form-label">Tags (separate with commas)</label><input class="form-input" id="cp-tags" value="${v('tags')}"></div></div>
@@ -12214,7 +12215,7 @@ function sponEdit(id,m){
 function sponEditSave(id,m){
   const name=V('cp-name');if(!name){toast('Add the business name',true);return;}
   const d=sponD(),pr={...d.prospects},prog={...d.prog},oldRaw=id?pr[id]||{}:null,old=oldRaw?norm(oldRaw):null,nid=id||'s'+Date.now().toString(36)+Math.floor(Math.random()*1e4).toString(36);
-  const rec={...(oldRaw||{}),id:nid,area:V('cp-area'),name:name,contactName:V('cp-who'),email:V('cp-email'),phone:V('cp-phone'),address:V('cp-addr'),city:V('cp-city'),ig:V('cp-ig'),fb:V('cp-fb'),web:V('cp-web'),kind:V('cp-kind'),cat:V('cp-cat'),desc:V('cp-desc'),ds:V('cp-ds'),fit:V('cp-fit'),notes:V('cp-notes'),tags:V('cp-tags')};
+  const rec={...(oldRaw||{}),id:nid,area:V('cp-area'),name:name,contactName:V('cp-who'),email:V('cp-email'),phone:V('cp-phone'),address:V('cp-addr'),city:V('cp-city'),ig:V('cp-ig'),fb:V('cp-fb'),igf:V('cp-igf'),fbf:V('cp-fbf'),web:V('cp-web'),kind:V('cp-kind'),cat:V('cp-cat'),desc:V('cp-desc'),ds:V('cp-ds'),fit:V('cp-fit'),notes:V('cp-notes'),tags:V('cp-tags')};
   PROGF.forEach(k=>{delete rec[k];});
   if(m){const g={...(prog[PK(m,nid)]||{})},em=$('cp-em').checked,dt=V('cp-emdate'),oe=g.emailedAt||'';
     g.pinned=true;g.answer=V('cp-ans');g.goneCold=$('cp-cold').checked;g.hidden=$('cp-hide').checked;if($('cp-hideloc')){const S=selAreas(),h=(g.hiddenAreas||[]).filter(a=>S.indexOf(a)<0);g.hiddenAreas=$('cp-hideloc').checked?[...new Set(h.concat(S))]:h;}
@@ -12240,7 +12241,7 @@ function sponEditSave(id,m){
 async function toProspects(id){
   const p=sponD().prospects[id];if(!p)return;
   if(!window.hqAddProspect){toast('Prospects are not loaded yet. Try again in a moment.',true);return;}
-  const ok=await window.hqAddProspect({name:p.name,city:p.city,address:p.address,contact:p.email||p.phone||'',contactName:p.contactName,phone:p.phone,instagram:p.ig,facebook:p.fb,website:p.web,evidence:p.fit||p.desc||'',notes:[p.desc,p.notes].filter(Boolean).join(' \u00b7 '),foundFrom:'Business bank'});
+  const ok=await window.hqAddProspect({name:p.name,city:p.city,address:p.address,contact:p.email||p.phone||'',contactName:p.contactName,phone:p.phone,instagram:p.ig,facebook:p.fb,website:p.web,evidence:p.fit||p.desc||'',notes:[p.desc,p.notes,p.igf?'Instagram followers: '+p.igf:'',p.fbf?'Facebook followers: '+p.fbf:''].filter(Boolean).join(' \u00b7 '),foundFrom:'Business bank'});
   if(ok){const pr={...sponD().prospects};pr[id]={...p,toProspects:Date.now()};await save({prospects:pr},true);}
 }
 async function toSponsors(id){
@@ -12477,7 +12478,7 @@ function masterCard(){
       <select class="roster-filter-select" data-cpmsel="city">${opt('','All cities',M.city)}${cities.map(c=>opt(c,c,M.city)).join('')}</select>
       ${tg.length?`<select class="roster-filter-select" data-cpmsel="tag">${opt('','All tags',M.tag)}${tg.map(c=>opt(c,c,M.tag)).join('')}</select>`:''}
       <button class="btn-sm" data-cp="mclear">Clear</button><div style="flex:1"></div><button class="btn-sm" data-cp="padd" data-arg="">+ Add business</button><button class="btn-sm" data-cp="bulk" data-arg="">Add in bulk</button></div>
-      ${Ls.length?Ls.map(p=>{const ms=mons(p.id);return `<div class="cp-row cp-click" data-cp="pedit" data-arg="|${esc(p.id)}"><div class="cp-rt">${esc(p.name)}<small>${esc([p.kind,p.city,p.area&&p.area!==p.city?'area: '+p.area:'',sibs(p).length?'also at '+sibs(p).map(x=>x.city||x.area||x.name).join(', '):'',tagsOf(p).length?'tags: '+tagsOf(p).join(', '):'',ms.length?'on: '+ms.map(x=>monthName(x)).join(', '):''].filter(Boolean).join(' · '))}</small></div>${sendBtns(p)}${pen('pedit','|'+p.id,'Edit this business')}</div>`;}).join(''):'<div class="cp-none">No businesses match.</div>'}</div>`;}
+      ${Ls.length?Ls.map(p=>{const ms=mons(p.id);return `<div class="cp-row cp-click" data-cp="pedit" data-arg="|${esc(p.id)}"><div class="cp-rt">${esc(p.name)}<small>${esc([p.kind,p.city,p.area&&p.area!==p.city?'area: '+p.area:'',sibs(p).length?'also at '+sibs(p).map(x=>x.city||x.area||x.name).join(', '):'',tagsOf(p).length?'tags: '+tagsOf(p).join(', '):'',p.igf?'IG '+p.igf:'',p.fbf?'FB '+p.fbf:'',ms.length?'on: '+ms.map(x=>monthName(x)).join(', '):''].filter(Boolean).join(' · '))}</small></div>${sendBtns(p)}${pen('pedit','|'+p.id,'Edit this business')}</div>`;}).join(''):'<div class="cp-none">No businesses match.</div>'}</div>`;}
   return `<div class="cp-card"><div class="cp-fold cp-head" data-cp="fold" data-arg="master" data-def="0"><span class="cp-car">${open?'&#9662;':'&#9656;'}</span><span class="cp-mt">All businesses (${A.length})</span></div>${body}</div>`;
 }
 function monthCard(m){
@@ -12488,7 +12489,7 @@ function monthCard(m){
     return `<div class="cp-row cp-click" data-cp="wkedit" data-arg="${ak}"><div class="cp-rt">Week ${i+1}${mons[i]?' · '+niceDay(mons[i]):''}</div><div class="cp-rs">${w.name?esc(w.name)+(w.venue?' at '+esc(w.venue):'')+' · '+esc(w.status||'Needed')+(w.fee?' · $'+esc(w.fee):''):'No sponsor yet'}</div>${w.name?`<button class="btn-sm" data-cp="mailwk" data-arg="${ak}">Email</button>`:''}${pen('wkedit',m+'|'+i+'|'+ar,'Edit this week')}</div>`;}).join('');
   const SA=selAreas();
   const wkRows=SA.length>1?SA.map(ar=>`<div class="cp-lbl" style="margin:.5rem 0 .25rem">${esc(ar)}</div>`+wkBlock(ar)).join(''):wkBlock(SA[0]||'');
-  const prRows=Lp.length?Lp.map(p=>{const lk=[p.ig&&'IG',p.fb&&'FB',p.web&&'Web'].filter(Boolean).join(' ');
+  const prRows=Lp.length?Lp.map(p=>{const lk=[(p.ig||p.igf)&&'IG'+(p.igf?' '+p.igf:''),(p.fb||p.fbf)&&'FB'+(p.fbf?' '+p.fbf:''),p.web&&'Web'].filter(Boolean).join(' ');
     return `<div class="cp-row cp-click" data-cp="pedit" data-arg="${esc(m)}|${esc(p.id)}"><div class="cp-rt">${esc(p.name)}<small>${esc([p.heart?'\u2665 hearted':'',p.kind,stage(p)+(p.emailedAt&&p.emailedAt!=='earlier'?' (emailed '+dayTxt(p.emailedAt)+')':''),p.city,sibs(p).length?'also at '+sibs(p).map(x=>x.city||x.area||x.name).join(', '):'',tagsOf(p).length?'tags: '+tagsOf(p).join(', '):'',p.contactName,lk,p.ds?'info: '+p.ds:''].filter(Boolean).join(' · '))}</small>${p.replyNote?`<small style="color:var(--gold)">Replied: ${esc(p.replyNote)}</small>`:''}${p.fit?`<small>Fit: ${esc(p.fit)}</small>`:''}</div>
       <label class="cp-chk" data-cp="stop"><input type="checkbox" data-cp="em" data-arg="${esc(m)}|${esc(p.id)}" ${p.emailedAt?'checked':''}> Emailed</label><label class="cp-chk" data-cp="stop"><input type="checkbox" data-cp="cold" data-arg="${esc(m)}|${esc(p.id)}" ${p.goneCold?'checked':''}> Gone cold</label>
       ${nuBtns(m,p)}<button class="btn-sm" data-cp="mailp" data-arg="${esc(m)}|${esc(p.id)}">Email</button>${pen('pedit',m+'|'+p.id,'Edit this business')}</div>`;}).join(''):`<div class="cp-none">${tot?'No sponsor prospects match the filters.':'No sponsor prospects for '+esc(area||'this month')+' yet.'}</div>`;
