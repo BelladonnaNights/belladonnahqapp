@@ -997,6 +997,7 @@ html::-webkit-scrollbar-thumb:hover,.modal::-webkit-scrollbar-thumb:hover{backgr
     <button class="subtab" onclick="showSub('hosts','history',this)">Sign-In/Out Log</button>
     <button class="subtab" onclick="showSub('hosts','onboarding',this)">Host Onboarding</button>
     <button class="subtab" onclick="showSub('hosts','setupresponses',this)">Profile Setup</button>
+    <button class="subtab" onclick="showSub('hosts','hostprospects',this);renderHostProspects()">Prospects</button>
     <button class="subtab" onclick="showSub('hosts','leadsprogress',this);renderRecruits()">Leads Progress</button>
   </div>
   <div class="subpanel active" id="sub-hosts-live">
@@ -1133,6 +1134,14 @@ html::-webkit-scrollbar-thumb:hover,.modal::-webkit-scrollbar-thumb:hover{backgr
       <div id="hostSetupResponsesList"><div class="empty-state">Loading...</div></div>
     </div>
   </div>
+  <div class="subpanel" id="sub-hosts-hostprospects">
+    <div class="section-header">
+      <div class="section-title">Host Prospects</div>
+      <button class="btn-sm btn-gold" onclick="openRecruitModal(null,true)">+ Add Host Prospect</button>
+    </div>
+    <div style="font-size:0.68rem;color:var(--text3);margin-bottom:1rem;line-height:1.6;">People and businesses that could host for us, before anyone has started recruiting them. Press Move to Host Leads when you start talking to one. They live on one list at a time, and everything on their card goes with them.</div>
+    <div id="hostProspectList"></div>
+  </div>
   <div class="subpanel" id="sub-hosts-leadsprogress">
     <div class="section-header">
       <div class="section-title">Leads Progress</div>
@@ -1146,17 +1155,19 @@ html::-webkit-scrollbar-thumb:hover,.modal::-webkit-scrollbar-thumb:hover{backgr
 <!-- RECRUIT MODAL -->
 <div class="modal-bg vmx" id="recruitModal">
   <div class="modal vm-wide">
-    <div class="vm-top"><button type="button" class="vm-back" onclick="closeModal('recruitModal')">&larr; Host Leads</button><div class="vm-ttl"><i></i><span id="recruitModalTitle">Add Lead</span><i class="r"></i></div><span></span></div>
-    <div class="vm-sec"><div class="vm-sec-h"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-7 8-7s8 3 8 7"/></svg>Contact</div><div class="vm-grid vm-g2"><div class="form-group"><label class="form-label">Name</label><input type="text" class="form-input" id="recruitName"></div><div class="form-group"><label class="form-label">Location</label><select class="form-input" id="recruitLocation"></select></div><div class="form-group"><label class="form-label">Phone</label><input type="tel" class="form-input" id="recruitPhone"></div><div class="form-group"><label class="form-label">Email</label><input type="email" class="form-input" id="recruitEmail"></div></div></div>
-    <div class="vm-sec"><div class="vm-sec-h"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l4 4 10-10"/></svg>Milestones</div><div id="recruitMilestoneChecks" style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem 1.4rem;"></div></div>
+    <div class="vm-top"><button type="button" class="vm-back" id="recruitBack" onclick="closeModal('recruitModal')">&larr; Host Leads</button><div class="vm-ttl"><i></i><span id="recruitModalTitle">Add Lead</span><i class="r"></i></div><span></span></div>
+    <div class="vm-sec"><div class="vm-sec-h"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-7 8-7s8 3 8 7"/></svg>Contact</div><div class="vm-grid vm-g2"><div class="form-group"><label class="form-label">Name</label><input type="text" class="form-input" id="recruitName"></div><div class="form-group"><label class="form-label">Location</label><select class="form-input" id="recruitLocation"></select></div><div class="form-group"><label class="form-label">Phone</label><input type="tel" class="form-input" id="recruitPhone"></div><div class="form-group"><label class="form-label">Email</label><input type="email" class="form-input" id="recruitEmail"></div><div class="form-group"><label class="form-label">Contact person</label><input type="text" class="form-input" id="recruitWho"></div></div></div>
+    <div class="vm-sec"><div class="vm-sec-h"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/></svg>Online &amp; place</div><div class="vm-grid vm-g4"><div class="form-group"><label class="form-label">Instagram</label><input type="text" class="form-input" id="recruitIG"></div><div class="form-group"><label class="form-label">Instagram followers</label><input type="text" class="form-input" id="recruitIGF"></div><div class="form-group"><label class="form-label">Facebook</label><input type="text" class="form-input" id="recruitFB"></div><div class="form-group"><label class="form-label">Facebook followers</label><input type="text" class="form-input" id="recruitFBF"></div></div><div class="vm-grid vm-g3" style="margin-top:.6rem"><div class="form-group"><label class="form-label">Website</label><input type="text" class="form-input" id="recruitWeb"></div><div class="form-group"><label class="form-label">Address</label><input type="text" class="form-input" id="recruitAddr"></div><div class="form-group"><label class="form-label">City</label><input type="text" class="form-input" id="recruitCity"></div></div></div>
+    <div class="vm-sec" id="recruitMileSec"><div class="vm-sec-h"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l4 4 10-10"/></svg>Milestones</div><div id="recruitMilestoneChecks" style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem 1.4rem;"></div></div>
     <div class="vm-sec"><div class="vm-sec-h"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h9l4 4v14H6zM14 3v5h5M9 12h7M9 16h7"/></svg>Notes</div><div class="form-group"><textarea class="form-textarea" id="recruitNotes" style="min-height:90px;"></textarea></div></div>
     <div class="vm-sec"><div class="vm-sec-h"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="1.5"/><path d="M3 7l9 6 9-6"/></svg>Outreach log</div><div id="recruitHistory"></div></div>
     <div class="modal-actions vm-actions">
       <button class="modal-cancel" id="recruitDeleteBtn" onclick="deleteRecruit()" style="color:var(--rose);display:none;">Delete</button>
+      <button class="modal-cancel" id="recruitMoveBtn" onclick="moveRecruit(editingRecruitId)" style="display:none;"></button>
       <button class="modal-cancel" id="recruitToHostBtn" onclick="recruitToHost(editingRecruitId,this)" style="display:none;">Make a host &rarr;</button>
       <div style="flex:1;"></div>
       <button class="modal-cancel" onclick="closeModal('recruitModal')">Cancel</button>
-      <button class="modal-save" onclick="saveRecruit()" style="flex:none;min-width:9rem;">Save Lead</button>
+      <button class="modal-save" id="recruitSaveBtn" onclick="saveRecruit()" style="flex:none;min-width:9rem;">Save Lead</button>
     </div>
   </div>
 </div>
@@ -4820,17 +4831,18 @@ function loadRecruits(){
   if(!db)return;
   db.collection('recruits').get().then(snap=>{
     recruits=snap.docs.map(d=>({id:d.id,...d.data()})).filter(r=>locationScopeMatches(r.locationId));
-    renderRecruits();
-  }).catch(()=>{recruits=[];renderRecruits();});
+    renderRecruits();try{renderHostProspects();}catch(e){}
+  }).catch(()=>{recruits=[];renderRecruits();try{renderHostProspects();}catch(e){}});
 }
 function renderRecruits(){
   const el=document.getElementById('recruitList');
   if(!el)return;
+  const RL=recruits.filter(r=>!r.hostProspect);
   const _nn=x=>String(x||'').toLowerCase().replace(/[^a-z0-9]/g,'');
   const _isHost=r=>(roster||[]).some(h=>h.recruitId===r.id||_nn(h.name)===_nn(r.name)||_nn((h.name||'')+(h.lastName||''))===_nn(r.name));
-  const _dups=recruits.filter(_isHost);
-  if(!recruits.length){el.innerHTML='<div class="empty-state">No leads being tracked yet.</div>';return;}
-  el.innerHTML=(_dups.length?'<div style="font-size:.78rem;opacity:.8;margin-bottom:.6rem;padding:.4rem .7rem;border:1px solid var(--border);border-radius:8px">'+_dups.length+' lead'+(_dups.length>1?'s are':' is')+' hidden because they are already on the Host Roster ('+_dups.slice(0,6).map(r=>r.name||'').join(', ')+'). Nothing was deleted.</div>':'')+recruits.filter(r=>!_isHost(r)).map(r=>{
+  const _dups=RL.filter(_isHost);
+  if(!RL.length){el.innerHTML='<div class="empty-state">No leads being tracked yet.</div>';return;}
+  el.innerHTML=(_dups.length?'<div style="font-size:.78rem;opacity:.8;margin-bottom:.6rem;padding:.4rem .7rem;border:1px solid var(--border);border-radius:8px">'+_dups.length+' lead'+(_dups.length>1?'s are':' is')+' hidden because they are already on the Host Roster ('+_dups.slice(0,6).map(r=>r.name||'').join(', ')+'). Nothing was deleted.</div>':'')+RL.filter(r=>!_isHost(r)).map(r=>{
     const done=RECRUIT_MILESTONES.filter(m=>r.milestones&&r.milestones[m.key]).length;
     const contactBits=[r.phone,r.email].filter(Boolean).join(' · ')||r.contact||'';
     return `<div class="acct-card" style="cursor:pointer;" onclick="openRecruitModal('${r.id}')">
@@ -4847,45 +4859,106 @@ function renderRecruits(){
     </div>`;
   }).join('');
 }
-function openRecruitModal(id){
+let editingRecruitProspect=false;
+function openRecruitModal(id,asProspect){
   editingRecruitId=id||null;
   const r=id?recruits.find(x=>x.id===id):null;
-  document.getElementById('recruitModalTitle').textContent=r?'Edit Lead':'Add Lead';
-  document.getElementById('recruitName').value=r?r.name||'':'';
-  document.getElementById('recruitPhone').value=r?r.phone||'':'';
-  document.getElementById('recruitEmail').value=r?r.email||'':'';
-  const locSel=document.getElementById('recruitLocation');
+  editingRecruitProspect=r?!!r.hostProspect:!!asProspect;
+  const P=editingRecruitProspect,g=x=>document.getElementById(x);
+  g('recruitModalTitle').textContent=(r?'Edit ':'Add ')+(P?'Host Prospect':'Lead');
+  g('recruitBack').innerHTML='&larr; '+(P?'Host Prospects':'Host Leads');
+  g('recruitSaveBtn').textContent=P?'Save Prospect':'Save Lead';
+  g('recruitName').value=r?r.name||'':'';
+  g('recruitPhone').value=r?r.phone||'':'';
+  g('recruitEmail').value=r?r.email||'':'';
+  g('recruitWho').value=r?r.contactName||'':'';
+  g('recruitIG').value=r?r.instagram||'':'';g('recruitIGF').value=r?r.igFollowers||'':'';
+  g('recruitFB').value=r?r.facebook||'':'';g('recruitFBF').value=r?r.fbFollowers||'':'';
+  g('recruitWeb').value=r?r.website||'':'';g('recruitAddr').value=r?r.address||'':'';g('recruitCity').value=r?r.city||'':'';
+  const locSel=g('recruitLocation');
   locSel.innerHTML=locations.map(l=>`<option value="${l.code}">${l.label}</option>`).join('');
   locSel.value=(r&&r.locationId)?r.locationId:(currentLocationScope!=='ALL'?currentLocationScope:((locations[0]&&locations[0].code)||''));
-  document.getElementById('recruitNotes').value=r?r.notes||'':'';
-  document.getElementById('recruitDeleteBtn').style.display=r?'':'none';
-  {const tb=document.getElementById('recruitToHostBtn');if(tb){tb.style.display=r?'':'none';tb.disabled=false;}}
-  {const h=document.getElementById('recruitHistory');if(h)h.innerHTML=(r&&window.hqHistoryHtml)?window.hqHistoryHtml(r,'host'):'<div style="font-size:.8rem;opacity:.7">Save the lead first, then reopen it.</div>';}
-  document.getElementById('recruitMilestoneChecks').innerHTML=RECRUIT_MILESTONES.map(m=>`
+  g('recruitNotes').value=r?r.notes||'':'';
+  g('recruitDeleteBtn').style.display=r?'':'none';
+  g('recruitMileSec').style.display=P?'none':'';
+  {const mb=g('recruitMoveBtn');if(mb){mb.style.display=r?'':'none';mb.disabled=false;mb.innerHTML=P?'Move to Host Leads &rarr;':'&larr; Move back to Host Prospects';}}
+  {const tb=g('recruitToHostBtn');if(tb){tb.style.display=(r&&!P)?'':'none';tb.disabled=false;}}
+  {const h=g('recruitHistory');if(h)h.innerHTML=(r&&window.hqHistoryHtml)?window.hqHistoryHtml(r,'host'):'<div style="font-size:.8rem;opacity:.7">Save it first, then reopen it.</div>';}
+  g('recruitMilestoneChecks').innerHTML=RECRUIT_MILESTONES.map(m=>`
     <label style="display:flex;align-items:center;gap:0.5rem;font-size:0.8rem;cursor:pointer;">
       <input type="checkbox" id="recruitM-${m.key}" ${r&&r.milestones&&r.milestones[m.key]?'checked':''} style="width:16px;height:16px;">
       ${m.label}
     </label>
   `).join('');
-  document.getElementById('recruitModal').classList.add('open');
+  g('recruitModal').classList.add('open');
 }
 function saveRecruit(){
-  const name=document.getElementById('recruitName').value.trim();
+  const g=x=>document.getElementById(x).value.trim();
+  const name=g('recruitName');
   if(!name){alert('Enter a name.');return;}
   const milestones={};
   RECRUIT_MILESTONES.forEach(m=>{milestones[m.key]=document.getElementById('recruitM-'+m.key).checked;});
   const data={
-    name, phone:document.getElementById('recruitPhone').value.trim(), email:document.getElementById('recruitEmail').value.trim(),
+    name, phone:g('recruitPhone'), email:g('recruitEmail'), contactName:g('recruitWho'),
+    instagram:g('recruitIG'), igFollowers:g('recruitIGF'), facebook:g('recruitFB'), fbFollowers:g('recruitFBF'),
+    website:g('recruitWeb'), address:g('recruitAddr'), city:g('recruitCity'),
     notes:document.getElementById('recruitNotes').value.trim(),
     milestones,
+    hostProspect:!!editingRecruitProspect,
     locationId: document.getElementById('recruitLocation').value,
     updatedAt: new Date().toISOString()
   };
+  if(!editingRecruitId)data.createdAt=new Date().toISOString();
   const id=editingRecruitId||db.collection('recruits').doc().id;
   db.collection('recruits').doc(id).set(data,{merge:true}).then(()=>{
     closeModal('recruitModal'); loadRecruits();
   }).catch(e=>alert('Failed to save: '+e.message));
 }
+// A host prospect and a host lead are the same record with a flag, so moving never copies or loses anything.
+async function moveRecruit(rid){
+  const r=recruits.find(x=>x.id===rid);if(!r)return;
+  const toLeads=!!r.hostProspect;
+  try{
+    await db.collection('recruits').doc(rid).set({hostProspect:!toLeads,updatedAt:new Date().toISOString()},{merge:true});
+    try{closeModal('recruitModal');}catch(e){}
+    loadRecruits();
+    try{hqToast(toLeads?'Moved to Host Leads (Leads Progress). Everything came with them.':'Moved back to Host Prospects. Everything came with them.');}catch(e){}
+  }catch(e){alert('Could not move them: '+(e&&e.message||e));}
+}
+function renderHostProspects(){
+  const el=document.getElementById('hostProspectList');if(!el)return;
+  const L=recruits.filter(r=>r.hostProspect).sort((a,b)=>String(a.name||'').localeCompare(String(b.name||'')));
+  const X=_lx;
+  if(!L.length){el.innerHTML='<div class="empty-state">No host prospects yet. Add one here, or press Add to Host Prospects on a business in the Campaigns tab.</div>';return;}
+  el.innerHTML=L.map(r=>{
+    const contact=[r.contactName,r.phone,r.email].filter(Boolean).join(' · ');
+    const online=[r.instagram?'Instagram '+r.instagram+(r.igFollowers?' ('+r.igFollowers+' followers)':''):(r.igFollowers?'Instagram '+r.igFollowers+' followers':''),r.facebook?'Facebook '+r.facebook+(r.fbFollowers?' ('+r.fbFollowers+' followers)':''):(r.fbFollowers?'Facebook '+r.fbFollowers+' followers':''),r.website].filter(Boolean).join(' · ');
+    const where=[r.address,r.city].filter(Boolean).join(', ');
+    return `<div class="acct-card" style="cursor:pointer;" onclick="openRecruitModal('${r.id}')">
+      <div class="acct-header"><div class="acct-name-group"><div class="acct-name">${X(r.name||'(no name)')}</div><div class="acct-meta">${X(contact)}</div></div>
+      <div class="acct-badges"><button class="btn-sm" onclick="event.stopPropagation();moveRecruit('${r.id}')" title="Start recruiting them. They move to Leads Progress with everything on this card.">Move to Host Leads &rarr;</button></div></div>
+      ${online?`<div style="font-size:.78rem;opacity:.85;margin-top:.4rem">${X(online)}</div>`:''}
+      ${where?`<div style="font-size:.78rem;opacity:.7;margin-top:.2rem">${X(where)}</div>`:''}
+      ${r.notes?`<div style="font-size:.78rem;opacity:.75;margin-top:.4rem;white-space:pre-wrap">${X(String(r.notes).slice(0,240))}${String(r.notes).length>240?'…':''}</div>`:''}
+    </div>`;
+  }).join('');
+}
+// Called from the Campaigns tab: add a business from the bank as a host prospect (one list at a time).
+window.hqAddHostProspect=async function(o){
+  const n=String(o.name||'').toLowerCase().replace(/[^a-z0-9]/g,'');
+  if(!n){hqToast('Type a name first.',true);return false;}
+  if(!db){hqToast('Not connected yet. Try again in a moment.',true);return false;}
+  try{
+    const snap=await db.collection('recruits').get(),nn=x=>String(x||'').toLowerCase().replace(/[^a-z0-9]/g,'');
+    const ex=snap.docs.map(d=>d.data()).find(r=>nn(r.name)===n);
+    if(ex){hqToast(o.name+' is already on '+(ex.hostProspect?'Host Prospects':'Host Leads')+'. Nobody lives on two lists, so it was not added.',true);return false;}
+    if((roster||[]).some(h=>nn(h.name)===n||nn((h.name||'')+(h.lastName||''))===n)){hqToast(o.name+' is already on the Host Roster. Nobody lives on two lists, so it was not added.',true);return false;}
+    const now=new Date().toISOString();
+    await db.collection('recruits').add({name:String(o.name).trim(),contactName:o.contactName||'',phone:o.phone||'',email:o.email||'',address:o.address||'',city:o.city||'',instagram:o.instagram||'',facebook:o.facebook||'',website:o.website||'',igFollowers:o.igFollowers||'',fbFollowers:o.fbFollowers||'',notes:[o.notes,o.source?'From: '+o.source:''].filter(Boolean).join('\n'),milestones:{},hostProspect:true,locationId:(currentLocationScope!=='ALL'?currentLocationScope:((locations[0]&&locations[0].code)||'')),createdAt:now,updatedAt:now});
+    loadRecruits();
+    hqToast('Added to Host Prospects on the Hosts tab.');return true;
+  }catch(e){hqToast('Could not add: '+(e&&e.message||e),true);return false;}
+};
 function deleteRecruit(){
   if(!editingRecruitId)return;
   if(!confirm('Remove this lead from tracking? This cannot be undone.'))return;
@@ -7922,7 +7995,7 @@ YOUR JOB: you run the host desk. You never message anyone and you never approve 
 Every morning at 8:30 AM Pacific:
 1. CALLOUTS. Read agent_config/coach. List every callout with status "open" and a shift date within 3 days. These are shifts nobody has picked up, list them first.
 2. FLAGS. Read the collection shifts for the last 14 days. Match each shift to gig_schedule by date and venue. Flag check-ins more than 20 minutes after the gig time, shifts with a check-in but no checkout, and checkouts missing at least two of crowdSize, energyLevel, tipScale. Group by host and say whether it is a pattern (3 or more in 30 days) or a one-off.
-3. ONBOARDING. Read the collection recruits. For anyone with unfinished milestones and no update in 7 days, give the name, the next step, and a short friendly nudge text Ahnna can send.
+3. ONBOARDING. Read the collection recruits. Ignore any recruit with hostProspect true (they are on the Host Prospects list, nobody is onboarding them yet). For anyone with unfinished milestones and no update in 7 days, give the name, the next step, and a short friendly nudge text Ahnna can send.
 4. FEEDBACK. If email or survey answers from venues arrived, write them to agent_config/coach under feedback: venue, score (1 to 5 if given), note, date.
 5. Never message anyone.
 
@@ -7952,7 +8025,7 @@ YOUR JOB: make sure nothing lapses and nothing goes unsigned. You never file, si
 
 Every Monday at 8 AM Pacific:
 1. Read the Firestore document agent_config/sigil. It has items (name, due as YYYY-MM-DD) and people (name, kind host or venue, contract, agreement, w9 as true or false). Only hosts have a W-9, meaning the host's W-9 is received. Venues need only a contract and an agreement. Never ask a venue for a W-9.
-2. Also read the collection recruits. Hosts there with contractSigned or w9Uploaded false are missing paperwork too.
+2. Also read the collection recruits (ignore any with hostProspect true). Hosts there with contractSigned or w9Uploaded false are missing paperwork too.
 3. RENEWALS: list every item due within its own lead time (the lead field, in days; use 60 if it has none), sorted by date, with the number of days left, how often it repeats (the repeat field: monthly, quarterly, semi, yearly, 2years, or empty for one time) and its price if it has one. Never change the due date yourself: Ahnna taps "Done" in HQ and the next due date rolls forward on its own. Mark overdue ones first. If an item has no due date, list it as "needs a date".
 4. SIGNATURES: for each person with anything missing, write one document to agent_drafts: leadId (empty), agent "sigil", kind "paperwork", body, label ("Paperwork: " plus the name), status "pending", createdAt (ms). Skip anyone with a pending paperwork draft.
    - Host reminder: friendly and specific. Name each missing item (signed contract, signed agreement, W-9), ask for it back this week, offer help.
@@ -8852,7 +8925,7 @@ function coachState(){
   });
   callouts.forEach(x=>{const h=hostOf(x.host);if(h)h.callouts++;if(x.status==='covered'){const p=hostOf(x.coveredBy);if(p)p.pickedUp++;}});
   const openCalls=callouts.filter(x=>x.status==='open'&&x.date&&x.date<=isoDay(now+3*DAY));
-  const rec=(typeof recruits!=='undefined'&&Array.isArray(recruits))?recruits:[];
+  const rec=(typeof recruits!=='undefined'&&Array.isArray(recruits))?recruits.filter(r=>!r.hostProspect):[];
   const MS=(typeof RECRUIT_MILESTONES!=='undefined')?RECRUIT_MILESTONES:[];
   const recs=rec.map(r=>{const done=MS.filter(m=>r.milestones&&r.milestones[m.key]).length;const nx=MS.find(m=>!(r.milestones&&r.milestones[m.key]));const t=r.updatedAt?new Date(r.updatedAt).getTime():0;return Object.assign({},r,{done:done,total:MS.length,next:nx?nx.label:'',idle:t?Math.floor((now-t)/DAY):999});});
   const stuck=recs.filter(r=>r.total&&r.done<r.total&&r.idle>=7).sort((a,b)=>b.idle-a.idle);
@@ -9045,7 +9118,7 @@ LABELS: every draft label and every NEEDS YOU line must START with the listing i
 FACEBOOK AND INSTAGRAM: Meta's robots.txt blocks automated readers on both, so never try to fetch them. Use the snapshot text in agent_sites if there is one, and public search results about the page. Only if there is no snapshot, or it is older than 30 days, add one line to NEEDS YOU: "- Needs a look: paste the page text for Facebook Page / Instagram into its box on Mirror's desk".
 5. Draft replies to new public reviews (kind "review") and review asks for happy venues (kind "reviewask"). Never ask for Yelp reviews, never buy or fake reviews.`},
  {name:'Host desk',who:'Jett',when:'Daily, 8:30 am',plain:'Reads callouts, check-ins, checkouts and onboarding progress, and flags callouts nobody covered, hosts who keep checking in late, and recruits who have gone quiet.',ids:['coach'],
-  body:`TASK: Host desk. Read "shifts" (last 14 days), agent_config coach, and recruits.
+  body:`TASK: Host desk. Read "shifts" (last 14 days), agent_config coach, and recruits (ignore any recruit with hostProspect true, those are only on the Host Prospects list).
 1. Callouts in agent_config coach with status "open" and a shift date within 3 days: list them first in your summary.
 2. Late check-ins (more than 20 minutes after the gig start), checkouts never finished, and checkouts missing crowd size, energy and tip scale. List by host.
 3. Recruits with unfinished milestones and no update in 7 days: setConfig is not needed, just list them with the next step and a nudge text.
@@ -12153,7 +12226,7 @@ function showBanners(){return sponD().showBanners!==false;}
 function bannerUrl(m){return ((L.banners||{}).map||{})[m]||'';}
 /* ── modal ── */
 function ov(html,w){let el=$('cpOv');if(!el){el=document.createElement('div');el.id='cpOv';el.className='modal-bg';el.innerHTML='<div class="modal" id="cpBox" style="max-width:640px"></div>';el.addEventListener('click',onClick);el.addEventListener('change',e=>{const t=e.target;if(t&&t.dataset&&t.dataset.campadd&&t.value)campAdd(t.dataset.campadd,t.value);});document.body.appendChild(el);}
-  const b=$('cpBox');b.style.maxWidth=(w||640)+'px';b.innerHTML=html;el.classList.add('open');document.body.classList.add('cp-lock');document.documentElement.classList.add('cp-lock');}
+  const b=$('cpBox'),vx=w==='vmx';el.className='modal-bg'+(vx?' vmx':'');b.className=vx?'modal vm-wide':'modal';b.style.maxWidth=vx?'':(w||640)+'px';b.innerHTML=html;el.classList.add('open');document.body.classList.add('cp-lock');document.documentElement.classList.add('cp-lock');}
 function closeOv(){const el=$('cpOv');if(el)el.classList.remove('open');document.body.classList.remove('cp-lock');document.documentElement.classList.remove('cp-lock');}
 function V(id){const e=$(id);return e?e.value.trim():'';}
 function fill(txt,c){return String(txt).replace(/\{(\w+)\}/g,(x,k)=>c[k]!==undefined&&c[k]!==''?c[k]:x);}
@@ -12192,25 +12265,15 @@ function sponEdit(id,m){
   const raw=id?sponD().prospects[id]:null;if(id&&!raw)return;const mm=m||'',p=raw?(mm?view(raw,mm):norm(raw)):null;
   const v=k=>esc(p?(p[k]||''):'');
   const kinds=[...new Set(Object.values(sponD().prospects).map(x=>x&&String(x.kind||'').trim()).filter(Boolean))].sort();
-  ov(`<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:.6rem"><div class="section-title" style="margin-bottom:.4rem">${p?'Edit business':'New business'}</div>${p&&mm?`<button class="btn-sm cp-heart ${p.heart?'on':''}" id="cp-heartbtn" data-cp="heart" data-arg="${esc(mm)}|${esc(id)}" title="Heart this business for ${esc(monthName(mm))} only">${p.heart?'&#9829;':'&#9825;'}</button>`:''}</div><div style="font-size:.74rem;color:var(--text3);margin-bottom:.9rem">${mm?esc(monthName(mm))+' · this business is on '+esc(monthName(mm))+"'s list":'Master list (every business, every area)'}</div>
-  <div class="cp-g2"><div class="form-group"><label class="form-label">Business name</label><input class="form-input" id="cp-name" value="${v('name')}"></div><div class="form-group"><label class="form-label">Contact name</label><input class="form-input" id="cp-who" value="${v('contactName')}"></div></div>
-  <div class="cp-g2"><div class="form-group"><label class="form-label">Email</label><input class="form-input" id="cp-email" value="${v('email')}"></div><div class="form-group"><label class="form-label">Phone</label><input class="form-input" id="cp-phone" value="${v('phone')}"></div></div>
-  <div class="cp-g2"><div class="form-group"><label class="form-label">Address</label><input class="form-input" id="cp-addr" value="${v('address')}"></div><div class="form-group"><label class="form-label">City</label><input class="form-input" id="cp-city" value="${v('city')}"></div></div>
-  <div class="cp-g2"><div class="form-group"><label class="form-label">Instagram</label><input class="form-input" id="cp-ig" value="${v('ig')}"></div><div class="form-group"><label class="form-label">Facebook</label><input class="form-input" id="cp-fb" value="${v('fb')}"></div></div>
-  <div class="cp-g2"><div class="form-group"><label class="form-label">Instagram followers</label><input class="form-input" id="cp-igf" value="${v('igf')}"></div><div class="form-group"><label class="form-label">Facebook followers</label><input class="form-input" id="cp-fbf" value="${v('fbf')}"></div></div>
-  <div class="cp-g2"><div class="form-group"><label class="form-label">Website</label><input class="form-input" id="cp-web" value="${v('web')}"></div><div class="form-group"><label class="form-label">Info found (found, partial, not found...)</label><input class="form-input" id="cp-ds" value="${v('ds')}"></div></div>
-  <div class="cp-g2"><div class="form-group"><label class="form-label">Category (Coffee, Restaurant, Salon...)</label><input class="form-input" id="cp-cat" list="cp-cats" value="${esc(p?catOf(p):'')}"><datalist id="cp-cats">${catList().map(k=>`<option value="${esc(k)}">`).join('')}</datalist></div><div class="form-group"><label class="form-label">Type (Coffee Shop, Mobile Coffee Cart, Coffee Stand...)</label><input class="form-input" id="cp-kind" list="cp-kinds" value="${v('kind')}"><datalist id="cp-kinds">${kinds.map(k=>`<option value="${esc(k)}">`).join('')}</datalist></div></div>
-  <div class="cp-g2"><div class="form-group"><label class="form-label">Area</label><select class="form-input" id="cp-area"><option value="">No area</option>${sponAreas().map(a=>`<option ${p&&p.area===a?'selected':(!p&&a===sponArea()?'selected':'')}>${esc(a)}</option>`).join('')}</select></div><div class="form-group"><label class="form-label">Tags (separate with commas)</label><input class="form-input" id="cp-tags" value="${v('tags')}"></div></div>
-  <div class="cp-g2"><div class="form-group"><label class="form-label">Same business as (another location)</label><select class="form-input" id="cp-link"><option value="">Not linked</option>${Object.values(sponD().prospects).filter(x=>x&&x.id!==id).sort((a,b)=>String(a.name).localeCompare(String(b.name))).map(x=>`<option value="${esc(x.id)}" ${p&&p.group&&x.group===p.group?'selected':''}>${esc(x.name)}${x.city?' · '+esc(x.city):''}</option>`).join('')}</select></div></div>
-  ${p?campAdder(id):''}
-  <div class="form-group"><label class="form-label">What this place is</label><textarea class="form-textarea" id="cp-desc" style="min-height:70px">${v('desc')}</textarea></div>
-  <div class="form-group"><label class="form-label">How they fit the theme</label><textarea class="form-textarea" id="cp-fit" style="min-height:70px">${v('fit')}</textarea></div>
-  <div class="form-group"><label class="form-label">Notes</label><textarea class="form-textarea" id="cp-notes" style="min-height:70px">${v('notes')}</textarea></div>
-  ${mm?`<div class="cp-g2"><div class="form-group"><label class="form-label">Their answer (${esc(monthName(mm))})</label><select class="form-input" id="cp-ans"><option value="">No answer yet</option><option value="yes" ${p&&p.answer==='yes'?'selected':''}>Said yes</option><option value="no" ${p&&p.answer==='no'?'selected':''}>Said no</option></select></div>
-  <div class="form-group"><label class="form-label">We emailed them on</label><input class="form-input" type="date" id="cp-emdate" value="${p&&p.emailedAt&&p.emailedAt!=='earlier'?esc(p.emailedAt):''}"></div></div>
-  <div style="display:flex;gap:1.4rem;flex-wrap:wrap;margin:.2rem 0 1rem"><label class="cp-chk"><input type="checkbox" id="cp-em" ${p&&p.emailedAt?'checked':''}> We emailed (in progress)</label><label class="cp-chk"><input type="checkbox" id="cp-cold" ${p&&p.goneCold?'checked':''}> Gone cold</label><label class="cp-chk"><input type="checkbox" id="cp-hide" ${p&&p.hidCamp?'checked':''}> Not using in this campaign (keep saved, hide it from this month's list and sponsor choices)</label>${p&&!p.area?`<label class="cp-chk"><input type="checkbox" id="cp-hideloc" ${p.hidLoc?'checked':''}> Not using in this location (hide it in the area(s) switched on now)</label>`:''}</div>`:''}
-  ${p?`<div class="cp-acts" style="justify-content:flex-start;margin-bottom:.6rem">${sendBtns(raw)}</div>`:''}
-  <div class="cp-acts">${p?`<button class="btn-sm cp-red" data-cp="del" data-arg="${esc(id)}">Remove everywhere</button>`:''}<button class="btn-sm" data-cp="close">Cancel</button><button class="btn-sm btn-gold" data-cp="editsave" data-arg="${esc(id)}" data-m="${esc(mm)}">Save</button></div>`,640);
+  ov(`<div class="vm-top"><button type="button" class="vm-back" data-cp="close">&larr; Businesses</button><div class="vm-ttl"><i></i><span>${p?'Edit Business':'New Business'}</span><i class="r"></i></div><div style="justify-self:end">${p&&mm?`<button class="btn-sm cp-heart ${p.heart?'on':''}" id="cp-heartbtn" data-cp="heart" data-arg="${esc(mm)}|${esc(id)}" title="Heart this business for ${esc(monthName(mm))} only">${p.heart?'&#9829;':'&#9825;'}</button>`:''}</div></div>
+  <div style="font-size:.74rem;color:var(--text3);margin:-.5rem 0 1rem;text-align:center">${mm?esc(monthName(mm))+' · this business is on '+esc(monthName(mm))+"'s list":'Master list (every business, every area)'}</div>
+  <div class="vm-sec"><div class="vm-grid vm-g4"><div class="form-group"><label class="form-label">Business name</label><input class="form-input" id="cp-name" value="${v('name')}"></div> <div class="form-group"><label class="form-label" title="Coffee, Restaurant, Salon...">Category</label><input class="form-input" id="cp-cat" list="cp-cats" value="${esc(p?catOf(p):'')}"><datalist id="cp-cats">${catList().map(k=>`<option value="${esc(k)}">`).join('')}</datalist></div> <div class="form-group"><label class="form-label" title="Coffee Shop, Mobile Coffee Cart, Coffee Stand...">Type</label><input class="form-input" id="cp-kind" list="cp-kinds" value="${v('kind')}"><datalist id="cp-kinds">${kinds.map(k=>`<option value="${esc(k)}">`).join('')}</datalist></div> <div class="form-group"><label class="form-label">Area</label><select class="form-input" id="cp-area"><option value="">No area</option>${sponAreas().map(a=>`<option ${p&&p.area===a?'selected':(!p&&a===sponArea()?'selected':'')}>${esc(a)}</option>`).join('')}</select></div></div></div>
+  <div class="vm-sec"><div class="vm-sec-h"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4a4 4 0 100 8 4 4 0 000-8zM4 21c0-4 4-7 8-7s8 3 8 7"/></svg>Contact</div><div class="vm-grid vm-g4"><div class="form-group"><label class="form-label">Contact name</label><input class="form-input" id="cp-who" value="${v('contactName')}"></div><div class="form-group"><label class="form-label">Email</label><input class="form-input" id="cp-email" value="${v('email')}"></div><div class="form-group"><label class="form-label">Phone</label><input class="form-input" id="cp-phone" value="${v('phone')}"></div><div class="form-group"><label class="form-label">City</label><input class="form-input" id="cp-city" value="${v('city')}"></div></div><div class="vm-grid" style="margin-top:.6rem"><div class="form-group"><label class="form-label">Address</label><input class="form-input" id="cp-addr" value="${v('address')}"></div></div></div>
+  <div class="vm-sec"><div class="vm-sec-h"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a9 9 0 100 18 9 9 0 000-18zM3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/></svg>Online</div><div class="vm-grid vm-g4"><div class="form-group"><label class="form-label">Instagram</label><input class="form-input" id="cp-ig" value="${v('ig')}"></div><div class="form-group"><label class="form-label">Instagram followers</label><input class="form-input" id="cp-igf" value="${v('igf')}"></div><div class="form-group"><label class="form-label">Facebook</label><input class="form-input" id="cp-fb" value="${v('fb')}"></div><div class="form-group"><label class="form-label">Facebook followers</label><input class="form-input" id="cp-fbf" value="${v('fbf')}"></div></div><div class="vm-grid vm-g2" style="margin-top:.6rem"><div class="form-group"><label class="form-label">Website</label><input class="form-input" id="cp-web" value="${v('web')}"></div><div class="form-group"><label class="form-label" title="found, partial, not found...">Info found</label><input class="form-input" id="cp-ds" value="${v('ds')}"></div></div></div>
+  <div class="vm-sec"><div class="vm-sec-h"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12V4h8l10 10-8 8z"/></svg>Tags &amp; locations</div><div class="vm-grid vm-g2"><div class="form-group"><label class="form-label">Tags (separate with commas)</label><input class="form-input" id="cp-tags" value="${v('tags')}"></div><div class="form-group"><label class="form-label">Same business as (another location)</label><select class="form-input" id="cp-link"><option value="">Not linked</option>${Object.values(sponD().prospects).filter(x=>x&&x.id!==id).sort((a,b)=>String(a.name).localeCompare(String(b.name))).map(x=>`<option value="${esc(x.id)}" ${p&&p.group&&x.group===p.group?'selected':''}>${esc(x.name)}${x.city?' · '+esc(x.city):''}</option>`).join('')}</select></div></div>${p?campAdder(id):''}</div>
+  <div class="vm-sec"><div class="vm-sec-h"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h9l4 4v14H6zM14 3v5h5M9 12h7M9 16h7"/></svg>About</div><div class="vm-grid vm-g2"><div class="form-group"><label class="form-label">What this place is</label><textarea class="form-textarea" id="cp-desc" style="min-height:70px">${v('desc')}</textarea></div><div class="form-group"><label class="form-label">How they fit the theme</label><textarea class="form-textarea" id="cp-fit" style="min-height:70px">${v('fit')}</textarea></div></div><div class="vm-grid" style="margin-top:.6rem"><div class="form-group"><label class="form-label">Notes</label><textarea class="form-textarea" id="cp-notes" style="min-height:70px">${v('notes')}</textarea></div></div></div>
+  ${mm?`<div class="vm-sec"><div class="vm-sec-h"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16v14H4zM4 10h16M8 3v4M16 3v4"/></svg>${esc(monthName(mm))}</div><div class="vm-grid vm-g2"><div class="form-group"><label class="form-label">Their answer (${esc(monthName(mm))})</label><select class="form-input" id="cp-ans"><option value="">No answer yet</option><option value="yes" ${p&&p.answer==='yes'?'selected':''}>Said yes</option><option value="no" ${p&&p.answer==='no'?'selected':''}>Said no</option></select></div><div class="form-group"><label class="form-label">We emailed them on</label><input class="form-input" type="date" id="cp-emdate" value="${p&&p.emailedAt&&p.emailedAt!=='earlier'?esc(p.emailedAt):''}"></div></div><div style="display:flex;gap:1.4rem;flex-wrap:wrap;margin:.2rem 0 1rem"><label class="cp-chk"><input type="checkbox" id="cp-em" ${p&&p.emailedAt?'checked':''}> We emailed (in progress)</label><label class="cp-chk"><input type="checkbox" id="cp-cold" ${p&&p.goneCold?'checked':''}> Gone cold</label><label class="cp-chk"><input type="checkbox" id="cp-hide" ${p&&p.hidCamp?'checked':''}> Not using in this campaign (keep saved, hide it from this month's list and sponsor choices)</label>${p&&!p.area?`<label class="cp-chk"><input type="checkbox" id="cp-hideloc" ${p.hidLoc?'checked':''}> Not using in this location (hide it in the area(s) switched on now)</label>`:''}</div></div>`:''}
+  <div class="modal-actions vm-actions">${p?`<button class="modal-cancel" data-cp="del" data-arg="${esc(id)}" style="color:var(--rose)">Remove everywhere</button>${sendBtns(raw,'modal-cancel')}`:''}<div style="flex:1"></div><button class="modal-cancel" data-cp="close">Cancel</button><button class="modal-save" data-cp="editsave" data-arg="${esc(id)}" data-m="${esc(mm)}" style="flex:none;min-width:9rem">Save</button></div>`,'vmx');
 }
 function sponEditSave(id,m){
   const name=V('cp-name');if(!name){toast('Add the business name',true);return;}
@@ -12242,15 +12305,21 @@ async function toProspects(id){
   const p=sponD().prospects[id];if(!p)return;
   if(!window.hqAddProspect){toast('Prospects are not loaded yet. Try again in a moment.',true);return;}
   const ok=await window.hqAddProspect({name:p.name,city:p.city,address:p.address,contact:p.email||p.phone||'',contactName:p.contactName,phone:p.phone,instagram:p.ig,facebook:p.fb,website:p.web,evidence:p.fit||p.desc||'',notes:[p.desc,p.notes,p.igf?'Instagram followers: '+p.igf:'',p.fbf?'Facebook followers: '+p.fbf:''].filter(Boolean).join(' \u00b7 '),foundFrom:'Business bank'});
-  if(ok){const pr={...sponD().prospects};pr[id]={...p,toProspects:Date.now()};await save({prospects:pr},true);}
+  if(ok){const pr={...sponD().prospects};pr[id]={...p,toProspects:Date.now()};document.querySelectorAll('#cpBox [data-cp="toprosp"]').forEach(b=>{b.textContent='On Venue Prospects \u2713';});await save({prospects:pr},true);}
+}
+async function toHost(id){
+  const p=sponD().prospects[id];if(!p)return;
+  if(!window.hqAddHostProspect){toast('The Hosts tab is not loaded yet. Try again in a moment.',true);return;}
+  const ok=await window.hqAddHostProspect({name:p.name,contactName:p.contactName,phone:p.phone,email:p.email,address:p.address,city:p.city,instagram:p.ig,facebook:p.fb,website:p.web,igFollowers:p.igf,fbFollowers:p.fbf,notes:[p.desc,p.notes].filter(Boolean).join('\n'),source:'Business bank'});
+  if(ok){const pr={...sponD().prospects};pr[id]={...p,toHost:Date.now()};document.querySelectorAll('#cpBox [data-cp="tohost"]').forEach(b=>{b.textContent='On Host Prospects \u2713';});await save({prospects:pr},true);}
 }
 async function toSponsors(id){
   const p=sponD().prospects[id];if(!p)return;
   if(!window.hqAddSponsor){toast('Raven\'s desk is not loaded yet. Try again in a moment.',true);return;}
   const ok=await window.hqAddSponsor({business:p.name,kind:p.kind||catOf(p),city:p.city,url:p.web,contact:p.contactName,email:p.email,why:p.fit||p.desc||''});
-  if(ok){const pr={...sponD().prospects};pr[id]={...p,toSponsors:Date.now()};await save({prospects:pr},true);}
+  if(ok){const pr={...sponD().prospects};pr[id]={...p,toSponsors:Date.now()};document.querySelectorAll('#cpBox [data-cp="tospon"]').forEach(b=>{b.textContent='On sponsors \u2713';});await save({prospects:pr},true);}
 }
-function sendBtns(p){return `<button class="btn-sm" data-cp="toprosp" data-arg="${esc(p.id)}" title="Add this business to Prospects">${p.toProspects?'On prospects \u2713':'Add to prospects'}</button><button class="btn-sm" data-cp="tospon" data-arg="${esc(p.id)}" title="Add this business to Possible sponsors on Raven's desk">${p.toSponsors?'On sponsors \u2713':'Add to sponsors'}</button>`;}
+function sendBtns(p,cls){cls=cls||'btn-sm';return `<button class="${cls}" data-cp="toprosp" data-arg="${esc(p.id)}" title="Add this business to the Venue Prospects list">${p.toProspects?'On Venue Prospects \u2713':'Add to Venue Prospects'}</button><button class="${cls}" data-cp="tohost" data-arg="${esc(p.id)}" title="Add this business to the Host Prospects list on the Hosts tab">${p.toHost?'On Host Prospects \u2713':'Add to Host Prospects'}</button><button class="${cls}" data-cp="tospon" data-arg="${esc(p.id)}" title="Add this business to Possible sponsors on Raven's desk">${p.toSponsors?'On sponsors \u2713':'Add to sponsors'}</button>`;}
 async function save(patch,quiet){await saveLib('sponsors',patch,quiet);render();}
 function sponDel(id){if(!confirm('Remove this business from the master list and from every month? (To only skip it for one theme, use Not using instead.)'))return;const pr={...sponD().prospects},prog={...sponD().prog};delete pr[id];Object.keys(prog).forEach(k=>{if(k.split('|')[1]===id)delete prog[k];});closeOv();save({prospects:pr,prog:prog});}
 async function toggle(m,id,field){
@@ -12550,6 +12619,7 @@ function onClick(e){
     case 'stop':break;
     case 'toprosp':toProspects(arg);break;
     case 'tospon':toSponsors(arg);break;
+    case 'tohost':toHost(arg);break;
     case 'close':closeOv();break;
     case 'fold':foldToggle(arg,arg==='master'?false:arg.charAt(0)==='c'?arg.slice(2)===todayStr().slice(0,7):true);break;
     case 'mode':filterMode=arg;render();break;
