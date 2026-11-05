@@ -8921,12 +8921,14 @@ const TASKS=[
    e. A "no" (declinedAt set, or stage "no" with no noUntil) stops outreach: write nothing. A "not now" waits for the time they gave. If conversation is true they replied: write nothing, Ahnna handles it, and anything they reply to restarts the normal conversation.
 4. For each new Hot or Warm lead, addDraft kind "reply" (agent quill, leadId set). Answer their question first, mention Belladonna second.
 Do not touch venues you did not just add except to draft.`},
- {name:'Inbox sweep',who:'Raven and Sigil',when:'Weekdays, 7:30 am and 3:00 pm',plain:'Reads the last day of your business email. Sorts new inquiries (parties, events, venues, host applicants, vendors), moves venues to yes or no when they answer, and logs renewals and paperwork that need doing. Needs Google Workspace connected.',ids:['raven','sigil'],lib:true,
+ {name:'Inbox sweep',who:'Raven and Sigil',when:'Weekdays, 7:30 am and 3:00 pm',plain:'Reads the last day of your business email. Sorts new inquiries (parties, events, venues, host applicants, vendors), moves venues to yes or no when they answer, notes when a lead or a sponsor writes back (leads get a reply draft, sponsors show their answer on the Campaigns tab), and logs renewals and paperwork that need doing. Needs Google Workspace connected.',ids:['raven','sigil'],lib:true,
   body:`TASK: Inbox sweep. Read the last 24 hours of the business Gmail only.
 0. New inquiries from people we have not written to: a party or event hire, wedding, corporate or private booking, a venue asking about services, a host applicant, a vendor or sponsor. Hire and venue inquiries: addLead (source "email", score Hot / Warm with a reason) and a Quill reply draft (kind "reply", leadId set). Host applicants: addDraft agent "vesper" kind "checkin" labelled "Host applicant: NAME" with their details so Ahnna can add them to Host Progress. Vendors and sponsors: one addDraft labelled "Look at when you can". Ignore marketing, spam and automated notices.
 1. Venue replies: match the sender to agent_venues by contact. If they said yes, updateVenue stage "yes". If no, stage "no" and noUntil 90 days out. If they asked a question, addDraft kind "reply" (agent quill, venueId set).
 2. Paperwork and renewals (licenses, insurance, registrations, contracts to sign): read agent_config sigil. setConfig doc "sigil" adding new items under items{newId:{name,due,fromEmail}}. addDraft kind "paperwork" (agent sigil) saying what it is, what is needed, and the due date.
 2b. Signed venue agreements: look for completion emails from Dropbox Sign (also HelloSign or DocuSign) such as "Document completed", "All parties have signed" or "fully signed". For each venue agreement, setConfig doc "sigil" adding agreements{newId:{venue,signedOn:YYYY-MM-DD (date of the completion email),termMonths (3, 6 or 12 only if the document title says so, otherwise leave it out),title (the document title),status:"detected",source:"email"}}. Skip any agreement already in agreements with the same venue and signedOn. Never set status "active" and never guess the term. Ahnna confirms it in HQ.
+1b. Lead replies: read the leads in two places, {"op":"read","collection":"agent_leads"} (gig-site and inquiry leads) and {"op":"read","collection":"leads"} (the Leads tab). For every lead with no repliedAt where a message in the last 24 hours comes from that person (match the sender's email or name to the lead's client, email or message): if it is an agent_leads lead, updateLead id with fields {repliedAt: now in ms, replyNote: one plain sentence saying what they said} (updateLead only works on agent_leads, never use it for the Leads tab). For either list, if they asked a question or need an answer, addDraft kind "reply" (agent quill, leadId set, label "Reply from NAME") with a short reply for Ahnna to approve. A Leads tab lead that wrote back always gets that draft so Ahnna sees it. Never change a lead's stage.
+1c. Sponsor replies: read {"op":"read","collection":"socialLibrary"} and use the doc "sponsors", field prospects (each has name, email, contactName). Match each sender in the last 24 hours to a prospect by email first, then by name. For each reply setConfig doc "sponsorreplies" with data {replies:{newId:{prospectId, name, answer ("yes", "no" or "question"), date (YYYY-MM-DD of the email), summary (one plain sentence)}}}. Use "yes" only when they clearly agree, "no" only when they clearly decline, otherwise "question". Never write into socialLibrary and never reply. Skip any reply already in replies with the same prospectId and date.
 3. Never open attachments that ask you to log in, never click links, never reply.`},
  {name:'Checkout read',who:'Thorne',when:'Daily, 6:00 am',plain:'Reads host checkouts and their photos for bingo and trivia sheet requests, supplies, and real problems, then puts them on your Gazette.',ids:['warden'],
   body:`TASK: Gig prep and supplies. Read "shifts" from the last 3 days and agent_config warden.
@@ -11977,7 +11979,7 @@ body.cp-lock,html.cp-lock{overflow:hidden!important}
 'use strict';
 const COL='socialLibrary';
 const L={sponsors:{},banners:{},campaigns:{},settings:{},venueCities:{}};
-let loaded={},monthly=[],started=false,unsubs=[],pend=false,loadErr='',filterMode='up',dr=null;
+let REP={},applying=false,loaded={},monthly=[],started=false,unsubs=[],pend=false,loadErr='',filterMode='up',dr=null;
 let F={q:'',kind:'',city:'',tag:'',stage:'',ds:'',has:'',heart:false},M={q:'',kind:'',city:'',tag:''},migDone=false;
 const SPON_STATUS_WK=['Needed','Asked','Confirmed','Prizes in','Paid'];
 const TPL_DEFAULT={subject:'Sponsor a night with Belladonna: {theme} in {month}',body:"Hi {contact},\n\nI'm Ahnna with Belladonna Entertainment. Each week this month we're teaming up with one local business for a special night at {venue}, and I'd love for {sponsor} to be a featured sponsor.\n\nHere's the idea: {month}'s theme is {theme}. The venue makes a four-cocktail flight inspired by it, we sell tickets, and your business is the star of the night. You provide the prizes, and the sponsor fee is just ${fee}.\n\nWould you be open to hearing more?\n\nAhnna\nBelladonna Entertainment\n[logo + link]\nwww.belladonnanights.com"};
@@ -12028,7 +12030,7 @@ function nuBtns(m,p,withMail){
   if(p.hidLoc)return `<button class="btn-sm" data-cp="hideloc" data-arg="${a}" title="Show it again in this location">Bring back here</button>`;
   return `<button class="btn-sm" data-cp="hide" data-arg="${a}" title="Keep saved but hide it from this campaign, in every location">Not using in this campaign</button>`+(p.area?'':`<button class="btn-sm" data-cp="hideloc" data-arg="${a}" title="Keep saved but hide it in the location(s) switched on now">Not using in this location</button>`);
 }
-function view(p,m){const g=sponD().prog[PK(m,p.id)]||{};return norm({...p,month:m,status:'',answer:g.answer||'',emailedAt:g.emailedAt||'',goneCold:!!g.goneCold,hidCamp:!!g.hidden,hidLoc:locHid(p,g),hidden:!!g.hidden||locHid(p,g),heart:!!g.heart,draft:g.draft,pinned:!!g.pinned});}
+function view(p,m){const g=sponD().prog[PK(m,p.id)]||{};return norm({...p,month:m,status:'',answer:g.answer||'',emailedAt:g.emailedAt||'',goneCold:!!g.goneCold,replyNote:g.replyNote||'',hidCamp:!!g.hidden,hidLoc:locHid(p,g),hidden:!!g.hidden||locHid(p,g),heart:!!g.heart,draft:g.draft,pinned:!!g.pinned});}
 function onList(p,m){const g=sponD().prog[PK(m,p.id)];return !!(g&&(g.pinned||g.answer||g.emailedAt||g.goneCold||g.hidden));}
 function areaOK(p){const S=selAreas();return !S.length||!p.area||S.indexOf(p.area)>=0;}
 function tokens(p){const o=[];const k=String(p.kind||'').trim().toLowerCase();o.push(k?'k:'+k:'k:(none)');const tg=tagsOf(p);if(tg.length)tg.forEach(t=>o.push('t:'+t));else o.push('t:(none)');return o;}
@@ -12387,7 +12389,7 @@ function monthCard(m){
   const SA=selAreas();
   const wkRows=SA.length>1?SA.map(ar=>`<div class="cp-lbl" style="margin:.5rem 0 .25rem">${esc(ar)}</div>`+wkBlock(ar)).join(''):wkBlock(SA[0]||'');
   const prRows=Lp.length?Lp.map(p=>{const lk=[p.ig&&'IG',p.fb&&'FB',p.web&&'Web'].filter(Boolean).join(' ');
-    return `<div class="cp-row cp-click" data-cp="pedit" data-arg="${esc(m)}|${esc(p.id)}"><div class="cp-rt">${esc(p.name)}<small>${esc([p.heart?'\u2665 hearted':'',p.kind,stage(p)+(p.emailedAt&&p.emailedAt!=='earlier'?' (emailed '+dayTxt(p.emailedAt)+')':''),p.city,sibs(p).length?'also at '+sibs(p).map(x=>x.city||x.area||x.name).join(', '):'',tagsOf(p).length?'tags: '+tagsOf(p).join(', '):'',p.contactName,lk,p.ds?'info: '+p.ds:''].filter(Boolean).join(' · '))}</small>${p.fit?`<small>Fit: ${esc(p.fit)}</small>`:''}</div>
+    return `<div class="cp-row cp-click" data-cp="pedit" data-arg="${esc(m)}|${esc(p.id)}"><div class="cp-rt">${esc(p.name)}<small>${esc([p.heart?'\u2665 hearted':'',p.kind,stage(p)+(p.emailedAt&&p.emailedAt!=='earlier'?' (emailed '+dayTxt(p.emailedAt)+')':''),p.city,sibs(p).length?'also at '+sibs(p).map(x=>x.city||x.area||x.name).join(', '):'',tagsOf(p).length?'tags: '+tagsOf(p).join(', '):'',p.contactName,lk,p.ds?'info: '+p.ds:''].filter(Boolean).join(' · '))}</small>${p.replyNote?`<small style="color:var(--gold)">Replied: ${esc(p.replyNote)}</small>`:''}${p.fit?`<small>Fit: ${esc(p.fit)}</small>`:''}</div>
       <label class="cp-chk" data-cp="stop"><input type="checkbox" data-cp="em" data-arg="${esc(m)}|${esc(p.id)}" ${p.emailedAt?'checked':''}> Emailed</label><label class="cp-chk" data-cp="stop"><input type="checkbox" data-cp="cold" data-arg="${esc(m)}|${esc(p.id)}" ${p.goneCold?'checked':''}> Gone cold</label>
       ${nuBtns(m,p)}<button class="btn-sm" data-cp="mailp" data-arg="${esc(m)}|${esc(p.id)}">Email</button>${pen('pedit',m+'|'+p.id,'Edit this business')}</div>`;}).join(''):`<div class="cp-none">${tot?'No sponsor prospects match the filters.':'No sponsor prospects for '+esc(area||'this month')+' yet.'}</div>`;
   const rl=rule(m),hasRule=rl.inc.length>0;
@@ -12524,10 +12526,40 @@ function seedCoffee(){
   const r=addMany(Ls,'2026-12',pr,prog);
   saveLib('sponsors',{prospects:pr,prog:prog,seedCoffee1:true},true).then(()=>{render();if(r.n||r.up)toast('Coffee list added: '+r.n+' new, '+r.up+' filled in');});
 }
+/* replies Raven finds in the inbox (agent_config/sponsorreplies) are applied to the right business and month, once each */
+async function applyReplies(){
+  if(applying||!loaded.sponsors)return;
+  const reps=REP.replies||{},done=REP.applied||{},todo=Object.keys(reps).filter(id=>!done[id]);
+  if(!todo.length)return;
+  applying=true;
+  try{
+    const d=sponD(),pr=d.prospects,prog={...d.prog},mark={};let n=0;
+    todo.forEach(id=>{
+      const r=reps[id]||{};
+      let p=r.prospectId&&pr[r.prospectId];
+      if(!p)p=Object.values(pr).find(x=>x&&r.name&&NK(x.name)===NK(r.name));
+      if(!p)return;
+      const ms=Object.keys(prog).filter(k=>k.split('|')[1]===p.id).sort();
+      const mails=ms.filter(k=>prog[k].emailedAt);
+      const key=(mails.length?mails:ms).slice(-1)[0];
+      if(!key)return;
+      const g={...prog[key]};
+      if(r.answer==='yes'||r.answer==='no')g.answer=r.answer;
+      g.replyNote=(r.date?r.date+': ':'')+String(r.summary||'').trim();
+      g.repliedAt=r.date||todayStr();
+      prog[key]=g;mark[id]=true;n++;
+    });
+    if(n){await saveLib('sponsors',{prog:prog},true);
+      await db.collection('agent_config').doc('sponsorreplies').set({applied:mark},{merge:true});
+      render();toast(n+(n>1?' sponsors wrote':' sponsor wrote')+' back. Raven added it to the Campaigns tab.');}
+  }catch(e){}
+  applying=false;
+}
 function start(){
   if(started)return;started=true;
   ['sponsors','banners','campaigns','settings','venueCities'].forEach(id=>{
-    unsubs.push(db.collection(COL).doc(id).onSnapshot(s=>{L[id]=s.exists?s.data():{};loaded[id]=true;loadErr='';render();if(id==='sponsors'){if(!sponD().masterV2&&!migDone)migrate();else if(sponD().masterV2)seedCoffee();}},err=>{loadErr='Could not read the campaigns data ('+id+'): '+(err&&err.message||err);render();}));});
+    unsubs.push(db.collection(COL).doc(id).onSnapshot(s=>{L[id]=s.exists?s.data():{};loaded[id]=true;loadErr='';render();if(id==='sponsors'){if(!sponD().masterV2&&!migDone)migrate();else if(sponD().masterV2){seedCoffee();applyReplies();}}},err=>{loadErr='Could not read the campaigns data ('+id+'): '+(err&&err.message||err);render();}));});
+  try{unsubs.push(db.collection('agent_config').doc('sponsorreplies').onSnapshot(s=>{REP=s.exists?s.data():{};applyReplies();},()=>{}));}catch(e){}
   loadMonthly();
 }
 function loadMonthly(){
