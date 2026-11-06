@@ -1344,11 +1344,12 @@ html::-webkit-scrollbar-thumb:hover,.modal::-webkit-scrollbar-thumb:hover{backgr
     <div class="section-header"><div class="section-title">Prospects</div></div>
     <details style="border:1px solid var(--border,#444);border-radius:10px;padding:.6rem .8rem;margin-bottom:.8rem"><summary style="cursor:pointer;font-weight:600">+ Add a prospect</summary>
       <div class="vm-grid" style="grid-template-columns:repeat(auto-fit,minmax(210px,1fr));margin-top:.7rem">
-        <div class="form-group"><label class="form-label">Venue or business name</label><input class="form-input" id="pa-name"></div><div class="form-group"><label class="form-label">City</label><input class="form-input" id="pa-city"></div><div class="form-group"><label class="form-label">Address</label><input class="form-input" id="pa-addr"></div><div class="form-group"><label class="form-label">Contact name</label><input class="form-input" id="pa-who"></div><div class="form-group"><label class="form-label">Email</label><input class="form-input" id="pa-email"></div><div class="form-group"><label class="form-label">Phone</label><input class="form-input" id="pa-phone"></div><div class="form-group"><label class="form-label">Instagram</label><input class="form-input" id="pa-ig"></div><div class="form-group"><label class="form-label">Instagram followers</label><input class="form-input" id="pa-igf"></div><div class="form-group"><label class="form-label">Facebook</label><input class="form-input" id="pa-fb"></div><div class="form-group"><label class="form-label">Facebook followers</label><input class="form-input" id="pa-fbf"></div><div class="form-group"><label class="form-label">Website</label><input class="form-input" id="pa-web"></div><div class="form-group"><label class="form-label">Hours of service</label><input class="form-input" id="pa-hours"></div><div class="form-group"><label class="form-label">Where we got them from</label><input class="form-input" id="pa-from"></div>
+        <div class="form-group"><label class="form-label">Venue or business name</label><input class="form-input" id="pa-name"></div><div class="form-group"><label class="form-label">City</label><input class="form-input" id="pa-city"></div><div class="form-group"><label class="form-label">Address</label><input class="form-input" id="pa-addr"></div><div class="form-group"><label class="form-label">Contact name</label><input class="form-input" id="pa-who"></div><div class="form-group"><label class="form-label">Email</label><input class="form-input" id="pa-email"></div><div class="form-group"><label class="form-label">Phone</label><input class="form-input" id="pa-phone"></div><div class="form-group"><label class="form-label">Instagram</label><input class="form-input" id="pa-ig"></div><div class="form-group"><label class="form-label">Instagram followers</label><input class="form-input" id="pa-igf"></div><div class="form-group"><label class="form-label">Facebook</label><input class="form-input" id="pa-fb"></div><div class="form-group"><label class="form-label">Facebook followers</label><input class="form-input" id="pa-fbf"></div><div class="form-group"><label class="form-label">Website</label><input class="form-input" id="pa-web"></div><div class="form-group"><label class="form-label">Hours of service</label><input class="form-input" id="pa-hours"></div><div class="form-group"><label class="form-label">Where we got them from</label><input class="form-input" id="pa-from"></div><div class="form-group"><label class="form-label">Owner</label><input class="form-input" id="pa-owner"></div><div class="form-group"><label class="form-label">Manager</label><input class="form-input" id="pa-manager"></div><div class="form-group"><label class="form-label">Type (more than one is fine, comma between)</label><input class="form-input" id="pa-bizType"></div>
       </div>
       <div class="vm-grid" style="grid-template-columns:repeat(auto-fit,minmax(260px,1fr));margin-top:.6rem">
-        <div class="form-group"><label class="form-label">Why them</label><textarea class="form-textarea" id="pa-why" style="min-height:3.4rem;resize:vertical"></textarea></div><div class="form-group"><label class="form-label">Pitch (format and night)</label><textarea class="form-textarea" id="pa-pitch" style="min-height:3.4rem;resize:vertical"></textarea></div><div class="form-group"><label class="form-label">Notes</label><textarea class="form-textarea" id="pa-notes" style="min-height:3.4rem;resize:vertical"></textarea></div>
+        <div class="form-group"><label class="form-label">Why them</label><textarea class="form-textarea" id="pa-why" style="min-height:3.4rem;resize:vertical"></textarea></div><div class="form-group"><label class="form-label">Pitch (format and night)</label><textarea class="form-textarea" id="pa-pitch" style="min-height:3.4rem;resize:vertical"></textarea></div><div class="form-group"><label class="form-label">Notes</label><textarea class="form-textarea" id="pa-notes" style="min-height:3.4rem;resize:vertical"></textarea></div><div class="form-group"><label class="form-label">Other contacts (bartenders, bookers, anyone else)</label><textarea class="form-textarea" id="pa-otherContacts" style="min-height:3.4rem;resize:vertical"></textarea></div>
       </div>
+      <div style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;margin-top:.6rem"><span style="font-size:.78rem;opacity:.75">Heart a social page so you can find it again:</span><button type="button" class="btn-sm cp-heart" id="pa-igHeart" data-l="Instagram" style="font-size:.8rem" onclick="xfHeart(this)">&#9825; Instagram</button><button type="button" class="btn-sm cp-heart" id="pa-fbHeart" data-l="Facebook" style="font-size:.8rem" onclick="xfHeart(this)">&#9825; Facebook</button></div>
       <div style="display:flex;gap:.8rem;flex-wrap:wrap;align-items:center;margin-top:.6rem"><label style="font-size:.85rem;display:inline-flex;gap:.3rem;align-items:center"><input type="checkbox" id="pa-sent"> I already sent them a cold email</label><label style="font-size:.85rem">on <input type="date" class="form-input" id="pa-date" style="width:auto;display:inline-block"></label><button type="button" class="btn-sm btn-gold" onclick="addProspect()">Add to Prospects</button></div>
     </details>
     <div id="prospectsBody"></div>
@@ -1421,6 +1422,8 @@ html::-webkit-scrollbar-thumb:hover,.modal::-webkit-scrollbar-thumb:hover{backgr
       <div class="form-group"><label style="display:flex;align-items:center;gap:0.4rem;cursor:pointer;font-size:0.78rem;color:var(--text2);padding-bottom:.55rem"><input type="checkbox" id="leadCompetitor"> Currently using a competitor</label></div>
     </div></div>
     <div class="vm-sec"><div class="vm-sec-h"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h9l4 4v14H6zM14 3v5h5M9 12h7M9 16h7"/></svg>Notes</div><div class="form-group"><textarea class="form-textarea" id="leadNotes" style="min-height:90px;"></textarea></div></div>
+    <div class="vm-sec"><div class="og-box" data-ogsrc="leadName"></div></div>
+    <div class="vm-sec" id="leadXf"></div>
     <div class="vm-sec" id="leadOffers"></div>
     <div class="vm-sec"><div class="vm-sec-h"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="1.5"/><path d="M3 7l9 6 9-6"/></svg>Outreach log and emails sent</div><div id="leadHistory"></div></div>
     <div class="modal-actions vm-actions">
@@ -2027,6 +2030,8 @@ match /agent_config/{id}  { allow read, write: if isAdmin(); }</pre>
       <div class="form-group" id="vmOtherContactsWrap"><label class="form-label">Other contacts (bartenders, bookers, anyone else)</label><textarea class="form-textarea" id="vmOtherContacts" placeholder="Name, role, phone/email. One per line." style="min-height:64px;"></textarea></div>
     </div>
 
+    <div class="vm-sec"><div class="og-box" data-ogsrc="vmName"></div></div>
+    <div class="vm-sec" id="vmXf"></div>
     <div class="vm-sec" id="vmOffers"></div>
 
     <div class="vm-sec" id="vmLead"><div id="vmLeadInfo"></div><div id="vmAll"></div></div>
@@ -5244,7 +5249,9 @@ function openLeadModal(id){
   {const o=document.getElementById('leadOffers');if(o)o.innerHTML=(l&&typeof offersBlock==='function')?offersBlock(l.id,l.name,'ld'):'<div style="font-size:.8rem;opacity:.7">Save the lead first, then reopen it to fill in what it offers.</div>';}
   document.getElementById('leadDeleteBtn').style.display=l?'':'none';
   {const bb=document.getElementById('leadBackBtn');if(bb){bb.style.display=(l&&l.stage!=='signed'&&l.stage!=='active'&&l.stage!=='transferred'&&!venueForLead(l))?'':'none';bb.disabled=false;}}
+  try{document.getElementById('leadXf').innerHTML=xfHtml('ldx',XF_LEAD);xfFill('ldx',XF_LEAD,[l,l&&l.prospectInfo]);}catch(e){}
   document.getElementById('leadModal').classList.add('open');
+  try{ogRefresh();}catch(e){}
 }
 function saveLead(){
   const name=document.getElementById('leadName').value.trim();
@@ -5266,6 +5273,7 @@ function saveLead(){
     address:document.getElementById('leadAddress').value.trim(), instagram:document.getElementById('leadInstagram').value.trim(),
     website:document.getElementById('leadWebsite').value.trim(), facebook:document.getElementById('leadFacebook').value.trim()
   };
+  try{Object.assign(data,xfRead('ldx',XF_LEAD));}catch(e){}
   if(!editingLeadId)data.createdAt=new Date().toISOString();
   // Carry everything the prospect had onto the lead, and keep it there.
   try{const cur=editingLeadId?leads.find(x=>x.id===editingLeadId):null,ps=window.hqProspectSnap&&window.hqProspectSnap({id:editingLeadId,name:name,prospectId:cur&&cur.prospectId});
@@ -5295,7 +5303,7 @@ function transferLeadToVenue(id){
   let _ps=null;try{_ps=window.hqProspectSnap&&window.hqProspectSnap(l);}catch(e){}
   const _pi=l.prospectInfo||(_ps?_ps.info:{})||{};
   venues.push({
-    id:newVid, leadId:l.id, prospectId:l.prospectId||(_ps?_ps.prospectId:''), prospectInfo:Object.keys(_pi).length?_pi:null, address:l.address||_pi.address||'', instagram:l.instagram||_pi.instagram||'', website:l.website||_pi.website||'', facebook:l.facebook||_pi.facebook||'', city:l.city||'', contactName:l.contactName||'', phone:l.phone||'', email:l.email||'', noAgreement:(l.stage==='active'), leadInfo:{contactName:l.contactName||'',phone:l.phone||'',email:l.email||'',city:l.city||'',contactMethod:l.contactMethod||'',contactMethodOther:l.contactMethodOther||'',source:l.source||'',foundBy:l.foundBy||'',usingCompetitor:!!l.usingCompetitor,interests:Array.isArray(l.interests)?l.interests:[],notes:l.notes||'',createdAt:l.createdAt||'',signedStage:l.stage||''}, name:l.name, gigs,
+    id:newVid, leadId:l.id, prospectId:l.prospectId||(_ps?_ps.prospectId:''), prospectInfo:Object.keys(_pi).length?_pi:null, address:l.address||_pi.address||'', instagram:l.instagram||_pi.instagram||'', website:l.website||_pi.website||'', facebook:l.facebook||_pi.facebook||'', owner:l.owner||_pi.owner||'', manager:l.manager||_pi.manager||'', otherContacts:l.otherContacts||_pi.otherContacts||'', bizType:l.bizType||_pi.bizType||'', igFollowers:l.igFollowers||_pi.igFollowers||'', fbFollowers:l.fbFollowers||_pi.fbFollowers||'', foundFrom:l.foundFrom||_pi.foundFrom||'', evidence:l.evidence||_pi.evidence||'', pitch:l.pitch||_pi.pitch||'', igHeart:!!(l.igHeart||_pi.igHeart), fbHeart:!!(l.fbHeart||_pi.fbHeart), city:l.city||'', contactName:l.contactName||'', phone:l.phone||'', email:l.email||'', noAgreement:(l.stage==='active'), leadInfo:{contactName:l.contactName||'',phone:l.phone||'',email:l.email||'',city:l.city||'',contactMethod:l.contactMethod||'',contactMethodOther:l.contactMethodOther||'',source:l.source||'',foundBy:l.foundBy||'',usingCompetitor:!!l.usingCompetitor,interests:Array.isArray(l.interests)?l.interests:[],notes:l.notes||'',createdAt:l.createdAt||'',signedStage:l.stage||''}, name:l.name, gigs,
     notes:[l.city?('City: '+l.city):'',l.contactName?('Contact: '+l.contactName+(l.phone?' · '+l.phone:'')+(l.email?' · '+l.email:'')):'',scheduleNote,l.notes||''].filter(Boolean).join('\n'),
     locationId:l.locationId
   });
@@ -6672,7 +6680,9 @@ function openVenueModal(id=null){
   document.getElementById('gigChips').innerHTML=['Karaoke','Bingo','Trivia','Events','Private Events'].map(g=>{const sel=venue&&(venue.gigs||[]).includes(g);return`<div class="chip${sel?' selected-skill':''}" onclick="toggleChip(this,'skill')">${g}</div>`;}).join('');
   renderChecklistInto('onboardChecklist-venueModal','venue',ONBOARD_CHECKLIST_ITEMS.venue);
   vmSetAdminOpen(false);
+  try{const PI=(venue&&venue.prospectInfo)||{},LI=(venue&&venue.leadInfo)||{},LD=(venue&&leadForVenue(venue))||{};document.getElementById('vmXf').innerHTML=xfHtml('vmx',XF_VENUE);xfFill('vmx',XF_VENUE,[venue,PI,LI,LD]);}catch(e){}
   document.getElementById('venueModal').classList.add('open');
+  try{ogRefresh();}catch(e){}
   document.body.style.overflow='hidden';
   const _m=document.querySelector('#venueModal .modal');if(_m)_m.scrollTop=0;
   window._vmDirty=false;
@@ -6789,6 +6799,7 @@ function saveVenue(){
   const host=document.getElementById('vmHost').value||null;
   const gv=i=>{const e=document.getElementById(i);return e?e.value.trim():'';};
   const det={address:gv('vmAddress'),hours:(function(){const e=document.getElementById('vmHours');return e?e.value.trim():'';})(),city:gv('vmCity'),owner:gv('vmOwner'),manager:gv('vmManager'),contactName:gv('vmContactName'),phone:gv('vmPhone'),email:gv('vmEmail'),website:gv('vmWebsite'),instagram:gv('vmInstagram'),facebook:gv('vmFacebook'),otherContacts:gv('vmOtherContacts'),billDay:gv('vmBillFreq')==='gig'?'':gv('vmBillDay'),billFreq:gv('vmBillFreq'),billAmount:gv('vmBillAmount'),billNote:gv('vmBillNote'),billStart:gv('vmBillStart')};
+  try{Object.assign(det,xfRead('vmx',XF_VENUE));}catch(e){}
   const today=new Date().toISOString().slice(0,10);
   if(editVenueId){
     const v=venues.find(x=>x.id===editVenueId);
@@ -9894,7 +9905,7 @@ window.hqProspectFor=function(rec){
 window.hqProspectSnap=function(rec){
   const p=window.hqProspectFor(rec);if(!p)return null;
   const o={prospectId:p.id,info:{}};
-  ['name','city','address','hours','contact','contactName','phone','notes','foundFrom','instagram','website','facebook','evidence','pitch','stage','emailedAt','emailed2At','emailed3At','createdAt','addedBy','thrownFrom','thrownIdea','followUpOn','igDmAt','lastTouchAt'].forEach(k=>{if(p[k]!=null&&p[k]!=='')o.info[k]=p[k];});
+  ['name','city','address','hours','contact','contactName','phone','notes','foundFrom','instagram','website','facebook','evidence','pitch','owner','manager','otherContacts','bizType','igFollowers','fbFollowers','igHeart','fbHeart','stage','emailedAt','emailed2At','emailed3At','createdAt','addedBy','thrownFrom','thrownIdea','followUpOn','igDmAt','lastTouchAt'].forEach(k=>{if(p[k]!=null&&p[k]!=='')o.info[k]=p[k];});
   const em=emailOf(p);if(em)o.info.email=em;
   return o;
 };
@@ -10020,7 +10031,7 @@ window.hqProspectToLead=async function(pid,btn){
       // it was a lead before: bring that lead back exactly as it was, with anything newer from Prospects filled in
       lid=v.leadInfoId||db.collection('leads').doc().id;const L=Object.assign({},v.leadInfo);
       const pick=(a,b)=>String(b||'').trim()?b:(a||'');
-      L.name=v.name;L.contactName=pick(L.contactName,v.contactName);L.email=pick(L.email,emailOf(v));L.phone=pick(L.phone,v.phone);L.city=pick(L.city,v.city);L.address=pick(L.address,v.address);L.hours=pick(L.hours,v.hours);L.instagram=pick(L.instagram,v.instagram);L.website=pick(L.website,v.website);L.facebook=pick(L.facebook,v.facebook);L.foundFrom=pick(L.foundFrom,v.foundFrom);
+      L.name=v.name;L.contactName=pick(L.contactName,v.contactName);L.email=pick(L.email,emailOf(v));L.phone=pick(L.phone,v.phone);L.city=pick(L.city,v.city);L.address=pick(L.address,v.address);L.hours=pick(L.hours,v.hours);L.instagram=pick(L.instagram,v.instagram);L.website=pick(L.website,v.website);L.facebook=pick(L.facebook,v.facebook);L.foundFrom=pick(L.foundFrom,v.foundFrom);['owner','manager','otherContacts','bizType','igFollowers','fbFollowers','evidence','pitch'].forEach(k=>{L[k]=pick(L[k],v[k]);});L.igHeart=!!(L.igHeart||v.igHeart);L.fbHeart=!!(L.fbHeart||v.fbHeart);
       if(v.followUpOn){L.nextFollowUp=v.followUpOn;L.followUpNone=false;}
       if(v.notes&&String(L.notes||'').indexOf(v.notes)<0)L.notes=[L.notes,v.notes].filter(Boolean).join('\n');
       L.prospectId=v.id;L.prospectInfo=info;L.updatedAt=now;
@@ -10030,7 +10041,7 @@ window.hqProspectToLead=async function(pid,btn){
       lid=db.collection('leads').doc().id;
       const lastCh=T.length&&T[T.length-1].channel==='instagram'?'instagram':'email';
       const notes=[v.evidence?'Why them: '+v.evidence:'',v.pitch?'Pitch: '+v.pitch:''].filter(Boolean).join('\n');
-      await db.collection('leads').doc(lid).set({name:v.name,contactName:v.contactName||'',phone:v.phone||'',email:emailOf(v)||'',city:v.city||'',locationId:loc,stage:T.length?'contact':'new',temperature:'warm',interests:[],contactMethod:T.length?lastCh:'email',contactMethodOther:'',source:'outbound',foundBy:(v.addedBy==='manual'?'Ahnna':'Raven'),nextFollowUp:v.followUpOn||'',followUpNone:!v.followUpOn,usingCompetitor:false,notes:[notes,v.notes].filter(Boolean).join('\n'),address:v.address||'',hours:v.hours||'',instagram:v.instagram||'',website:v.website||'',facebook:v.facebook||'',foundFrom:v.foundFrom||'',prospectId:v.id,prospectInfo:info,createdAt:now,updatedAt:now});
+      await db.collection('leads').doc(lid).set({name:v.name,contactName:v.contactName||'',phone:v.phone||'',email:emailOf(v)||'',city:v.city||'',locationId:loc,stage:T.length?'contact':'new',temperature:'warm',interests:[],contactMethod:T.length?lastCh:'email',contactMethodOther:'',source:'outbound',foundBy:(v.addedBy==='manual'?'Ahnna':'Raven'),nextFollowUp:v.followUpOn||'',followUpNone:!v.followUpOn,usingCompetitor:false,notes:[notes,v.notes].filter(Boolean).join('\n'),address:v.address||'',hours:v.hours||'',instagram:v.instagram||'',website:v.website||'',facebook:v.facebook||'',foundFrom:v.foundFrom||'',owner:v.owner||'',manager:v.manager||'',otherContacts:v.otherContacts||'',bizType:v.bizType||'',igFollowers:v.igFollowers||'',fbFollowers:v.fbFollowers||'',igHeart:!!v.igHeart,fbHeart:!!v.fbHeart,evidence:v.evidence||'',pitch:v.pitch||'',prospectId:v.id,prospectInfo:info,createdAt:now,updatedAt:now});
     }
     await col('agent_venues').doc(v.id).update({stageBeforeLead:(v.stage&&v.stage!=='lead')?v.stage:(v.stageBeforeLead||'target'),conversationBeforeLead:v.stage==='lead'?!!v.conversationBeforeLead:!!v.conversation,stage:'lead',conversation:true,movedToLeadId:lid,movedToLeadAt:Date.now(),followUpOn:'',leadInfo:firebase.firestore.FieldValue.delete(),leadInfoId:firebase.firestore.FieldValue.delete()});
     movedTo(btn,'Moved to Leads');
@@ -10052,6 +10063,7 @@ window.hqLeadToProspect=async function(lid,btn){
     const talking=['interview','negotiation','contract'].indexOf(l.stage)>=0;
     const u={city:fill(v&&v.city,l.city||pi.city),address:fill(v&&v.address,l.address||pi.address),hours:fill(v&&v.hours,l.hours||pi.hours),contactName:fill(v&&v.contactName,l.contactName||pi.contactName),contact:fill(v&&v.contact,l.email||pi.email||pi.contact),phone:fill(v&&v.phone,l.phone),instagram:fill(v&&v.instagram,l.instagram||pi.instagram),facebook:fill(v&&v.facebook,l.facebook||pi.facebook),website:fill(v&&v.website,l.website||pi.website),foundFrom:fill(v&&v.foundFrom,l.foundFrom||pi.foundFrom),followUpOn:fill(v&&v.followUpOn,l.nextFollowUp||''),leadInfo:full,leadInfoId:l.id,leadId:l.id,movedBackAt:Date.now(),
       stage:(v&&v.stageBeforeLead)||(T.length?'followup':'target'),conversation:talking||!!(v&&v.conversationBeforeLead),movedToLeadId:firebase.firestore.FieldValue.delete()};
+    ['owner','manager','otherContacts','bizType','igFollowers','fbFollowers','evidence','pitch'].forEach(k=>{const nv=fill(v&&v[k],l[k]||pi[k]);if(nv)u[k]=nv;});if(l.igHeart||pi.igHeart||(v&&v.igHeart))u.igHeart=true;if(l.fbHeart||pi.fbHeart||(v&&v.fbHeart))u.fbHeart=true;
     if(l.notes&&String((v&&v.notes)||'').indexOf(l.notes)<0)u.notes=[(v&&v.notes)||'',l.notes].filter(Boolean).join('\n');
     if(v){await col('agent_venues').doc(v.id).update(u);}
     else{
@@ -10837,7 +10849,8 @@ async function addProspectDoc(o){
   {const w=window.hqDupWhere(o.name);if(w){toast(o.name+' is already '+w+'. Nobody lives on two lists, so it was not added.',true);return false;}}
   const sent=!!o.emailed;
   const doc={name:String(o.name).trim(),city:o.city||'',address:o.address||'',contact:o.contact||'',contactName:o.contactName||'',evidence:o.evidence||'',pitch:o.pitch||'',stage:sent?'followup':'target',createdAt:Date.now(),addedBy:'manual'};
-  ['phone','instagram','facebook','igFollowers','fbFollowers','website','notes','foundFrom','hours'].forEach(k=>{if(o[k]&&String(o[k]).trim())doc[k]=String(o[k]).trim();});
+  ['phone','instagram','facebook','igFollowers','fbFollowers','owner','manager','otherContacts','bizType','website','notes','foundFrom','hours'].forEach(k=>{if(o[k]&&String(o[k]).trim())doc[k]=String(o[k]).trim();});
+  if(o.igHeart)doc.igHeart=true;if(o.fbHeart)doc.fbHeart=true;
   if(o.thrownFrom){doc.thrownFrom=o.thrownFrom;doc.thrownIdea=o.thrownIdea||'';doc.thrownAt=Date.now();}
   if(sent){doc.emailedAt=o.emailedAt||Date.now();}
   const ref=await col('agent_venues').add(doc);
@@ -10847,8 +10860,8 @@ async function addProspectDoc(o){
 async function addProspect(){
   const g=i=>{const e=document.getElementById(i);return e?e.value.trim():'';};
   const d=g('pa-date');
-  const ok=await addProspectDoc({name:g('pa-name'),city:g('pa-city'),address:g('pa-addr'),contact:g('pa-email'),contactName:g('pa-who'),evidence:g('pa-why'),pitch:g('pa-pitch'),phone:g('pa-phone'),instagram:g('pa-ig'),facebook:g('pa-fb'),igFollowers:g('pa-igf'),fbFollowers:g('pa-fbf'),website:g('pa-web'),foundFrom:g('pa-from'),hours:g('pa-hours'),notes:g('pa-notes'),emailed:document.getElementById('pa-sent').checked,emailedAt:d?new Date(d+'T12:00:00').getTime():0});
-  if(ok){['pa-name','pa-city','pa-addr','pa-email','pa-who','pa-why','pa-pitch','pa-date','pa-phone','pa-ig','pa-igf','pa-fb','pa-fbf','pa-web','pa-from','pa-hours','pa-notes'].forEach(i=>{const e=document.getElementById(i);if(e)e.value='';});document.getElementById('pa-sent').checked=false;}
+  const ok=await addProspectDoc({name:g('pa-name'),city:g('pa-city'),address:g('pa-addr'),contact:g('pa-email'),contactName:g('pa-who'),evidence:g('pa-why'),pitch:g('pa-pitch'),phone:g('pa-phone'),instagram:g('pa-ig'),facebook:g('pa-fb'),igFollowers:g('pa-igf'),fbFollowers:g('pa-fbf'),owner:g('pa-owner'),manager:g('pa-manager'),bizType:g('pa-bizType'),otherContacts:g('pa-otherContacts'),igHeart:!!document.getElementById('pa-igHeart').classList.contains('on'),fbHeart:!!document.getElementById('pa-fbHeart').classList.contains('on'),website:g('pa-web'),foundFrom:g('pa-from'),hours:g('pa-hours'),notes:g('pa-notes'),emailed:document.getElementById('pa-sent').checked,emailedAt:d?new Date(d+'T12:00:00').getTime():0});
+  if(ok){['pa-name','pa-city','pa-addr','pa-email','pa-who','pa-why','pa-pitch','pa-date','pa-phone','pa-owner','pa-manager','pa-bizType','pa-otherContacts','pa-ig','pa-igf','pa-fb','pa-fbf','pa-web','pa-from','pa-hours','pa-notes'].forEach(i=>{const e=document.getElementById(i);if(e)e.value='';});document.getElementById('pa-sent').checked=false;['pa-igHeart','pa-fbHeart'].forEach(i=>{const b=document.getElementById(i);if(b){b.classList.remove('on');b.innerHTML='\u2661 '+b.dataset.l;}});}
 }
 window.hqAddProspect=addProspectDoc;
 window.hqAddSponsor=async function(o){
@@ -10859,7 +10872,7 @@ window.hqAddSponsor=async function(o){
   await mqSave({['sponsors.b'+Date.now().toString(36)+Math.floor(Math.random()*1e4).toString(36)]:doc});
   toast('Added to Possible sponsors on Raven\'s desk.');return true;
 };
-const PR={q:'',stage:'',city:''};
+const PR={q:'',stage:'',city:'',sh:''};
 function hxHref(k,v){v=String(v||'').trim();if(!v)return '';if(/^https?:\/\//i.test(v))return v;
   if(k==='instagram')return /instagram\.com/i.test(v)?'https://'+v.replace(/^\/+/,''):'https://instagram.com/'+v.replace(/^@/,'').replace(/\/+$/,'');
   if(k==='facebook')return /facebook\.com|fb\.com/i.test(v)?'https://'+v.replace(/^\/+/,''):'https://facebook.com/'+v.replace(/^\/+/,'');
@@ -10895,6 +10908,10 @@ window.hqDupWhere=function(name,exceptPid){const n=hxNm(name);if(!n)return '';
   try{if(hqLeads().some(l=>l&&hxNm(l.name)===n&&(l.stage||'new')!=='transferred'&&!(exceptPid&&l.prospectId===exceptPid)))return 'a lead (Leads tab)';}catch(e){}
   try{if((typeof venues!=='undefined'?venues:[]).some(x=>x&&hxNm(x.name)===n))return 'one of Our Venues';}catch(e){}
   return '';};
+function pfHearts(v){const b=(k,l)=>'<button type="button" class="btn-sm cp-heart'+(v[k]?' on':'')+'" data-l="'+l+'" style="font-size:.8rem" onclick="hqPfHeart(\''+esc(v.id)+'\',\''+k+'\',this)">'+(v[k]?'\u2665 ':'\u2661 ')+l+'</button>';
+  return '<div style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;margin:.3rem 0 .6rem"><span style="font-size:.78rem;opacity:.75">Heart a social page so you can find it again:</span>'+b('igHeart','Instagram')+b('fbHeart','Facebook')+'</div>';}
+window.hqPfHeart=async function(id,k,btn){const v=(S.venues||[]).find(x=>x.id===id),on=!(v&&v[k]);try{await col('agent_venues').doc(id).update({[k]:on});if(btn){btn.classList.toggle('on',on);btn.innerHTML=(on?'\u2665 ':'\u2661 ')+btn.dataset.l;}}catch(e){toast('Could not save: '+(e&&e.message||e),true);}};
+window.hqProspectNames=function(){return (S.venues||[]).filter(v=>v&&v.name&&v.stage!=='lead').map(v=>v.name);};
 function renderProspects(force){
   try{window.hqSeedP1();}catch(e){}
   const el=document.getElementById('prospectsBody');if(!el)return;
@@ -10906,10 +10923,10 @@ function renderProspects(force){
   const q=PR.q.toLowerCase();
   const dupOf=v=>(v.stage!=='lead'&&!PR.showDup)?window.hqDupWhere(v.name,v.id):'';
   const hiddenDup=all.filter(v=>v.stage!=='lead'&&!isBlocked(v)&&window.hqDupWhere(v.name,v.id));
-  const list=all.filter(v=>v.stage!=='lead'&&(PR.showDup||!window.hqDupWhere(v.name,v.id))&&(PR.stage?prStage(v)===PR.stage:true)&&(!PR.city||v.city===PR.city)&&(!q||[v.name,v.city,v.address,v.contact,v.contactName,v.pitch,v.evidence].join(' ').toLowerCase().indexOf(q)>=0)).sort((a,b)=>((PR_RANK[prStage(a)]!=null?PR_RANK[prStage(a)]:3)-(PR_RANK[prStage(b)]!=null?PR_RANK[prStage(b)]:3))||(prLastTouch(b)-prLastTouch(a))||String(a.name).localeCompare(String(b.name)));
+  const list=all.filter(v=>v.stage!=='lead'&&(PR.showDup||!window.hqDupWhere(v.name,v.id))&&(PR.stage?prStage(v)===PR.stage:true)&&(!PR.sh||(PR.sh==='ig'?v.igHeart:PR.sh==='fb'?v.fbHeart:(v.igHeart||v.fbHeart)))&&(!PR.city||v.city===PR.city)&&(!q||[v.name,v.city,v.address,v.contact,v.contactName,v.pitch,v.evidence].join(' ').toLowerCase().indexOf(q)>=0)).sort((a,b)=>((PR_RANK[prStage(a)]!=null?PR_RANK[prStage(a)]:3)-(PR_RANK[prStage(b)]!=null?PR_RANK[prStage(b)]:3))||(prLastTouch(b)-prLastTouch(a))||String(a.name).localeCompare(String(b.name)));
   const keep=document.activeElement&&document.activeElement.id;
   const stages=['yes','onboarding','followup','target','closed','no','gonecold'];
-  let h='<div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.8rem"><input class="form-input" id="prQ" style="flex:1;min-width:180px" placeholder="Search prospects" value="'+esc(PR.q)+'" oninput="PR.q=this.value;renderProspects(1)"><select class="form-input" style="width:auto" onchange="PR.stage=this.value;renderProspects()"><option value="">All stages</option>'+stages.map(k=>'<option value="'+k+'"'+(PR.stage===k?' selected':'')+'>'+TAGL[k]+'</option>').join('')+'</select><select class="form-input" style="width:auto" onchange="PR.city=this.value;renderProspects()"><option value="">All cities</option>'+cities.map(c=>'<option'+(PR.city===c?' selected':'')+'>'+esc(c)+'</option>').join('')+'</select></div>';
+  let h='<div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.8rem"><input class="form-input" id="prQ" style="flex:1;min-width:180px" placeholder="Search prospects" value="'+esc(PR.q)+'" oninput="PR.q=this.value;renderProspects(1)"><select class="form-input" style="width:auto" onchange="PR.sh=this.value;renderProspects()"><option value="">Social hearts: all</option><option value="any"'+(PR.sh==='any'?' selected':'')+'>&#9829; Any social page</option><option value="ig"'+(PR.sh==='ig'?' selected':'')+'>&#9829; Instagram page</option><option value="fb"'+(PR.sh==='fb'?' selected':'')+'>&#9829; Facebook page</option></select><select class="form-input" style="width:auto" onchange="PR.stage=this.value;renderProspects()"><option value="">All stages</option>'+stages.map(k=>'<option value="'+k+'"'+(PR.stage===k?' selected':'')+'>'+TAGL[k]+'</option>').join('')+'</select><select class="form-input" style="width:auto" onchange="PR.city=this.value;renderProspects()"><option value="">All cities</option>'+cities.map(c=>'<option'+(PR.city===c?' selected':'')+'>'+esc(c)+'</option>').join('')+'</select></div>';
   h+='<div style="font-size:.8rem;opacity:.7;margin-bottom:.6rem">'+list.length+' of '+all.length+' prospects, in order of how far along they are: yes and handed off first, then in progress (any outreach sent), then not contacted yet, and gone cold last. These are the venues Sable finds and Raven works. Do-not-use venues are hidden.</div>';
   if(hiddenDup.length)h+='<div style="font-size:.78rem;opacity:.8;margin-bottom:.6rem;padding:.4rem .7rem;border:1px solid var(--border,#444);border-radius:8px">'+(PR.showDup?'Showing ':'')+hiddenDup.length+' prospect'+(hiddenDup.length>1?'s':'')+(PR.showDup?' that are':' hidden because they are') +' already a lead or one of Our Venues ('+esc(hiddenDup.slice(0,6).map(v=>v.name).join(', '))+(hiddenDup.length>6?', and more':'')+'). Nothing was deleted. <a href="#" onclick="PR.showDup=!PR.showDup;renderProspects(1);return false">'+(PR.showDup?'Hide them again':'Show them')+'</a></div>';
   if(!all.length)h+='<div style="opacity:.7">'+(S.started?'No prospects yet. Sable adds them as she finds them.':'Loading...')+'</div>';
@@ -10917,13 +10934,14 @@ function renderProspects(force){
     const st=prStage(v),T=otTouches(v),em=emailOf(v);
     const line=(t,x)=>x?'<div style="margin:.25rem 0;font-size:.85rem"><b>'+t+':</b> '+esc(x)+'</div>':'';
     h+='<details data-pk="'+esc(v.id)+'"'+(S.open['pr_'+v.id]?' open':'')+' style="border:1px solid var(--border,#444);border-radius:10px;padding:.55rem .8rem;margin-bottom:.5rem"><summary style="cursor:pointer;display:flex;gap:.5rem;align-items:center;flex-wrap:wrap"><span class="tm-tag '+(TAGC[st]||'')+'">'+esc(TAGL[st]||st)+'</span><b>'+esc(v.name)+'</b>'+thrownTag(v)+(irisDossier(v.name)?(prQuillDrafts(v).length?'<span class="tm-tag booked" title="Quill wrote a draft from Iris\'s research. Open this prospect to read it.">Quill draft ready</span>':'<span class="tm-tag booked" title="Iris has researched this venue. Quill writes the first email on the next weekday Lead run.">Researched, Quill writes next</span>'):'<span class="tm-tag" title="Iris researches new prospects every morning">Iris queued</span>')+'<span style="opacity:.7;font-size:.8rem">'+esc(v.city||'')+'</span>'+(hxLinks(v)?'<span>'+hxLinks(v)+'</span>':'')+(T.length?'<span style="opacity:.7;font-size:.75rem">'+T.length+' email'+(T.length>1?'s':'')+' sent</span>':'')+(v.followUpOn?'<span style="opacity:.7;font-size:.75rem">check back '+esc(v.followUpOn)+'</span>':'')+'</summary><div style="margin-top:.5rem">'+
-      '<div class="vm-grid" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr));margin:.3rem 0 .6rem">'+[['name','Name'],['city','City'],['address','Address'],['contactName','Contact name'],['contact',em?'Email or phone':'Email or phone (none found yet)'],['phone','Phone'],['instagram','Instagram'],['igFollowers','Instagram followers'],['facebook','Facebook'],['fbFollowers','Facebook followers'],['website','Website'],['foundFrom','Where we got them from']].map(a=>'<div class="form-group"><label class="form-label">'+a[1]+'</label><input class="form-input" id="lg-pf-'+esc(v.id)+'-'+a[0]+'" value="'+esc(v[a[0]]||'')+'" onchange="hqPfSave(\''+esc(v.id)+'\',\''+a[0]+'\',this.value)"></div>').join('')+'</div>'+
-      [['hours','Hours of service'],['evidence','Why them'],['pitch','Pitch (format and night)']].map(a=>'<div class="form-group" style="margin:.3rem 0 .6rem"><label class="form-label">'+a[1]+'</label><textarea class="form-textarea" id="lg-pf-'+esc(v.id)+'-'+a[0]+'" style="min-height:3.4rem;resize:vertical" onchange="hqPfSave(\''+esc(v.id)+'\',\''+a[0]+'\',this.value)">'+esc(v[a[0]]||'')+'</textarea></div>').join('')+'<div class="form-group" style="margin:.3rem 0 .6rem"><label class="form-label">Notes</label><textarea class="form-textarea" id="lg-pf-'+esc(v.id)+'-notes" style="min-height:3.4rem;resize:vertical" onchange="hqPfSave(\''+esc(v.id)+'\',\'notes\',this.value)">'+esc(v.notes||'')+'</textarea></div>'+(thrownInfo(v)?line('Thrown to Raven from '+thrownInfo(v).who,thrownInfo(v).title+(thrownInfo(v).at?' ('+fmtDay(thrownInfo(v).at)+')':'')):'')+line("Iris's idea to open with",baitFor(v.name))+line("Iris's best pitch",bestFitText(v.name))+(v.hours?'':line('Hours Iris found',(irisDossier(v.name)||{}).hours))+line('Already runs',(function(){const r=irisDossier(v.name);if(!r)return '';const a=[].concat(r.runsNow||[]).filter(Boolean);return a.length?a.join('; '):(r.checkedAt?'Nothing found running':'');})())+
+      '<div class="vm-grid" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr));margin:.3rem 0 .6rem">'+[['name','Name'],['city','City'],['address','Address'],['contactName','Contact name'],['contact',em?'Email or phone':'Email or phone (none found yet)'],['phone','Phone'],['instagram','Instagram'],['igFollowers','Instagram followers'],['facebook','Facebook'],['fbFollowers','Facebook followers'],['website','Website'],['foundFrom','Where we got them from'],['owner','Owner'],['manager','Manager'],['bizType','Type (more than one is fine, comma between)']].map(a=>'<div class="form-group"><label class="form-label">'+a[1]+'</label><input class="form-input" id="lg-pf-'+esc(v.id)+'-'+a[0]+'" value="'+esc(v[a[0]]||'')+'" onchange="hqPfSave(\''+esc(v.id)+'\',\''+a[0]+'\',this.value)"></div>').join('')+'</div>'+
+      [['hours','Hours of service'],['otherContacts','Other contacts (bartenders, bookers, anyone else)'],['evidence','Why them'],['pitch','Pitch (format and night)']].map(a=>'<div class="form-group" style="margin:.3rem 0 .6rem"><label class="form-label">'+a[1]+'</label><textarea class="form-textarea" id="lg-pf-'+esc(v.id)+'-'+a[0]+'" style="min-height:3.4rem;resize:vertical" onchange="hqPfSave(\''+esc(v.id)+'\',\''+a[0]+'\',this.value)">'+esc(v[a[0]]||'')+'</textarea></div>').join('')+'<div class="form-group" style="margin:.3rem 0 .6rem"><label class="form-label">Notes</label><textarea class="form-textarea" id="lg-pf-'+esc(v.id)+'-notes" style="min-height:3.4rem;resize:vertical" onchange="hqPfSave(\''+esc(v.id)+'\',\'notes\',this.value)">'+esc(v.notes||'')+'</textarea></div>'+(thrownInfo(v)?line('Thrown to Raven from '+thrownInfo(v).who,thrownInfo(v).title+(thrownInfo(v).at?' ('+fmtDay(thrownInfo(v).at)+')':'')):'')+line("Iris's idea to open with",baitFor(v.name))+line("Iris's best pitch",bestFitText(v.name))+(v.hours?'':line('Hours Iris found',(irisDossier(v.name)||{}).hours))+line('Already runs',(function(){const r=irisDossier(v.name);if(!r)return '';const a=[].concat(r.runsNow||[]).filter(Boolean);return a.length?a.join('; '):(r.checkedAt?'Nothing found running':'');})())+
       prDraftsHtml(v)+
       '<details data-pk="log_'+esc(v.id)+'"'+(S.open['pr_log_'+v.id]?' open':'')+' style="margin:.5rem 0;padding:.4rem .7rem;border:1px solid var(--border,#444);border-radius:8px"><summary style="cursor:pointer;font-size:.7rem;letter-spacing:.2em;text-transform:uppercase;opacity:.85">Outreach log and emails sent'+(T.length?' ('+T.length+')':'')+'</summary><div style="margin-top:.5rem">'+window.hqLogFormHtml('pr',v)+window.hqHistoryHtml(v,'venue')+'</div></details>'+
-      offersBlock(v.id,v.name,'pr')+'<div style="margin:.6rem 0;display:flex;gap:1rem;flex-wrap:wrap;align-items:center">'+((st==='target'||st==='followup')?'<label style="font-size:.85rem;display:inline-flex;gap:.4rem;align-items:center;cursor:'+(T.length?'default':'pointer')+'"'+(T.length?' title="Outreach has been logged, so this is in progress automatically"':'')+'><input type="checkbox"'+(st==='followup'?' checked':'')+(T.length?' disabled':'')+' onchange="hqPfProg(\''+esc(v.id)+'\',this.checked)" style="width:16px;height:16px"> In progress</label>':'')+'<label style="font-size:.85rem;display:inline-flex;gap:.4rem;align-items:center;cursor:pointer"><input type="checkbox"'+(v.goneCold?' checked':'')+' onchange="hqPfCold(\''+esc(v.id)+'\',this.checked)" style="width:16px;height:16px"> Gone cold</label>'+(st==='lead'?'<span class="tm-tag booked">Moved to Leads</span>':'<button type="button" class="btn-sm btn-gold" onclick="hqProspectToLead(\''+esc(v.id)+'\',this)">Move to Leads</button>')+'</div><div style="font-size:.75rem;opacity:.7">Work this one on Raven\'s desk in My Team.</div></div></details>';
+      pfHearts(v)+'<div class="og-box" data-ogname="'+esc(v.name)+'" style="margin:.6rem 0"></div>'+offersBlock(v.id,v.name,'pr')+'<div style="margin:.6rem 0;display:flex;gap:1rem;flex-wrap:wrap;align-items:center">'+((st==='target'||st==='followup')?'<label style="font-size:.85rem;display:inline-flex;gap:.4rem;align-items:center;cursor:'+(T.length?'default':'pointer')+'"'+(T.length?' title="Outreach has been logged, so this is in progress automatically"':'')+'><input type="checkbox"'+(st==='followup'?' checked':'')+(T.length?' disabled':'')+' onchange="hqPfProg(\''+esc(v.id)+'\',this.checked)" style="width:16px;height:16px"> In progress</label>':'')+'<label style="font-size:.85rem;display:inline-flex;gap:.4rem;align-items:center;cursor:pointer"><input type="checkbox"'+(v.goneCold?' checked':'')+' onchange="hqPfCold(\''+esc(v.id)+'\',this.checked)" style="width:16px;height:16px"> Gone cold</label>'+(st==='lead'?'<span class="tm-tag booked">Moved to Leads</span>':'<button type="button" class="btn-sm btn-gold" onclick="hqProspectToLead(\''+esc(v.id)+'\',this)">Move to Leads</button>')+'</div><div style="font-size:.75rem;opacity:.7">Work this one on Raven\'s desk in My Team.</div></div></details>';
   });
   el.innerHTML=h;
+  try{if(window.ogRefresh)window.ogRefresh();}catch(e){}
   Object.keys(_typed).forEach(id=>{const x=document.getElementById(id);if(x&&x.value!==_typed[id])x.value=_typed[id];});
   if(keep&&(keep==='prQ'||keep.indexOf('lg-')===0)){const i=document.getElementById(keep);if(i){i.focus();try{const n=i.value.length;i.setSelectionRange(n,n);}catch(e){}}}
 }
@@ -12308,7 +12326,7 @@ function sponEditSave(id,m){
 async function toProspects(id){
   const p=sponD().prospects[id];if(!p)return;
   if(!window.hqAddProspect){toast('Prospects are not loaded yet. Try again in a moment.',true);return;}
-  const ok=await window.hqAddProspect({name:p.name,city:p.city,address:p.address,contact:p.email||p.phone||'',contactName:p.contactName,phone:p.phone,instagram:p.ig,facebook:p.fb,website:p.web,igFollowers:p.igf||'',fbFollowers:p.fbf||'',evidence:p.fit||p.desc||'',notes:[p.desc,p.notes].filter(Boolean).join(' \u00b7 '),foundFrom:'Business bank'});
+  const ok=await window.hqAddProspect({name:p.name,city:p.city,address:p.address,contact:p.email||p.phone||'',contactName:p.contactName,phone:p.phone,instagram:p.ig,facebook:p.fb,website:p.web,igFollowers:p.igf||'',fbFollowers:p.fbf||'',bizType:p.kind||'',igHeart:!!p.igHeart,fbHeart:!!p.fbHeart,evidence:p.fit||p.desc||'',notes:[p.desc,p.notes].filter(Boolean).join(' \u00b7 '),foundFrom:'Business bank'});
   if(ok){const pr={...sponD().prospects};pr[id]={...p,toProspects:Date.now()};document.querySelectorAll('#cpBox [data-cp="toprosp"]').forEach(b=>{b.textContent='On Venue Prospects \u2713';});await save({prospects:pr},true);}
 }
 async function toHost(id){
@@ -12763,6 +12781,101 @@ window.campOpen=function(){init();start();render();};
 function hqApplyTheme(t){var d=document.documentElement;if(t==='light')d.setAttribute('data-theme','light');else d.removeAttribute('data-theme');try{localStorage.setItem('bn_clio_theme',t==='light'?'light':'dark');}catch(e){}var b=document.getElementById('themeBtn');if(b)b.innerHTML=t==='light'?'&#9790; Dark mode':'&#9728; Light mode';}
 function hqToggleTheme(){hqApplyTheme(document.documentElement.getAttribute('data-theme')==='light'?'dark':'light');}
 document.addEventListener('DOMContentLoaded',function(){hqApplyTheme(document.documentElement.getAttribute('data-theme')==='light'?'light':'dark');});
+</script>
+<script>
+/* ── SAME OWNERS + SHARED PROFILE FIELDS ──
+   Venues, prospects and leads all carry the same info, and any of them can be linked as "same owners".
+   Links are kept by business name (the same way this app already ties a prospect to its lead and venue),
+   so a link survives a prospect becoming a lead and a lead becoming a venue. Stored in agent_config/ownergroups. */
+(function(){
+const OG={map:{},label:{}};let sub=null;
+const nz=x=>String(x||'').toLowerCase().replace(/[^a-z0-9]/g,'');
+const q=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const say=(m,bad)=>{try{hqToast(m,bad);}catch(e){alert(m);}};
+function ensure(){
+  if(sub||typeof db==='undefined'||!db)return;
+  try{sub=db.collection('agent_config').doc('ownergroups').onSnapshot(function(s){const d=s.exists?s.data():{};OG.map=d.map||{};OG.label=d.label||{};refresh();},function(){sub=null;});}catch(e){sub=null;}
+}
+function pool(){
+  const out=[],seen={};
+  const add=(kind,name)=>{const n=nz(name);if(!n)return;if(seen[n]){if(seen[n].kinds.indexOf(kind)<0)seen[n].kinds.push(kind);return;}const o={n:n,name:String(name),kinds:[kind]};seen[n]=o;out.push(o);};
+  try{(typeof venues!=='undefined'?venues:[]).forEach(v=>v&&add('venue',v.name));}catch(e){}
+  try{(typeof leads!=='undefined'?leads:[]).forEach(l=>l&&l.stage!=='transferred'&&add('lead',l.name));}catch(e){}
+  try{(window.hqProspectNames?window.hqProspectNames():[]).forEach(n=>add('prospect',n));}catch(e){}
+  return out;
+}
+function nameOf(box){const s=box.dataset.ogsrc;if(s){const i=document.getElementById(s);return i?i.value.trim():'';}return box.dataset.ogname||'';}
+function members(n){const g=OG.map[n];if(!g)return [];return Object.keys(OG.map).filter(k=>OG.map[k]===g&&k!==n);}
+function inner(box){
+  const me=nameOf(box),n=nz(me),pl=pool(),by={};pl.forEach(p=>{by[p.n]=p;});
+  const mem=members(n);
+  const nm=k=>(by[k]&&by[k].name)||OG.label[k]||k;
+  const tg=k=>by[k]?by[k].kinds.join('/'):'';
+  const chips=mem.length?mem.map(k=>'<span class="cp-chip on" style="display:inline-flex;gap:.4rem;align-items:center;margin:0 .4rem .3rem 0;text-transform:none;letter-spacing:0">'+q(nm(k))+'<small style="opacity:.7">'+q(tg(k))+'</small><button type="button" data-og="unlink" data-n="'+q(k)+'" title="Take '+q(nm(k))+' out of this owner group" style="background:none;border:none;color:inherit;cursor:pointer;padding:0 .1rem">&#10005;</button></span>').join(''):'<span style="font-size:.8rem;opacity:.7">Not linked to anyone yet.</span>';
+  const id='ogdl'+Math.random().toString(36).slice(2,8);
+  const opts=pl.filter(p=>p.n!==n&&mem.indexOf(p.n)<0).sort((a,b)=>a.name.localeCompare(b.name)).map(p=>'<option value="'+q(p.name)+'">'+q(p.kinds.join('/'))+'</option>').join('');
+  return '<div class="vm-sec-h">Same owners</div><div style="font-size:.76rem;color:var(--text3);margin-bottom:.4rem">Link venues, prospects and leads that share an owner. Everything in the group shows the others.</div><div>'+chips+'</div>'+
+    '<div style="display:flex;gap:.4rem;margin-top:.3rem;flex-wrap:wrap"><input class="form-input" list="'+id+'" data-ogin placeholder="Type a venue, prospect or lead name" style="flex:1;min-width:180px"><datalist id="'+id+'">'+opts+'</datalist><button type="button" class="btn-sm" data-og="link">Link</button>'+(mem.length?'<button type="button" class="btn-sm" data-og="leave">Leave group</button>':'')+'</div>';
+}
+function refresh(){ensure();document.querySelectorAll('.og-box').forEach(function(b){try{b.innerHTML=inner(b);}catch(e){}});}
+async function save(patch){
+  Object.keys(patch.map).forEach(function(n){if(patch.map[n]===null){delete OG.map[n];delete OG.label[n];}else{OG.map[n]=patch.map[n];OG.label[n]=patch.label[n]||n;}});
+  refresh();
+  const FV=firebase.firestore.FieldValue,upd={},m={},l={};
+  Object.keys(patch.map).forEach(function(n){if(patch.map[n]===null){upd['map.'+n]=FV.delete();upd['label.'+n]=FV.delete();}else{upd['map.'+n]=patch.map[n];upd['label.'+n]=patch.label[n]||n;m[n]=patch.map[n];l[n]=patch.label[n]||n;}});
+  const ref=db.collection('agent_config').doc('ownergroups');
+  try{await ref.update(upd);}catch(e){try{await ref.set({map:m,label:l},{merge:true});}catch(e2){say('Could not save the link: '+(e2&&e2.message||e2),true);}}
+}
+function dropWith(norms){ // remove these from their groups, and never leave a group of one
+  const patch={map:{},label:{}},gone={};norms.forEach(function(n){gone[n]=1;patch.map[n]=null;});
+  const left={};Object.keys(OG.map).forEach(function(k){if(!gone[k])(left[OG.map[k]]=left[OG.map[k]]||[]).push(k);});
+  Object.keys(left).forEach(function(g){if(left[g].length===1&&norms.some(function(n){return OG.map[n]===g;}))patch.map[left[g][0]]=null;});
+  return patch;
+}
+document.addEventListener('click',function(e){
+  const b=e.target.closest&&e.target.closest('[data-og]');if(!b)return;
+  const box=b.closest('.og-box');if(!box)return;
+  e.preventDefault();e.stopPropagation();
+  const act=b.dataset.og,me=nameOf(box),n=nz(me);
+  if(act==='link'){
+    if(!n){say('Type this one’s name first.',true);return;}
+    const inp=box.querySelector('[data-ogin]'),t=nz(inp&&inp.value);
+    const hit=pool().find(function(p){return p.n===t;});
+    if(!t||!hit){say('Pick a name from the list. It has to be a venue, prospect or lead already in the app.',true);return;}
+    if(hit.n===n){say('That is this same one.',true);return;}
+    const ga=OG.map[n],gb=OG.map[hit.n],gid=ga||gb||('og'+Date.now().toString(36)+Math.floor(Math.random()*1e4).toString(36));
+    const patch={map:{},label:{}};
+    patch.map[n]=gid;patch.label[n]=me;patch.map[hit.n]=gid;patch.label[hit.n]=hit.name;
+    if(ga&&gb&&ga!==gb){Object.keys(OG.map).filter(function(k){return OG.map[k]===gb;}).forEach(function(k){patch.map[k]=ga;patch.label[k]=OG.label[k]||k;});}
+    save(patch).then(function(){say('Linked as same owners.');});
+  }else if(act==='unlink'){save(dropWith([b.dataset.n]));}
+  else if(act==='leave'){save(dropWith([n]));}
+});
+window.ogRefresh=refresh;
+/* ── shared profile fields ── */
+const LAB={owner:'Owner',manager:'Manager',otherContacts:'Other contacts (bartenders, bookers, anyone else)',igFollowers:'Instagram followers',fbFollowers:'Facebook followers',bizType:'Type (more than one is fine, comma between)',foundFrom:'Where we got them from',evidence:'Why them',pitch:'Pitch (format and night)'};
+const AREA={otherContacts:1,evidence:1,pitch:1};
+window.XF_VENUE=['igFollowers','fbFollowers','bizType','foundFrom','evidence','pitch'];
+window.XF_LEAD=['owner','manager','otherContacts','igFollowers','fbFollowers','bizType','evidence','pitch'];
+window.xfHtml=function(px,keys){
+  const f=keys.map(function(k){return AREA[k]?'<div class="form-group" style="grid-column:1/-1"><label class="form-label">'+LAB[k]+'</label><textarea class="form-textarea" id="'+px+'-'+k+'" style="min-height:3.4rem;resize:vertical"></textarea></div>':'<div class="form-group"><label class="form-label">'+LAB[k]+'</label><input type="text" class="form-input" id="'+px+'-'+k+'"></div>';}).join('');
+  const hb=function(k,l){return '<button type="button" class="btn-sm cp-heart" id="'+px+'-'+k+'" data-l="'+l+'" style="font-size:.8rem" onclick="xfHeart(this)">&#9825; '+l+'</button>';};
+  return '<div class="vm-sec-h">More info</div><div class="vm-grid" style="grid-template-columns:repeat(auto-fit,minmax(210px,1fr))">'+f+'</div>'+
+    '<div style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;margin-top:.6rem"><span style="font-size:.78rem;color:var(--text3)">Heart a social page so you can find it again in the filters:</span>'+hb('igHeart','Instagram')+hb('fbHeart','Facebook')+'</div>';
+};
+window.xfHeart=function(b){const on=!b.classList.contains('on');b.classList.toggle('on',on);b.innerHTML=(on?'&#9829; ':'&#9825; ')+b.dataset.l;try{if(window.vmMarkDirty&&b.id.indexOf('vmx-')===0)vmMarkDirty();}catch(e){}};
+window.xfFill=function(px,keys,srcs){
+  srcs=(srcs||[]).filter(Boolean);
+  keys.forEach(function(k){const e=document.getElementById(px+'-'+k);if(!e)return;const o=srcs.find(function(s){return s[k];});e.value=o?o[k]:'';});
+  ['igHeart','fbHeart'].forEach(function(k){const b=document.getElementById(px+'-'+k);if(!b)return;const on=srcs.some(function(s){return s[k];});b.classList.toggle('on',on);b.innerHTML=(on?'&#9829; ':'&#9825; ')+b.dataset.l;});
+};
+window.xfRead=function(px,keys){
+  const o={};keys.forEach(function(k){const e=document.getElementById(px+'-'+k);o[k]=e?e.value.trim():'';});
+  ['igHeart','fbHeart'].forEach(function(k){const b=document.getElementById(px+'-'+k);o[k]=!!(b&&b.classList.contains('on'));});
+  return o;
+};
+document.addEventListener('DOMContentLoaded',function(){setTimeout(ensure,1500);});
+})();
 </script>
 </body>
 </html>
