@@ -1914,6 +1914,7 @@ match /agent_config/{id}  { allow read, write: if isAdmin(); }</pre>
     <div class="vm-sec" id="gigSeriesNote" style="display:none;"><div class="vm-hint" style="font-size:0.74rem;color:var(--text2);">This gig is part of a repeating series. When you save, you'll be asked whether the change applies to just this one or to future gigs too.</div></div>
     <div class="vm-sec"><div class="vm-sec-h"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.800 5.800 6.200.9-4.500 4.400 1.100 6.200L12 17.300 6.400 20.300l1.100-6.200L3 9.700l6.200-.9z"/></svg>Options</div>
       <div class="vm-grid vm-g3">
+        <div class="form-group"><label style="display:flex;gap:0.5rem;align-items:center;cursor:pointer;font-size:0.8rem;color:var(--text2);"><input type="checkbox" id="gigFb"> ★ Needs a Facebook event (Clio tells you exactly when to create it)</label></div>
         <div class="form-group"><label style="display:flex;gap:0.5rem;align-items:center;cursor:pointer;font-size:0.8rem;color:var(--text2);"><input type="checkbox" id="gigBig" onchange="document.getElementById('gigBigNameRow').style.display=this.checked?'block':'none'"> Big night: post on social media (shows in Clio and the Planner)</label>
           <div id="gigBigNameRow" style="display:none;margin-top:0.5rem;"><label class="form-label">Event name for the posts</label><input type="text" class="form-input" id="gigBigName"></div></div>
         <div class="form-group" id="gigCancelRow" style="display:none;"><label style="display:flex;align-items:center;gap:0.5rem;font-size:0.8rem;color:var(--text2);cursor:pointer;"><input type="checkbox" id="gigCancelCheckbox" style="accent-color:var(--rose);width:16px;height:16px;cursor:pointer;"> Mark this gig as cancelled</label></div>
@@ -2008,7 +2009,6 @@ match /agent_config/{id}  { allow read, write: if isAdmin(); }</pre>
       </div>
       <div id="vmGigSlotRows"></div>
       <button class="btn-sm" type="button" id="vmAddSlotBtn" onclick="addVenueGigSlotRow()">+ Add night</button>
-      </div>
     </div>
 
     <div class="vm-sec">
@@ -3632,7 +3632,7 @@ function persistGig(entry,isDelete){
   const oldLoc=_gigLastLoc[entry.id];
   saveGigScheduleLocal();
   scheduleTipScheduleSync();
-  if(db){try{if(isDelete)db.collection('gig_schedule').doc(entry.id).delete();else db.collection('gig_schedule').doc(entry.id).set({date:entry.date,time:entry.time||'',endTime:entry.endTime||'',kind:entry.kind||'',venue:entry.venue,host:entry.host||'Unassigned',status:entry.status||'scheduled',notes:entry.notes||'',bigNight:!!entry.bigNight,bigName:entry.bigName||'',seriesId:entry.seriesId||null,timeLocked:!!entry.timeLocked,cadence:entry.cadence||null,cadenceAnchor:entry.cadenceAnchor||null,locationId:entry.locationId||(currentLocationScope!=='ALL'?currentLocationScope:(locations[0]&&locations[0].code)||null)}).catch(cloudSaveFailed);}catch(e){cloudSaveFailed(e);}}
+  if(db){try{if(isDelete)db.collection('gig_schedule').doc(entry.id).delete();else db.collection('gig_schedule').doc(entry.id).set({date:entry.date,time:entry.time||'',endTime:entry.endTime||'',kind:entry.kind||'',venue:entry.venue,host:entry.host||'Unassigned',status:entry.status||'scheduled',notes:entry.notes||'',bigNight:!!entry.bigNight,fbEvent:!!entry.fbEvent,bigName:entry.bigName||'',seriesId:entry.seriesId||null,timeLocked:!!entry.timeLocked,cadence:entry.cadence||null,cadenceAnchor:entry.cadenceAnchor||null,locationId:entry.locationId||(currentLocationScope!=='ALL'?currentLocationScope:(locations[0]&&locations[0].code)||null)}).catch(cloudSaveFailed);}catch(e){cloudSaveFailed(e);}}
   // mirror to the Sheet so the Apps Script triggers (no-show + auto sign-out) can read it
   try{fetch(SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({form_type:'schedule',action:isDelete?'delete':'upsert',id:entry.id,date:entry.date,time:entry.time||'',endTime:entry.endTime||'',venue:entry.venue,host:entry.host||'Unassigned',status:entry.status||'scheduled',notes:entry.notes||''})});}catch(e){}
   if(!isDelete)setTimeout(()=>verifyGigSaved(entry),1500);
@@ -4215,7 +4215,7 @@ function createGigEntry(base,repeatMode,count,existing){
     if(isMonthly)d.setMonth(d.getMonth()+w);
     else d.setDate(d.getDate()+w*(isBiweekly?14:7));
     const dateStr=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
-    const entry={id:Date.now().toString()+'_'+w+'_'+Math.random().toString(36).slice(2,6),date:dateStr,timeLocked:!!base.timeLocked,time:base.time||'',endTime:base.endTime||'',kind:base.kind||'',venue:base.venue,host:base.host||'Unassigned',status:'scheduled',notes:base.notes||'',bigNight:!!base.bigNight,bigName:base.bigName||'',seriesId,cadence,cadenceAnchor:cadence?base.date:''};
+    const entry={id:Date.now().toString()+'_'+w+'_'+Math.random().toString(36).slice(2,6),date:dateStr,timeLocked:!!base.timeLocked,time:base.time||'',endTime:base.endTime||'',kind:base.kind||'',venue:base.venue,host:base.host||'Unassigned',status:'scheduled',notes:base.notes||'',bigNight:!!base.bigNight,fbEvent:!!base.fbEvent,bigName:base.bigName||'',seriesId,cadence,cadenceAnchor:cadence?base.date:''};
     gigSchedule.push(entry);
     persistGig(entry,false);
   }
@@ -4401,7 +4401,7 @@ function openGigModal(id,presetHost){
   document.getElementById('gigTime').value=g?time24(g.time||gigTimeFor(g)||''):'';
   document.getElementById('gigEndTime').value=g?g.endTime||'':'';
   document.getElementById('gigNotes').value=g?g.notes||'':'';
-  document.getElementById('gigBig').checked=!!(g&&g.bigNight);document.getElementById('gigBigName').value=g?g.bigName||'':'';document.getElementById('gigBigNameRow').style.display=(g&&g.bigNight)?'block':'none';
+  document.getElementById('gigBig').checked=!!(g&&g.bigNight);document.getElementById('gigFb').checked=!!(g&&g.fbEvent);document.getElementById('gigBigName').value=g?g.bigName||'':'';document.getElementById('gigBigNameRow').style.display=(g&&g.bigNight)?'block':'none';
   populateGigKindChips(g?g.kind:null);
   populateGigVenueChips(g?g.venue:null);
   populateGigHostChips(g?g.host:(presetHost||null));
@@ -4431,7 +4431,7 @@ function saveGig(){
   const time=document.getElementById('gigTime').value;
   const endTime=document.getElementById('gigEndTime').value;
   const notes=document.getElementById('gigNotes').value.trim();
-  const bigNight=document.getElementById('gigBig').checked,bigName=document.getElementById('gigBigName').value.trim();
+  const fbEvent=document.getElementById('gigFb').checked,bigNight=document.getElementById('gigBig').checked,bigName=document.getElementById('gigBigName').value.trim();
   const cancelled=document.getElementById('gigCancelCheckbox').checked;
   if(!date||!selectedGigVenue){alert('Please set a date and venue.');return;}
   // a time typed in by hand that differs from the venue's usual time = a one-night change: keep it locked
@@ -4440,7 +4440,7 @@ function saveGig(){
   if(editingGigId){
     const g=gigSchedule.find(x=>x.id===editingGigId);
     if(!g)return;
-    const changes={date,time,endTime,timeLocked,bigNight,bigName,kind:selectedGigKind,venue:selectedGigVenue,host:selectedGigHost,notes,status:cancelled?'cancelled':'scheduled'};
+    const changes={date,time,endTime,timeLocked,bigNight,fbEvent,bigName,kind:selectedGigKind,venue:selectedGigVenue,host:selectedGigHost,notes,status:cancelled?'cancelled':'scheduled'};
     const seriesMates=g.seriesId?gigSchedule.filter(x=>x.seriesId===g.seriesId):[];
     if(g.seriesId&&seriesMates.length>1){
       pendingGigScopeAction={type:'edit',gig:g,changes,origDate:g.date};
@@ -4451,12 +4451,12 @@ function saveGig(){
     Object.assign(g,changes);
     const rm=document.getElementById('gigRepeatMode').value;
     if(rm!=='none'&&!g.seriesId){
-      createGigEntry({date,time,endTime,bigNight,bigName,kind:selectedGigKind,venue:selectedGigVenue,host:selectedGigHost,notes},rm+'-forever',0,g);
+      createGigEntry({date,time,endTime,bigNight,fbEvent,bigName,kind:selectedGigKind,venue:selectedGigVenue,host:selectedGigHost,notes},rm+'-forever',0,g);
     }else persistGig(g,false);
     renderScheduleAll();closeGigModal();
   }else{
     const repeatMode=document.getElementById('gigRepeatMode').value;
-    createGigEntry({date,time,endTime,timeLocked,bigNight,bigName,kind:selectedGigKind,venue:selectedGigVenue,host:selectedGigHost,notes},repeatMode==='none'?'none':repeatMode+'-forever',0);
+    createGigEntry({date,time,endTime,timeLocked,bigNight,fbEvent,bigName,kind:selectedGigKind,venue:selectedGigVenue,host:selectedGigHost,notes},repeatMode==='none'?'none':repeatMode+'-forever',0);
     renderScheduleAll();closeGigModal();
   }
 }
