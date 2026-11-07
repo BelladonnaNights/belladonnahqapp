@@ -11514,18 +11514,25 @@ const A={
   async gall(t){const v=t.dataset.v==='1';(S.gids||[]).forEach(id=>{S.open['g_'+id]=v;});renderBrief();},
   async bsave(t,only){
     const keys=only?[only]:Object.keys(S.bchk).filter(k=>S.bchk[k]);if(!keys.length){toast('Tick something first.',true);return;}
-    const today=isoDay(Date.now()),cur=(S.cfg.briefing&&S.cfg.briefing.done)||{},m={};
+    const today=isoDay(Date.now());
     const rk=keys.filter(k=>k.indexOf('rem_')===0),nk=keys.filter(k=>k.indexOf('rem_')!==0);
-    Object.keys(cur).forEach(k=>{if(cur[k]===today)m[k]=today;});nk.forEach(k=>{m[k]=today;});
-    if(nk.length)await col('agent_config').doc('briefing').set({done:m});
+    if(nk.length){
+      // save ONLY the ticked items (merge), so quick ticks never wipe each other, and show them filed at once
+      const patch={};nk.forEach(k=>{patch[k]=today;});
+      S.cfg.briefing=S.cfg.briefing||{};S.cfg.briefing.done=Object.assign({},S.cfg.briefing.done||{},patch);
+      keys.forEach(k=>delete S.bchk[k]);renderBrief();
+      try{await col('agent_config').doc('briefing').set({done:patch},{merge:true});}
+      catch(e){nk.forEach(k=>{try{delete S.cfg.briefing.done[k];}catch(_){}});renderBrief();toast('Could not save that. Try again.',true);return;}
+    }
     if(rk.length){const p={};rk.forEach(k=>{p['items.'+k.slice(4)+'.done']=true;p['items.'+k.slice(4)+'.doneAt']=Date.now();});await remSave(p);}
     keys.forEach(k=>delete S.bchk[k]);toast(only?'Done. Filed away.':'Saved. Filed away for today.');
   },
   async bundo(t){
     if(String(t.dataset.key).indexOf('rem_')===0){await remSave({['items.'+t.dataset.key.slice(4)+'.done']:false});return;}
-    const today=isoDay(Date.now()),cur=(S.cfg.briefing&&S.cfg.briefing.done)||{},m={};
-    Object.keys(cur).forEach(k=>{if(cur[k]===today&&k!==t.dataset.key)m[k]=today;});
-    await col('agent_config').doc('briefing').set({done:m});
+    const k=t.dataset.key;
+    try{if(S.cfg.briefing&&S.cfg.briefing.done)delete S.cfg.briefing.done[k];}catch(e){}
+    renderBrief();
+    try{await col('agent_config').doc('briefing').update({['done.'+k]:firebase.firestore.FieldValue.delete()});}catch(e){toast('Could not undo that. Try again.',true);}
   },
   async bchk(t){S.bchk[t.dataset.key]=t.checked;if(t.checked)await A.bsave(t,t.dataset.key);},
   async copybrief(){toast(await copy(briefText())?'Briefing copied.':'Copy failed.',false);},
