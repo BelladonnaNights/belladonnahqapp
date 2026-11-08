@@ -571,6 +571,18 @@ html::-webkit-scrollbar-thumb:hover,.modal::-webkit-scrollbar-thumb:hover{backgr
 #staffTools .result code{display:block;margin-top:8px;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;word-break:break-all;font-size:12px;color:var(--text2)}
 #staffTools .pill{display:inline-block;padding:2px 10px;border:1px solid var(--border2);border-radius:999px;font-size:12px;color:var(--text2);margin-right:6px}
 #staffTools .pill.gold{border-color:var(--gold);color:var(--gold2)}
+
+.pl-d{border:1px solid var(--border2,rgba(255,255,255,.12));border-radius:8px;margin-bottom:.5rem}
+.pl-d>summary{cursor:pointer;padding:.65rem .9rem;list-style:none;display:flex;align-items:center;gap:.5rem;font-size:.85rem}
+.pl-d>summary::-webkit-details-marker{display:none}
+.pl-d>summary::before{content:'\25B8';color:var(--gold,#c9a84c);font-size:.8rem}
+.pl-d[open]>summary::before{content:'\25BE'}
+.pl-sec>summary{font-size:.95rem}
+.pl-body{padding:.2rem .9rem .8rem}
+.pl-sub,.pl-prompt{margin-top:.5rem}
+.pl-n{font-size:.65rem;color:var(--text3);border:1px solid var(--border2,rgba(255,255,255,.15));border-radius:99px;padding:1px 7px}
+.pl-acts{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.6rem}
+.pl-none{font-size:.72rem;color:var(--text3);padding:.3rem 0}
 </style>
 <style>
 /* ── MY TEAM (agent cast) ── */
@@ -891,6 +903,7 @@ html::-webkit-scrollbar-thumb:hover,.modal::-webkit-scrollbar-thumb:hover{backgr
         </div>
       </div>
     </div>
+    <button class="hq-btn-ghost" onclick="showPromptsPage()">Prompts</button>
     <button class="hq-btn-ghost" onclick="showLinksPage()">Links</button>
   </div>
 </div>
@@ -1560,6 +1573,15 @@ match /agent_config/{id}  { allow read, write: if isAdmin(); }</pre>
     </div>
     <div class="tm-dr-b" id="tmDrB"></div>
   </aside>
+</div>
+
+<div class="panel" id="panel-prompts">
+  <div class="section-header">
+    <div class="section-title">Prompts</div>
+    <div style="display:flex;gap:0.5rem;flex-wrap:wrap;"><button class="btn-sm btn-gold" onclick="plAddSection()">+ Add section</button></div>
+  </div>
+  <div style="font-size:0.74rem;color:var(--text3);line-height:1.55;margin-bottom:1rem;max-width:760px;">Every prompt you use, in one place. Open a section, then a subsection if it has one, then the prompt. Everything starts closed.</div>
+  <div id="plRoot"></div>
 </div>
 
 <div class="panel" id="panel-links">
@@ -2293,7 +2315,8 @@ const PERSIST_GUARDS={
   'host-roster':()=>rosterLoadedFromServer,
   'venues-list':()=>venuesLoadedFromServer,
   'host-ranks':()=>ranksLoadedFromServer,
-  'host-order':()=>hostOrderLoadedFromServer
+  'host-order':()=>hostOrderLoadedFromServer,
+  'prompt-library':()=>plLoaded
 };
 let _cloudWarnAt=0;
 function hqToast(msg,bad){
@@ -2448,6 +2471,61 @@ function showTab(id,el){
   if(id==='campaigns'&&window.campOpen)window.campOpen();
   if(id==='feedback')loadTriviaFeedback();
 }
+
+// ── PROMPT LIBRARY ── sections > optional subsections > prompts. Everything collapsed by default; saved to the cloud.
+let promptLib={sections:[]},plLoaded=false,plStarted=false,plOpen={};
+function plEsc(x){return String(x==null?'':x).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function plId(){return 'p'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
+function plLoad(){
+  plStarted=true;
+  try{const r=LS.get('prompt-library');if(r){const v=JSON.parse(r);if(v&&v.sections)promptLib=v;}}catch(e){}
+  if(!db){plLoaded=true;plRender();return;}
+  db.collection('hq_data').doc('prompt-library').get().then(snap=>{
+    if(snap.exists){try{const v=JSON.parse(snap.data().value);if(v&&v.sections)promptLib=v;}catch(e){}}
+    plLoaded=true;plRender();
+  }).catch(()=>{plLoaded=true;plRender();});
+}
+function plSave(){persist('prompt-library',promptLib);}
+function showPromptsPage(){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('panel-prompts').classList.add('active');
+  if(!plStarted)plLoad();else plRender();
+  window.scrollTo(0,0);
+}
+function plFind(id){
+  for(const sec of promptLib.sections){
+    if(sec.id===id)return {kind:'sec',node:sec,list:promptLib.sections};
+    for(const p of sec.prompts||[])if(p.id===id)return {kind:'prompt',node:p,list:sec.prompts};
+    for(const sub of sec.subs||[]){
+      if(sub.id===id)return {kind:'sub',node:sub,list:sec.subs};
+      for(const p of sub.prompts||[])if(p.id===id)return {kind:'prompt',node:p,list:sub.prompts};
+    }
+  }
+  return null;
+}
+function plRender(){
+  const root=document.getElementById('plRoot');if(!root)return;
+  if(!plLoaded){root.innerHTML='<div class="empty-state">Loading your prompts…</div>';return;}
+  const btn=(l,f,id)=>`<button class="btn-sm" onclick="event.preventDefault();event.stopPropagation();${f}('${id}')">${l}</button>`;
+  const prm=p=>`<details class="pl-d pl-prompt" data-k="${p.id}" ${plOpen[p.id]?'open':''}><summary><b>${plEsc(p.title||'Untitled')}</b></summary>
+    <div class="pl-body"><textarea class="form-textarea" style="min-height:200px" onchange="plSetText('${p.id}',this.value)">${plEsc(p.text||'')}</textarea>
+    <div class="pl-acts"><button class="btn-sm" onclick="plCopy('${p.id}',this)">Copy prompt</button>${btn('Rename','plRename',p.id)}${btn('Delete','plDelete',p.id)}</div></div></details>`;
+  const sub=u=>`<details class="pl-d pl-sub" data-k="${u.id}" ${plOpen[u.id]?'open':''}><summary><b>${plEsc(u.title||'Untitled')}</b> <span class="pl-n">${(u.prompts||[]).length}</span></summary>
+    <div class="pl-body">${(u.prompts||[]).map(prm).join('')||'<div class="pl-none">No prompts here yet.</div>'}
+    <div class="pl-acts">${btn('+ Add prompt','plAddPrompt',u.id)}${btn('Rename','plRename',u.id)}${btn('Delete','plDelete',u.id)}</div></div></details>`;
+  root.innerHTML=promptLib.sections.length?promptLib.sections.map(sec=>`<details class="pl-d pl-sec" data-k="${sec.id}" ${plOpen[sec.id]?'open':''}><summary><b>${plEsc(sec.title||'Untitled')}</b> <span class="pl-n">${(sec.prompts||[]).length+(sec.subs||[]).reduce((n,u)=>n+(u.prompts||[]).length,0)}</span></summary>
+    <div class="pl-body">${(sec.subs||[]).map(sub).join('')}${(sec.prompts||[]).map(prm).join('')}
+    <div class="pl-acts">${btn('+ Add prompt','plAddPrompt',sec.id)}${btn('+ Add subsection','plAddSub',sec.id)}${btn('Rename','plRename',sec.id)}${btn('Delete','plDelete',sec.id)}</div></div></details>`).join(''):'<div class="empty-state">No sections yet. Press Add section.</div>';
+  root.querySelectorAll('details').forEach(d=>d.addEventListener('toggle',()=>{plOpen[d.dataset.k]=d.open;}));
+}
+function plAddSection(){const t=(window.prompt('Section name')||'').trim();if(!t)return;const id=plId();promptLib.sections.push({id,title:t,subs:[],prompts:[]});plOpen[id]=true;plSave();plRender();}
+function plAddSub(secId){const f=plFind(secId);if(!f)return;const t=(window.prompt('Subsection name')||'').trim();if(!t)return;const id=plId();(f.node.subs=f.node.subs||[]).push({id,title:t,prompts:[]});plOpen[secId]=true;plOpen[id]=true;plSave();plRender();}
+function plAddPrompt(parentId){const f=plFind(parentId);if(!f)return;const t=(window.prompt('Prompt title')||'').trim();if(!t)return;const id=plId();(f.node.prompts=f.node.prompts||[]).push({id,title:t,text:''});plOpen[parentId]=true;plOpen[id]=true;plSave();plRender();}
+function plRename(id){const f=plFind(id);if(!f)return;const t=(window.prompt('New name',f.node.title||'')||'').trim();if(!t)return;f.node.title=t;plSave();plRender();}
+function plDelete(id){const f=plFind(id);if(!f)return;if(!confirm('Delete "'+(f.node.title||'this')+'"'+(f.kind==='prompt'?'?':' and everything inside it?')))return;const i=f.list.indexOf(f.node);if(i>=0)f.list.splice(i,1);plSave();plRender();}
+function plSetText(id,v){const f=plFind(id);if(!f)return;f.node.text=v;plSave();}
+function plCopy(id,b){const f=plFind(id);if(!f)return;const ta=b.closest('.pl-body').querySelector('textarea');const v=ta?ta.value:(f.node.text||'');if(navigator.clipboard)navigator.clipboard.writeText(v).then(()=>{const o=b.textContent;b.textContent='Copied';setTimeout(()=>{b.textContent=o;},1500);}).catch(()=>{});}
 function showLinksPage(){
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
@@ -12691,7 +12769,7 @@ function render(){
   const root=$('campRoot');if(!root)return;
   try{window.hqBankEnsure();}catch(e){}
   const a=document.activeElement;
-  if(a&&root.contains(a)&&a.matches&&a.matches('#cp-dsub,#cp-dbody,[data-cptheme],[data-cpdesc]')){pend=true;return;}
+  if(a&&root.contains(a)&&a.matches&&a.matches('#cp-dsub,#cp-dbody,#cp-sprompt,[data-cptheme],[data-cpdesc]')){pend=true;return;}
   const cur=todayStr().slice(0,7);
   let months;
   if(filterMode==='up'){months=[];for(let i=0;i<12;i++)months.push(addMonths(cur,i));}
@@ -12723,6 +12801,11 @@ function render(){
     <div class="form-group"><label class="form-label">Subject</label><input class="form-input" id="cp-dsub" value="${esc(t.subject)}"></div>
     <div class="form-group"><label class="form-label">Email</label><textarea class="form-textarea" id="cp-dbody" style="min-height:240px">${esc(t.body)}</textarea></div>
     <div class="cp-acts"><button class="btn-sm" data-cp="defreset">Back to the starter version</button><button class="btn-sm btn-gold" data-cp="defsave">Save default draft</button></div></div>`:''}</div>`+
+  (function(){const o=foldOpen('spp',false),sp=String((L.settings||{}).sponsorPrompt||'');
+    return `<div class="cp-card"><div class="cp-fold" data-cp="fold" data-arg="spp"><span class="cp-car">${o?'&#9662;':'&#9656;'}</span><span class="cp-lbl">Sponsor email prompt (paste into your own ChatGPT or Claude chat)</span></div>
+    ${o?`<div class="cp-body"><div style="font-size:.74rem;color:var(--text3);margin-bottom:.7rem">Write the instructions you give the chat when you want it to draft a sponsor email. Saves to the cloud. Line breaks are kept.</div>
+    <div class="form-group"><label class="form-label">Prompt</label><textarea class="form-textarea" id="cp-sprompt" style="min-height:240px">${esc(sp)}</textarea></div>
+    <div class="cp-acts"><button class="btn-sm" data-cp="spcopy">Copy prompt</button><button class="btn-sm btn-gold" data-cp="spsave">Save prompt</button></div></div>`:''}</div>`;})()+
   masterCard()+(months.length?months.map(monthCard).join(''):`<div class="cp-none">${filterMode==='prev'?'No previous months yet.':'No months ahead yet.'}</div>`);
 }
 function onClick(e){
@@ -12736,7 +12819,7 @@ function onClick(e){
     case 'tospon':toSponsors(arg);break;
     case 'tohost':toHost(arg);break;
     case 'close':closeOv();break;
-    case 'fold':foldToggle(arg,arg==='master'?false:arg.charAt(0)==='c'?arg.slice(2)===todayStr().slice(0,7):true);break;
+    case 'fold':foldToggle(arg,(arg==='master'||arg==='spp')?false:arg.charAt(0)==='c'?arg.slice(2)===todayStr().slice(0,7):true);break;
     case 'mode':filterMode=arg;render();break;
     case 'area':{let S=selAreas().slice();const k=S.indexOf(arg);if(k>=0){if(S.length>1)S.splice(k,1);}else S.push(arg);const A=sponAreas();S=A.filter(x=>S.indexOf(x)>=0);saveLib('sponsors',{areasSel:S,area:S[0]||arg},true).then(render);break;}
     case 'areaall':{const A=sponAreas();saveLib('sponsors',{areasSel:A,area:A[0]||''},true).then(render);break;}
@@ -12781,6 +12864,8 @@ function onClick(e){
     case 'drmail':location.href='mailto:'+encodeURIComponent(V('cp-to')).replace(/%40/g,'@')+'?subject='+encodeURIComponent(V('cp-sub'))+'&body='+encodeURIComponent($('cp-body').value);break;
     case 'drsent':drSent();break;
     case 'defsave':defSave();break;
+    case 'spsave':{const el=$('cp-sprompt');if(el)saveLib('settings',{sponsorPrompt:el.value.replace(/\s+$/,'')}).then(()=>{pend=false;});break;}
+    case 'spcopy':{const el=$('cp-sprompt');if(el&&navigator.clipboard)navigator.clipboard.writeText(el.value).then(()=>toast('Prompt copied')).catch(()=>toast('Could not copy',true));break;}
     case 'defreset':defReset();break;
     case 'banedit':banEdit(arg);break;
     case 'banupload':banUpload(arg);break;
@@ -12865,7 +12950,7 @@ function init(){
     else if(t.dataset&&t.dataset.cptheme){saveTheme(t.dataset.cptheme,t.value);}
     else if(t.dataset&&t.dataset.cpdesc){saveDesc(t.dataset.cpdesc,t.value);}});
   root.addEventListener('input',e=>{if(e.target.id==='cp-q'||e.target.id==='cp-mq'){const id=e.target.id;(id==='cp-q'?F:M).q=e.target.value;const pos=e.target.value.length;render();const q=$(id);if(q){q.focus();try{q.setSelectionRange(pos,pos);}catch(x){}}}});
-  root.addEventListener('focusout',()=>setTimeout(()=>{const a=document.activeElement;if(a&&root.contains(a)&&a.matches&&a.matches('#cp-dsub,#cp-dbody,[data-cptheme],[data-cpdesc]'))return;if(pend){pend=false;render();}},60));
+  root.addEventListener('focusout',()=>setTimeout(()=>{const a=document.activeElement;if(a&&root.contains(a)&&a.matches&&a.matches('#cp-dsub,#cp-dbody,#cp-sprompt,[data-cptheme],[data-cpdesc]'))return;if(pend){pend=false;render();}},60));
 }
 window.campOpen=function(){init();start();render();};
 })();
