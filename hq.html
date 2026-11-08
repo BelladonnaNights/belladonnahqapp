@@ -9237,6 +9237,7 @@ Write with setConfig doc "ideabox" data {items:{<id>:{owner:"...",route:[...],no
 
  {name:'Sponsor hunt',who:'Raven and Quill',when:'Mondays, 11:00 am',plain:'Finds local businesses that could sponsor your nights (screensaver slide, shout-outs, a winners\' prize) and writes the pitch email for each. You send it yourself.',ids:['raven','quill'],
   body:`TASK: Sponsor hunt. Public web only. Never email or message anyone, never log in, never post.
+0. PAUSE CHECK (do this first). Read agent_config ads. If settings.sponsorHuntPaused is true, do nothing else: write the run note "Sponsor hunt is paused, nothing searched" and stop. Do not search, do not add sponsors.
 1. Read agent_config ads: settings (sponsorOffer, area) and sponsors (every business already there, with any status). A sponsor with status skipped and a skippedAt date was only skipped for now: do not list it again for 30 days after skippedAt, then you may offer it again if it still fits. Status archived or anything on the blocklist is never offered again. Also read agent_config outreach blocklist: never add, pitch or list any business on it. Read Our Venues ({"op":"readVenues"}, skip inactive) and agent_leads.
 2. What a sponsor gets: use settings.sponsorOffer. If it is empty use this: a slide on our gig screensavers (it plays between our trivia and bingo games and between karaoke singers), shout-outs during those nights, and the chance to give a prize to the winners as free marketing.
 3. Search the web for up to 12 NEW local businesses likely to want to reach our crowd. Work through it: do not stop after a few. Search each town we work in or near (Auburn, Kent, Federal Way, Renton, Puyallup, Sumner, Bonney Lake, Tacoma, Enumclaw, plus anywhere in settings.area) against each kind of business below, run at least 20 different searches, and keep going until you have 12 or truly cannot find another new name. Finding only one or two means you stopped too early. Use local business directories, Google Maps style listings, city and chamber of commerce member lists, farmers market vendor pages, Instagram and Facebook business pages, and "shop local" lists. The businesses (adults who go out for karaoke, trivia and bingo). They must NOT be bars, pubs, taverns, taprooms, breweries, distilleries or nightclubs: those are our venues, not sponsors. Look for small, local, independent businesses of every kind, and actively include women-owned, Black-owned, queer-owned and other minority-owned ones. Examples (not a limit): lash and brow artists, tattoo studios, permanent jewelry, hair stylists and barbers, nail techs, estheticians, makers and artists, garden nurseries, farmers markets and their vendors, coffee shops, ice cream shops, bakeries, independent restaurants and food trucks, antique and thrift shops, book and record shops, florists, boutiques, fitness and yoga studios, and mobile services (detailing, pet grooming, cleaning). Mix the kinds: at most 3 of the same kind in one run. Only say a business is women-, Black-, queer- or otherwise owned if its own website or public pages say so; never guess, and put it in kind or why when it is stated. Ones near a venue we work with and ones that already advertise locally are a bonus, but any good local business in our area counts. Skip national chains with no local decision-maker, other karaoke, trivia or bingo hosts, and any business already in sponsors.
@@ -11393,7 +11394,9 @@ function sponsorCard(x){
 }
 function sponsorSection(){
   const sp=adsState().sponsors,live=sp.filter(x=>['skipped','archived'].indexOf(x.status)<0);
-  let h='<div class="tm-sec">Possible sponsors ('+sp.filter(x=>!x.status||x.status==='new').length+' new)</div><div class="tm-hint">Local businesses that could sponsor our nights. Raven finds them on Mondays and Quill writes the pitch. You send it yourself: nothing goes out on its own.</div>';
+  const paused=!!((S.cfg.ads||{}).settings||{}).sponsorHuntPaused;
+  let h='<div class="tm-sec">Sponsor hunt</div><div class="tm-item"><div class="t1">'+(paused?'<span class="tm-tag warn">paused</span><b>Raven is not looking for new sponsors</b>':'<span class="tm-tag quoted">running</span><b>Raven looks for new sponsors on Mondays</b>')+'</div><div class="t2">'+(paused?'The Sponsor hunt skips its run until you unpause it. Sponsors already listed below stay put.':'Pause it any time. Nothing already listed below is touched.')+'</div><div class="tm-row"><button class="tm-b '+(paused?'pri':'')+'" data-act="sppause" data-v="'+(paused?'0':'1')+'">'+(paused?'Unpause sponsor hunt':'Pause sponsor hunt')+'</button></div></div>';
+  h+='<div class="tm-sec">Possible sponsors ('+sp.filter(x=>!x.status||x.status==='new').length+' new)</div><div class="tm-hint">Local businesses that could sponsor our nights. Raven finds them on Mondays and Quill writes the pitch. You send it yourself: nothing goes out on its own.</div>';
   if(!live.length)h+='<div class="tm-empty">No sponsors yet. They show up after the Sponsor hunt task runs.</div>';
   live.forEach(x=>h+=sponsorCard(x));
   const sk=sp.filter(x=>x.status==='skipped'),ar=sp.filter(x=>x.status==='archived');
@@ -11693,6 +11696,13 @@ const A={
   async mqplan(t){const v=t.dataset.v,p={['plans.'+t.dataset.id+'.status']:v};if(v==='running')p['plans.'+t.dataset.id+'.startedAt']=Date.now();await mqSave(p);},
   async mqplandel(t){if(!confirm('Delete this plan?'))return;await mqSave({['plans.'+t.dataset.id]:null});},
   async mqidea(t){await mqSave({['ideas.'+t.dataset.id+'.status']:t.dataset.v,['ideas.'+t.dataset.id+'.updatedAt']:Date.now()});},
+  async sppause(t){
+    const on=t.dataset.v==='1';
+    try{await mqSave({'settings.sponsorHuntPaused':on,'settings.sponsorHuntPausedAt':Date.now()});
+      S.cfg.ads=S.cfg.ads||{};S.cfg.ads.settings=Object.assign({},S.cfg.ads.settings||{},{sponsorHuntPaused:on});
+      toast(on?'Sponsor hunt paused.':'Sponsor hunt is running again.',false);try{renderDrawer(true);}catch(e){}
+    }catch(e){toast('Could not save that. Try again.',true);}
+  },
   async sponsorset(t){
     if(t.dataset.v==='skipped'){await mqSave({['sponsors.'+t.dataset.id+'.skippedAt']:Date.now()});toast('Skipped for now. It can come back later.',false);}
     await mqSave({['sponsors.'+t.dataset.id+'.status']:t.dataset.v,['sponsors.'+t.dataset.id+'.updatedAt']:Date.now()});
