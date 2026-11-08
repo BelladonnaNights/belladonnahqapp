@@ -3139,7 +3139,7 @@ function vmTrialToggle(){const w=document.getElementById('vmEndDateWrap'),s=docu
 // nothing shows on the schedule before a venue's start date, or after a trial's end date
 function hqVenueOffSchedule(name,dk){const k=normVenueName(name);const v=(venues||[]).find(x=>x&&normVenueName(x.name)===k);if(!v)return false;if(v.startDate&&dk<v.startDate)return true;if(v.trial&&v.trialEnd&&dk>v.trialEnd)return true;return false;}
 function getExternalGigsForDate(dk,dow){
-  return getExternalGigsForDate0(dk,dow).filter(it=>!hqVenueOffSchedule(it.venue,dk));
+  return getExternalGigsForDate0(dk,dow).filter(it=>!hqVenueOffSchedule(it.venue,dk)&&!rnIsRemoved(it));
 }
 function getExternalGigsForDate0(dk,dow){
   const out=[];
@@ -3621,13 +3621,41 @@ async function removeRegularNight(kind,id){
 // ── GIG SCHEDULE ──
 const MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
 let editingExternalGig=null;
+// Nights you removed in HQ. A removed gig must stay gone even though the Planner / Bingo / Edit Venue schedule
+// would otherwise draw that night again. ones = single dates, from = "this and every later night" per venue+kind.
+let removedNights={ones:{},from:{}};
+function rnKey(venue,kind){return normVenueName(venue)+'|'+(plannerKindKey(kind)||kind||'');}
+function rnLoad(){
+  try{const r=LS.get('removed-nights');if(r)removedNights=JSON.parse(r);}catch(e){}
+  if(db){db.collection('hq_data').doc('removed-nights').get().then(snap=>{if(snap.exists){try{const v=JSON.parse(snap.data().value);removedNights={ones:Object.assign({},v.ones||{},removedNights.ones),from:Object.assign({},v.from||{},removedNights.from)};}catch(e){}}try{renderScheduleAll();renderDashboardWeek();}catch(e){}}).catch(()=>{});}
+}
+function rnSave(){LS.set('removed-nights',JSON.stringify(removedNights));if(db){try{db.collection('hq_data').doc('removed-nights').set({value:JSON.stringify(removedNights)}).catch(()=>{});}catch(e){}}}
+function rnIsRemoved(it){
+  const k=rnKey(it.venue,it.kind);
+  if(removedNights.ones[k+'|'+it.dk])return true;
+  const f=removedNights.from[k];return !!(f&&it.dk>=f);
+}
+function rnMark(g,fromHere){
+  if(!g||!g.date)return;const k=rnKey(g.venue,g.kind);
+  if(fromHere){if(!removedNights.from[k]||g.date<removedNights.from[k])removedNights.from[k]=g.date;}
+  else removedNights.ones[k+'|'+g.date]=1;
+  rnSave();
+}
+function rnClear(g){
+  if(!g||!g.date)return;const k=rnKey(g.venue,g.kind);let ch=false;
+  if(removedNights.ones[k+'|'+g.date]){delete removedNights.ones[k+'|'+g.date];ch=true;}
+  if(removedNights.from[k]&&g.date>=removedNights.from[k]){delete removedNights.from[k];ch=true;}
+  if(ch)rnSave();
+}
 let gigSchedule=[],editingGigId=null,pendingGigDate=null,selectedGigVenue='',selectedGigHost='Unassigned',selectedGigKind='';
 function loadGigSchedule(){
+  rnLoad();
   try{const g=LS.get('gig-schedule');if(g){gigSchedule=JSON.parse(g);gigSchedule.forEach(noteGigLoc);}}catch(e){}
   if(db){db.collection('gig_schedule').get().then(snap=>{if(!snap.empty){gigSchedule=snap.docs.map(d=>({id:d.id,...d.data()})).filter(g=>locationScopeMatches(g.locationId));gigSchedule.forEach(noteGigLoc);renderScheduleAll();renderDashboardWeek();scheduleTipScheduleSync();autoSyncMissingToPlanner();}}).catch(()=>{});}
 }
 function saveGigScheduleLocal(){LS.set('gig-schedule',JSON.stringify(gigSchedule));}
-function persistGig(entry,isDelete){
+function persistGig(entry,isDelete,noMark){
+  try{if(noMark){}else if(isDelete)rnMark(entry,false);else rnClear(entry);}catch(e){}
   _gigTouched[entry.id]=Date.now();
   const oldLoc=_gigLastLoc[entry.id];
   saveGigScheduleLocal();
@@ -3943,7 +3971,7 @@ async function vmxPushTimesToGigs(v,rows,oldSlots){
     const stillThere=rows.some(r=>r.id===sid&&r.status!=='finished'&&r.status!=='paused');
     if(stillThere)return;
     const key=plannerKindKey(o.kind);const dow=dowOf(o.day);if(!key||dow<0||liveKeys.has(key+'|'+dow))return;
-    gigSchedule.filter(g=>mine(g,key,dow)&&!g.timeLocked).forEach(g=>{gigSchedule=gigSchedule.filter(x=>x!==g);persistGig(g,true);removed++;});
+    gigSchedule.filter(g=>mine(g,key,dow)&&!g.timeLocked).forEach(g=>{gigSchedule=gigSchedule.filter(x=>x!==g);persistGig(g,true,true);removed++;});
   });
   if(Object.keys(upd).length)await rtdb.ref().update(upd);
   return {n,moved,removed};
@@ -4559,6 +4587,7 @@ function resolveGigScope(scope){
     }else{
       const mates=gigSchedule.filter(x=>x.seriesId===g.seriesId&&x.date>=g.date);
       mates.forEach(m=>persistGig(m,true));
+      rnMark(g,true);
       gigSchedule=gigSchedule.filter(x=>!(x.seriesId===g.seriesId&&x.date>=g.date));
       saveGigScheduleLocal();
     }
