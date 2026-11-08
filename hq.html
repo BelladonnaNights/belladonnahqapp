@@ -8784,7 +8784,9 @@ function briefData(){
   const RM=remState();
   RM.due.forEach(r=>need.push({a:r.agent,rem:true,rid:r.id,text:'Reminder: '+r.text,body:(r.date?(r.date<isoDay(now)?'Was due '+fmtEv(r.date)+'. ':r.date===isoDay(now)?'Due today. ':''):'')+'You asked '+(agent(r.agent)?agent(r.agent).name:'a desk')+' to remind you.'}));
   const hsh=s=>{let h=5381;for(let k=0;k<s.length;k++)h=((h<<5)+h+s.charCodeAt(k))|0;return Math.abs(h).toString(36);};
-  need.forEach(n=>{n.key=n.rem?'rem_'+n.rid:n.a+'_'+hsh(n.text);n.u=!n.rem&&/is overdue|not covered|at risk|^Checkout issue/i.test(n.text);});
+  // The key must stay the same when only the countdown changes ("due in 5 days" -> "due in 4 days" -> "is overdue"), or a ticked item comes back as a "new" one.
+  const stableTxt=t=>String(t||'').toLowerCase().replace(/\d+/g,' ').replace(/\b(overdue|due|today|soon|is|are|in|days?|by|past|the|end|ends|goes|out|was|will|be)\b/g,' ').replace(/[^a-z ]/g,' ').replace(/\s+/g,' ').trim();
+  need.forEach(n=>{n.kold=n.rem?null:n.a+'_'+hsh(n.text);n.key=n.rem?'rem_'+n.rid:n.a+'_'+hsh(stableTxt(n.text));n.u=!n.rem&&/is overdue|not covered|at risk|^Checkout issue/i.test(n.text);});
   const ideas=d.top5.map((x,i)=>Object.assign({},x,{i:i,dec:d.dec['t'+i]})).filter(o=>o.dec!=='skip').sort((a,b)=>String(a.date).localeCompare(String(b.date)));
   const avoid=(d.digest&&Array.isArray(d.digest.avoid)?d.digest.avoid:[]).slice(0,4);
   const L=S.leads,booked=L.filter(l=>l.stage==='booked').length;
@@ -8815,7 +8817,12 @@ function renderBrief(){
   const el=$('#tmBrief');if(!el)return;
   const b=briefData(),open=S.open.brief!==false,today=isoDay(Date.now());
   const doneMap=(S.cfg.briefing&&S.cfg.briefing.done)||{};
-  const isDone=n=>n.rem?false:doneMap[n.key]===today;
+  // A ticked item stays filed away (not just for today) until 30 days pass, so it only returns if it is still there a month later.
+  const fresh=v=>{if(!v)return false;const a=Date.parse(v+'T12:00:00'),b=Date.parse(today+'T12:00:00');return isNaN(a)||(b-a)/864e5<30;};
+  b.need.forEach(n=>{if(n.rem||!n.kold||n.kold===n.key)return;
+    if(fresh(doneMap[n.kold])&&!doneMap[n.key]){doneMap[n.key]=doneMap[n.kold];delete doneMap[n.kold];
+      try{col('agent_config').doc('briefing').update({['done.'+n.key]:doneMap[n.key],['done.'+n.kold]:firebase.firestore.FieldValue.delete()}).catch(()=>{});}catch(e){}}});
+  const isDone=n=>n.rem?false:fresh(doneMap[n.key]);
   const todo=b.need.filter(n=>!isDone(n)),filed=b.need.filter(isDone);
   const TAG=["All the news that's fit to sing.","Monday: stop the presses, the week begins.","Tuesday: trivia night is never a neutral party.","Wednesday: the hump, the bingo, the glory.","Thursday: nearly the weekend, and the bars know it.","Friday: extra, extra, everyone is going out.","Saturday: the biggest night of the paper's week."];
   const BY={quill:'Quill sharpens the pen',vesper:'Vesper keeps watch',raven:'Raven reports',sable:'Sable spots a trend',mirror:'Mirror reflects',sigil:'Sigil seals the deal',warden:'Thorne stocks up',coach:'Jett checks the roster',ledger:'Ledger counts the take',herald:'Iris curates',ember:'Sabine finds the words',marquee:'Ren counts the cost'};
