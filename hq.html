@@ -1459,6 +1459,9 @@ html::-webkit-scrollbar-thumb:hover,.modal::-webkit-scrollbar-thumb:hover{backgr
         <option value="Events">Events</option>
         <option value="Private Events">Private Events</option>
       </select>
+      <button class="btn-sm" onclick="calShift(-1)" title="Show earlier months">◀ Earlier</button>
+      <button class="btn-sm" onclick="calShift(0)" title="Back to this month">This month</button>
+      <button class="btn-sm" onclick="calShift(1)" title="Show later months">Later ▶</button>
       <button class="btn-sm" id="calFilterClearBtn" onclick="document.getElementById('calFilterVenue').value='';document.getElementById('calFilterType').value='';renderGigCalendar();">Clear Filters</button>
     </div>
     <div id="gigCalScroll"></div>
@@ -4330,12 +4333,15 @@ function calGigColor(kind,cancelled){
   if(kind==='Bingo')return 'var(--cal-purple)';
   return 'var(--gold)'; // Events / Private Events / anything else not called out specifically
 }
+let calMonthOffset=0;
+function calShift(d){calMonthOffset=d===0?0:calMonthOffset+d;renderGigCalendar();}
 function renderGigCalendar(){
   const scroll=document.getElementById('gigCalScroll');
   if(!scroll)return;
   const today=new Date();
-  const startYear=today.getFullYear();
-  const startMonth=today.getMonth();
+  const base=new Date(today.getFullYear(),today.getMonth()+calMonthOffset,1);
+  const startYear=base.getFullYear();
+  const startMonth=base.getMonth();
   const calVenue=document.getElementById('calFilterVenue')?.value||'';
   const calType=document.getElementById('calFilterType')?.value||'';
   scheduleExternalItemsFlat=[];
