@@ -10717,12 +10717,17 @@ function sportsEditHtml(){
   h+='<div class="tm-fg"><div class="full"><label class="tm-lbl">Add a team</label><input class="tm-in" id="gm-name"></div></div><div class="tm-row"><button class="tm-b pri" data-act="gmadd">Add team</button></div>';
   return h;
 }
+function evKey(e){return 'e_'+String(e.date||'x').replace(/[^0-9]/g,'')+'_'+String(e.event||'').toLowerCase().replace(/\([^)]*\)/g,'').replace(/[^a-z0-9]/g,'').slice(0,40);}
 function vSable(){
   const d=D(),dg=d.digest;let h='';
   h+=det('gmteams','Teams for Game Days',sportsEditHtml(),false);
   if(!dg)return h+'<div class="tm-empty">No digest loaded yet.</div>';
   h+='<div class="tm-sec">Top opportunities'+(dg.runDate?' · '+esc(fmtEv(dg.runDate)):'')+'</div>';
-  if(!d.top5.length)h+='<div class="tm-empty">No top picks in this digest.</div>';
+  {const pin=Object.entries((S.cfg.sable&&S.cfg.sable.pinned)||{}).map(([k,v])=>Object.assign({k:k},v)).filter(x=>x&&x.event).sort((a,b)=>String(a.date).localeCompare(String(b.date)));
+   pin.forEach(x=>{const u=safeUrl(x.sourceUrl);
+    h+='<div class="tm-item"><div class="t1"><b>'+esc(x.event)+'</b> · '+esc(fmtEv(x.date))+evTiming(x.date)+' <span class="tm-tag booked">on your list</span>'+(x.category?' <span class="tm-tag">'+esc(x.category)+'</span>':'')+'</div>'+(u?'<div class="t2"><a href="'+esc(u)+'" target="_blank" rel="noopener">source</a></div>':'')+
+      '<div class="tm-row"><button class="tm-b pri" data-act="copypin" data-k="'+esc(x.k)+'">Copy event brief for Quill</button><button class="tm-b dim" data-act="evpin" data-k="'+esc(x.k)+'" data-v="0">Take off my list</button></div></div>';});}
+  if(!d.top5.length&&!Object.keys((S.cfg.sable&&S.cfg.sable.pinned)||{}).length)h+='<div class="tm-empty">No top picks in this digest.</div>';
   const skAt=(S.cfg.sable&&S.cfg.sable.skipAt)||{},todayIso=isoDay(Date.now()),passed=[];
   d.top5.forEach((t,i)=>{
     if(t.date&&String(t.date)<todayIso)return;
@@ -10734,15 +10739,19 @@ function vSable(){
       (st==='skip'?'':'<button class="tm-b dim" data-act="decide" data-i="'+i+'" data-v="skip">Skip</button>')+
       (st?'<button class="tm-b dim" data-act="decide" data-i="'+i+'" data-v="">Undo</button>':'')+'</div></div>';
   });
-  if(passed.length)h+=det('spass','Passed on ('+passed.length+')','<div class="tm-hint">Kept here for 30 days, or until the date passes, then dropped.</div>'+passed.map(p=>'<div class="tm-item"><div class="t1"><b>'+esc(p[0].event)+'</b> &middot; '+esc(fmtEv(p[0].date))+'</div><div class="t2">'+esc(p[0].idea||'')+'</div><div class="tm-row"><button class="tm-b" data-act="decide" data-i="'+p[1]+'" data-v="">Bring back</button></div></div>').join(''),false);
+  if(passed.length)h+=det('spass','Passed on ('+passed.length+')','<div class="tm-hint">Kept here for 30 days, or until the date passes, then dropped.</div>'+passed.map(p=>'<div class="tm-item"><div class="t1"><b>'+esc(p[0].event)+'</b> &middot; '+esc(fmtEv(p[0].date))+'</div><div class="t2">'+esc(p[0].idea||'')+'</div><div class="tm-row"><button class="tm-b" data-act="decide" data-i="'+p[1]+'" data-v="">Put back</button></div></div>').join(''),false);
   const all=Array.isArray(dg.all)?dg.all:[];
   if(all.length){
-    h+='<div class="tm-sec">Everything by date ('+all.length+')</div><div class="tm-item">';
+    // each event once (same date + same name, ignoring the time in brackets), and any you hid sit in a Hidden box below
+    const pinMap=(S.cfg.sable&&S.cfg.sable.pinned)||{},hidMap=(S.cfg.sable&&S.cfg.sable.hiddenAll)||{},seenK=new Set(),vis=[],hid=[];
     all.slice().filter(e=>!e.date||String(e.date)>=todayIso).sort((a,b)=>String(a.date).localeCompare(String(b.date))).forEach(e=>{
-      const u=safeUrl(e.sourceUrl);
-      h+='<div class="t2" style="margin:.35rem 0"><b style="color:var(--text)">'+esc(fmtEv(e.date))+'</b> · '+esc(e.event)+evTiming(e.date)+(e.category?' <span class="tm-tag">'+esc(e.category)+'</span>':'')+(u?' <a href="'+esc(u)+'" target="_blank" rel="noopener">link</a>':'')+'</div>';
+      const k=evKey(e);
+      if(seenK.has(k)||pinMap[k])return;seenK.add(k);(hidMap[k]?hid:vis).push([e,k]);
     });
-    h+='</div>';
+    const row=(e,k,hidden)=>{const u=safeUrl(e.sourceUrl);
+      return '<div class="t2" style="margin:.35rem 0"><b style="color:var(--text)">'+esc(fmtEv(e.date))+'</b> · '+esc(e.event)+evTiming(e.date)+(e.category?' <span class="tm-tag">'+esc(e.category)+'</span>':'')+(u?' <a href="'+esc(u)+'" target="_blank" rel="noopener">link</a>':'')+' <button class="tm-b" data-act="evpin" data-k="'+esc(k)+'" data-v="1">Put on my list</button> <button class="tm-b dim" data-act="evhide" data-k="'+esc(k)+'" data-v="'+(hidden?'0':'1')+'">'+(hidden?'Put back':'Hide')+'</button></div>';};
+    h+='<div class="tm-sec">Everything by date ('+vis.length+')</div><div class="tm-item">'+vis.map(x=>row(x[0],x[1],false)).join('')+'</div>';
+    if(hid.length)h+=det('ahid','Hidden ('+hid.length+')','<div class="tm-item">'+hid.map(x=>row(x[0],x[1],true)).join('')+'</div>',false);
   }
   const comp=Array.isArray(dg.competitors)?dg.competitors:[];
   if(comp.length){
@@ -12138,6 +12147,20 @@ const A={
   },
   async gideathumb(t){const id=t.dataset.id,v=t.dataset.v,cur=((S.cfg.curator||{}).ideas||{})[id];await cuSave({['ideas.'+id+'.status']:((v==='pursuing'||v==='liked')&&cur&&cur.status===v)?'new':v,['ideas.'+id+'.updatedAt']:Date.now()});},
   async gthumb(t){const i=t.dataset.i,v=t.dataset.v,ref=col('agent_config').doc('sable'),cur=(S.cfg.sable&&S.cfg.sable.decisions||{})['t'+i];if(v==='pursue'&&cur==='pursue')await ref.update({['decisions.t'+i]:firebase.firestore.FieldValue.delete()});else if(v==='skip')await ref.update({['decisions.t'+i]:'skip',['skipAt.t'+i]:Date.now()});else await ref.update({['decisions.t'+i]:v});},
+  async evpin(t){
+    const ref=col('agent_config').doc('sable'),k='pinned.'+t.dataset.k;
+    try{
+      if(t.dataset.v==='1'){const dg=(D().digest)||{},e=(Array.isArray(dg.all)?dg.all:[]).find(x=>evKey(x)===t.dataset.k);if(!e){toast('Could not find that event.',true);return;}
+        await ref.update({[k]:{event:e.event||'',date:e.date||'',sourceUrl:e.sourceUrl||'',category:e.category||'',addedAt:Date.now()},['hiddenAll.'+t.dataset.k]:firebase.firestore.FieldValue.delete()});toast('Put on your list.',false);}
+      else{await ref.update({[k]:firebase.firestore.FieldValue.delete()});toast('Taken off your list.',false);}
+    }catch(e){toast('Could not save that. Try again.',true);}
+  },
+  async copypin(t){const x=((S.cfg.sable&&S.cfg.sable.pinned)||{})[t.dataset.k];if(x)toast(await copy(eventPrompt(x))?'Brief copied. Paste it into Claude.':'Copy failed.',false);},
+  async evhide(t){
+    const ref=col('agent_config').doc('sable'),k='hiddenAll.'+t.dataset.k;
+    try{if(t.dataset.v==='1')await ref.update({[k]:Date.now()});else await ref.update({[k]:firebase.firestore.FieldValue.delete()});}
+    catch(e){toast('Could not save that. Try again.',true);}
+  },
   async decide(t){
     const k='decisions.t'+t.dataset.i,v=t.dataset.v,ref=col('agent_config').doc('sable');
     if(v==='skip')await ref.update({[k]:v,['skipAt.t'+t.dataset.i]:Date.now()});else if(v)await ref.update({[k]:v});else await ref.update({[k]:firebase.firestore.FieldValue.delete()});
