@@ -12699,7 +12699,14 @@ function mailWk(m,i,ar){const w=sponD().weeks[wkKey(m,i,ar)];if(!w)return;const 
 function drSave(){if(!dr||!dr.id)return;const prog={...sponD().prog},k=PK(dr.m,dr.id);prog[k]={...(prog[k]||{}),pinned:true,draft:{subject:V('cp-sub'),body:$('cp-body').value}};toast('Draft saved');save({prog:prog},true);}
 function drSent(){if(!dr||!dr.id)return;const prog={...sponD().prog},k=PK(dr.m,dr.id),g={...(prog[k]||{})};g.pinned=true;g.emailedAt=g.emailedAt&&g.emailedAt!=='earlier'?g.emailedAt:todayStr();g.draft={subject:V('cp-sub'),body:$('cp-body').value};prog[k]=g;closeOv();save({prog:prog},true).then(()=>toast('Marked as emailed (in progress)'));}
 /* ── default draft at the top of the page ── */
-function defSave(){const t={subject:V('cp-dsub'),body:$('cp-dbody').value.replace(/\s+$/,'')};save({template:t},true).then(()=>toast('Default draft saved'));}
+function draftOpen(){
+  const t=tpl();
+  ov(`<div class="section-title" style="margin-bottom:.4rem">Sponsor Email Draft</div><div style="font-size:.74rem;color:var(--text3);margin-bottom:.7rem">Write the email you send to sponsors. Every sponsor email starts from it. These words fill in automatically: {sponsor} {contact} {theme} {month} {area} {venue} {week} {fee}</div>
+    <div class="form-group"><label class="form-label">Subject</label><input class="form-input" id="cp-dsub" value="${esc(t.subject)}"></div>
+    <div class="form-group"><label class="form-label">Email</label><textarea class="form-textarea" id="cp-dbody" style="min-height:300px">${esc(t.body)}</textarea></div>
+    <div class="cp-acts"><button class="btn-sm" data-cp="defreset">Back to the starter version</button><button class="btn-sm" data-cp="close">Close</button><button class="btn-sm btn-gold" data-cp="defsave">Save draft</button></div>`,680);
+}
+function defSave(){const t={subject:V('cp-dsub'),body:$('cp-dbody').value.replace(/\s+$/,'')};save({template:t},true).then(()=>{toast('Sponsor email draft saved');closeOv();});}
 function defReset(){$('cp-dsub').value=TPL_DEFAULT.subject;$('cp-dbody').value=TPL_DEFAULT.body;}
 /* ── bulk add: CSV or paragraph ── */
 function csvRows(text,delim){const rows=[];let row=[],cur='',q=false;
@@ -12877,11 +12884,7 @@ function render(){
     <select class="roster-filter-select" data-cpsel="sh">${opt('','Social hearts: all',F.sh)}${opt('any','&#9829; Any social page',F.sh)}${opt('ig','&#9829; Instagram page',F.sh)}${opt('fb','&#9829; Facebook page',F.sh)}</select>
     <button class="cp-chip ${F.heart?'on':''}" data-cp="heartf">&#9829; Hearted</button>
     <button class="btn-sm" data-cp="clearf">Clear filters</button></div>
-  <div class="cp-card"><div class="cp-fold" data-cp="fold" data-arg="def" data-def="1"><span class="cp-car">${defOpen?'&#9662;':'&#9656;'}</span><span class="cp-lbl">Default email draft (every sponsor email starts from this)</span></div>
-    ${defOpen?`<div class="cp-body"><div style="font-size:.74rem;color:var(--text3);margin-bottom:.7rem">These words fill in automatically: {sponsor} {contact} {theme} {month} {area} {venue} {week} {fee}</div>
-    <div class="form-group"><label class="form-label">Subject</label><input class="form-input" id="cp-dsub" value="${esc(t.subject)}"></div>
-    <div class="form-group"><label class="form-label">Email</label><textarea class="form-textarea" id="cp-dbody" style="min-height:240px">${esc(t.body)}</textarea></div>
-    <div class="cp-acts"><button class="btn-sm" data-cp="defreset">Back to the starter version</button><button class="btn-sm btn-gold" data-cp="defsave">Save default draft</button></div></div>`:''}</div>`+
+  <div class="cp-card" style="display:flex;align-items:center;gap:.8rem;flex-wrap:wrap"><button class="btn-sm btn-gold" data-cp="draftopen">Sponsor Email Draft</button><span style="font-size:.74rem;color:var(--text3)">${(t.body&&t.body.trim())?'Your draft is saved. Every sponsor email starts from it.':'No draft yet. Press the button to add yours.'}</span></div>`+
   (function(){const o=foldOpen('spp',false),sp=String((L.settings||{}).sponsorPrompt||'');
     return `<div class="cp-card"><div class="cp-fold" data-cp="fold" data-arg="spp"><span class="cp-car">${o?'&#9662;':'&#9656;'}</span><span class="cp-lbl">Sponsor email prompt (paste into your own ChatGPT or Claude chat)</span></div>
     ${o?`<div class="cp-body"><div style="font-size:.74rem;color:var(--text3);margin-bottom:.7rem">Write the instructions you give the chat when you want it to draft a sponsor email. Saves to the cloud. Line breaks are kept.</div>
@@ -12944,6 +12947,7 @@ function onClick(e){
     case 'drcopy':copyTxt('Subject: '+V('cp-sub')+'\n\n'+$('cp-body').value);break;
     case 'drmail':location.href='mailto:'+encodeURIComponent(V('cp-to')).replace(/%40/g,'@')+'?subject='+encodeURIComponent(V('cp-sub'))+'&body='+encodeURIComponent($('cp-body').value);break;
     case 'drsent':drSent();break;
+    case 'draftopen':draftOpen();break;
     case 'defsave':defSave();break;
     case 'spsave':{const el=$('cp-sprompt');if(el)saveLib('settings',{sponsorPrompt:el.value.replace(/\s+$/,'')}).then(()=>{pend=false;});break;}
     case 'spcopy':{const el=$('cp-sprompt');if(el&&navigator.clipboard)navigator.clipboard.writeText(el.value).then(()=>toast('Prompt copied')).catch(()=>toast('Could not copy',true));break;}
