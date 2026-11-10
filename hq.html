@@ -905,7 +905,7 @@ html::-webkit-scrollbar-thumb:hover,.modal::-webkit-scrollbar-thumb:hover{backgr
         </div>
       </div>
     </div>
-    <button class="hq-btn-ghost" onclick="showPromptsPage()">Prompts</button>
+    <button class="hq-btn-ghost" onclick="showPromptsPage()">Prompts &amp; Emails</button>
     <button class="hq-btn-ghost" onclick="showLinksPage()">Links</button>
   </div>
 </div>
@@ -1579,11 +1579,17 @@ match /agent_config/{id}  { allow read, write: if isAdmin(); }</pre>
 
 <div class="panel" id="panel-prompts">
   <div class="section-header">
-    <div class="section-title"><span id="plHead">Prompts</span> <button class="btn-sm pl-ed" onclick="plInline('__head',this)" title="Edit the headline">&#9998;</button></div>
+    <div class="section-title"><span id="plHead">Prompts &amp; Emails</span> <button class="btn-sm pl-ed" onclick="plInline('__head',this)" title="Edit the headline">&#9998;</button></div>
     <div style="display:flex;gap:0.5rem;flex-wrap:wrap;"><button class="btn-sm btn-gold" onclick="plAddSection()">+ Add section</button></div>
   </div>
   <div style="font-size:0.74rem;color:var(--text3);line-height:1.55;margin-bottom:1rem;max-width:760px;"><span id="plIntro">Every prompt you use, in one place. Open a section, then a subsection if it has one, then the prompt. Everything starts closed.</span> <button class="btn-sm pl-ed" onclick="plInline('__intro',this)" title="Edit this line">&#9998;</button></div>
   <div id="plRoot"></div>
+  <div class="section-header" style="margin-top:2rem;">
+    <div class="section-title"><span>Emails</span></div>
+    <div style="display:flex;gap:0.5rem;flex-wrap:wrap;"><button class="btn-sm btn-gold" onclick="plAddSection('em')">+ Add section</button></div>
+  </div>
+  <div style="font-size:0.74rem;color:var(--text3);line-height:1.55;margin-bottom:1rem;max-width:760px;">Your email templates, in one place. Open a section, then a subsection if it has one, then the email. Everything starts closed.</div>
+  <div id="plEmRoot"></div>
 </div>
 
 <div class="panel" id="panel-links">
@@ -2496,8 +2502,10 @@ function showPromptsPage(){
   window.scrollTo(0,0);
 }
 function plFind(id){
-  for(const sec of promptLib.sections){
-    if(sec.id===id)return {kind:'sec',node:sec,list:promptLib.sections};
+  promptLib.emailSections=promptLib.emailSections||[];
+  for(const L of [promptLib.sections,promptLib.emailSections])
+  for(const sec of L){
+    if(sec.id===id)return {kind:'sec',node:sec,list:L};
     for(const p of sec.prompts||[])if(p.id===id)return {kind:'prompt',node:p,list:sec.prompts};
     for(const sub of sec.subs||[]){
       if(sub.id===id)return {kind:'sub',node:sub,list:sec.subs};
@@ -2507,21 +2515,27 @@ function plFind(id){
   return null;
 }
 function plRender(){
+  promptLib.emailSections=promptLib.emailSections||[];
   const root=document.getElementById('plRoot');if(!root)return;
   const hd=document.getElementById('plHead'),it=document.getElementById('plIntro');
-  if(hd&&promptLib.head)hd.textContent=promptLib.head;if(it&&promptLib.intro!==undefined)it.textContent=promptLib.intro;
-  if(!plLoaded){root.innerHTML='<div class="empty-state">Loading your prompts…</div>';return;}
+  if(hd&&promptLib.head&&promptLib.head!=='Prompts')hd.textContent=promptLib.head;if(it&&promptLib.intro!==undefined)it.textContent=promptLib.intro;
+  const eroot=document.getElementById('plEmRoot');
+  if(!plLoaded){root.innerHTML='<div class="empty-state">Loading your prompts…</div>';if(eroot)eroot.innerHTML='';return;}
   const btn=(l,f,id)=>`<button class="btn-sm" onclick="event.preventDefault();event.stopPropagation();${f}('${id}')">${l}</button>`;
+  const build=(list,W)=>{
   const prm=p=>`<details class="pl-d pl-prompt" data-k="${p.id}" ${plOpen[p.id]?'open':''}><summary><b class="pl-t" data-id="${p.id}">${plEsc(p.title||'Untitled')}</b><button class="btn-sm pl-ed" onclick="event.preventDefault();event.stopPropagation();plInline('${p.id}',this)" title="Edit the title">&#9998;</button></summary>
     <div class="pl-body"><textarea class="form-textarea" style="min-height:200px" onchange="plSetText('${p.id}',this.value)">${plEsc(p.text||'')}</textarea>
-    <div class="pl-acts"><button class="btn-sm" onclick="plCopy('${p.id}',this)">Copy prompt</button>${btn('Rename','plRename',p.id)}${btn('Delete','plDelete',p.id)}</div></div></details>`;
+    <div class="pl-acts"><button class="btn-sm" onclick="plCopy('${p.id}',this)">Copy ${W}</button>${btn('Rename','plRename',p.id)}${btn('Delete','plDelete',p.id)}</div></div></details>`;
   const sub=u=>`<details class="pl-d pl-sub" data-k="${u.id}" ${plOpen[u.id]?'open':''}><summary><b class="pl-t" data-id="${u.id}">${plEsc(u.title||'Untitled')}</b><button class="btn-sm pl-ed" onclick="event.preventDefault();event.stopPropagation();plInline('${u.id}',this)" title="Edit the title">&#9998;</button> <span class="pl-n">${(u.prompts||[]).length}</span></summary>
-    <div class="pl-body">${(u.prompts||[]).map(prm).join('')||'<div class="pl-none">No prompts here yet.</div>'}
-    <div class="pl-acts">${btn('+ Add prompt','plAddPrompt',u.id)}${btn('Rename','plRename',u.id)}${btn('Delete','plDelete',u.id)}</div></div></details>`;
-  root.innerHTML=promptLib.sections.length?promptLib.sections.map(sec=>`<details class="pl-d pl-sec" data-k="${sec.id}" ${plOpen[sec.id]?'open':''}><summary><b class="pl-t" data-id="${sec.id}">${plEsc(sec.title||'Untitled')}</b><button class="btn-sm pl-ed" onclick="event.preventDefault();event.stopPropagation();plInline('${sec.id}',this)" title="Edit the title">&#9998;</button> <span class="pl-n">${(sec.prompts||[]).length+(sec.subs||[]).reduce((n,u)=>n+(u.prompts||[]).length,0)}</span></summary>
+    <div class="pl-body">${(u.prompts||[]).map(prm).join('')||'<div class="pl-none">No '+W+'s here yet.</div>'}
+    <div class="pl-acts">${btn('+ Add '+W,'plAddPrompt',u.id)}${btn('Rename','plRename',u.id)}${btn('Delete','plDelete',u.id)}</div></div></details>`;
+  return list.length?list.map(sec=>`<details class="pl-d pl-sec" data-k="${sec.id}" ${plOpen[sec.id]?'open':''}><summary><b class="pl-t" data-id="${sec.id}">${plEsc(sec.title||'Untitled')}</b><button class="btn-sm pl-ed" onclick="event.preventDefault();event.stopPropagation();plInline('${sec.id}',this)" title="Edit the title">&#9998;</button> <span class="pl-n">${(sec.prompts||[]).length+(sec.subs||[]).reduce((n,u)=>n+(u.prompts||[]).length,0)}</span></summary>
     <div class="pl-body">${(sec.subs||[]).map(sub).join('')}${(sec.prompts||[]).map(prm).join('')}
-    <div class="pl-acts">${btn('+ Add prompt','plAddPrompt',sec.id)}${btn('+ Add subsection','plAddSub',sec.id)}${btn('Rename','plRename',sec.id)}${btn('Delete','plDelete',sec.id)}</div></div></details>`).join(''):'<div class="empty-state">No sections yet. Press Add section.</div>';
-  root.querySelectorAll('details').forEach(d=>d.addEventListener('toggle',()=>{plOpen[d.dataset.k]=d.open;}));
+    <div class="pl-acts">${btn('+ Add '+W,'plAddPrompt',sec.id)}${btn('+ Add subsection','plAddSub',sec.id)}${btn('Rename','plRename',sec.id)}${btn('Delete','plDelete',sec.id)}</div></div></details>`).join(''):'<div class="empty-state">No sections yet. Press Add section.</div>';
+  };
+  root.innerHTML=build(promptLib.sections,'prompt');
+  if(eroot)eroot.innerHTML=build(promptLib.emailSections,'email');
+  [root,eroot].forEach(r=>{if(r)r.querySelectorAll('details').forEach(d=>d.addEventListener('toggle',()=>{plOpen[d.dataset.k]=d.open;}));});
 }
 function plInline(id,btn){
   let el,cur,multi=false;
@@ -2540,9 +2554,9 @@ function plInline(id,btn){
   inp.addEventListener('blur',()=>finish(true));
   el.textContent='';el.appendChild(inp);inp.focus();inp.select();
 }
-function plAddSection(){const t=(window.prompt('Section name')||'').trim();if(!t)return;const id=plId();promptLib.sections.push({id,title:t,subs:[],prompts:[]});plOpen[id]=true;plSave();plRender();}
+function plAddSection(k){const t=(window.prompt('Section name')||'').trim();if(!t)return;const id=plId();promptLib.emailSections=promptLib.emailSections||[];(k==='em'?promptLib.emailSections:promptLib.sections).push({id,title:t,subs:[],prompts:[]});plOpen[id]=true;plSave();plRender();}
 function plAddSub(secId){const f=plFind(secId);if(!f)return;const t=(window.prompt('Subsection name')||'').trim();if(!t)return;const id=plId();(f.node.subs=f.node.subs||[]).push({id,title:t,prompts:[]});plOpen[secId]=true;plOpen[id]=true;plSave();plRender();}
-function plAddPrompt(parentId){const f=plFind(parentId);if(!f)return;const t=(window.prompt('Prompt title')||'').trim();if(!t)return;const id=plId();(f.node.prompts=f.node.prompts||[]).push({id,title:t,text:''});plOpen[parentId]=true;plOpen[id]=true;plSave();plRender();}
+function plAddPrompt(parentId){const f=plFind(parentId);if(!f)return;const t=(window.prompt('Title')||'').trim();if(!t)return;const id=plId();(f.node.prompts=f.node.prompts||[]).push({id,title:t,text:''});plOpen[parentId]=true;plOpen[id]=true;plSave();plRender();}
 function plRename(id){const f=plFind(id);if(!f)return;const t=(window.prompt('New name',f.node.title||'')||'').trim();if(!t)return;f.node.title=t;plSave();plRender();}
 function plDelete(id){const f=plFind(id);if(!f)return;if(!confirm('Delete "'+(f.node.title||'this')+'"'+(f.kind==='prompt'?'?':' and everything inside it?')))return;const i=f.list.indexOf(f.node);if(i>=0)f.list.splice(i,1);plSave();plRender();}
 function plSetText(id,v){const f=plFind(id);if(!f)return;f.node.text=v;plSave();}
@@ -8184,7 +8198,7 @@ Every Monday at 8 AM Pacific:
    - Host reminder: friendly and specific. Name each missing item (signed contract, signed agreement, W-9), ask for it back this week, offer help.
    - Venue reminder: ask for the signed contract and agreement. Nothing else.
 5. INBOX. Search the business email inbox for the last 7 days for renewal notices, expiring policies or licenses, signature requests (DocuSign and similar), W-9 or tax-form requests, and forms that need to be filled out again. For each, add or update an item in agent_config/sigil items (name, due as YYYY-MM-DD from the email, fromEmail true). If an email asks for something with no clear date, add it with no date and say so in the output. Never reply to, forward or delete an email.
-6. VENUE CHECK-INS (every 3 months). Read Our Venues ({"op":"readVenues"}, skip inactive) and agent_config/care for each venue's saved lastCheckinAt. A venue is due when lastCheckinAt is empty or older than 90 days. Use venueId "hq_" plus the venue id. For each due venue without a pending draft, write one document to agent_drafts: leadId (empty), venueId, agent "sigil", kind "checkin", body, label ("Check-in: " plus the venue name), status "pending", createdAt (ms). Follow the EMAIL VOICE. Ask one specific question about how the nights are going and whether anything about the night, music, host or crowd should change. If the checkouts show a good trend, mention one real number and ask for an introduction. If health is "risk" or "watch", ask what would make it better and offer a quick call, and never mention the flag.
+6. VENUE CHECK-INS (every 3 months). Read Our Venues ({"op":"readVenues"}) and agent_config/care for each venue's saved lastCheckinAt and careSkip. ONLY venues that are active (not inactive, not marked no recurring gig) AND have a scheduled recurring gig (an active weekly, biweekly or monthly slot) get check-ins. Skip every other venue, and skip any venue with careSkip true. A venue is due when lastCheckinAt is empty or older than 90 days. Use venueId "hq_" plus the venue id. For each due venue without a pending draft, write one document to agent_drafts: leadId (empty), venueId, agent "sigil", kind "checkin", body, label ("Check-in: " plus the venue name), status "pending", createdAt (ms). Follow the EMAIL VOICE. Ask one specific question about how the nights are going and whether anything about the night, music, host or crowd should change. If the checkouts show a good trend, mention one real number and ask for an introduction. If health is "risk" or "watch", ask what would make it better and offer a quick call, and never mention the flag.
 7. AGREEMENT RENEWALS. Read agent_config/sigil agreements (status active, with signedOn, endsOn and termMonths). A 3-month agreement is due a check-in at 2 months. Other agreements are due for renewal when endsOn is within 30 days (3 months), 45 days (6 months) or 60 days (1 year). For each due agreement without a pending draft write kind "paperwork", label ("Renewal: " plus the venue), a short renewal note in the EMAIL VOICE, status "pending".
 8. INVOICES. Read Our Venues (readVenues). For every active venue whose payMethod contains "invoice" or "QuickBooks", the invoice is due on billDay of each month (empty means the 1st, "last" means the last day). Read agent_config/sigil invoices (invoices.v<venue id>.m<YYYY_MM> holds the time it was marked sent; the value -1 means that month was skipped on purpose, so do not remind for it). Skip any venue whose billStart (YYYY-MM) is later than the current month. From 2 days before the billing day until it is marked sent or skipped, include the venue in your run note under NEEDS YOU as "Send <venue> its invoice (<amount or per-night amounts>, due <date>)". Never send an invoice yourself.
 9. Never mark anything complete. Ahnna ticks items herself.
@@ -8214,7 +8228,7 @@ warden:{
 YOUR JOB: you keep track of everything each gig and event needs, and you catch problems from host checkouts. You never buy or order anything.
 
 Every morning at 9 AM Pacific:
-1. CHECKOUTS. Read the collection shifts for the last day. Look at issues, checkoutNotes and the photos (photoUrls is a list of every photo; photoUrl is the first). Find (a) real problems (broken equipment, a venue complaint, an unpaid night, a safety problem) and (b) any mention of supplies: bingo sheets, trivia answer sheets, paper, prizes, "out of", "running low", "need more". If a checkout has a photoUrl, open the photo. Photos often show the bingo card storage rack, where each slot has a label for a category. Read every label you can, and note which slots look empty or low. If the note names categories (for example "2000s Bingo"), add one restock request per category named in the note and one per extra category the photo shows empty or low. If the note asks for gobbers (daubers), clips or any other supply, add a request for each. If a label in the photo is too small to read, say so in your output and do not guess it. For each supply mention add a restock request to agent_config/warden under restocks: item, note (the category and the host's words), host, venue, qty (empty if not stated; for example "50 per category" if the host states a minimum), status "requested", requestedAt (ms). Do not add one that is already open for the same item, venue and host.
+1. CHECKOUTS. Read the collection shifts for the last day. Look at issues, checkoutNotes and the photos (photoUrls is a list of every photo; photoUrl is the first). Find (a) real problems (broken equipment, a venue complaint, an unpaid night, a safety problem) and (b) any mention of supplies: bingo sheets, trivia answer sheets, paper, prizes, "out of", "running low", "need more". If a checkout has a photoUrl, open the photo. Photos often show the bingo card storage rack, where each slot has a label for a category. Ignore the photo for categories: the host names the categories in the note, and the photo has nothing to do with it. If the note names categories (for example "I need more 80s Synth and more 80s throwback sheets"), add one restock request per category the host named, every time, even if the photo shows nothing. Never add categories from the photo. If the note asks for gobbers (daubers), clips or any other supply, add a request for each. If a label in the photo is too small to read, say so in your output and do not guess it. For each supply mention add a restock request to agent_config/warden under restocks: item, note (the category and the host's words), host, venue, qty (empty if not stated; for example "50 per category" if the host states a minimum), status "requested", requestedAt (ms). Do not add one that is already open for the same item, venue and host.
 2. ISSUES. List every real problem in your output with the venue, date and host. Say where it should go: a venue problem to Vesper, a paperwork problem to Sigil, anything else to Ahnna.
 3. PREP. Read the collection gig_schedule for the next 21 days. For each gig with bigNight true or a bigName, or a note that mentions a theme, a custom category, prizes or a special event, add a prep task to agent_config/warden under tasks: title, type (one of "Custom trivia category", "Prizes to buy", "Supplies", "Decor or props", "Equipment check", "Other"), date (the gig date), venue, gigId, status "open", createdAt (ms). For every big night also add one task of type "Equipment check" (check cables, mics, speakers and the bingo and trivia kit before the night). Do not add a task that already exists for that gigId and type.
 4. REMINDERS. List every open prep task due in 7 days or less, soonest first.
@@ -8335,7 +8349,7 @@ function careVenues(){
     const m=/Contact:\s*([^·\n]+)(?:·\s*([^·\n]+))?/.exec(v.notes||'');
     const base={contactName:m?m[1].trim():'',contact:m&&m[2]?m[2].trim():''};
     const o=Object.assign({},base,lg,care[v.id]||{});
-    o.id='hq_'+v.id;o.hqId=v.id;o.name=v.name;o.noRecurring=!!v.noRecurring;o.startDate=v.startDate||'';
+    o.id='hq_'+v.id;o.hqId=v.id;o.name=v.name;o.noRecurring=!!v.noRecurring;o.careEligible=!v.inactive&&!v.noRecurring&&!!(v.recurring||(v.gigSlots||[]).some(sl=>sl&&sl.day&&(!sl.status||sl.status==='active'||sl.status==='seasonal')&&(sl.cadence||'weekly')!=='single'));o.startDate=v.startDate||'';
     o.contactName=o.contactName||base.contactName;o.contact=o.contact||base.contact;
     return o;
   });
@@ -8387,7 +8401,7 @@ function D(){
     rPending:dr.filter(d=>d.agent==='raven'&&d.status==='pending'),
     silenced:S.sites.filter(s=>s.active===false),
     care:careVenues(),
-    careDue:careVenues().filter(v=>!v.careSkip&&Date.now()-(v.lastCheckinAt||0)>=CARE),
+    careDue:careVenues().filter(v=>!v.careSkip&&v.careEligible!==false&&Date.now()-(v.lastCheckinAt||0)>=CARE),
     careRisk:careVenues().filter(v=>v.health==='risk'),
     vlDue:venueLeadsDue(),
     sPending:dr.filter(d=>d.agent==='sigil'&&d.status==='pending'),
@@ -9193,15 +9207,15 @@ Do not touch venues you did not just add except to draft.`},
  {name:'Checkout read',who:'Thorne',when:'Daily, 6:00 am',plain:'Reads host checkouts and their photos for bingo and trivia sheet requests, supplies, and real problems, then puts them on your Gazette.',ids:['warden'],
   body:`TASK: Gig prep and supplies. Read "shifts" from the last 3 days and agent_config warden.
 1. Skip any shift id already in warden.handled.
-2. Read checkoutNotes. If there is a photoUrls list (several photos), open every photo in it; otherwise open photoUrl. Read every label. Do not guess.
-3. Find requests for bingo sheets, trivia answer sheets, paper or supplies. setConfig doc "warden" with restocks{newId:{item,cat (the bingo categories or trivia themes the host named, for example "90s, Country". Leave it empty if none were named. Never guess),note,qty,host,venue,status:"requested",requestedAt}}. Use rough quantities (no inventory is kept).
+2. Read checkoutNotes. If there is a photoUrls list (several photos), open every photo in it; otherwise open photoUrl. Do not use photos to decide categories.
+3. Find requests for bingo sheets, trivia answer sheets, paper or supplies. setConfig doc "warden" with restocks{newId:{item,cat (the bingo categories or trivia themes the host named, for example "90s, Country". Leave it empty if none were named. Never guess),note,qty,host,venue,status:"requested",requestedAt}}. Use rough quantities (no inventory is kept). CATEGORIES COME FROM THE HOST'S WORDS, NOT THE PHOTO. The photo has nothing to do with which categories to restock. If the host's note names categories (for example "I need more 80s Synth and more 80s throwback sheets"), log a restock request for EACH category the host named, every time, with cat set to that name. Never skip a request because the photo does not show an empty slot, and never add categories from the photo.
 4. Real issues (equipment, venue problems, safety) go into tasks{newId:{title,type:"issue",date,venue,gigId,status:"open"}}.
 5. Add the shift id to handled{shiftId:true} when finished.`},
  {name:'Venue care',who:'Vesper',when:'Weekdays, 8:00 am',plain:'Reads Our Venues and your Leads tab, rates how each current venue is doing from host checkouts, drafts the 3-month check-in, and flags venue leads that need a follow-up.',ids:['vesper'],
   body:`TASK: Venue care.
 1. Read Our Venues: {"op":"readVenues"}. Skip any venue marked inactive. These are the venues we work with. Read agent_config care (saved check-ins and health per venue id) and shifts from the last 14 days.
 2. For each venue, read the matching host checkouts (match by venue name): energyLevel, crowdSize, singers, tipScale, issues. setConfig doc "care" with data {"venues":{"<venue id>":{"healthSuggested":"good|watch|risk","healthWhy":"one plain sentence"}}}. Never write "health", only the suggested fields.
-3. If lastCheckinAt for that venue id is 90 or more days ago (or missing): addDraft kind "checkin" (agent vesper, venueId "hq_<venue id>", label "Check-in: NAME").
+3. Only for a venue that is active, has a scheduled recurring gig and does not have careSkip true: if lastCheckinAt for that venue id is 90 or more days ago (or missing): addDraft kind "checkin" (agent vesper, venueId "hq_<venue id>", label "Check-in: NAME").
 4. Read the Leads: {"op":"read","collection":"leads"}. For any lead whose stage is not signed, transferred or paused, with nextFollowUp today or past, or no update in 14 days: addDraft kind "n1" (agent vesper, label "Lead follow-up: NAME") with a short follow-up email. Never change the lead.
 5. 3-month agreements: read agent_config sigil agreements. For each active agreement with termMonths 3 where signedOn is 2 or more months ago and checkinAt is empty, addDraft kind "checkin" (agent vesper, label "Check-in (2 months): NAME") asking how the nights are going. If checkinOutcome is "good" and renewAfter has passed, addDraft kind "paperwork" (agent vesper, label "Renewal: NAME") saying it is renewal time and the agreement is now a full year. Not a question: stern, nice and a little fun. If checkinOutcome is "bad", write nothing and say so in your report. For termMonths 6 start 45 days before endsOn and for 12 start 60 days before, offering the same term. Never change an agreement.`},
  {name:'Curator run',who:'Iris',when:'Mondays, 9:00 am',plain:'Builds new themed nights, events and venue pitches from your catalog, your venues, Sable\'s finds, your leads and the public domain, and files them under Iris\'s ideas.',ids:['herald'],
@@ -10407,13 +10421,13 @@ function careHtml(){
   h+='<div class="tm-sec">Venue care: check in every 3 months ('+d.careDue.length+' due)</div>';
   if(!d.care.length)h+='<div class="tm-empty">No current venues yet. Add the venues you already work with below, or hand a yes to onboarding from Raven.</div>';
   d.care.slice().sort((a,b)=>(a.careSkip?1:0)-(b.careSkip?1:0)||(a.lastCheckinAt||0)-(b.lastCheckinAt||0)).forEach(v=>{
-    const sk=!!v.careSkip,due=!sk&&Date.now()-(v.lastCheckinAt||0)>=CARE,has=S.drafts.some(x=>x.venueId===v.id&&x.kind==='checkin'&&x.status==='pending');
+    const ne=v.careEligible===false,sk=!!v.careSkip,due=!sk&&!ne&&Date.now()-(v.lastCheckinAt||0)>=CARE,has=S.drafts.some(x=>x.venueId===v.id&&x.kind==='checkin'&&x.status==='pending');
     const H=v.health||'good';
-    h+='<div class="tm-item'+(S.open['c_'+v.id]?'':' folded')+'"><div class="t1 fold" data-act="fold" data-id="'+esc(v.id)+'"><b>'+esc(v.name)+'</b> '+(sk?'<span class="tm-tag">no check-ins</span>':due?'<span class="tm-tag warn">check-in due</span>':'<span class="tm-tag booked">next '+esc(fmtDay((v.lastCheckinAt||0)+CARE))+'</span>')+(H==='risk'?'<span class="tm-tag lost">at risk</span>':H==='watch'?'<span class="tm-tag warn">watch</span>':'')+'</div>'+
+    h+='<div class="tm-item'+(S.open['c_'+v.id]?'':' folded')+'"><div class="t1 fold" data-act="fold" data-id="'+esc(v.id)+'"><b>'+esc(v.name)+'</b> '+(sk?'<span class="tm-tag">no check-ins</span>':ne?'<span class="tm-tag">no recurring gig</span>':due?'<span class="tm-tag warn">check-in due</span>':'<span class="tm-tag booked">next '+esc(fmtDay((v.lastCheckinAt||0)+CARE))+'</span>')+(H==='risk'?'<span class="tm-tag lost">at risk</span>':H==='watch'?'<span class="tm-tag warn">watch</span>':'')+'</div>'+
       (v.healthWhy?'<div class="t2"><b>Vesper\'s read:</b> '+esc(v.healthWhy)+'</div>':'')+checksHtml(v)+
       '<div class="t2">'+(v.lastCheckinAt?'Last check-in '+esc(fmtDay(v.lastCheckinAt)):'Never checked in')+(v.contactName||v.contact?' · '+esc([v.contactName,v.contact].filter(Boolean).join(' · ')):'')+'</div>'+
       '<div class="tm-row"><select class="tm-sel" style="width:auto" data-chg="careskip" data-id="'+esc(v.id)+'"><option value="on"'+(sk?'':' selected')+'>Check in every 3 months</option><option value="skip"'+(sk?' selected':'')+'>Skip, no check-ins</option></select><select class="tm-sel" style="width:auto" data-chg="venuehealth" data-id="'+esc(v.id)+'"><option value="good"'+(H==='good'?' selected':'')+'>Health: good</option><option value="watch"'+(H==='watch'?' selected':'')+'>Health: watch</option><option value="risk"'+(H==='risk'?' selected':'')+'>Health: at risk</option></select>'+
-      (due&&!has?'<button class="tm-b pri" data-act="carecheckin" data-id="'+esc(v.id)+'">Draft check-in</button>':'')+(has?'<span class="tm-tag">draft waiting</span>':'')+'<button class="tm-b dim" data-act="vtl" data-id="'+esc(v.id)+'">'+(S.open['tl_'+v.id]?'Hide timeline':'Timeline')+'</button></div>'+(S.open['tl_'+v.id]?timelineHtml(v):'')+'</div>';
+      (due&&!has?'<button class="tm-b pri" data-act="carecheckin" data-id="'+esc(v.id)+'">Draft check-in</button>':'')+(due?'<button class="tm-b dim" data-act="careskipone" data-id="'+esc(v.id)+'" title="Skips this one check-in. The next one comes up in 3 months.">Skip this check-in</button>':'')+(has?'<span class="tm-tag">draft waiting</span>':'')+'<button class="tm-b dim" data-act="vtl" data-id="'+esc(v.id)+'">'+(S.open['tl_'+v.id]?'Hide timeline':'Timeline')+'</button></div>'+(S.open['tl_'+v.id]?timelineHtml(v):'')+'</div>';
   });
   return h;
 }
@@ -10576,7 +10590,7 @@ function vThorne(){
   }
   h+='<div class="tm-sec">Issues and supply mentions from host checkouts ('+w.issues.length+')</div><div class="tm-hint">Last 14 days. Mark each one when it is handled.</div>';
   if(!w.issues.length)h+='<div class="tm-empty">None.</div>';
-  w.issues.forEach(x=>{h+='<div class="tm-item"><div class="t1"><b>'+esc(x.venue||'Checkout')+'</b> · '+esc(fmtEv(x.date))+(x.host?' · '+esc(x.host):'')+'</div><div class="t2">'+esc(x.text)+'</div>'+(x.photo?'<a href="'+esc(x.photo)+'" target="_blank" rel="noopener"><img src="'+esc(x.photo)+'" alt="Checkout photo" style="width:120px;max-height:120px;object-fit:cover;border-radius:8px;border:1px solid var(--border2);margin-top:.5rem"></a><div class="t2">The photo may show which categories are empty. Thorne reads it when he runs.</div>':'')+'<div class="tm-row"><button class="tm-b" data-act="wdhandled" data-id="'+esc(x.id)+'">Handled</button><button class="tm-b dim" data-act="wdrestockfrom" data-id="'+esc(x.id)+'">Log a restock request</button></div></div>';});
+  w.issues.forEach(x=>{h+='<div class="tm-item"><div class="t1"><b>'+esc(x.venue||'Checkout')+'</b> · '+esc(fmtEv(x.date))+(x.host?' · '+esc(x.host):'')+'</div><div class="t2">'+esc(x.text)+'</div>'+(x.photo?'<a href="'+esc(x.photo)+'" target="_blank" rel="noopener"><img src="'+esc(x.photo)+'" alt="Checkout photo" style="width:120px;max-height:120px;object-fit:cover;border-radius:8px;border:1px solid var(--border2);margin-top:.5rem"></a><div class="t2">Thorne restocks the categories the host names in the note when he runs.</div>':'')+'<div class="tm-row"><button class="tm-b" data-act="wdhandled" data-id="'+esc(x.id)+'">Handled</button><button class="tm-b dim" data-act="wdrestockfrom" data-id="'+esc(x.id)+'">Log a restock request</button></div></div>';});
   return h;
 }
 
@@ -11977,6 +11991,7 @@ const A={
   agrcalc(t){const g=i=>document.getElementById(t.dataset[i]),d=g('d'),m=g('t'),e=g('e');if(d&&m&&e&&d.value)e.value=addMonths(d.value,+m.value||12);},
   async agrends(t){if(!t.value)return;await sgSave({['agreements.'+t.dataset.id+'.endsOn']:t.value});toast('Renewal date set to '+fmtEv(t.value)+'.');},
   async agrundo(t){const x=agrState().active.find(a=>a.id===t.dataset.id);if(!x)return;const D=firebase.firestore.FieldValue.delete(),p='agreements.'+x.id+'.';if(x.checkinOutcome)await sgSave({[p+'checkinOutcome']:D,[p+'renewAfter']:D});else await sgSave({[p+'checkinAt']:D});toast('Undone.');},
+  async careskipone(t){const id=t.dataset.id,now=Date.now();const pend=S.drafts.filter(x=>x.venueId===id&&x.kind==='checkin'&&x.status==='pending');for(const x of pend)await col('agent_drafts').doc(x.id).update({status:'skipped'});if(id.indexOf('hq_')===0)await careSave({['venues.'+id.slice(3)+'.lastCheckinAt']:now,['venues.'+id.slice(3)+'.checkinSkippedAt']:now});else await col('agent_venues').doc(id).update({lastCheckinAt:now,checkinSkippedAt:now});toast('Skipped. The next check-in comes up in 3 months.');},
   async careskip(t){const id=t.dataset.id,on=t.value==='skip';if(id.indexOf('hq_')===0)await careSave({['venues.'+id.slice(3)+'.careSkip']:on});else await col('agent_venues').doc(id).update({careSkip:on});toast(on?'No check-ins for this venue.':'Check-ins back on.');},
   async ckedit(t){const id=t.dataset.id,dr=S.drafts.find(x=>x.id===id);if(!dr)return;const dv=(document.querySelector('[data-ckd="'+id+'"]')||{}).value,bv=(document.querySelector('[data-ckb="'+id+'"]')||{}).value;const ms=dv?new Date(dv+'T12:00:00').getTime():(dr.approvedAt||Date.now());await col('agent_drafts').doc(id).update({body:bv==null?dr.body:bv,approvedAt:ms});await ckSync(dr.venueId,id,ms);toast('Saved.');},
   async ckundo(t){const id=t.dataset.id,dr=S.drafts.find(x=>x.id===id);if(!dr)return;const D=firebase.firestore.FieldValue.delete();await col('agent_drafts').doc(id).update({status:'pending',approvedAt:D});await ckSync(dr.venueId,id,null);toast('Back in Drafts.');},
@@ -12019,7 +12034,7 @@ const A={
   async sgprice(t){const v=sgMoney(t.value);await sgSave({['items.'+t.dataset.id+'.price']:v==null?firebase.firestore.FieldValue.delete():v});},
   async sglead(t){await sgSave({['items.'+t.dataset.id+'.lead']:+t.value||30});},
   async sgroll(t){const x=sigilState().items.find(i=>i.id===t.dataset.id);if(!x||!x.due||!SG_REPN[x.repeat])return;const nx=addMonths(x.due,SG_REPN[x.repeat]);await sgSave({['items.'+x.id+'.due']:nx,['items.'+x.id+'.lastDone']:isoDay(Date.now())});toast('Next one is '+fmtEv(nx)+'.');},
-  async sgdue(t){await sgSave({['items.'+t.dataset.id+'.due']:t.value});},
+  async sgdue(t){const v=t.value;if(v&&!/^(20\d\d)-\d\d-\d\d$/.test(v))return;await sgSave({['items.'+t.dataset.id+'.due']:v||''});toast(v?'Saved. Due '+fmtEv(v)+'.':'Date cleared.',false);},
   async sgdelitem(t){if(!confirm('Stop tracking this?'))return;await sgSave({['items.'+t.dataset.id]:null});},
   async sgaddperson(){const n=val('sgp-name');if(!n){toast('Type a name.',true);return;}await sgSave({['people.p'+Date.now().toString(36)]:{name:n,kind:$('#sgp-kind').value,contract:false,agreement:false,w9:false}});toast('Added.');},
   async sgtoggle(t){await sgSave({['people.'+t.dataset.id+'.'+t.dataset.f]:t.checked});},
@@ -12141,6 +12156,7 @@ const A={
   async mirdone(t){await col('agent_drafts').doc(t.dataset.id).update({status:'approved',approvedAt:Date.now()});toast('Done.');},
   async mircopy(t){toast(await copy(t.dataset.txt||'')?'Copied.':'Copy failed.',false);},
   async skipdraft(t){const dr=S.drafts.find(x=>x.id===t.dataset.id);await col('agent_drafts').doc(t.dataset.id).update({status:'skipped'});
+    if(dr&&dr.venueId&&dr.kind==='checkin'){const id=String(dr.venueId),now=Date.now();if(id.indexOf('hq_')===0)await careSave({['venues.'+id.slice(3)+'.lastCheckinAt']:now,['venues.'+id.slice(3)+'.checkinSkippedAt']:now});else await col('agent_venues').doc(id).update({lastCheckinAt:now,checkinSkippedAt:now});toast('Skipped. The next check-in comes up in 3 months.');return;}
     const l=dr&&dr.leadId?leadsById()[dr.leadId]:null;
     if(l){await col('agent_leads').doc(l.id).update({skippedAt:Date.now(),updatedAt:Date.now()});toast('Skipped for now. It can come back later.',false);return;}
     toast('Skipped.');},
