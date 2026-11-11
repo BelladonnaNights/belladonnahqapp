@@ -145,6 +145,7 @@ $('cf').addEventListener('submit',async e=>{
   ss('bq_lead',id);ss('bq_name',g('name'));ss('bq_venue',g('venue'));ss('bq_phone',g('phone'));ss('bq_email',g('email'));ss('bq_rec',rec);
   $('rt').textContent=RES[win][0];$('rb').textContent=RES[win][1];
   const u=new URLSearchParams({lead:id,name:g('name'),venue:g('venue'),phone:g('phone'),email:g('email'),rec:rec});if(SRCQ)u.set('src',SRC);
+  const DAYS=[['Mon','Tue'],['Wed','Thu'],['Fri','Sat'],['Sun']][ans[0]]||[];u.set('days',DAYS.join(','));ss('bq_days',DAYS.join(','));
   $('claim').href='book.html?'+u.toString();
   show('result');
 });
