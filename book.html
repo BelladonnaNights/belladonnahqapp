@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Book Belladonna For Your Venue</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=DM+Sans:wght@400;500;600;700&family=Cinzel:wght@400;600;700&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{--bg:#000;--surface:#0d0d0d;--surface2:#141414;--surface3:#1a1a1a;--border:rgba(180,150,100,0.16);--border2:rgba(180,150,100,0.34);--border-gold:rgba(201,169,110,0.4);--gold:#c9a96e;--gold2:#e0bc7e;--gold-dim:rgba(201,169,110,0.12);--rose:#b0505a;--live:#3a9a5a;--text:#f0ece0;--text2:#b8ad98;--text3:#8a8272;--text4:#4a4638;}
+html{-webkit-text-size-adjust:100%;}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-weight:300;min-height:100vh;letter-spacing:0.04em;overflow-x:hidden;line-height:1.6;}
+.wrap{max-width:640px;margin:0 auto;padding:1.4rem 1.1rem 3rem;}
+.brand{text-align:center;padding:0.6rem 0 0.2rem;}
+.brand img{width:56px;height:56px;object-fit:contain;display:block;margin:0 auto 0.4rem;}
+.logo{font-family:'Bebas Neue',sans-serif;font-size:2rem;letter-spacing:0.06em;text-transform:uppercase;}
+.logo-accent{color:var(--gold);font-family:'Cinzel',serif;font-size:0.72rem;letter-spacing:0.3em;display:block;margin-top:-0.2rem;}
+.gold-line{height:3px;background:linear-gradient(90deg,transparent,var(--gold),var(--gold2),var(--gold),transparent);margin:1rem 0;}
+h1{font-family:'Cinzel',serif;font-weight:600;font-size:1.55rem;line-height:1.25;text-align:center;letter-spacing:0.08em;color:var(--text);}
+.sub{font-family:'EB Garamond',serif;font-style:italic;font-size:1.08rem;color:var(--text2);text-align:center;margin-top:0.7rem;letter-spacing:0.01em;}
+.orn{text-align:center;color:var(--gold);letter-spacing:0.6em;font-size:0.8rem;margin:1.2rem 0;}
+.panel{background:var(--surface);border:1px solid var(--border2);border-radius:14px;padding:1.2rem;margin-bottom:1rem;}
+.sec-title{font-family:'Cinzel',serif;font-size:0.72rem;letter-spacing:0.22em;text-transform:uppercase;color:var(--gold);margin-bottom:0.8rem;}
+.btn{display:block;width:100%;text-align:center;text-decoration:none;font-family:'Cinzel',serif;font-size:0.8rem;letter-spacing:0.12em;text-transform:uppercase;font-weight:600;background:var(--gold-dim);color:var(--gold);border:1px solid var(--border-gold);border-radius:12px;padding:1.05rem 1rem;min-height:56px;cursor:pointer;transition:all .2s;}
+.btn:hover{background:rgba(201,168,76,0.2);border-color:var(--gold);}
+.btn:disabled{opacity:.5;cursor:default;}
+.btn.solid{background:var(--gold);color:#000;}
+.btn.solid:hover{background:var(--gold2);}
+.form-label{font-size:0.62rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--text3);display:block;margin-bottom:0.4rem;font-weight:400;}
+.form-input,.form-textarea,select.form-input{width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:0.85rem 0.9rem;font-size:1rem;font-family:'DM Sans',sans-serif;letter-spacing:0.04em;outline:none;border-radius:10px;min-height:50px;transition:border-color .2s;}
+.form-textarea{min-height:110px;resize:vertical;}
+.form-input:focus,.form-textarea:focus{border-color:var(--gold);}
+.fg{margin-bottom:1rem;}
+.err{color:#d9534f;font-size:0.78rem;margin-top:0.35rem;display:none;}
+.has-err .form-input{border-color:#d9534f;}
+.has-err .err{display:block;}
+.hp{position:absolute!important;left:-9999px;width:1px;height:1px;overflow:hidden;}
+.chips{display:flex;flex-wrap:wrap;gap:0.5rem;}
+.chip{position:relative;}
+.chip input{position:absolute;opacity:0;inset:0;width:100%;height:100%;cursor:pointer;margin:0;}
+.chip span{display:block;min-width:58px;text-align:center;padding:0.75rem 0.9rem;border:1px solid var(--border2);border-radius:999px;font-size:0.85rem;color:var(--text2);background:var(--surface2);transition:all .15s;}
+.chip input:checked+span{border-color:var(--gold);color:var(--gold);background:var(--gold-dim);}
+.chip input:focus-visible+span{outline:2px solid var(--gold);}
+.social{display:flex;gap:0.7rem;justify-content:center;flex-wrap:wrap;margin-top:1rem;}
+.social a{font-family:'Cinzel',serif;font-size:0.66rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--gold);border:1px solid var(--border-gold);border-radius:999px;padding:0.7rem 1.2rem;text-decoration:none;}
+.social a:hover{background:var(--gold-dim);}
+.foot{text-align:center;color:var(--text3);font-size:0.72rem;margin-top:1.6rem;}
+</style></head><body>
+<div class="wrap">
+<div class="brand"><img src="logo.png" alt="Belladonna" onerror="this.style.display='none'"><div class="logo">Belladonna<span class="logo-accent">Entertainment</span></div></div>
+<div class="gold-line"></div>
+<h1>Book Belladonna For Your Venue</h1>
+<p class="sub">Karaoke, Music Bingo, Trivia, Themed Nights, and Belladonna Games Night. Start with a free trial night.</p>
+<div class="orn">&#10022; &#10022; &#10022;</div>
+
+<a class="btn solid" id="quizBtn" href="quiz.html">Not sure which night fits? Take the 60-second quiz</a>
+
+<div class="orn">&#10022;</div>
+<div class="panel"><div class="sec-title">How the free trial works</div>
+<div style="display:grid;gap:.8rem;font-size:.95rem;color:var(--text2)">
+<div><b style="color:var(--gold);font-family:'Cinzel',serif">1</b> &nbsp;Tell us about your venue</div>
+<div><b style="color:var(--gold);font-family:'Cinzel',serif">2</b> &nbsp;We pick a night and bring everything</div>
+<div><b style="color:var(--gold);font-family:'Cinzel',serif">3</b> &nbsp;You bring the crowd</div></div></div>
+
+<div id="formWrap" class="panel"><div class="sec-title">Request your free trial night</div>
+<form id="f" novalidate>
+<div class="hp" aria-hidden="true"><label>Website<input type="text" id="website" tabindex="-1" autocomplete="off"></label></div>
+<div class="fg" data-f="name"><label class="form-label" for="name">Your name *</label><input class="form-input" id="name" autocomplete="name"><div class="err">Please add your name.</div></div>
+<div class="fg" data-f="venue"><label class="form-label" for="venue">Venue name *</label><input class="form-input" id="venue" autocomplete="organization"><div class="err">Please add your venue name.</div></div>
+<div class="fg" data-f="city"><label class="form-label" for="city">Venue city *</label><input class="form-input" id="city" autocomplete="address-level2"><div class="err">Please add the city.</div></div>
+<div class="fg" data-f="phone"><label class="form-label" for="phone">Phone *</label><input class="form-input" id="phone" type="tel" autocomplete="tel"><div class="err">Please enter a phone number with area code.</div></div>
+<div class="fg" data-f="email"><label class="form-label" for="email">Email *</label><input class="form-input" id="email" type="email" autocomplete="email"><div class="err">Please enter a valid email address.</div></div>
+<div class="fg"><label class="form-label">Which night(s) need help?</label><div class="chips" id="nights"></div></div>
+<div class="fg"><label class="form-label" for="interest">What are you interested in?</label><select class="form-input" id="interest"><option value=""></option></select></div>
+<div class="fg"><label class="form-label" for="notes">Anything else we should know?</label><textarea class="form-textarea" id="notes"></textarea></div>
+<button class="btn solid" id="go" type="submit">Request my free trial night</button>
+<div class="err" id="gerr" style="text-align:center;margin-top:.8rem">Something went wrong sending that. Please try again.</div>
+</form></div>
+
+<div id="done" class="panel" style="display:none;text-align:center"><div class="sec-title">Thank you</div>
+<h1 style="font-size:1.3rem">You're in.</h1><p class="sub">We'll reach out within 24 hours to lock in your free trial night.</p>
+<div class="social"><a href="https://www.facebook.com/belladonnaentertainment/" target="_blank" rel="noopener">Facebook</a><a href="https://www.instagram.com/belladonna.nights/" target="_blank" rel="noopener">Instagram</a></div></div>
+<div class="orn">&#10022; &#10022; &#10022;</div>
+<div class="social"><a href="https://www.facebook.com/belladonnaentertainment/" target="_blank" rel="noopener">Facebook</a><a href="https://www.instagram.com/belladonna.nights/" target="_blank" rel="noopener">Instagram</a></div>
+<div class="foot">www.belladonnanights.com</div>
+</div>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+<script>
+firebase.initializeApp({apiKey:"AIzaSyCIfAE1JGHsUGzzVH2pz1Vyj5b5OhA0tDQ",authDomain:"belladonna-hq.firebaseapp.com",projectId:"belladonna-hq",storageBucket:"belladonna-hq.firebasestorage.app",messagingSenderId:"1021873183587",appId:"1:1021873183587:web:def283bb7b5ca48e4f9156"});
+const db=firebase.firestore(),TS=firebase.firestore.FieldValue.serverTimestamp;
+const Q=new URLSearchParams(location.search);
+const SRC=(Q.get('src')||'direct').toLowerCase().replace(/[^a-z0-9_-]/g,'').slice(0,30)||'direct';
+const SRCQ=Q.get('src')?('src='+encodeURIComponent(SRC)):'';
+function ss(k,v){try{if(v===undefined)return sessionStorage.getItem(k);sessionStorage.setItem(k,v);}catch(e){return null;}}
+const okPhone=v=>String(v||'').replace(/\D/g,'').length>=10;
+const okEmail=v=>/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(String(v||'').trim());
+</script>
+<script>
+const NIGHTS=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],FORMATS=['Karaoke','Music Bingo','Trivia','Themed Night','Belladonna Games Night','Not sure'];
+document.getElementById('nights').innerHTML=NIGHTS.map(n=>'<label class="chip"><input type="checkbox" value="'+n+'"><span>'+n+'</span></label>').join('');
+document.getElementById('interest').innerHTML='<option value=""></option>'+FORMATS.map(x=>'<option>'+x+'</option>').join('');
+document.getElementById('quizBtn').href='quiz.html'+(SRCQ?'?'+SRCQ:'');
+// prefill from the quiz (URL first, then session storage)
+const P=k=>Q.get(k)||ss('bq_'+k)||'';
+['name','venue','phone','email'].forEach(k=>{const v=P(k);if(v)document.getElementById(k).value=v;});
+{const rec=P('rec');if(rec){const sel=document.getElementById('interest');for(const o of sel.options)if(o.value===rec)sel.value=rec;}}
+const LEAD=Q.get('lead')||ss('bq_lead')||'';
+const f=document.getElementById('f');
+f.addEventListener('submit',async e=>{
+  e.preventDefault();
+  if(document.getElementById('website').value)return;
+  const g=id=>document.getElementById(id).value.trim();
+  let bad=false;
+  const chk=(k,ok)=>{const el=document.querySelector('[data-f="'+k+'"]');el.classList.toggle('has-err',!ok);if(!ok)bad=true;};
+  chk('name',!!g('name'));chk('venue',!!g('venue'));chk('city',!!g('city'));chk('phone',okPhone(g('phone')));chk('email',okEmail(g('email')));
+  if(bad){const el=document.querySelector('.has-err input');if(el)el.focus();return;}
+  const btn=document.getElementById('go');btn.disabled=true;btn.textContent='Sending...';document.getElementById('gerr').style.display='none';
+  const nights=[...document.querySelectorAll('#nights input:checked')].map(i=>i.value);
+  const data={name:g('name'),venue:g('venue'),city:g('city'),phone:g('phone'),email:g('email'),preferredNights:nights,interest:g('interest'),notes:g('notes')};
+  try{
+    let done=false;
+    if(LEAD){
+      try{await db.collection('venueLeads').doc(LEAD).update(Object.assign({},data,{source:'booking-form',updatedAt:TS()}));done=true;}catch(err){done=false;}
+    }
+    if(!done){
+      await db.collection('venueLeads').add(Object.assign({},data,{source:'booking-form',sourceDetail:SRC,status:'new',createdAt:TS()}));
+    }
+    ['lead','name','venue','phone','email','rec'].forEach(k=>{try{sessionStorage.removeItem('bq_'+k);}catch(e){}});
+    document.getElementById('formWrap').style.display='none';document.getElementById('done').style.display='block';window.scrollTo(0,0);
+  }catch(err){btn.disabled=false;btn.textContent='Request my free trial night';document.getElementById('gerr').style.display='block';}
+});
+</script></body></html>
