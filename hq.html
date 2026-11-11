@@ -905,7 +905,7 @@ html::-webkit-scrollbar-thumb:hover,.modal::-webkit-scrollbar-thumb:hover{backgr
         </div>
       </div>
     </div>
-    <button class="hq-btn-ghost" onclick="showPromptsPage()">Prompts</button>
+    <button class="hq-btn-ghost" onclick="showPromptsPage()">Prompts &amp; Emails</button>
     <button class="hq-btn-ghost" onclick="showLinksPage()">Links</button>
   </div>
 </div>
@@ -1354,6 +1354,7 @@ html::-webkit-scrollbar-thumb:hover,.modal::-webkit-scrollbar-thumb:hover{backgr
       </div>
     </div>
     <div style="font-size:0.62rem;color:var(--text3);letter-spacing:0.04em;margin:-0.5rem 0 0.8rem;">Click a lead to see full details.</div>
+    <div id="webReqBox"></div>
     <div id="leadnoteBox"></div>
     <div id="leadsList"></div>
   </div>
@@ -1579,11 +1580,17 @@ match /agent_config/{id}  { allow read, write: if isAdmin(); }</pre>
 
 <div class="panel" id="panel-prompts">
   <div class="section-header">
-    <div class="section-title"><span id="plHead">Prompts</span> <button class="btn-sm pl-ed" onclick="plInline('__head',this)" title="Edit the headline">&#9998;</button></div>
+    <div class="section-title"><span id="plHead">Prompts &amp; Emails</span> <button class="btn-sm pl-ed" onclick="plInline('__head',this)" title="Edit the headline">&#9998;</button></div>
     <div style="display:flex;gap:0.5rem;flex-wrap:wrap;"><button class="btn-sm btn-gold" onclick="plAddSection()">+ Add section</button></div>
   </div>
   <div style="font-size:0.74rem;color:var(--text3);line-height:1.55;margin-bottom:1rem;max-width:760px;"><span id="plIntro">Every prompt you use, in one place. Open a section, then a subsection if it has one, then the prompt. Everything starts closed.</span> <button class="btn-sm pl-ed" onclick="plInline('__intro',this)" title="Edit this line">&#9998;</button></div>
   <div id="plRoot"></div>
+  <div class="section-header" style="margin-top:2rem;">
+    <div class="section-title"><span>Emails</span></div>
+    <div style="display:flex;gap:0.5rem;flex-wrap:wrap;"><button class="btn-sm btn-gold" onclick="plAddSection('em')">+ Add section</button></div>
+  </div>
+  <div style="font-size:0.74rem;color:var(--text3);line-height:1.55;margin-bottom:1rem;max-width:760px;">Your email templates, in one place. Open a section, then a subsection if it has one, then the email. Everything starts closed.</div>
+  <div id="plEmRoot"></div>
 </div>
 
 <div class="panel" id="panel-links">
@@ -2496,8 +2503,10 @@ function showPromptsPage(){
   window.scrollTo(0,0);
 }
 function plFind(id){
-  for(const sec of promptLib.sections){
-    if(sec.id===id)return {kind:'sec',node:sec,list:promptLib.sections};
+  promptLib.emailSections=promptLib.emailSections||[];
+  for(const L of [promptLib.sections,promptLib.emailSections])
+  for(const sec of L){
+    if(sec.id===id)return {kind:'sec',node:sec,list:L};
     for(const p of sec.prompts||[])if(p.id===id)return {kind:'prompt',node:p,list:sec.prompts};
     for(const sub of sec.subs||[]){
       if(sub.id===id)return {kind:'sub',node:sub,list:sec.subs};
@@ -2507,21 +2516,27 @@ function plFind(id){
   return null;
 }
 function plRender(){
+  promptLib.emailSections=promptLib.emailSections||[];
   const root=document.getElementById('plRoot');if(!root)return;
   const hd=document.getElementById('plHead'),it=document.getElementById('plIntro');
-  if(hd&&promptLib.head)hd.textContent=promptLib.head;if(it&&promptLib.intro!==undefined)it.textContent=promptLib.intro;
-  if(!plLoaded){root.innerHTML='<div class="empty-state">Loading your prompts…</div>';return;}
+  if(hd&&promptLib.head&&promptLib.head!=='Prompts')hd.textContent=promptLib.head;if(it&&promptLib.intro!==undefined)it.textContent=promptLib.intro;
+  const eroot=document.getElementById('plEmRoot');
+  if(!plLoaded){root.innerHTML='<div class="empty-state">Loading your prompts…</div>';if(eroot)eroot.innerHTML='';return;}
   const btn=(l,f,id)=>`<button class="btn-sm" onclick="event.preventDefault();event.stopPropagation();${f}('${id}')">${l}</button>`;
+  const build=(list,W)=>{
   const prm=p=>`<details class="pl-d pl-prompt" data-k="${p.id}" ${plOpen[p.id]?'open':''}><summary><b class="pl-t" data-id="${p.id}">${plEsc(p.title||'Untitled')}</b><button class="btn-sm pl-ed" onclick="event.preventDefault();event.stopPropagation();plInline('${p.id}',this)" title="Edit the title">&#9998;</button></summary>
     <div class="pl-body"><textarea class="form-textarea" style="min-height:200px" onchange="plSetText('${p.id}',this.value)">${plEsc(p.text||'')}</textarea>
-    <div class="pl-acts"><button class="btn-sm" onclick="plCopy('${p.id}',this)">Copy prompt</button>${btn('Rename','plRename',p.id)}${btn('Delete','plDelete',p.id)}</div></div></details>`;
+    <div class="pl-acts"><button class="btn-sm" onclick="plCopy('${p.id}',this)">Copy ${W}</button>${btn('Rename','plRename',p.id)}${btn('Delete','plDelete',p.id)}</div></div></details>`;
   const sub=u=>`<details class="pl-d pl-sub" data-k="${u.id}" ${plOpen[u.id]?'open':''}><summary><b class="pl-t" data-id="${u.id}">${plEsc(u.title||'Untitled')}</b><button class="btn-sm pl-ed" onclick="event.preventDefault();event.stopPropagation();plInline('${u.id}',this)" title="Edit the title">&#9998;</button> <span class="pl-n">${(u.prompts||[]).length}</span></summary>
-    <div class="pl-body">${(u.prompts||[]).map(prm).join('')||'<div class="pl-none">No prompts here yet.</div>'}
-    <div class="pl-acts">${btn('+ Add prompt','plAddPrompt',u.id)}${btn('Rename','plRename',u.id)}${btn('Delete','plDelete',u.id)}</div></div></details>`;
-  root.innerHTML=promptLib.sections.length?promptLib.sections.map(sec=>`<details class="pl-d pl-sec" data-k="${sec.id}" ${plOpen[sec.id]?'open':''}><summary><b class="pl-t" data-id="${sec.id}">${plEsc(sec.title||'Untitled')}</b><button class="btn-sm pl-ed" onclick="event.preventDefault();event.stopPropagation();plInline('${sec.id}',this)" title="Edit the title">&#9998;</button> <span class="pl-n">${(sec.prompts||[]).length+(sec.subs||[]).reduce((n,u)=>n+(u.prompts||[]).length,0)}</span></summary>
+    <div class="pl-body">${(u.prompts||[]).map(prm).join('')||'<div class="pl-none">No '+W+'s here yet.</div>'}
+    <div class="pl-acts">${btn('+ Add '+W,'plAddPrompt',u.id)}${btn('Rename','plRename',u.id)}${btn('Delete','plDelete',u.id)}</div></div></details>`;
+  return list.length?list.map(sec=>`<details class="pl-d pl-sec" data-k="${sec.id}" ${plOpen[sec.id]?'open':''}><summary><b class="pl-t" data-id="${sec.id}">${plEsc(sec.title||'Untitled')}</b><button class="btn-sm pl-ed" onclick="event.preventDefault();event.stopPropagation();plInline('${sec.id}',this)" title="Edit the title">&#9998;</button> <span class="pl-n">${(sec.prompts||[]).length+(sec.subs||[]).reduce((n,u)=>n+(u.prompts||[]).length,0)}</span></summary>
     <div class="pl-body">${(sec.subs||[]).map(sub).join('')}${(sec.prompts||[]).map(prm).join('')}
-    <div class="pl-acts">${btn('+ Add prompt','plAddPrompt',sec.id)}${btn('+ Add subsection','plAddSub',sec.id)}${btn('Rename','plRename',sec.id)}${btn('Delete','plDelete',sec.id)}</div></div></details>`).join(''):'<div class="empty-state">No sections yet. Press Add section.</div>';
-  root.querySelectorAll('details').forEach(d=>d.addEventListener('toggle',()=>{plOpen[d.dataset.k]=d.open;}));
+    <div class="pl-acts">${btn('+ Add '+W,'plAddPrompt',sec.id)}${btn('+ Add subsection','plAddSub',sec.id)}${btn('Rename','plRename',sec.id)}${btn('Delete','plDelete',sec.id)}</div></div></details>`).join(''):'<div class="empty-state">No sections yet. Press Add section.</div>';
+  };
+  root.innerHTML=build(promptLib.sections,'prompt');
+  if(eroot)eroot.innerHTML=build(promptLib.emailSections,'email');
+  [root,eroot].forEach(r=>{if(r)r.querySelectorAll('details').forEach(d=>d.addEventListener('toggle',()=>{plOpen[d.dataset.k]=d.open;}));});
 }
 function plInline(id,btn){
   let el,cur,multi=false;
@@ -2540,9 +2555,9 @@ function plInline(id,btn){
   inp.addEventListener('blur',()=>finish(true));
   el.textContent='';el.appendChild(inp);inp.focus();inp.select();
 }
-function plAddSection(){const t=(window.prompt('Section name')||'').trim();if(!t)return;const id=plId();promptLib.sections.push({id,title:t,subs:[],prompts:[]});plOpen[id]=true;plSave();plRender();}
+function plAddSection(k){const t=(window.prompt('Section name')||'').trim();if(!t)return;const id=plId();promptLib.emailSections=promptLib.emailSections||[];(k==='em'?promptLib.emailSections:promptLib.sections).push({id,title:t,subs:[],prompts:[]});plOpen[id]=true;plSave();plRender();}
 function plAddSub(secId){const f=plFind(secId);if(!f)return;const t=(window.prompt('Subsection name')||'').trim();if(!t)return;const id=plId();(f.node.subs=f.node.subs||[]).push({id,title:t,prompts:[]});plOpen[secId]=true;plOpen[id]=true;plSave();plRender();}
-function plAddPrompt(parentId){const f=plFind(parentId);if(!f)return;const t=(window.prompt('Prompt title')||'').trim();if(!t)return;const id=plId();(f.node.prompts=f.node.prompts||[]).push({id,title:t,text:''});plOpen[parentId]=true;plOpen[id]=true;plSave();plRender();}
+function plAddPrompt(parentId){const f=plFind(parentId);if(!f)return;const t=(window.prompt('Title')||'').trim();if(!t)return;const id=plId();(f.node.prompts=f.node.prompts||[]).push({id,title:t,text:''});plOpen[parentId]=true;plOpen[id]=true;plSave();plRender();}
 function plRename(id){const f=plFind(id);if(!f)return;const t=(window.prompt('New name',f.node.title||'')||'').trim();if(!t)return;f.node.title=t;plSave();plRender();}
 function plDelete(id){const f=plFind(id);if(!f)return;if(!confirm('Delete "'+(f.node.title||'this')+'"'+(f.kind==='prompt'?'?':' and everything inside it?')))return;const i=f.list.indexOf(f.node);if(i>=0)f.list.splice(i,1);plSave();plRender();}
 function plSetText(id,v){const f=plFind(id);if(!f)return;f.node.text=v;plSave();}
@@ -5120,8 +5135,67 @@ function leadStageLabel(k){const s=LEAD_STAGES.find(x=>x.key===k);return s?s.lab
 let leads=[];
 let editingLeadId=null;
 let expandedLeadId=null;
+
+/* ── Website requests: leads from the Venue Match Quiz and Book Us page (collection venueLeads). One list: "Add to Leads" moves it over with everything and removes it here. ── */
+let webLeads=[],_wlUnsub=null,_wlOpen={},_wlSent={},wlAlerts={phones:['','']};
+const WL_STATUS=[['new','New'],['contacted','Contacted'],['trial','Trial scheduled'],['signed','Signed'],['lost','Lost']];
+function wlListen(){
+  if(_wlUnsub||!db)return;
+  try{_wlUnsub=db.collection('venueLeads').onSnapshot(sn=>{
+    webLeads=sn.docs.map(d=>Object.assign({id:d.id},d.data())).sort((a,b)=>((b.createdAt&&b.createdAt.toMillis?b.createdAt.toMillis():0)-(a.createdAt&&a.createdAt.toMillis?a.createdAt.toMillis():0)));
+    renderWebLeads();try{render();}catch(e){}
+  },e=>{webLeads=[];const b=document.getElementById('webReqBox');if(b)b.innerHTML='<div class="empty-state" style="font-size:.75rem">Website requests could not load: '+_lx(e&&e.message||e)+'. The security rules need the venueLeads block.</div>';});}catch(e){}
+  try{db.collection('agent_config').doc('venueLeadAlerts').onSnapshot(sn=>{if(sn.exists){const p=(sn.data().phones||[]).slice(0,2);wlAlerts.phones=[p[0]||'',p[1]||''];}renderWebLeads();});}catch(e){}
+}
+function wlWhen(l){try{const m=l.createdAt&&l.createdAt.toMillis?l.createdAt.toMillis():0;return m?new Date(m).toLocaleDateString('en-US',{month:'short',day:'numeric'}):'';}catch(e){return '';}}
+function renderWebLeads(){
+  const box=document.getElementById('webReqBox');if(!box)return;
+  const n=webLeads.filter(l=>(l.status||'new')==='new').length;
+  const tel=x=>String(x||'').replace(/[^0-9+]/g,'');
+  let h='<details class="pl-d" id="wlDet" '+(_wlOpen.__all?'open':'')+' style="margin-bottom:1rem"><summary><b>Website requests</b> <span class="pl-n">'+webLeads.length+'</span>'+(n?' <span class="sg-tag gold">'+n+' new</span>':'')+'</summary><div class="pl-body">';
+  h+='<div style="font-size:.66rem;color:var(--text3);margin-bottom:.6rem">From the Venue Match Quiz and the Book Us page, newest first. Add to Leads moves the request over with everything on it.</div>';
+  if(!webLeads.length)h+='<div class="pl-none">No website requests yet.</div>';
+  webLeads.forEach(l=>{
+    const nights=Array.isArray(l.preferredNights)?l.preferredNights.join(', '):(l.preferredNights||'');
+    const rec=l.interest||l.recommendedFormat||'';
+    h+='<details class="pl-d pl-sub" data-wl="'+_lx(l.id)+'" '+(_wlOpen[l.id]?'open':'')+'><summary><b>'+_lx(l.venue||'(no venue)')+'</b> <span style="color:var(--text3);font-size:.72rem">'+_lx(l.name||'')+(rec?' · '+_lx(rec):'')+' · '+_lx(wlWhen(l))+'</span> '+((l.status||'new')==='new'?'<span class="sg-tag gold">new</span>':'<span class="sg-tag">'+_lx((WL_STATUS.find(x=>x[0]===l.status)||[0,l.status])[1])+'</span>')+'</summary><div class="pl-body" style="font-size:.8rem;line-height:1.7">'+
+      '<div>'+_lx(l.name||'')+(l.city?' · '+_lx(l.city):'')+'</div>'+
+      '<div>'+(l.phone?_lx(l.phone):'')+(l.email?' · '+_lx(l.email):'')+'</div>'+
+      (rec?'<div><b>Interested in / recommended:</b> '+_lx(rec)+(l.recommendedFormat&&l.interest&&l.recommendedFormat!==l.interest?' (quiz said '+_lx(l.recommendedFormat)+')':'')+'</div>':'')+
+      (nights?'<div><b>Nights that need help:</b> '+_lx(nights)+'</div>':'')+
+      (l.notes?'<div style="white-space:pre-wrap"><b>Notes:</b> '+_lx(l.notes)+'</div>':'')+
+      '<div style="color:var(--text3)">Came from: '+_lx(l.source||'')+(l.sourceDetail?' ('+_lx(l.sourceDetail)+')':'')+'</div>'+
+      '<div class="pl-acts" style="margin-top:.5rem">'+
+        (l.phone?'<a class="btn-sm btn-gold" style="text-decoration:none" href="tel:'+_lx(tel(l.phone))+'">Call</a><a class="btn-sm btn-gold" style="text-decoration:none" href="sms:'+_lx(tel(l.phone))+'">Text</a>':'')+
+        '<select class="form-input" style="width:auto;padding:.35rem .6rem" onchange="wlStatus(\''+_lx(l.id)+'\',this.value)">'+WL_STATUS.map(x=>'<option value="'+x[0]+'"'+((l.status||'new')===x[0]?' selected':'')+'>'+x[1]+'</option>').join('')+'</select>'+
+        '<button class="btn-sm" onclick="wlMove(\''+_lx(l.id)+'\',this)">'+(_wlSent[l.id]||'Add to Leads')+'</button>'+
+        '<button class="btn-sm" onclick="wlDelete(\''+_lx(l.id)+'\')">Delete</button>'+
+      '</div></div></details>';
+  });
+  h+='<div class="pl-acts" style="margin-top:.8rem;align-items:center"><span style="font-size:.66rem;color:var(--text3)">Text new requests to:</span><input class="form-input" style="width:150px" id="wlPh1" value="'+_lx(wlAlerts.phones[0])+'"><input class="form-input" style="width:150px" id="wlPh2" value="'+_lx(wlAlerts.phones[1])+'"><button class="btn-sm" onclick="wlSavePhones()">Save</button></div>';
+  h+='</div></details>';
+  box.innerHTML=h;
+  const dt=document.getElementById('wlDet');if(dt)dt.addEventListener('toggle',e=>{if(e.target===dt)_wlOpen.__all=dt.open;});
+  box.querySelectorAll('details[data-wl]').forEach(d=>d.addEventListener('toggle',e=>{e.stopPropagation();_wlOpen[d.dataset.wl]=d.open;}));
+}
+function wlStatus(id,v){db.collection('venueLeads').doc(id).update({status:v,updatedAt:firebase.firestore.FieldValue.serverTimestamp()}).then(()=>hqToast('Saved.')).catch(e=>hqToast('Failed: '+e.message,true));}
+function wlSavePhones(){const p=[document.getElementById('wlPh1').value.trim(),document.getElementById('wlPh2').value.trim()];db.collection('agent_config').doc('venueLeadAlerts').set({phones:p},{merge:true}).then(()=>hqToast('Saved.')).catch(e=>hqToast('Failed: '+e.message,true));}
+function wlDelete(id){if(!confirm('Delete this request?'))return;db.collection('venueLeads').doc(id).delete().catch(e=>hqToast('Failed: '+e.message,true));}
+async function wlMove(id,btn){
+  const l=webLeads.find(x=>x.id===id);if(!l)return;
+  const nights=Array.isArray(l.preferredNights)?l.preferredNights.join(', '):(l.preferredNights||'');
+  const notes=[l.interest?'Interested in: '+l.interest:'',l.recommendedFormat&&l.recommendedFormat!==l.interest?'Quiz recommended: '+l.recommendedFormat:'',nights?'Nights that need help: '+nights:'',l.notes?'Notes: '+l.notes:'',l.scores?'Quiz scores: '+Object.entries(l.scores).map(([k,v])=>k+' '+v).join(', '):'','From the website ('+(l.source||'')+(l.sourceDetail?', '+l.sourceDetail:'')+')'].filter(Boolean).join('\n');
+  const stage=l.status==='contacted'?'contact':l.status==='signed'?'signed':l.status==='lost'?'paused':'new';
+  const nid=db.collection('leads').doc().id,now=new Date().toISOString();
+  try{
+    await db.collection('leads').doc(nid).set({name:l.venue||l.name||'Website request',contactName:l.name||'',phone:l.phone||'',email:l.email||'',city:l.city||'',stage:stage,source:'inbound',contactMethod:'email',notes:notes,webRequest:l,createdAt:now,updatedAt:now},{merge:true});
+    await db.collection('venueLeads').doc(id).delete();
+    _wlSent[id]='Sent to Leads: '+(l.venue||'new lead');hqToast('Added to Leads.');loadLeads();
+  }catch(e){hqToast('Failed: '+e.message,true);}
+}
 function loadLeads(){
   if(!db)return;
+  try{wlListen();}catch(e){}
   try{lnListen();renderLeadnotes();}catch(e){}
   db.collection('leads').get().then(snap=>{
     leads=snap.docs.map(d=>({id:d.id,...d.data()})).filter(l=>locationScopeMatches(l.locationId));
@@ -8184,7 +8258,7 @@ Every Monday at 8 AM Pacific:
    - Host reminder: friendly and specific. Name each missing item (signed contract, signed agreement, W-9), ask for it back this week, offer help.
    - Venue reminder: ask for the signed contract and agreement. Nothing else.
 5. INBOX. Search the business email inbox for the last 7 days for renewal notices, expiring policies or licenses, signature requests (DocuSign and similar), W-9 or tax-form requests, and forms that need to be filled out again. For each, add or update an item in agent_config/sigil items (name, due as YYYY-MM-DD from the email, fromEmail true). If an email asks for something with no clear date, add it with no date and say so in the output. Never reply to, forward or delete an email.
-6. VENUE CHECK-INS (every 3 months). Read Our Venues ({"op":"readVenues"}, skip inactive) and agent_config/care for each venue's saved lastCheckinAt. A venue is due when lastCheckinAt is empty or older than 90 days. Use venueId "hq_" plus the venue id. For each due venue without a pending draft, write one document to agent_drafts: leadId (empty), venueId, agent "sigil", kind "checkin", body, label ("Check-in: " plus the venue name), status "pending", createdAt (ms). Follow the EMAIL VOICE. Ask one specific question about how the nights are going and whether anything about the night, music, host or crowd should change. If the checkouts show a good trend, mention one real number and ask for an introduction. If health is "risk" or "watch", ask what would make it better and offer a quick call, and never mention the flag.
+6. VENUE CHECK-INS (every 3 months). Read Our Venues ({"op":"readVenues"}) and agent_config/care for each venue's saved lastCheckinAt and careSkip. ONLY venues that are active (not inactive, not marked no recurring gig) AND have a scheduled recurring gig (an active weekly, biweekly or monthly slot) get check-ins. Skip every other venue, and skip any venue with careSkip true. A venue is due when lastCheckinAt is empty or older than 90 days. Use venueId "hq_" plus the venue id. For each due venue without a pending draft, write one document to agent_drafts: leadId (empty), venueId, agent "sigil", kind "checkin", body, label ("Check-in: " plus the venue name), status "pending", createdAt (ms). Follow the EMAIL VOICE. Ask one specific question about how the nights are going and whether anything about the night, music, host or crowd should change. If the checkouts show a good trend, mention one real number and ask for an introduction. If health is "risk" or "watch", ask what would make it better and offer a quick call, and never mention the flag.
 7. AGREEMENT RENEWALS. Read agent_config/sigil agreements (status active, with signedOn, endsOn and termMonths). A 3-month agreement is due a check-in at 2 months. Other agreements are due for renewal when endsOn is within 30 days (3 months), 45 days (6 months) or 60 days (1 year). For each due agreement without a pending draft write kind "paperwork", label ("Renewal: " plus the venue), a short renewal note in the EMAIL VOICE, status "pending".
 8. INVOICES. Read Our Venues (readVenues). For every active venue whose payMethod contains "invoice" or "QuickBooks", the invoice is due on billDay of each month (empty means the 1st, "last" means the last day). Read agent_config/sigil invoices (invoices.v<venue id>.m<YYYY_MM> holds the time it was marked sent; the value -1 means that month was skipped on purpose, so do not remind for it). Skip any venue whose billStart (YYYY-MM) is later than the current month. From 2 days before the billing day until it is marked sent or skipped, include the venue in your run note under NEEDS YOU as "Send <venue> its invoice (<amount or per-night amounts>, due <date>)". Never send an invoice yourself.
 9. Never mark anything complete. Ahnna ticks items herself.
@@ -8335,7 +8409,7 @@ function careVenues(){
     const m=/Contact:\s*([^·\n]+)(?:·\s*([^·\n]+))?/.exec(v.notes||'');
     const base={contactName:m?m[1].trim():'',contact:m&&m[2]?m[2].trim():''};
     const o=Object.assign({},base,lg,care[v.id]||{});
-    o.id='hq_'+v.id;o.hqId=v.id;o.name=v.name;o.noRecurring=!!v.noRecurring;o.startDate=v.startDate||'';
+    o.id='hq_'+v.id;o.hqId=v.id;o.name=v.name;o.noRecurring=!!v.noRecurring;o.careEligible=!v.inactive&&!v.noRecurring&&!!(v.recurring||(v.gigSlots||[]).some(sl=>sl&&sl.day&&(!sl.status||sl.status==='active'||sl.status==='seasonal')&&(sl.cadence||'weekly')!=='single'));o.startDate=v.startDate||'';
     o.contactName=o.contactName||base.contactName;o.contact=o.contact||base.contact;
     return o;
   });
@@ -8387,7 +8461,7 @@ function D(){
     rPending:dr.filter(d=>d.agent==='raven'&&d.status==='pending'),
     silenced:S.sites.filter(s=>s.active===false),
     care:careVenues(),
-    careDue:careVenues().filter(v=>!v.careSkip&&Date.now()-(v.lastCheckinAt||0)>=CARE),
+    careDue:careVenues().filter(v=>!v.careSkip&&v.careEligible!==false&&Date.now()-(v.lastCheckinAt||0)>=CARE),
     careRisk:careVenues().filter(v=>v.health==='risk'),
     vlDue:venueLeadsDue(),
     sPending:dr.filter(d=>d.agent==='sigil'&&d.status==='pending'),
@@ -8774,6 +8848,7 @@ function briefData(){
   d.sg.dueSoon.forEach(x=>need.push({a:'sigil',text:x.name+(x.days<0?' is overdue':' is due in '+x.days+' days'),body:(x.due?'Due '+fmtEv(x.due)+'. ':'')+(x.price?'About '+sgFmt$(sgMoney(x.price)||0)+'. ':'')+(x.repeat?'Repeats '+((SG_REP.find(r=>r[0]===x.repeat)||[0,''])[1].toLowerCase())+'. ':'')+(x.fromEmail?'Pulled from email, so confirm the date. ':'')+'Sigil can draft the reminder.'}));
   add('sigil',d.sg.incomplete.length,plural(d.sg.incomplete.length,'person is','people are')+' missing paperwork',d.sg.incomplete.slice(0,5).map(p=>p.name+' needs '+p.miss.join(', ')).join('; ')+'.');
   add('sigil',d.sPending.length,plural(d.sPending.length,'paperwork reminder','paperwork reminders')+' to approve',d.sPending.map(x=>cut(x.label,60)).join('; ')+'.');
+  {const wn=(typeof webLeads!=='undefined'?webLeads:[]).filter(l=>(l.status||'new')==='new');if(wn.length)need.push({a:'raven',text:plural(wn.length,'new website request','new website requests'),body:wn.slice(0,5).map(l=>(l.venue||'?')+' ('+(l.interest||l.recommendedFormat||'?')+') - '+(l.name||'')+' '+(l.phone||'')).join('; ')+'. Open Leads, Website requests.'});}
   {const pr=printRun();if(pr.unk.length)need.push({a:'warden',text:plural(pr.unk.length,'restock request needs','restock requests need')+' a category from the host',body:pr.unk.map(r=>(r.venue||'?')+(r.host?' ('+r.host+')':'')).join(', ')+'. Thorne can draft the question.'});if(pr.toPrint.length)need.push({a:'warden',text:'Print run ready: '+plural(pr.toPrint.length,'item','items'),body:pr.groups.map(g=>g.item+' '+g.cat).join('; ')+'.'});}
   {const ad=adsState();if(ad.settings.budgetReviewed!==ad.mon)need.push({a:'marquee',u:!ad.budget,text:'Recheck your monthly marketing budget',body:(ad.budget?'It is set to '+fmtMoney(ad.budget)+'. ':'It is not set yet. ')+'Open Ren to confirm or change it. It will ask again next month.'});if(ad.fresh.length)add('marquee',ad.fresh.length,plural(ad.fresh.length,'ad move is','ad moves are')+' waiting for you',ad.fresh.slice(0,3).map(p=>p.title+(p.when?' ('+p.when+')':'')).join('; ')+'.');ad.stale.forEach(p=>need.push({a:'marquee',text:'Check how "'+p.title+'" is doing',body:'It has been live a few days. Type in the numbers from Meta and Ren will say keep, change or stop.'}));if(ad.budget&&ad.total>=ad.budget*0.9)need.push({a:'marquee',u:true,text:'Marketing budget almost used up',body:fmtMoney(ad.total)+' of '+fmtMoney(ad.budget)+' spent this month.'});}
   {const cu=curatorState();if(cu.fresh.length)add('herald',cu.fresh.length,plural(cu.fresh.length,'new idea','new ideas')+' from Iris',cu.fresh.slice(0,4).map(x=>x.title).join('; ')+'.');}
@@ -10421,14 +10496,14 @@ function careHtml(){
   const d=D();let h='';
   h+='<div class="tm-sec">Venue care: check in every 3 months ('+d.careDue.length+' due)</div>';
   if(!d.care.length)h+='<div class="tm-empty">No current venues yet. Add the venues you already work with below, or hand a yes to onboarding from Raven.</div>';
-  d.care.slice().sort((a,b)=>(a.careSkip?1:0)-(b.careSkip?1:0)||(a.lastCheckinAt||0)-(b.lastCheckinAt||0)).forEach(v=>{
-    const sk=!!v.careSkip,due=!sk&&Date.now()-(v.lastCheckinAt||0)>=CARE,has=S.drafts.some(x=>x.venueId===v.id&&x.kind==='checkin'&&x.status==='pending');
+  d.care.filter(v=>v.careEligible!==false).sort((a,b)=>(a.careSkip?1:0)-(b.careSkip?1:0)||(a.lastCheckinAt||0)-(b.lastCheckinAt||0)).forEach(v=>{
+    const ne=v.careEligible===false,sk=!!v.careSkip,due=!sk&&!ne&&Date.now()-(v.lastCheckinAt||0)>=CARE,has=S.drafts.some(x=>x.venueId===v.id&&x.kind==='checkin'&&x.status==='pending');
     const H=v.health||'good';
-    h+='<div class="tm-item'+(S.open['c_'+v.id]?'':' folded')+'"><div class="t1 fold" data-act="fold" data-id="'+esc(v.id)+'"><b>'+esc(v.name)+'</b> '+(sk?'<span class="tm-tag">no check-ins</span>':due?'<span class="tm-tag warn">check-in due</span>':'<span class="tm-tag booked">next '+esc(fmtDay((v.lastCheckinAt||0)+CARE))+'</span>')+(H==='risk'?'<span class="tm-tag lost">at risk</span>':H==='watch'?'<span class="tm-tag warn">watch</span>':'')+'</div>'+
+    h+='<div class="tm-item'+(S.open['c_'+v.id]?'':' folded')+'"><div class="t1 fold" data-act="fold" data-id="'+esc(v.id)+'"><b>'+esc(v.name)+'</b> '+(sk?'<span class="tm-tag">no check-ins</span>':ne?'<span class="tm-tag">no recurring gig</span>':due?'<span class="tm-tag warn">check-in due</span>':'<span class="tm-tag booked">next '+esc(fmtDay((v.lastCheckinAt||0)+CARE))+'</span>')+(H==='risk'?'<span class="tm-tag lost">at risk</span>':H==='watch'?'<span class="tm-tag warn">watch</span>':'')+'</div>'+
       (v.healthWhy?'<div class="t2"><b>Vesper\'s read:</b> '+esc(v.healthWhy)+'</div>':'')+checksHtml(v)+
       '<div class="t2">'+(v.lastCheckinAt?'Last check-in '+esc(fmtDay(v.lastCheckinAt)):'Never checked in')+(v.contactName||v.contact?' · '+esc([v.contactName,v.contact].filter(Boolean).join(' · ')):'')+'</div>'+
       '<div class="tm-row"><select class="tm-sel" style="width:auto" data-chg="careskip" data-id="'+esc(v.id)+'"><option value="on"'+(sk?'':' selected')+'>Check in every 3 months</option><option value="skip"'+(sk?' selected':'')+'>Skip, no check-ins</option></select><select class="tm-sel" style="width:auto" data-chg="venuehealth" data-id="'+esc(v.id)+'"><option value="good"'+(H==='good'?' selected':'')+'>Health: good</option><option value="watch"'+(H==='watch'?' selected':'')+'>Health: watch</option><option value="risk"'+(H==='risk'?' selected':'')+'>Health: at risk</option></select>'+
-      (due&&!has?'<button class="tm-b pri" data-act="carecheckin" data-id="'+esc(v.id)+'">Draft check-in</button>':'')+(has?'<span class="tm-tag">draft waiting</span>':'')+'<button class="tm-b dim" data-act="vtl" data-id="'+esc(v.id)+'">'+(S.open['tl_'+v.id]?'Hide timeline':'Timeline')+'</button></div>'+(S.open['tl_'+v.id]?timelineHtml(v):'')+'</div>';
+      (due&&!has?'<button class="tm-b pri" data-act="carecheckin" data-id="'+esc(v.id)+'">Draft check-in</button>':'')+(due?'<button class="tm-b dim" data-act="careskipone" data-id="'+esc(v.id)+'" title="Skips this one check-in. The next one comes up in 3 months.">Skip this check-in</button>':'')+(has?'<span class="tm-tag">draft waiting</span>':'')+'<button class="tm-b dim" data-act="vtl" data-id="'+esc(v.id)+'">'+(S.open['tl_'+v.id]?'Hide timeline':'Timeline')+'</button></div>'+(S.open['tl_'+v.id]?timelineHtml(v):'')+'</div>';
   });
   return h;
 }
@@ -12022,6 +12097,7 @@ const A={
   agrcalc(t){const g=i=>document.getElementById(t.dataset[i]),d=g('d'),m=g('t'),e=g('e');if(d&&m&&e&&d.value)e.value=addMonths(d.value,+m.value||12);},
   async agrends(t){if(!t.value)return;await sgSave({['agreements.'+t.dataset.id+'.endsOn']:t.value});toast('Renewal date set to '+fmtEv(t.value)+'.');},
   async agrundo(t){const x=agrState().active.find(a=>a.id===t.dataset.id);if(!x)return;const D=firebase.firestore.FieldValue.delete(),p='agreements.'+x.id+'.';if(x.checkinOutcome)await sgSave({[p+'checkinOutcome']:D,[p+'renewAfter']:D});else await sgSave({[p+'checkinAt']:D});toast('Undone.');},
+  async careskipone(t){const id=t.dataset.id,now=Date.now();const pend=S.drafts.filter(x=>x.venueId===id&&x.kind==='checkin'&&x.status==='pending');for(const x of pend)await col('agent_drafts').doc(x.id).update({status:'skipped'});if(id.indexOf('hq_')===0)await careSave({['venues.'+id.slice(3)+'.lastCheckinAt']:now,['venues.'+id.slice(3)+'.checkinSkippedAt']:now});else await col('agent_venues').doc(id).update({lastCheckinAt:now,checkinSkippedAt:now});toast('Skipped. The next check-in comes up in 3 months.');},
   async careskip(t){const id=t.dataset.id,on=t.value==='skip';if(id.indexOf('hq_')===0)await careSave({['venues.'+id.slice(3)+'.careSkip']:on});else await col('agent_venues').doc(id).update({careSkip:on});toast(on?'No check-ins for this venue.':'Check-ins back on.');},
   async ckedit(t){const id=t.dataset.id,dr=S.drafts.find(x=>x.id===id);if(!dr)return;const dv=(document.querySelector('[data-ckd="'+id+'"]')||{}).value,bv=(document.querySelector('[data-ckb="'+id+'"]')||{}).value;const ms=dv?new Date(dv+'T12:00:00').getTime():(dr.approvedAt||Date.now());await col('agent_drafts').doc(id).update({body:bv==null?dr.body:bv,approvedAt:ms});await ckSync(dr.venueId,id,ms);toast('Saved.');},
   async ckundo(t){const id=t.dataset.id,dr=S.drafts.find(x=>x.id===id);if(!dr)return;const D=firebase.firestore.FieldValue.delete();await col('agent_drafts').doc(id).update({status:'pending',approvedAt:D});await ckSync(dr.venueId,id,null);toast('Back in Drafts.');},
@@ -12064,7 +12140,7 @@ const A={
   async sgprice(t){const v=sgMoney(t.value);await sgSave({['items.'+t.dataset.id+'.price']:v==null?firebase.firestore.FieldValue.delete():v});},
   async sglead(t){await sgSave({['items.'+t.dataset.id+'.lead']:+t.value||30});},
   async sgroll(t){const x=sigilState().items.find(i=>i.id===t.dataset.id);if(!x||!x.due||!SG_REPN[x.repeat])return;const nx=addMonths(x.due,SG_REPN[x.repeat]);await sgSave({['items.'+x.id+'.due']:nx,['items.'+x.id+'.lastDone']:isoDay(Date.now())});toast('Next one is '+fmtEv(nx)+'.');},
-  async sgdue(t){await sgSave({['items.'+t.dataset.id+'.due']:t.value});},
+  async sgdue(t){const v=t.value;if(v&&!/^(20\d\d)-\d\d-\d\d$/.test(v))return;await sgSave({['items.'+t.dataset.id+'.due']:v||''});toast(v?'Saved. Due '+fmtEv(v)+'.':'Date cleared.',false);},
   async sgdelitem(t){if(!confirm('Stop tracking this?'))return;await sgSave({['items.'+t.dataset.id]:null});},
   async sgaddperson(){const n=val('sgp-name');if(!n){toast('Type a name.',true);return;}await sgSave({['people.p'+Date.now().toString(36)]:{name:n,kind:$('#sgp-kind').value,contract:false,agreement:false,w9:false}});toast('Added.');},
   async sgtoggle(t){await sgSave({['people.'+t.dataset.id+'.'+t.dataset.f]:t.checked});},
@@ -12186,6 +12262,7 @@ const A={
   async mirdone(t){await col('agent_drafts').doc(t.dataset.id).update({status:'approved',approvedAt:Date.now()});toast('Done.');},
   async mircopy(t){toast(await copy(t.dataset.txt||'')?'Copied.':'Copy failed.',false);},
   async skipdraft(t){const dr=S.drafts.find(x=>x.id===t.dataset.id);await col('agent_drafts').doc(t.dataset.id).update({status:'skipped'});
+    if(dr&&dr.venueId&&dr.kind==='checkin'){const id=String(dr.venueId),now=Date.now();if(id.indexOf('hq_')===0)await careSave({['venues.'+id.slice(3)+'.lastCheckinAt']:now,['venues.'+id.slice(3)+'.checkinSkippedAt']:now});else await col('agent_venues').doc(id).update({lastCheckinAt:now,checkinSkippedAt:now});toast('Skipped. The next check-in comes up in 3 months.');return;}
     const l=dr&&dr.leadId?leadsById()[dr.leadId]:null;
     if(l){await col('agent_leads').doc(l.id).update({skippedAt:Date.now(),updatedAt:Date.now()});toast('Skipped for now. It can come back later.',false);return;}
     toast('Skipped.');},
