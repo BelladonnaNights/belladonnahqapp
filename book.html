@@ -113,6 +113,7 @@ document.getElementById('quizBtn').href='quiz.html'+(SRCQ?'?'+SRCQ:'');
 const P=k=>Q.get(k)||ss('bq_'+k)||'';
 ['name','venue','phone','email'].forEach(k=>{const v=P(k);if(v)document.getElementById(k).value=v;});
 {const rec=P('rec');if(rec){const sel=document.getElementById('interest');for(const o of sel.options)if(o.value===rec)sel.value=rec;}}
+{const dd=(P('days')||'').split(',');document.querySelectorAll('#nights input').forEach(i=>{if(dd.includes(i.value))i.checked=true;});}
 const LEAD=Q.get('lead')||ss('bq_lead')||'';
 const f=document.getElementById('f');
 f.addEventListener('submit',async e=>{
@@ -134,7 +135,7 @@ f.addEventListener('submit',async e=>{
     if(!done){
       await db.collection('venueLeads').add(Object.assign({},data,{source:'booking-form',sourceDetail:SRC,status:'new',createdAt:TS()}));
     }
-    ['lead','name','venue','phone','email','rec'].forEach(k=>{try{sessionStorage.removeItem('bq_'+k);}catch(e){}});
+    ['lead','name','venue','phone','email','rec','days'].forEach(k=>{try{sessionStorage.removeItem('bq_'+k);}catch(e){}});
     document.getElementById('formWrap').style.display='none';document.getElementById('done').style.display='block';window.scrollTo(0,0);
   }catch(err){btn.disabled=false;btn.textContent='Request my free trial night';document.getElementById('gerr').style.display='block';}
 });
