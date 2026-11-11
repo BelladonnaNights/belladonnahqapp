@@ -1354,6 +1354,7 @@ html::-webkit-scrollbar-thumb:hover,.modal::-webkit-scrollbar-thumb:hover{backgr
       </div>
     </div>
     <div style="font-size:0.62rem;color:var(--text3);letter-spacing:0.04em;margin:-0.5rem 0 0.8rem;">Click a lead to see full details.</div>
+    <div id="webReqBox"></div>
     <div id="leadnoteBox"></div>
     <div id="leadsList"></div>
   </div>
@@ -5134,8 +5135,67 @@ function leadStageLabel(k){const s=LEAD_STAGES.find(x=>x.key===k);return s?s.lab
 let leads=[];
 let editingLeadId=null;
 let expandedLeadId=null;
+
+/* ── Website requests: leads from the Venue Match Quiz and Book Us page (collection venueLeads). One list: "Add to Leads" moves it over with everything and removes it here. ── */
+let webLeads=[],_wlUnsub=null,_wlOpen={},_wlSent={},wlAlerts={phones:['','']};
+const WL_STATUS=[['new','New'],['contacted','Contacted'],['trial','Trial scheduled'],['signed','Signed'],['lost','Lost']];
+function wlListen(){
+  if(_wlUnsub||!db)return;
+  try{_wlUnsub=db.collection('venueLeads').onSnapshot(sn=>{
+    webLeads=sn.docs.map(d=>Object.assign({id:d.id},d.data())).sort((a,b)=>((b.createdAt&&b.createdAt.toMillis?b.createdAt.toMillis():0)-(a.createdAt&&a.createdAt.toMillis?a.createdAt.toMillis():0)));
+    renderWebLeads();try{render();}catch(e){}
+  },e=>{webLeads=[];const b=document.getElementById('webReqBox');if(b)b.innerHTML='<div class="empty-state" style="font-size:.75rem">Website requests could not load: '+_lx(e&&e.message||e)+'. The security rules need the venueLeads block.</div>';});}catch(e){}
+  try{db.collection('agent_config').doc('venueLeadAlerts').onSnapshot(sn=>{if(sn.exists){const p=(sn.data().phones||[]).slice(0,2);wlAlerts.phones=[p[0]||'',p[1]||''];}renderWebLeads();});}catch(e){}
+}
+function wlWhen(l){try{const m=l.createdAt&&l.createdAt.toMillis?l.createdAt.toMillis():0;return m?new Date(m).toLocaleDateString('en-US',{month:'short',day:'numeric'}):'';}catch(e){return '';}}
+function renderWebLeads(){
+  const box=document.getElementById('webReqBox');if(!box)return;
+  const n=webLeads.filter(l=>(l.status||'new')==='new').length;
+  const tel=x=>String(x||'').replace(/[^0-9+]/g,'');
+  let h='<details class="pl-d" id="wlDet" '+(_wlOpen.__all?'open':'')+' style="margin-bottom:1rem"><summary><b>Website requests</b> <span class="pl-n">'+webLeads.length+'</span>'+(n?' <span class="sg-tag gold">'+n+' new</span>':'')+'</summary><div class="pl-body">';
+  h+='<div style="font-size:.66rem;color:var(--text3);margin-bottom:.6rem">From the Venue Match Quiz and the Book Us page, newest first. Add to Leads moves the request over with everything on it.</div>';
+  if(!webLeads.length)h+='<div class="pl-none">No website requests yet.</div>';
+  webLeads.forEach(l=>{
+    const nights=Array.isArray(l.preferredNights)?l.preferredNights.join(', '):(l.preferredNights||'');
+    const rec=l.interest||l.recommendedFormat||'';
+    h+='<details class="pl-d pl-sub" data-wl="'+_lx(l.id)+'" '+(_wlOpen[l.id]?'open':'')+'><summary><b>'+_lx(l.venue||'(no venue)')+'</b> <span style="color:var(--text3);font-size:.72rem">'+_lx(l.name||'')+(rec?' · '+_lx(rec):'')+' · '+_lx(wlWhen(l))+'</span> '+((l.status||'new')==='new'?'<span class="sg-tag gold">new</span>':'<span class="sg-tag">'+_lx((WL_STATUS.find(x=>x[0]===l.status)||[0,l.status])[1])+'</span>')+'</summary><div class="pl-body" style="font-size:.8rem;line-height:1.7">'+
+      '<div>'+_lx(l.name||'')+(l.city?' · '+_lx(l.city):'')+'</div>'+
+      '<div>'+(l.phone?_lx(l.phone):'')+(l.email?' · '+_lx(l.email):'')+'</div>'+
+      (rec?'<div><b>Interested in / recommended:</b> '+_lx(rec)+(l.recommendedFormat&&l.interest&&l.recommendedFormat!==l.interest?' (quiz said '+_lx(l.recommendedFormat)+')':'')+'</div>':'')+
+      (nights?'<div><b>Nights that need help:</b> '+_lx(nights)+'</div>':'')+
+      (l.notes?'<div style="white-space:pre-wrap"><b>Notes:</b> '+_lx(l.notes)+'</div>':'')+
+      '<div style="color:var(--text3)">Came from: '+_lx(l.source||'')+(l.sourceDetail?' ('+_lx(l.sourceDetail)+')':'')+'</div>'+
+      '<div class="pl-acts" style="margin-top:.5rem">'+
+        (l.phone?'<a class="btn-sm btn-gold" style="text-decoration:none" href="tel:'+_lx(tel(l.phone))+'">Call</a><a class="btn-sm btn-gold" style="text-decoration:none" href="sms:'+_lx(tel(l.phone))+'">Text</a>':'')+
+        '<select class="form-input" style="width:auto;padding:.35rem .6rem" onchange="wlStatus(\''+_lx(l.id)+'\',this.value)">'+WL_STATUS.map(x=>'<option value="'+x[0]+'"'+((l.status||'new')===x[0]?' selected':'')+'>'+x[1]+'</option>').join('')+'</select>'+
+        '<button class="btn-sm" onclick="wlMove(\''+_lx(l.id)+'\',this)">'+(_wlSent[l.id]||'Add to Leads')+'</button>'+
+        '<button class="btn-sm" onclick="wlDelete(\''+_lx(l.id)+'\')">Delete</button>'+
+      '</div></div></details>';
+  });
+  h+='<div class="pl-acts" style="margin-top:.8rem;align-items:center"><span style="font-size:.66rem;color:var(--text3)">Text new requests to:</span><input class="form-input" style="width:150px" id="wlPh1" value="'+_lx(wlAlerts.phones[0])+'"><input class="form-input" style="width:150px" id="wlPh2" value="'+_lx(wlAlerts.phones[1])+'"><button class="btn-sm" onclick="wlSavePhones()">Save</button></div>';
+  h+='</div></details>';
+  box.innerHTML=h;
+  const dt=document.getElementById('wlDet');if(dt)dt.addEventListener('toggle',e=>{if(e.target===dt)_wlOpen.__all=dt.open;});
+  box.querySelectorAll('details[data-wl]').forEach(d=>d.addEventListener('toggle',e=>{e.stopPropagation();_wlOpen[d.dataset.wl]=d.open;}));
+}
+function wlStatus(id,v){db.collection('venueLeads').doc(id).update({status:v,updatedAt:firebase.firestore.FieldValue.serverTimestamp()}).then(()=>hqToast('Saved.')).catch(e=>hqToast('Failed: '+e.message,true));}
+function wlSavePhones(){const p=[document.getElementById('wlPh1').value.trim(),document.getElementById('wlPh2').value.trim()];db.collection('agent_config').doc('venueLeadAlerts').set({phones:p},{merge:true}).then(()=>hqToast('Saved.')).catch(e=>hqToast('Failed: '+e.message,true));}
+function wlDelete(id){if(!confirm('Delete this request?'))return;db.collection('venueLeads').doc(id).delete().catch(e=>hqToast('Failed: '+e.message,true));}
+async function wlMove(id,btn){
+  const l=webLeads.find(x=>x.id===id);if(!l)return;
+  const nights=Array.isArray(l.preferredNights)?l.preferredNights.join(', '):(l.preferredNights||'');
+  const notes=[l.interest?'Interested in: '+l.interest:'',l.recommendedFormat&&l.recommendedFormat!==l.interest?'Quiz recommended: '+l.recommendedFormat:'',nights?'Nights that need help: '+nights:'',l.notes?'Notes: '+l.notes:'',l.scores?'Quiz scores: '+Object.entries(l.scores).map(([k,v])=>k+' '+v).join(', '):'','From the website ('+(l.source||'')+(l.sourceDetail?', '+l.sourceDetail:'')+')'].filter(Boolean).join('\n');
+  const stage=l.status==='contacted'?'contact':l.status==='signed'?'signed':l.status==='lost'?'paused':'new';
+  const nid=db.collection('leads').doc().id,now=new Date().toISOString();
+  try{
+    await db.collection('leads').doc(nid).set({name:l.venue||l.name||'Website request',contactName:l.name||'',phone:l.phone||'',email:l.email||'',city:l.city||'',stage:stage,source:'inbound',contactMethod:'email',notes:notes,webRequest:l,createdAt:now,updatedAt:now},{merge:true});
+    await db.collection('venueLeads').doc(id).delete();
+    _wlSent[id]='Sent to Leads: '+(l.venue||'new lead');hqToast('Added to Leads.');loadLeads();
+  }catch(e){hqToast('Failed: '+e.message,true);}
+}
 function loadLeads(){
   if(!db)return;
+  try{wlListen();}catch(e){}
   try{lnListen();renderLeadnotes();}catch(e){}
   db.collection('leads').get().then(snap=>{
     leads=snap.docs.map(d=>({id:d.id,...d.data()})).filter(l=>locationScopeMatches(l.locationId));
@@ -8788,6 +8848,7 @@ function briefData(){
   d.sg.dueSoon.forEach(x=>need.push({a:'sigil',text:x.name+(x.days<0?' is overdue':' is due in '+x.days+' days'),body:(x.due?'Due '+fmtEv(x.due)+'. ':'')+(x.price?'About '+sgFmt$(sgMoney(x.price)||0)+'. ':'')+(x.repeat?'Repeats '+((SG_REP.find(r=>r[0]===x.repeat)||[0,''])[1].toLowerCase())+'. ':'')+(x.fromEmail?'Pulled from email, so confirm the date. ':'')+'Sigil can draft the reminder.'}));
   add('sigil',d.sg.incomplete.length,plural(d.sg.incomplete.length,'person is','people are')+' missing paperwork',d.sg.incomplete.slice(0,5).map(p=>p.name+' needs '+p.miss.join(', ')).join('; ')+'.');
   add('sigil',d.sPending.length,plural(d.sPending.length,'paperwork reminder','paperwork reminders')+' to approve',d.sPending.map(x=>cut(x.label,60)).join('; ')+'.');
+  {const wn=(typeof webLeads!=='undefined'?webLeads:[]).filter(l=>(l.status||'new')==='new');if(wn.length)need.push({a:'raven',text:plural(wn.length,'new website request','new website requests'),body:wn.slice(0,5).map(l=>(l.venue||'?')+' ('+(l.interest||l.recommendedFormat||'?')+') - '+(l.name||'')+' '+(l.phone||'')).join('; ')+'. Open Leads, Website requests.'});}
   {const pr=printRun();if(pr.unk.length)need.push({a:'warden',text:plural(pr.unk.length,'restock request needs','restock requests need')+' a category from the host',body:pr.unk.map(r=>(r.venue||'?')+(r.host?' ('+r.host+')':'')).join(', ')+'. Thorne can draft the question.'});if(pr.toPrint.length)need.push({a:'warden',text:'Print run ready: '+plural(pr.toPrint.length,'item','items'),body:pr.groups.map(g=>g.item+' '+g.cat).join('; ')+'.'});}
   {const ad=adsState();if(ad.settings.budgetReviewed!==ad.mon)need.push({a:'marquee',u:!ad.budget,text:'Recheck your monthly marketing budget',body:(ad.budget?'It is set to '+fmtMoney(ad.budget)+'. ':'It is not set yet. ')+'Open Ren to confirm or change it. It will ask again next month.'});if(ad.fresh.length)add('marquee',ad.fresh.length,plural(ad.fresh.length,'ad move is','ad moves are')+' waiting for you',ad.fresh.slice(0,3).map(p=>p.title+(p.when?' ('+p.when+')':'')).join('; ')+'.');ad.stale.forEach(p=>need.push({a:'marquee',text:'Check how "'+p.title+'" is doing',body:'It has been live a few days. Type in the numbers from Meta and Ren will say keep, change or stop.'}));if(ad.budget&&ad.total>=ad.budget*0.9)need.push({a:'marquee',u:true,text:'Marketing budget almost used up',body:fmtMoney(ad.total)+' of '+fmtMoney(ad.budget)+' spent this month.'});}
   {const cu=curatorState();if(cu.fresh.length)add('herald',cu.fresh.length,plural(cu.fresh.length,'new idea','new ideas')+' from Iris',cu.fresh.slice(0,4).map(x=>x.title).join('; ')+'.');}
@@ -10420,7 +10481,7 @@ function careHtml(){
   const d=D();let h='';
   h+='<div class="tm-sec">Venue care: check in every 3 months ('+d.careDue.length+' due)</div>';
   if(!d.care.length)h+='<div class="tm-empty">No current venues yet. Add the venues you already work with below, or hand a yes to onboarding from Raven.</div>';
-  d.care.slice().sort((a,b)=>(a.careSkip?1:0)-(b.careSkip?1:0)||(a.lastCheckinAt||0)-(b.lastCheckinAt||0)).forEach(v=>{
+  d.care.filter(v=>v.careEligible!==false).sort((a,b)=>(a.careSkip?1:0)-(b.careSkip?1:0)||(a.lastCheckinAt||0)-(b.lastCheckinAt||0)).forEach(v=>{
     const ne=v.careEligible===false,sk=!!v.careSkip,due=!sk&&!ne&&Date.now()-(v.lastCheckinAt||0)>=CARE,has=S.drafts.some(x=>x.venueId===v.id&&x.kind==='checkin'&&x.status==='pending');
     const H=v.health||'good';
     h+='<div class="tm-item'+(S.open['c_'+v.id]?'':' folded')+'"><div class="t1 fold" data-act="fold" data-id="'+esc(v.id)+'"><b>'+esc(v.name)+'</b> '+(sk?'<span class="tm-tag">no check-ins</span>':ne?'<span class="tm-tag">no recurring gig</span>':due?'<span class="tm-tag warn">check-in due</span>':'<span class="tm-tag booked">next '+esc(fmtDay((v.lastCheckinAt||0)+CARE))+'</span>')+(H==='risk'?'<span class="tm-tag lost">at risk</span>':H==='watch'?'<span class="tm-tag warn">watch</span>':'')+'</div>'+
