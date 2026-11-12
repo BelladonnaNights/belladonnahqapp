@@ -1580,7 +1580,7 @@ match /agent_config/{id}  { allow read, write: if isAdmin(); }</pre>
 
 <div class="panel" id="panel-prompts">
   <div class="section-header">
-    <div class="section-title"><span id="plHead">Prompts &amp; Emails</span> <button class="btn-sm pl-ed" onclick="plInline('__head',this)" title="Edit the headline">&#9998;</button></div>
+    <div class="section-title"><span id="plHead">Prompts</span> <button class="btn-sm pl-ed" onclick="plInline('__head',this)" title="Edit the headline">&#9998;</button></div>
     <div style="display:flex;gap:0.5rem;flex-wrap:wrap;"><button class="btn-sm btn-gold" onclick="plAddSection()">+ Add section</button></div>
   </div>
   <div style="font-size:0.74rem;color:var(--text3);line-height:1.55;margin-bottom:1rem;max-width:760px;"><span id="plIntro">Every prompt you use, in one place. Open a section, then a subsection if it has one, then the prompt. Everything starts closed.</span> <button class="btn-sm pl-ed" onclick="plInline('__intro',this)" title="Edit this line">&#9998;</button></div>
@@ -1591,6 +1591,8 @@ match /agent_config/{id}  { allow read, write: if isAdmin(); }</pre>
   </div>
   <div style="font-size:0.74rem;color:var(--text3);line-height:1.55;margin-bottom:1rem;max-width:760px;">Your email templates, in one place. Open a section, then a subsection if it has one, then the email. Everything starts closed.</div>
   <div id="plEmRoot"></div>
+  <div id="plPartsRoot"></div>
+  <div style="margin-top:2rem;"><button class="btn-sm btn-gold" onclick="plAddPart()">+ Add group</button></div>
 </div>
 
 <div class="panel" id="panel-links">
@@ -2504,7 +2506,8 @@ function showPromptsPage(){
 }
 function plFind(id){
   promptLib.emailSections=promptLib.emailSections||[];
-  for(const L of [promptLib.sections,promptLib.emailSections])
+  promptLib.parts=promptLib.parts||[];
+  for(const L of [promptLib.sections,promptLib.emailSections].concat(promptLib.parts.map(p=>p.sections=p.sections||[])))
   for(const sec of L){
     if(sec.id===id)return {kind:'sec',node:sec,list:L};
     for(const p of sec.prompts||[])if(p.id===id)return {kind:'prompt',node:p,list:sec.prompts};
@@ -2526,6 +2529,7 @@ function plRender(){
   const build=(list,W)=>{
   const prm=p=>`<details class="pl-d pl-prompt" data-k="${p.id}" ${plOpen[p.id]?'open':''}><summary><b class="pl-t" data-id="${p.id}">${plEsc(p.title||'Untitled')}</b><button class="btn-sm pl-ed" onclick="event.preventDefault();event.stopPropagation();plInline('${p.id}',this)" title="Edit the title">&#9998;</button></summary>
     <div class="pl-body"><textarea class="form-textarea" style="min-height:200px" onchange="plSetText('${p.id}',this.value)">${plEsc(p.text||'')}</textarea>
+    <div class="pl-places" style="margin:6px 0;font-size:0.74rem;color:var(--text3);display:flex;flex-wrap:wrap;gap:6px;align-items:center;"><span>Also found in:</span>${(p.places||[]).map((pl,i)=>`<span style="border:1px solid var(--border);border-radius:12px;padding:1px 4px 1px 9px;">${plEsc(pl)} <button class="btn-sm" style="padding:0 6px;" onclick="plDelPlace('${p.id}',${i})" title="Remove">&times;</button></span>`).join('')}<button class="btn-sm" onclick="plAddPlace('${p.id}')">+ Add place</button></div>
     <div class="pl-acts"><button class="btn-sm" onclick="plCopy('${p.id}',this)">Copy ${W}</button>${btn('Rename','plRename',p.id)}${btn('Delete','plDelete',p.id)}</div></div></details>`;
   const sub=u=>`<details class="pl-d pl-sub" data-k="${u.id}" ${plOpen[u.id]?'open':''}><summary><b class="pl-t" data-id="${u.id}">${plEsc(u.title||'Untitled')}</b><button class="btn-sm pl-ed" onclick="event.preventDefault();event.stopPropagation();plInline('${u.id}',this)" title="Edit the title">&#9998;</button> <span class="pl-n">${(u.prompts||[]).length}</span></summary>
     <div class="pl-body">${(u.prompts||[]).map(prm).join('')||'<div class="pl-none">No '+W+'s here yet.</div>'}
@@ -2536,7 +2540,10 @@ function plRender(){
   };
   root.innerHTML=build(promptLib.sections,'prompt');
   if(eroot)eroot.innerHTML=build(promptLib.emailSections,'email');
-  [root,eroot].forEach(r=>{if(r)r.querySelectorAll('details').forEach(d=>d.addEventListener('toggle',()=>{plOpen[d.dataset.k]=d.open;}));});
+  promptLib.parts=promptLib.parts||[];
+  const proot=document.getElementById('plPartsRoot');
+  if(proot)proot.innerHTML=promptLib.parts.map(pt=>`<div class="section-header" style="margin-top:2rem;"><div class="section-title"><span>${plEsc(pt.title||'Untitled')}</span></div><div style="display:flex;gap:0.5rem;flex-wrap:wrap;"><button class="btn-sm" onclick="plRenamePart('${pt.id}')">Rename group</button><button class="btn-sm" onclick="plDeletePart('${pt.id}')">Delete group</button><button class="btn-sm btn-gold" onclick="plAddSection('part:${pt.id}')">+ Add section</button></div></div><div data-part="${pt.id}">${build(pt.sections=pt.sections||[],'item')}</div>`).join('');
+  [root,eroot,proot].forEach(r=>{if(r)r.querySelectorAll('details').forEach(d=>d.addEventListener('toggle',()=>{plOpen[d.dataset.k]=d.open;}));});
 }
 function plInline(id,btn){
   let el,cur,multi=false;
@@ -2555,9 +2562,14 @@ function plInline(id,btn){
   inp.addEventListener('blur',()=>finish(true));
   el.textContent='';el.appendChild(inp);inp.focus();inp.select();
 }
-function plAddSection(k){const t=(window.prompt('Section name')||'').trim();if(!t)return;const id=plId();promptLib.emailSections=promptLib.emailSections||[];(k==='em'?promptLib.emailSections:promptLib.sections).push({id,title:t,subs:[],prompts:[]});plOpen[id]=true;plSave();plRender();}
+function plAddSection(k){const t=(window.prompt('Section name')||'').trim();if(!t)return;const id=plId();promptLib.emailSections=promptLib.emailSections||[];(k==='em'?promptLib.emailSections:(String(k).indexOf('part:')===0?((promptLib.parts||[]).find(x=>x.id===k.slice(5))||{sections:promptLib.sections}).sections:promptLib.sections)).push({id,title:t,subs:[],prompts:[]});plOpen[id]=true;plSave();plRender();}
 function plAddSub(secId){const f=plFind(secId);if(!f)return;const t=(window.prompt('Subsection name')||'').trim();if(!t)return;const id=plId();(f.node.subs=f.node.subs||[]).push({id,title:t,prompts:[]});plOpen[secId]=true;plOpen[id]=true;plSave();plRender();}
 function plAddPrompt(parentId){const f=plFind(parentId);if(!f)return;const t=(window.prompt('Title')||'').trim();if(!t)return;const id=plId();(f.node.prompts=f.node.prompts||[]).push({id,title:t,text:''});plOpen[parentId]=true;plOpen[id]=true;plSave();plRender();}
+function plAddPart(){const t=(window.prompt('Group name')||'').trim();if(!t)return;promptLib.parts=promptLib.parts||[];promptLib.parts.push({id:plId(),title:t,sections:[]});plSave();plRender();}
+function plRenamePart(id){const p=(promptLib.parts||[]).find(x=>x.id===id);if(!p)return;const t=(window.prompt('New group name',p.title||'')||'').trim();if(!t)return;p.title=t;plSave();plRender();}
+function plDeletePart(id){const p=(promptLib.parts||[]).find(x=>x.id===id);if(!p)return;if(!confirm('Delete the group "'+(p.title||'')+'" and everything inside it?'))return;promptLib.parts=promptLib.parts.filter(x=>x!==p);plSave();plRender();}
+function plAddPlace(id){const f=plFind(id);if(!f)return;const t=(window.prompt('Where else is this found? (for example: The Vault)')||'').trim();if(!t)return;(f.node.places=f.node.places||[]).push(t);plOpen[id]=true;plSave();plRender();}
+function plDelPlace(id,i){const f=plFind(id);if(!f||!f.node.places)return;f.node.places.splice(i,1);plOpen[id]=true;plSave();plRender();}
 function plRename(id){const f=plFind(id);if(!f)return;const t=(window.prompt('New name',f.node.title||'')||'').trim();if(!t)return;f.node.title=t;plSave();plRender();}
 function plDelete(id){const f=plFind(id);if(!f)return;if(!confirm('Delete "'+(f.node.title||'this')+'"'+(f.kind==='prompt'?'?':' and everything inside it?')))return;const i=f.list.indexOf(f.node);if(i>=0)f.list.splice(i,1);plSave();plRender();}
 function plSetText(id,v){const f=plFind(id);if(!f)return;f.node.text=v;plSave();}
