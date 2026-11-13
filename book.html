@@ -78,7 +78,8 @@ select.form-input{appearance:none;background-image:url("data:image/svg+xml,%3Csv
 <div class="steps" style="margin-bottom:1.4rem"><div class="step"><div class="stepnum">01</div><div class="steptitle">Tell us about your venue</div></div><div class="step"><div class="stepnum">02</div><div class="steptitle">We talk through what fits</div></div><div class="step"><div class="stepnum">03</div><div class="steptitle">We bring everything, you bring the crowd</div></div></div>
 
 <div id="formWrap" class="panel"><div class="sec-title">What are you looking for?</div>
-<div class="tog" role="tablist"><button type="button" class="on" id="tabRec" onclick="setKind('recurring')">Weekly recurring night</button><button type="button" id="tabEv" onclick="setKind('event')">Special event</button></div>
+<div class="tog" role="tablist"><button type="button" class="on" id="tabRec" onclick="setKind('recurring')">Weekly recurring gig</button><button type="button" id="tabEv" onclick="setKind('event')">Special event</button></div>
+<div id="evPoster" style="display:none;text-align:center;margin:0 0 1.4rem"><img id="evPosterImg" alt="" style="width:min(100%,280px);border-radius:12px;border:1px solid rgba(201,168,76,.45);display:block;margin:0 auto"><div id="evPosterName" style="font:600 13px 'Cinzel',serif;letter-spacing:.08em;color:var(--gold-soft);margin-top:.8rem"></div><a href="seasonal.html" style="font:600 10px 'Cinzel',serif;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);text-decoration:none;display:inline-block;margin-top:.4rem">Pick a different night</a></div>
 <form id="f" novalidate>
 <div class="hp" aria-hidden="true"><label>Website<input type="text" id="website" tabindex="-1" autocomplete="off"></label></div>
 <div class="fg" data-f="name"><label class="form-label" for="name">Your name *</label><input class="form-input" id="name" autocomplete="name"><div class="err">Please add your name.</div></div>
@@ -125,8 +126,8 @@ const P=k=>Q.get(k)||ss('bq_'+k)||'';
 ['name','venue','phone','email'].forEach(k=>{const v=P(k);if(v)document.getElementById(k).value=v;});
 {const rec=P('rec');if(rec){const sel=document.getElementById('interest');for(const o of sel.options)if(o.value===rec)sel.value=rec;}}
 {const dd=(P('days')||'').split(',');document.querySelectorAll('#nights input').forEach(i=>{if(dd.includes(i.value))i.checked=true;});}
-let KIND='recurring';
-function setKind(k){KIND=k;document.getElementById('tabRec').classList.toggle('on',k==='recurring');document.getElementById('tabEv').classList.toggle('on',k==='event');document.getElementById('recFields').style.display=k==='recurring'?'':'none';document.getElementById('evFields').style.display=k==='event'?'':'none';}
+let KIND='recurring',SEASONAL=null;
+function setKind(k){KIND=k;{const ep=document.getElementById('evPoster');if(ep)ep.style.display=(k==='event'&&SEASONAL)?'block':'none';}document.getElementById('tabRec').classList.toggle('on',k==='recurring');document.getElementById('tabEv').classList.toggle('on',k==='event');document.getElementById('recFields').style.display=k==='recurring'?'':'none';document.getElementById('evFields').style.display=k==='event'?'':'none';}
 const LEAD=Q.get('lead')||ss('bq_lead')||'';
 const f=document.getElementById('f');
 f.addEventListener('submit',async e=>{
@@ -139,8 +140,8 @@ f.addEventListener('submit',async e=>{
   if(bad){const el=document.querySelector('.has-err input');if(el)el.focus();return;}
   const btn=document.getElementById('go');btn.disabled=true;btn.textContent='Sending...';document.getElementById('gerr').style.display='none';
   const nights=KIND==='recurring'?[...document.querySelectorAll('#nights input:checked')].map(i=>i.value):[];
-  const head=KIND==='event'?['Request: Special event',g('evDate')?'Event date: '+g('evDate'):'',g('evType')?'Event type: '+g('evType'):'',g('evGuests')?'Expected guests: '+g('evGuests'):''].filter(Boolean).join('\n'):'Request: Weekly recurring night';
-  const data={name:g('name'),venue:g('venue'),city:g('city'),phone:g('phone'),email:g('email'),preferredNights:nights,interest:g('interest'),notes:head+(g('notes')?'\n\n'+g('notes'):'')};
+  const head=KIND==='event'?['Request: Special event',SEASONAL?'Seasonal night: '+SEASONAL.name:'',g('evDate')?'Event date: '+g('evDate'):'',g('evType')?'Event type: '+g('evType'):'',g('evGuests')?'Expected guests: '+g('evGuests'):''].filter(Boolean).join('\n'):'Request: Weekly recurring gig';
+  const data={name:g('name'),venue:g('venue'),city:g('city'),phone:g('phone'),email:g('email'),preferredNights:nights,interest:g('interest')||(KIND==='event'&&SEASONAL?'Themed Night':''),notes:head+(g('notes')?'\n\n'+g('notes'):'')};
   try{
     let done=false;
     if(LEAD){
@@ -153,4 +154,22 @@ f.addEventListener('submit',async e=>{
     document.getElementById('formWrap').style.display='none';document.getElementById('done').style.display='block';window.scrollTo(0,0);
   }catch(err){btn.disabled=false;btn.textContent='Send my request';document.getElementById('gerr').style.display='block';}
 });
+</script>
+<script>
+// Coming from the Seasonal Nights page (book.html?event=<night id>): choose Special event and show the poster they picked.
+(function(){
+  const id=Q.get('event');if(!id)return;
+  setKind('event');
+  db.collection('venueMenuNights').doc(id).get().then(function(d){
+    if(!d.exists)return;const n=d.data();if(!n.publishedSeasonal)return;
+    SEASONAL={id:id,name:n.name||''};
+    const img=document.getElementById('evPosterImg');
+    if(n.bannerData){img.src=n.bannerData;img.alt=(n.name||'')+' poster';}else{img.style.display='none';}
+    document.getElementById('evPosterName').textContent=n.name||'';
+    const et=document.getElementById('evType');for(const o of et.options)if(o.text==='Holiday or themed night')et.value=o.value||o.text;
+    const it=document.getElementById('interest');for(const o of it.options)if(o.value==='Themed Night')it.value='Themed Night';
+    if(n.seasonalDate&&!document.getElementById('evDate').value)document.getElementById('evDate').value=n.seasonalDate;
+    setKind('event');
+  }).catch(function(){});
+})();
 </script></body></html>
