@@ -8921,6 +8921,7 @@ function briefText(){
   t+='\n\nDONE IN THE LAST 7 DAYS\n'+(b.done.length?b.done.map(x=>'- '+x).join('\n'):'- Nothing logged yet');
   return t;
 }
+const BINFO={};
 function renderBrief(){
   const el=$('#tmBrief');if(!el)return;
   const b=briefData(),open=S.open.brief!==false,today=isoDay(Date.now());
@@ -8948,7 +8949,7 @@ function renderBrief(){
   const d0=new Date(),dt=d0.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
   const doy=Math.floor((d0-new Date(d0.getFullYear(),0,0))/DAY);
   const sec=t=>'<div class="np-sec">'+esc(t)+'</div>';
-  const art=n=>'<label class="np-item"><input type="checkbox" data-chg="bchk" data-key="'+esc(n.key)+'"'+(S.bchk[n.key]?' checked':'')+'><span><span class="np-hd">'+esc(n.text)+ini(n.a)+'</span>'+(n.body?'<span class="np-body">'+esc(n.body)+'</span>':'')+'<span class="np-by">'+esc(BY[n.a]||agent(n.a).name)+(n.rem?' &middot; your reminder':'')+' &middot; <a href="#" data-act="open" data-agent="'+esc(n.a)+'">open desk</a>'+(n.note?' &middot; <a href="#" data-act="notedone" data-id="'+esc(n.note)+'">got it</a>':'')+(n.ig?' &middot; <a href="'+esc(n.ig)+'" target="_blank" rel="noopener">open Instagram</a>':'')+(n.mail?' &middot; <a href="'+esc(gmailHref(n.mail))+'" target="_blank" rel="noopener"'+(n.mail.to?'':' title="No email address on file for this venue. Add one in the To box."')+'>open email'+(n.mail.to?'':' (add address)')+'</a>':'')+'</span></span></label>';
+  const art=n=>(BINFO[n.key]={n:n,by:BY[n.a]||agent(n.a).name})&&'<div class="np-item" data-act="briefinfo" data-key="'+esc(n.key)+'" title="Click for more info. Use the box to check it off."><input type="checkbox" data-chg="bchk" data-key="'+esc(n.key)+'"'+(S.bchk[n.key]?' checked':'')+'><span><span class="np-hd">'+esc(n.text)+ini(n.a)+'</span>'+(n.body?'<span class="np-body">'+esc(n.body)+'</span>':'')+'<span class="np-by">'+esc(BY[n.a]||agent(n.a).name)+(n.rem?' &middot; your reminder':'')+' &middot; <a href="#" data-act="open" data-agent="'+esc(n.a)+'">open desk</a>'+(n.note?' &middot; <a href="#" data-act="notedone" data-id="'+esc(n.note)+'">got it</a>':'')+(n.ig?' &middot; <a href="'+esc(n.ig)+'" target="_blank" rel="noopener">open Instagram</a>':'')+(n.mail?' &middot; <a href="'+esc(gmailHref(n.mail))+'" target="_blank" rel="noopener"'+(n.mail.to?'':' title="No email address on file for this venue. Add one in the To box."')+'>open email'+(n.mail.to?'':' (add address)')+'</a>':'')+'</span></span></div>';
   const urgent=todo.filter(n=>n.u),rest=todo.filter(n=>!n.u);
   let h='<details class="tm-det tm-brief np" data-k="brief"'+(open?' open':'')+'><summary>The Belladonna Gazette · '+esc(b.date)+' · '+(todo.length?'<b style="color:var(--gold)">'+todo.length+' to do</b>':'all clear')+'</summary><div class="in"><div class="np-paper">';
   h+='<div class="np-top"><span>Auburn, Washington</span><span>'+esc(dt)+'</span><span>Vol. I &middot; No. '+doy+' &middot; Free with every gig</span></div>';
@@ -8958,7 +8959,8 @@ function renderBrief(){
   h+='<div class="np-front"><div class="np-flag">'+(urgent.length?'FRONT PAGE':todo.length?'TODAY\'S EDITION':'QUIET ON THE PRESS')+'</div>';
   if(urgent.length){
     const lead=urgent[0],more=urgent.slice(1);
-    h+='<div class="np-frontgrid"><label class="np-lead"><input type="checkbox" data-chg="bchk" data-key="'+esc(lead.key)+'"'+(S.bchk[lead.key]?' checked':'')+'><span><span class="np-kick">'+esc(agent(lead.a).name+' reports')+'</span><span class="np-big">'+esc(lead.text)+ini(lead.a)+'</span><span class="np-body">'+esc(lead.body||'')+'</span><span class="np-by"><a href="#" data-act="open" data-agent="'+esc(lead.a)+'">open desk</a></span></span></label>'+(more.length?'<div class="np-side">'+more.map(art).join('')+'</div>':'')+'</div>';
+    BINFO[lead.key]={n:lead,by:BY[lead.a]||agent(lead.a).name};
+    h+='<div class="np-frontgrid"><div class="np-lead" data-act="briefinfo" data-key="'+esc(lead.key)+'" title="Click for more info. Use the box to check it off."><input type="checkbox" data-chg="bchk" data-key="'+esc(lead.key)+'"'+(S.bchk[lead.key]?' checked':'')+'><span><span class="np-kick">'+esc(agent(lead.a).name+' reports')+'</span><span class="np-big">'+esc(lead.text)+ini(lead.a)+'</span><span class="np-body">'+esc(lead.body||'')+'</span><span class="np-by"><a href="#" data-act="open" data-agent="'+esc(lead.a)+'">open desk</a></span></span></div>'+(more.length?'<div class="np-side">'+more.map(art).join('')+'</div>':'')+'</div>';
   }else if(!todo.length)h+='<div class="np-quiet">Nothing is waiting on you. Go enjoy a night out.</div>';
   else h+='<div class="np-quiet">No emergencies. The rest of the paper is below.</div>';
   h+='</div>';
@@ -11830,6 +11832,24 @@ const A={
     renderBrief();
     try{await col('agent_config').doc('briefing').update({['done.'+k]:firebase.firestore.FieldValue.delete()});}catch(e){toast('Could not undo that. Try again.',true);}
   },
+  briefinfo(t){const k=t.dataset.key,r=BINFO[k];if(!r)return;const n=r.n,ag=agent(n.a),m=n.mail;
+    const row=(l,v)=>v?'<div style="margin:.5rem 0"><div style="font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;opacity:.65">'+esc(l)+'</div><div style="white-space:pre-wrap;line-height:1.5">'+v+'</div></div>':'';
+    let h='<div style="font-size:1.1rem;font-weight:700;margin-bottom:.4rem">'+esc(n.text)+'</div>';
+    h+=row('What it is',esc(n.body||'No more detail was written for this one.'));
+    if(m){h+=row('To',esc(m.to||'(no address on file)'))+row('Subject',esc(m.subject||''))+row('Full message',esc(m.body||''));}
+    h+=row('Found by',esc(r.by)+(n.rem?' (your own reminder)':''));
+    h+=row('Where to find it',esc(ag.name)+'\'s desk &middot; <a href="#" data-bi="desk">open desk</a>'+(m?' &middot; <a href="'+esc(gmailHref(m))+'" target="_blank" rel="noopener">open email</a>':'')+(n.ig?' &middot; <a href="'+esc(n.ig)+'" target="_blank" rel="noopener">open Instagram</a>':''));
+    if(n.u)h+=row('Priority','Front page. This one is urgent.');
+    const cb=document.querySelector('#tmBrief input[data-key="'+(window.CSS&&CSS.escape?CSS.escape(k):k)+'"]');
+    const ov=document.createElement('div');ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:1rem';
+    ov.innerHTML='<div style="background:var(--surface,#1c1b1a);color:var(--text,#eee);border:1px solid var(--border,#555);border-radius:10px;max-width:620px;width:100%;max-height:85vh;overflow:auto;padding:1.2rem 1.3rem;box-shadow:0 10px 40px rgba(0,0,0,.6)">'+h+'<div style="display:flex;gap:.5rem;justify-content:flex-end;margin-top:1rem;flex-wrap:wrap">'+(cb?'<button class="btn-sm btn-gold" data-bi="chk">'+(cb.checked?'Uncheck it':'Check it off')+'</button>':'')+'<button class="btn-sm" data-bi="x">Close</button></div></div>';
+    const close=()=>ov.remove();
+    ov.addEventListener('click',e=>{const b=e.target.closest('[data-bi]');if(!b){if(e.target===ov)close();return;}
+      if(b.dataset.bi==='desk'){e.preventDefault();close();A.open({dataset:{agent:n.a}});return;}
+      if(b.dataset.bi==='chk'){close();if(cb)cb.click();return;}
+      if(b.dataset.bi==='x')close();});
+    document.addEventListener('keydown',function esc2(e){if(e.key==='Escape'){close();document.removeEventListener('keydown',esc2);}});
+    document.body.appendChild(ov);},
   async bchk(t){S.bchk[t.dataset.key]=t.checked;if(t.checked)await A.bsave(t,t.dataset.key);},
   async copybrief(){toast(await copy(briefText())?'Briefing copied.':'Copy failed.',false);},
   chavatar(){$('#tmFile').click();},
@@ -12373,6 +12393,7 @@ function wire(){
   root.addEventListener('click',e=>{
     const t=e.target.closest('[data-act]');if(!t||!root.contains(t))return;
     if(t.classList.contains('tm-card')&&e.target.closest('button'))return;
+    if(t.dataset.act==='briefinfo'&&e.target.closest('input,a,button'))return;
     if(t.classList.contains('fold')&&e.target.closest('a,button,select,input'))return;
     const f=A[t.dataset.act];if(f){e.stopPropagation();run(()=>f(t)).then(()=>{if(S.pend)renderDrawer(true);});}
   });
