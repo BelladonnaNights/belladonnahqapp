@@ -12509,6 +12509,20 @@ function monthLong(m){return new Date(m+'-15T12:00:00').toLocaleDateString('en-U
 function addMonths(m,n){const d=new Date(+m.slice(0,4),+m.slice(5)-1+n,1);return d.getFullYear()+'-'+pad(d.getMonth()+1);}
 function mondaysOf(m){const out=[],n=new Date(+m.slice(0,4),+m.slice(5),0).getDate();for(let d=1;d<=n;d++){const ds=m+'-'+pad(d);if(new Date(ds+'T12:00:00').getDay()===1)out.push(ds);}return out;}
 function niceDay(ds){return new Date(ds+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'});}
+/* **bold** markers: the B button wraps the selected words; Copy sends real bold to Gmail etc., Open in my email drops the markers */
+const plainB=t=>String(t||'').replace(/\*\*([\s\S]*?)\*\*/g,'$1');
+const htmlB=t=>String(t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\*\*([\s\S]*?)\*\*/g,'<b>$1</b>').replace(/\r?\n/g,'<br>');
+function boldSel(id){const ta=document.getElementById(id);if(!ta)return;const a=ta.selectionStart,b=ta.selectionEnd,v=ta.value;
+  if(a===b){toast('Select the words you want bold first');return;}
+  const wrapped=v.slice(a-2,a)==='**'&&v.slice(b,b+2)==='**';
+  if(wrapped){ta.value=v.slice(0,a-2)+v.slice(a,b)+v.slice(b+2);ta.setSelectionRange(a-2,b-2);}
+  else{ta.value=v.slice(0,a)+'**'+v.slice(a,b)+'**'+v.slice(b);ta.setSelectionRange(a+2,b+2);}
+  ta.focus();}
+function boldBar(id){return `<div style="margin:0 0 .3rem"><button type="button" class="btn-sm" data-cp="bold" data-arg="${id}" title="Make the selected words bold (Ctrl/Cmd+B)" style="font-weight:800;min-width:2rem">B</button><span style="font-size:.7rem;color:var(--text3);margin-left:.5rem">Select words, press B. Bold shows as **words** here and comes out bold when you press Copy and paste into your email.</span></div>`;}
+async function copyRich(text){if(!text)return;const html='<div>'+htmlB(text)+'</div>';
+  try{if(window.ClipboardItem&&navigator.clipboard&&navigator.clipboard.write){await navigator.clipboard.write([new ClipboardItem({'text/html':new Blob([html],{type:'text/html'}),'text/plain':new Blob([plainB(text)],{type:'text/plain'})})]);toast('Copied');return;}}catch(e){}
+  copyTxt(plainB(text));}
+document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&!e.shiftKey&&!e.altKey&&String(e.key).toLowerCase()==='b'){const t=e.target;if(t&&(t.id==='cp-body'||t.id==='cp-dbody')){e.preventDefault();boldSel(t.id);}}});
 function copyTxt(t){if(!t)return;(navigator.clipboard?navigator.clipboard.writeText(t).then(()=>toast('Copied'),()=>toast('Could not copy. Select it and copy by hand',true)):toast('Could not copy. Select it and copy by hand',true));}
 /* ── saving: whole document, same as Clio did ── */
 async function saveLib(id,patch,quiet){
@@ -12833,7 +12847,7 @@ function draftOpen(base,wk,id){
   ov(`<div class="section-title" style="margin-bottom:.4rem">Email to ${esc(base.name||'sponsor')}</div><div style="font-size:.74rem;color:var(--text3);margin-bottom:.9rem">${saved?'Your saved draft for this sponsor.':'Built from your default draft. Change anything, it only changes this email.'}</div>
   <div class="form-group"><label class="form-label">To</label><input class="form-input" id="cp-to" value="${esc(base.email||'')}"></div>
   <div class="form-group"><label class="form-label">Subject</label><input class="form-input" id="cp-sub" value="${esc(saved?saved.subject:dr.def.subject)}"></div>
-  <div class="form-group"><label class="form-label">Email</label><textarea class="form-textarea" id="cp-body" style="min-height:320px">${esc(saved?saved.body:dr.def.body)}</textarea></div>
+  <div class="form-group"><label class="form-label">Email</label>${boldBar('cp-body')}<textarea class="form-textarea" id="cp-body" style="min-height:320px">${esc(saved?saved.body:dr.def.body)}</textarea></div>
   <div class="cp-acts"><button class="btn-sm" data-cp="drreset">Back to default</button>${id?'<button class="btn-sm" data-cp="drsave">Save this draft</button>':''}<button class="btn-sm" data-cp="drcopy">Copy</button><button class="btn-sm" data-cp="drmail">Open in my email</button>${id?'<button class="btn-sm btn-gold" data-cp="drsent">We sent it</button>':''}<button class="btn-sm" data-cp="close">Close</button></div>`,700);
 }
 function mailP(m,id){const p=sponD().prospects[id];if(!p)return;draftOpen(view(p,m),null,id);}
@@ -12843,11 +12857,11 @@ function mailWk(m,i,ar){const w=sponD().weeks[wkKey(m,i,ar)];if(!w)return;const 
 function drSave(){if(!dr||!dr.id)return;const prog={...sponD().prog},k=PK(dr.m,dr.id);prog[k]={...(prog[k]||{}),pinned:true,draft:{subject:V('cp-sub'),body:$('cp-body').value}};toast('Draft saved');save({prog:prog},true);}
 function drSent(){if(!dr||!dr.id)return;const prog={...sponD().prog},k=PK(dr.m,dr.id),g={...(prog[k]||{})};g.pinned=true;g.emailedAt=g.emailedAt&&g.emailedAt!=='earlier'?g.emailedAt:todayStr();g.draft={subject:V('cp-sub'),body:$('cp-body').value};prog[k]=g;closeOv();save({prog:prog},true).then(()=>toast('Marked as emailed (in progress)'));}
 /* ── default draft at the top of the page ── */
-function draftOpen(){
+function defOpen(){
   const t=tpl();
   ov(`<div class="section-title" style="margin-bottom:.4rem">Sponsor Email Draft</div><div style="font-size:.74rem;color:var(--text3);margin-bottom:.7rem">Write the email you send to sponsors. Every sponsor email starts from it. These words fill in automatically: {sponsor} {contact} {theme} {month} {area} {venue} {week} {fee}</div>
     <div class="form-group"><label class="form-label">Subject</label><input class="form-input" id="cp-dsub" value="${esc(t.subject)}"></div>
-    <div class="form-group"><label class="form-label">Email</label><textarea class="form-textarea" id="cp-dbody" style="min-height:300px">${esc(t.body)}</textarea></div>
+    <div class="form-group"><label class="form-label">Email</label>${boldBar('cp-dbody')}<textarea class="form-textarea" id="cp-dbody" style="min-height:300px">${esc(t.body)}</textarea></div>
     <div class="cp-acts"><button class="btn-sm" data-cp="defreset">Back to the starter version</button><button class="btn-sm" data-cp="close">Close</button><button class="btn-sm btn-gold" data-cp="defsave">Save draft</button></div>`,680);
 }
 function defSave(){const t={subject:V('cp-dsub'),body:$('cp-dbody').value.replace(/\s+$/,'')};save({template:t},true).then(()=>{toast('Sponsor email draft saved');closeOv();});}
@@ -12975,16 +12989,16 @@ function masterCard(){
 }
 function monthCard(m){
   const cur=todayStr().slice(0,7),d=sponD(),area=sponArea(),Lp=list(m),tot=members(m).length,th=theme(m);
-  const sec=(key,title,body)=>{const o=foldOpen(key,true);return `<div class="cp-sec"><div class="cp-fold" data-cp="fold" data-arg="${esc(key)}" data-def="1"><span class="cp-car">${o?'&#9662;':'&#9656;'}</span><span class="cp-lbl">${title}</span></div>${o?`<div class="cp-body">${body}</div>`:''}</div>`;};
+  const sec=(key,title,body)=>{const dOpen=!/^w_/.test(key),o=foldOpen(key,dOpen);return `<div class="cp-sec"><div class="cp-fold" data-cp="fold" data-arg="${esc(key)}" data-def="${dOpen?1:0}"><span class="cp-car">${o?'&#9662;':'&#9656;'}</span><span class="cp-lbl">${title}</span></div>${o?`<div class="cp-body">${body}</div>`:''}</div>`;};
   const mons=mondaysOf(m);
   const wkBlock=ar=>[0,1,2,3].map(i=>{const w=d.weeks[wkKey(m,i,ar)]||{},ak=esc(m)+'|'+i+'|'+esc(ar);
     return `<div class="cp-row cp-click" data-cp="wkedit" data-arg="${ak}"><div class="cp-rt">Week ${i+1}${mons[i]?' · '+niceDay(mons[i]):''}</div><div class="cp-rs">${w.name?esc(w.name)+(w.venue?' at '+esc(w.venue):'')+' · '+esc(w.status||'Needed')+(w.fee?' · $'+esc(w.fee):''):'No sponsor yet'}</div>${w.name?`<button class="btn-sm" data-cp="mailwk" data-arg="${ak}">Email</button>`:''}${pen('wkedit',m+'|'+i+'|'+ar,'Edit this week')}</div>`;}).join('');
   const SA=selAreas();
-  const wkRows=SA.length>1?SA.map(ar=>{const k='wa_'+m+'|'+ar,o=foldOpen(k,true);return `<div class="cp-fold" data-cp="fold" data-arg="${esc(k)}" style="margin:.5rem 0 .25rem"><span class="cp-car">${o?'&#9662;':'&#9656;'}</span><span class="cp-lbl">${esc(ar)}</span></div>`+(o?wkBlock(ar):'');}).join(''):wkBlock(SA[0]||'');
+  const wkRows=SA.length>1?SA.map(ar=>{const k='wa_'+m+'|'+ar,o=foldOpen(k,false);return `<div class="cp-fold" data-cp="fold" data-arg="${esc(k)}" style="margin:.5rem 0 .25rem"><span class="cp-car">${o?'&#9662;':'&#9656;'}</span><span class="cp-lbl">${esc(ar)}</span></div>`+(o?wkBlock(ar):'');}).join(''):wkBlock(SA[0]||'');
   const prRows=Lp.length?Lp.map(p=>{const lk=[(p.ig||p.igf)&&'IG'+(p.igHeart?'\u2665':'')+(p.igf?' '+p.igf:''),(p.fb||p.fbf)&&'FB'+(p.fbHeart?'\u2665':'')+(p.fbf?' '+p.fbf:''),p.web&&'Web'].filter(Boolean).join(' ');
     return `<div class="cp-row cp-click" data-cp="pedit" data-arg="${esc(m)}|${esc(p.id)}"><div class="cp-rt">${esc(p.name)}<small>${esc([p.heart?'\u2665 hearted':'',p.kind,stage(p)+(p.emailedAt&&p.emailedAt!=='earlier'?' (emailed '+dayTxt(p.emailedAt)+')':''),p.city,sibs(p).length?'also at '+sibs(p).map(x=>x.city||x.area||x.name).join(', '):'',tagsOf(p).length?'tags: '+tagsOf(p).join(', '):'',p.contactName,lk,p.ds?'info: '+p.ds:''].filter(Boolean).join(' · '))}</small>${p.replyNote?`<small style="color:var(--gold)">Replied: ${esc(p.replyNote)}</small>`:''}${p.fit?`<small>Fit: ${esc(p.fit)}</small>`:''}</div>
       <label class="cp-chk" data-cp="stop"><input type="checkbox" data-cp="em" data-arg="${esc(m)}|${esc(p.id)}" ${p.emailedAt?'checked':''}> Emailed</label><label class="cp-chk" data-cp="stop"><input type="checkbox" data-cp="cold" data-arg="${esc(m)}|${esc(p.id)}" ${p.goneCold?'checked':''}> Gone cold</label>
-      ${nuBtns(m,p)}<button class="btn-sm" data-cp="mailp" data-arg="${esc(m)}|${esc(p.id)}">Email</button>${pen('pedit',m+'|'+p.id,'Edit this business')}</div>`;}).join(''):`<div class="cp-none">${tot?'No sponsor prospects match the filters.':'No sponsor prospects for '+esc(area||'this month')+' yet.'}</div>`;
+      ${nuBtns(m,p)}<button class="btn-sm" data-cp="mailp" data-arg="${esc(m)}|${esc(p.id)}">Email</button><button class="btn-sm" data-cp="bizcopy" data-arg="${esc(p.id)}" title="Copy name, website, Instagram, Facebook and email">Copy</button>${pen('pedit',m+'|'+p.id,'Edit this business')}</div>`;}).join(''):`<div class="cp-none">${tot?'No sponsor prospects match the filters.':'No sponsor prospects for '+esc(area||'this month')+' yet.'}</div>`;
   const rl=rule(m),hasRule=rl.inc.length>0;
   const filtTxt=hasRule?'Kind and tag filter is on: showing only businesses that match '+rl.inc.map(tokLabel).join(', ')+(rl.exc.length?', leaving out '+rl.exc.map(tokLabel).join(', '):''):'';
   const open=foldOpen('c_'+m,m===cur);
@@ -13044,10 +13058,14 @@ function onClick(e){
   switch(act){
     case 'stop':break;
     case 'toprosp':toProspects(arg);break;
+    case 'bizcopy':{const bp=sponD().prospects[arg]||{};const has=v=>{v=String(v==null?'':v).trim();return v&&!/^none$/i.test(v)?v:'';};
+      const lines=[has(bp.name),has(bp.web),has(bp.ig),has(bp.fb),has(bp.email)].filter(Boolean);const txt=lines.join('\n');
+      (async()=>{try{await navigator.clipboard.writeText(txt);}catch(er){const t=document.createElement('textarea');t.value=txt;document.body.appendChild(t);t.select();try{document.execCommand('copy');}catch(e2){}t.remove();}toast('Copied '+(has(bp.name)||'business'));})();
+      const old=a.textContent;a.textContent='Copied \u2713';setTimeout(()=>{a.textContent=old;},1500);break;}
     case 'tospon':toSponsors(arg);break;
     case 'tohost':toHost(arg);break;
     case 'close':closeOv();break;
-    case 'fold':foldToggle(arg,(arg==='master'||arg==='spp')?false:arg.charAt(0)==='c'?arg.slice(2)===todayStr().slice(0,7):true);break;
+    case 'fold':foldToggle(arg,(arg==='master'||arg==='spp'||arg.slice(0,2)==='w_'||arg.slice(0,3)==='wa_')?false:arg.charAt(0)==='c'?arg.slice(2)===todayStr().slice(0,7):true);break;
     case 'mode':filterMode=arg;render();break;
     case 'area':{let S=selAreas().slice();const k=S.indexOf(arg);if(k>=0){if(S.length>1)S.splice(k,1);}else S.push(arg);const A=sponAreas();S=A.filter(x=>S.indexOf(x)>=0);saveLib('sponsors',{areasSel:S,area:S[0]||arg},true).then(render);break;}
     case 'areaall':{const A=sponAreas();saveLib('sponsors',{areasSel:A,area:A[0]||''},true).then(render);break;}
@@ -13088,10 +13106,11 @@ function onClick(e){
     case 'mailwk':mailWk(mo[0],+mo[1],mo[2]);break;
     case 'drreset':if(dr){$('cp-sub').value=dr.def.subject;$('cp-body').value=dr.def.body;}break;
     case 'drsave':drSave();break;
-    case 'drcopy':copyTxt('Subject: '+V('cp-sub')+'\n\n'+$('cp-body').value);break;
-    case 'drmail':location.href='mailto:'+encodeURIComponent(V('cp-to')).replace(/%40/g,'@')+'?subject='+encodeURIComponent(V('cp-sub'))+'&body='+encodeURIComponent($('cp-body').value);break;
+    case 'bold':boldSel(arg);break;
+    case 'drcopy':copyRich('Subject: '+V('cp-sub')+'\n\n'+$('cp-body').value);break;
+    case 'drmail':location.href='mailto:'+encodeURIComponent(V('cp-to')).replace(/%40/g,'@')+'?subject='+encodeURIComponent(V('cp-sub'))+'&body='+encodeURIComponent(plainB($('cp-body').value));break;
     case 'drsent':drSent();break;
-    case 'draftopen':draftOpen();break;
+    case 'draftopen':defOpen();break;
     case 'defsave':defSave();break;
     case 'spsave':{const el=$('cp-sprompt');if(el)saveLib('settings',{sponsorPrompt:el.value.replace(/\s+$/,'')}).then(()=>{pend=false;});break;}
     case 'spcopy':{const el=$('cp-sprompt');if(el&&navigator.clipboard)navigator.clipboard.writeText(el.value).then(()=>toast('Prompt copied')).catch(()=>toast('Could not copy',true));break;}
