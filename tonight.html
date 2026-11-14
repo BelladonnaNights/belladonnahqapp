@@ -205,10 +205,11 @@
     user.getIdToken(true).then(afterSignIn).catch(afterSignIn);
     function afterSignIn(){
       authReady=true;
-      if(selectedVenueId)loadTonight();
+      if(venuesReady)tryAutoPick(); else if(selectedVenueId)loadTonight();
     }
   });
 
+  let venuesReady=false;
   function renderVenueOptions(){
     const sel=document.getElementById('venueSelect');
     if(!venues.length){sel.innerHTML='<option value="">No venues found</option>';return;}
@@ -216,6 +217,111 @@
     // restore last-used venue for this device, if any
     const last=localStorage.getItem('tonight-venue');
     if(last&&venues.some(v=>v.id===last)){sel.value=last;selectedVenueId=last;loadTonight();}
+    venuesReady=true;
+    if(authReady)tryAutoPick();
+  }
+
+  // ── AUTO-SELECT TONIGHT'S VENUE FOR THE SIGNED-IN HOST ───────────────
+  // Once the venue list and the sign-in are both ready, look at today's
+  // schedule (HQ Schedule, Trivia Planner, Karaoke Planner, Bingo schedule).
+  // If a gig today is assigned to the person who is signed in, that venue is
+  // selected for them. If nothing is scheduled for them today, whatever
+  // venue they used last stays selected, exactly as before. Runs once per
+  // page load, so picking a different venue by hand is never overridden.
+  let autoPickDone=false;
+  function normPerson(x){return (x||'').toString().toLowerCase().replace(/[^a-z0-9@. ]/g,' ').replace(/\s+/g,' ').trim();}
+  function myIdentity(){
+    const names=new Set(), emails=new Set(), ids=new Set();
+    const u=auth.currentUser;
+    const addName=n=>{n=normPerson(n);if(n&&n.indexOf('@')<0)names.add(n);};
+    if(u){
+      addName(u.displayName);
+      if(u.email){const e=normPerson(u.email);emails.add(e);addName(e.split('@')[0].replace(/[._]+/g,' '));}
+      if(u.uid)ids.add(u.uid);
+    }
+    try{
+      const raw=localStorage.getItem('gatewaySession_'+GATEWAY_APP_KEY);
+      if(raw){
+        const g=JSON.parse(raw)||{};
+        ['name','displayName','hostName','fullName','firstName','username'].forEach(k=>{if(g[k])addName(g[k]);});
+        if(g.email)emails.add(normPerson(g.email));
+        ['uid','hostId','id'].forEach(k=>{if(g[k])ids.add(String(g[k]));});
+      }
+    }catch(e){}
+    return {names,emails,ids};
+  }
+  function isMine(host,rec,me){
+    if(rec){
+      if(rec.hostId&&me.ids.has(String(rec.hostId)))return true;
+      if(rec.hostUid&&me.ids.has(String(rec.hostUid)))return true;
+      if(rec.hostEmail&&me.emails.has(normPerson(rec.hostEmail)))return true;
+    }
+    const h=normPerson(host);
+    if(!h||h==='unassigned')return false;
+    for(const n of me.names){
+      if(h===n)return true;
+      const first=n.split(' ')[0];
+      if(h.indexOf(' ')<0&&first&&h===first)return true; // host listed by first name only
+    }
+    return false;
+  }
+  async function findMyVenueToday(){
+    const me=myIdentity();
+    if(!me.names.size&&!me.emails.size&&!me.ids.size)return null;
+    const dk=dateToKey(new Date()), dow=new Date().getDay();
+    const hits=[]; // venue ids
+    const venueByName=nm=>venues.find(v=>normVenueName(v.name)===normVenueName(nm));
+    // HQ Schedule
+    try{
+      const snap=await db.collection('gig_schedule').where('date','==',dk).get();
+      snap.docs.forEach(d=>{const g=d.data();if(g.status==='cancelled')return;if(isMine(g.host,g,me)){const v=venueByName(g.venue);if(v)hits.push(v.id);}});
+    }catch(e){}
+    // Trivia Planner
+    try{
+      const pv=(await rtdb.ref('trivia/planner/venues').once('value')).val()||{};
+      for(const [pid,v] of Object.entries(pv)){
+        const mv=venues.find(x=>isThisVenue(v,x)); if(!mv)continue;
+        const g=(await rtdb.ref('trivia/planner/gigs/'+pid+'/'+dk).once('value')).val();
+        if(g&&g.status==='cancelled')continue;
+        const host=(g&&g.host)||((v.status==='active'||v.status==='seasonal')&&PLANNER_DAY_MAP[v.day]===dow?v.host:'');
+        if((g||((v.status==='active'||v.status==='seasonal')&&PLANNER_DAY_MAP[v.day]===dow))&&isMine(host,g,me))hits.push(mv.id);
+      }
+    }catch(e){}
+    // Karaoke Planner
+    try{
+      const kv=(await rtdb.ref('trivia/planner/karaokeVenues').once('value')).val()||{};
+      for(const [kid,v] of Object.entries(kv)){
+        const mv=venues.find(x=>isThisVenue(v,x)); if(!mv)continue;
+        const g=(await rtdb.ref('trivia/planner/karaokeGigs/'+kid+'/'+dk).once('value')).val();
+        if(g&&g.status==='cancelled')continue;
+        const byDay=(v.status==='active'||v.status==='seasonal')&&PLANNER_DAY_MAP[v.day]===dow;
+        if((g||byDay)&&isMine((g&&g.host)||v.host,g,me))hits.push(mv.id);
+      }
+    }catch(e){}
+    // Bingo schedule
+    try{
+      const bv=(await rtdb.ref('bingo/landing/venues').once('value')).val()||{};
+      const sched=Object.values((await rtdb.ref('bingo/landing/schedule').once('value')).val()||{});
+      sched.filter(e=>e&&e.date===dk&&bv[e.venueId]).forEach(e=>{
+        if(isMine(e.host,e,me)){const mv=venues.find(x=>isThisVenue(bv[e.venueId],x));if(mv)hits.push(mv.id);}
+      });
+    }catch(e){}
+    return hits.length?hits[0]:null;
+  }
+  async function tryAutoPick(){
+    if(autoPickDone)return;
+    autoPickDone=true;
+    let vid=null;
+    try{vid=await findMyVenueToday();}catch(e){}
+    const sel=document.getElementById('venueSelect');
+    if(vid&&venues.some(v=>v.id===vid)){
+      sel.value=vid;
+      if(selectedVenueId!==vid){
+        selectedVenueId=vid;
+        currentDate=new Date();updateDateDisplay();
+        loadTonight();
+      }else if(selectedVenueId){loadTonight();}
+    }else if(selectedVenueId){loadTonight();}
   }
   document.getElementById('venueSelect').addEventListener('change',e=>{
     selectedVenueId=e.target.value;
@@ -626,7 +732,10 @@
   function segCardBingo(seg){
     const active=!seg.cancelled;
     let btn;
-    if(active){
+    if(active&&!BINGO_DESKTOP_ENABLED){
+      // Desktop-app launch is on hold — the button just opens the web Bingo page in a new tab.
+      btn=`<a href="${BINGO_WEB_URL}" target="_blank" rel="noopener" class="seg-btn">Open Bingo</a>`;
+    }else if(active){
       const protoUrl=`belladonnabingo://open?venue=${encodeURIComponent(seg.bingoVenueId||'')}&entryId=${encodeURIComponent(seg.bingoEntryId||'')}&date=${encodeURIComponent(dateToKey(currentDate))}`;
       btn=`<a href="#" class="seg-btn" onclick="openBingo(event,'${protoUrl}')">Open Bingo</a>
         <div class="seg-note" id="bingoFallbackNote" style="display:none;">Bingo app didn't open — make sure it's installed on this computer, then try again.</div>`;
@@ -762,6 +871,9 @@
   // The browser Bingo page. Set this to the full address of your web Bingo app
   // (leave '' if there isn't one — Tonight then just shows the "not installed" note).
   const BINGO_WEB_URL='https://belladonnanights.github.io/belladonna-bingo/index.html';
+  // HIBERNATION SWITCH: the Windows-laptop app connection (belladonnabingo:// launch + fallback
+  // below) is all still here, just switched off. Set this to true to bring it back.
+  const BINGO_DESKTOP_ENABLED=false;
   function openBingo(ev,protoUrl){
     ev.preventDefault();
     const note=document.getElementById('bingoFallbackNote');
