@@ -8773,6 +8773,28 @@ function sportsTeams(){
 }
 const gdDay=d=>{const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(String(d||''));if(!m)return String(d||'');return new Date(+m[1],+m[2]-1,+m[3],12).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});};
 function gdLine(g,team){return '<div class="np-filed"><b>'+esc(gdDay(g.date))+'</b> &middot; '+(team?esc(team)+' &middot; ':'')+(g.home===false||g.home==='away'?'at ':'vs ')+esc(g.opp||'TBD')+(g.time?' &middot; '+esc(g.time):'')+(g.tv?' &middot; '+esc(g.tv):'')+(g.home===true||g.home==='home'?' <span class="tm-tag booked">HOME</span>':'')+'</div>';}
+
+/* ── Gig check (Sable): summary of Gigs run by others, shown on her desk and in the Gazette ── */
+function gigCheckState(){
+  const g=kgRows('gigs'),today=isoDay(Date.now());
+  const day=x=>String(x||'').slice(0,10);
+  const checked=g.filter(r=>day(r.checked)),last=checked.map(r=>day(r.checked)).sort().pop()||'';
+  const recent=checked.filter(r=>last&&day(r.checked)>=isoDay(new Date(last+'T12:00:00').getTime()-2*DAY));
+  const ended=g.filter(r=>r.status==='ended'&&last&&day(r.checked)>=isoDay(new Date(last+'T12:00:00').getTime()-8*DAY));
+  const unsure=g.filter(r=>r.status==='not sure');
+  return {total:g.length,never:g.filter(r=>!day(r.checked)).length,last:last,recent:recent,ended:ended,unsure:unsure,going:g.filter(r=>r.status==='still going').length,endedAll:g.filter(r=>r.status==='ended').length};
+}
+function gigCheckHtml(np){
+  const c=gigCheckState(),ln=r=>'<div class="'+(np?'np-body':'t2')+'"><b>'+esc(r.venue||'?')+'</b>'+(r.night?' · '+esc(r.night):'')+(r.kind?' · '+esc(r.kind):'')+(r.notes?' &mdash; '+esc(String(r.notes).split('\n').pop().slice(0,160)):'')+'</div>';
+  let h='';
+  if(!c.total)return '<div class="'+(np?'np-body':'tm-empty')+'">No gigs listed yet. Sable re-checks them every Wednesday at 6:30 am and adds new ones she finds.</div>';
+  h+='<div class="'+(np?'np-body':'t2')+'">'+(c.last?'Last checked '+esc(fmtEv(c.last))+'. ':'Not checked yet. ')+c.total+' gigs tracked: '+c.going+' still going, '+c.endedAll+' ended'+(c.unsure.length?', '+c.unsure.length+' not sure':'')+(c.never?', '+c.never+' never checked':'')+'.</div>';
+  if(c.ended.length)h+='<div class="'+(np?'np-sub':'tm-sec')+'">Ended lately (may be open to one of ours)</div>'+c.ended.map(ln).join('');
+  if(c.unsure.length)h+='<div class="'+(np?'np-sub':'tm-sec')+'">Could not confirm</div>'+c.unsure.slice(0,8).map(ln).join('');
+  h+='<div class="'+(np?'np-by':'tm-row')+'" style="margin-top:.4rem"><a href="#" data-act="kgjump" class="'+(np?'':'tm-b')+'">Open Gigs run by others</a></div>';
+  return h;
+}
+
 function sportsGazette(){
   const T=sportsTeams(),have=T.filter(t=>t.games.length);
   if(!have.length)return {n:0,show:true,html:'<div class="np-body">No game days loaded yet. Sable fills this in on her Sunday run (the Game days task under Scheduled Tasks).</div>'};
@@ -8976,13 +8998,15 @@ function renderBrief(){
     const ig=dp.id==='curator'?irisGazette():null;
     const rg=dp.id==='social'?renGazette():(dp.id==='lead'?sponsorGazette():null);
     const gm=dp.id==='games'?sportsGazette():null;
-    if(!items.length&&!ideas.length&&!(ig&&ig.n)&&!(rg&&rg.n)&&!(gm&&gm.show))return;
+    const gcz=dp.id==='town'&&gigCheckState().total?gigCheckState():null;
+    if(!items.length&&!ideas.length&&!(ig&&ig.n)&&!(rg&&rg.n)&&!(gm&&gm.show)&&!gcz)return;
     let inner='';
     if(items.length)inner+='<div class="'+(items.length>1?'np-cols':'np-one')+'">'+items.map(art).join('')+'</div>';
     if(ideas.length)inner+=ideasHtml(ideas);
     if(ig)inner+=ig.html;
     if(rg)inner+=rg.html;
     if(gm)inner+=gm.html;
+    if(gcz)inner+='<div class="np-sub">Gig check <em>'+(gcz.ended.length||gcz.unsure.length||'')+'</em></div>'+gigCheckHtml(true);
     if(dp.id==='town'&&b.avoid.length){inner+=avoidHtml();avoidShown=true;}
     secs+=gsec_(dp.id,dp.t,dp.s,inner,items.length+ideas.length+(ig?ig.n:0)+(rg?rg.n:0)+(gm?gm.n:0),dp.id!=='town');
   });
@@ -10855,6 +10879,7 @@ function sportsEditHtml(){
 function evKey(e){return 'e_'+String(e.date||'x').replace(/[^0-9]/g,'')+'_'+String(e.event||'').toLowerCase().replace(/\([^)]*\)/g,'').replace(/[^a-z0-9]/g,'').slice(0,40);}
 function vSable(){
   const d=D(),dg=d.digest;let h='';
+  h+=det('gigcheck','Gig check · Gigs run by others',gigCheckHtml(false),false);
   h+=det('gmteams','Teams for Game Days',sportsEditHtml(),false);
   if(!dg)return h+'<div class="tm-empty">No digest loaded yet.</div>';
   h+='<div class="tm-sec">Top opportunities'+(dg.runDate?' · '+esc(fmtEv(dg.runDate)):'')+'</div>';
@@ -11808,6 +11833,7 @@ const A={
   hztime(t){S.hz.time=t.value||'15:00';renderDrawer(true);},
   async hzcopy(){const e=$('#hz-prompt');toast(await copy(e?e.value:'')?'Copied. Paste it into ChatGPT.':'Copy failed.',false);},
   open(t){openAgent(t.dataset.agent);},
+  kgjump(t){S.rtab='outreach';openAgent('raven');},
   async gsec(t){const k='g_'+t.dataset.id,cur=S.open[k]!==undefined?S.open[k]:false;S.open[k]=!cur;renderBrief();},
   async gall(t){const v=t.dataset.v==='1';(S.gids||[]).forEach(id=>{S.open['g_'+id]=v;});renderBrief();},
   async bsave(t,only){
