@@ -12590,7 +12590,7 @@ body.cp-lock,html.cp-lock{overflow:hidden!important}
 const COL='socialLibrary';
 const L={sponsors:{},banners:{},campaigns:{},settings:{},venueCities:{}};
 let REP={},applying=false,loaded={},monthly=[],started=false,unsubs=[],pend=false,loadErr='',filterMode='up',dr=null;
-let F={q:'',cat:'',kind:'',city:'',tag:'',stage:'',ds:'',has:'',heart:false,sh:''},M={q:'',cat:'',kind:'',city:'',tag:'',sh:''},migDone=false;
+let F={q:'',cat:'',kind:'',city:'',tag:'',stage:'',ds:'',has:'',heart:false,sh:''},M={q:'',cat:'',kind:'',city:'',tag:'',sh:''},migDone=false,MSEL={};
 const SPON_STATUS_WK=['Needed','Asked','Confirmed','Prizes in','Paid'];
 const TPL_DEFAULT={subject:'Sponsor a night with Belladonna: {theme} in {month}',body:"Hi {contact},\n\nI'm Ahnna with Belladonna Entertainment. Each week this month we're teaming up with one local business for a special night at {venue}, and I'd love for {sponsor} to be a featured sponsor.\n\nHere's the idea: {month}'s theme is {theme}. The venue makes a four-cocktail flight inspired by it, we sell tickets, and your business is the star of the night. You provide the prizes, and the sponsor fee is just ${fee}.\n\nWould you be open to hearing more?\n\nAhnna\nBelladonna Entertainment\n[logo + link]\nwww.belladonnanights.com"};
 const $=id=>document.getElementById(id);
@@ -13077,8 +13077,8 @@ function masterCard(){
       <select class="roster-filter-select" data-cpmsel="cat">${opt('','All kinds of business',M.cat)}${cats.map(c=>opt(c,c+' ('+A.filter(p=>catOf(p)===c).length+')',M.cat)).join('')}</select>${M.cat?`<select class="roster-filter-select" data-cpmsel="kind">${opt('','All '+M.cat+' types',M.kind)}${kindsIn(M.cat,A).map(c=>opt(c,c,M.kind)).join('')}</select>`:''}<select class="roster-filter-select" data-cpmsel="sh">${opt('','Social hearts: all',M.sh)}${opt('any','&#9829; Any social page',M.sh)}${opt('ig','&#9829; Instagram page',M.sh)}${opt('fb','&#9829; Facebook page',M.sh)}</select>
       <select class="roster-filter-select" data-cpmsel="city">${opt('','All cities',M.city)}${cities.map(c=>opt(c,c,M.city)).join('')}</select>
       ${tg.length?`<select class="roster-filter-select" data-cpmsel="tag">${opt('','All tags',M.tag)}${tg.map(c=>opt(c,c,M.tag)).join('')}</select>`:''}
-      <button class="btn-sm" data-cp="mclear">Clear</button><div style="flex:1"></div><button class="btn-sm" data-cp="padd" data-arg="">+ Add business</button><button class="btn-sm" data-cp="bulk" data-arg="">Add in bulk</button></div>
-      ${Ls.length?Ls.map(p=>{const ms=mons(p.id);return `<div class="cp-row cp-click" data-cp="pedit" data-arg="|${esc(p.id)}"><div class="cp-rt">${esc(p.name)}<small>${esc([kl(p),p.kind,p.city,p.area&&p.area!==p.city?'area: '+p.area:'',sibs(p).length?'also at '+sibs(p).map(x=>x.city||x.area||x.name).join(', '):'',tagsOf(p).length?'tags: '+tagsOf(p).join(', '):'',p.igHeart||p.igf?'IG'+(p.igHeart?'\u2665':'')+(p.igf?' '+p.igf:''):'',p.fbHeart||p.fbf?'FB'+(p.fbHeart?'\u2665':'')+(p.fbf?' '+p.fbf:''):'',ms.length?'on: '+ms.map(x=>monthName(x)).join(', '):''].filter(Boolean).join(' · '))}</small></div>${sendBtns(p)}${pen('pedit','|'+p.id,'Edit this business')}</div>`;}).join(''):'<div class="cp-none">No businesses match.</div>'}</div>`;}
+      <button class="btn-sm" data-cp="mclear">Clear</button><div style="flex:1"></div><button class="btn-sm" data-cp="mselall" title="Tick every business shown below">Select all shown</button><button class="btn-sm" data-cp="mselnone">Clear selection</button><button class="btn-sm btn-gold" id="cp-mapbtn" data-cp="mapcsv" title="Download a file you can import into Google My Maps">Map file (${Object.keys(MSEL).length})</button><button class="btn-sm" data-cp="padd" data-arg="">+ Add business</button><button class="btn-sm" data-cp="bulk" data-arg="">Add in bulk</button></div>
+      ${Ls.length?Ls.map(p=>{const ms=mons(p.id);return `<div class="cp-row cp-click" data-cp="pedit" data-arg="|${esc(p.id)}"><label class="cp-chk" data-cp="stop" title="Add to the map file" style="margin-right:.4rem"><input type="checkbox" data-cp="msel" data-arg="${esc(p.id)}" ${MSEL[p.id]?'checked':''}></label><div class="cp-rt">${esc(p.name)}<small>${esc([kl(p),p.kind,p.city,p.area&&p.area!==p.city?'area: '+p.area:'',sibs(p).length?'also at '+sibs(p).map(x=>x.city||x.area||x.name).join(', '):'',tagsOf(p).length?'tags: '+tagsOf(p).join(', '):'',p.igHeart||p.igf?'IG'+(p.igHeart?'\u2665':'')+(p.igf?' '+p.igf:''):'',p.fbHeart||p.fbf?'FB'+(p.fbHeart?'\u2665':'')+(p.fbf?' '+p.fbf:''):'',ms.length?'on: '+ms.map(x=>monthName(x)).join(', '):''].filter(Boolean).join(' · '))}</small></div>${sendBtns(p)}${pen('pedit','|'+p.id,'Edit this business')}</div>`;}).join(''):'<div class="cp-none">No businesses match.</div>'}</div>`;}
   return `<div class="cp-card"><div class="cp-fold cp-head" data-cp="fold" data-arg="master" data-def="0"><span class="cp-car">${open?'&#9662;':'&#9656;'}</span><span class="cp-mt">All businesses (${A.length})</span></div>${body}</div>`;
 }
 function monthCard(m){
@@ -13183,6 +13183,21 @@ function onClick(e){
     case 'restorevenue':{const p=sponD().prospects[arg];if(p&&p.venueSnapshot&&window.hqRestoreVenue&&window.hqRestoreVenue(p.venueSnapshot)){const pr={...sponD().prospects};pr[arg]={...p,formerVenue:false};save({prospects:pr},true);closeOv();toast('Restored to Our Venues.');}else toast('Could not restore it.',true);break;}
     case 'kindchip':{const e=$('cp-kind');if(e){const a=e.value.split(',').map(x=>x.trim()).filter(Boolean),i=a.findIndex(x=>x.toLowerCase()===String(arg).toLowerCase());if(i>=0)a.splice(i,1);else a.push(arg);e.value=a.join(', ');syncKindChips();}break;}
     case 'sheart':{const b=$('cp-'+arg+'heart');if(b){const on=!b.classList.contains('on');b.classList.toggle('on',on);b.innerHTML=on?'&#9829;':'&#9825;';}break;}
+    case 'msel':{if(a.checked)MSEL[arg]=1;else delete MSEL[arg];const b=document.getElementById('cp-mapbtn');if(b)b.textContent='Map file ('+Object.keys(MSEL).length+')';break;}
+    case 'mselall':masterList().forEach(p=>{MSEL[p.id]=1;});render();break;
+    case 'mselnone':MSEL={};render();break;
+    case 'mapcsv':{
+      const ids=Object.keys(MSEL).filter(id=>sponD().prospects[id]);if(!ids.length){toast('Tick the businesses you want on the map first.',true);break;}
+      const q=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"',noneV=v=>{v=String(v==null?'':v).trim();return /^none$/i.test(v)?'':v;};
+      let noAddr=0;
+      const rows=ids.map(id=>sponD().prospects[id]).sort((x,y)=>String(x.name).localeCompare(String(y.name))).map(p=>{
+        const ad=noneV(p.address),ci=noneV(p.city);
+        let addr=ad;if(ci&&ad.toLowerCase().indexOf(ci.toLowerCase())<0)addr=(ad?ad+', ':'')+ci;
+        if(!ad)noAddr++;
+        return [p.name,addr||p.name+(ci?', '+ci:''),ci,catOf(p),p.kind,noneV(p.web),noneV(p.phone),noneV(p.ig)].map(q).join(',');});
+      const csv='\ufeff'+['Name','Address','City','Category','Type','Website','Phone','Instagram'].map(q).join(',')+'\r\n'+rows.join('\r\n');
+      const url=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'})),dl=document.createElement('a');dl.href=url;dl.download='sponsor-map.csv';document.body.appendChild(dl);dl.click();setTimeout(()=>{document.body.removeChild(dl);URL.revokeObjectURL(url);},500);
+      toast('Downloaded '+ids.length+' businesses for the map.'+(noAddr?' '+noAddr+' have no street address, so Google will search by name and city.':''));break;}
     case 'mclear':M={q:'',cat:'',kind:'',city:'',tag:'',sh:''};render();break;
     case 'editsave':sponEditSave(arg,a.dataset.m);break;
     case 'del':sponDel(arg);break;
