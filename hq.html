@@ -13189,14 +13189,14 @@ function onClick(e){
     case 'mselnone':MSEL={};render();break;
     case 'mapcsv':{
       const ids=Object.keys(MSEL).filter(id=>sponD().prospects[id]);if(!ids.length){toast('Tick the businesses you want on the map first.',true);break;}
-      const q=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"',noneV=v=>{v=String(v==null?'':v).trim();return /^none$/i.test(v)?'':v;};
+      const q=v=>{v=String(v==null?'':v);return /[",\r\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;},noneV=v=>{v=String(v==null?'':v).trim();return /^none$/i.test(v)?'':v;};
       let noAddr=0;
       const rows=ids.map(id=>sponD().prospects[id]).sort((x,y)=>String(x.name).localeCompare(String(y.name))).map(p=>{
-        const ad=noneV(p.address),ci=noneV(p.city);
+        const ad=noneV(p.address).split(/\s*\(|\.\s*Also|;/)[0].trim(),ci=noneV(p.city).split(/\s*\/\s*/)[0].trim();
         let addr=ad;if(ci&&ad.toLowerCase().indexOf(ci.toLowerCase())<0)addr=(ad?ad+', ':'')+ci;
         if(!ad)noAddr++;
         return [p.name,addr||p.name+(ci?', '+ci:''),ci,catOf(p),p.kind,noneV(p.web),noneV(p.phone),noneV(p.ig)].map(q).join(',');});
-      const csv='\ufeff'+['Name','Address','City','Category','Type','Website','Phone','Instagram'].map(q).join(',')+'\r\n'+rows.join('\r\n');
+      const csv=['Name','Address','City','Category','Type','Website','Phone','Instagram'].map(q).join(',')+'\r\n'+rows.join('\r\n');
       const url=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'})),dl=document.createElement('a');dl.href=url;dl.download='sponsor-map.csv';document.body.appendChild(dl);dl.click();setTimeout(()=>{document.body.removeChild(dl);URL.revokeObjectURL(url);},500);
       toast('Downloaded '+ids.length+' businesses for the map.'+(noAddr?' '+noAddr+' have no street address, so Google will search by name and city.':''));break;}
     case 'mclear':M={q:'',cat:'',kind:'',city:'',tag:'',sh:''};render();break;
