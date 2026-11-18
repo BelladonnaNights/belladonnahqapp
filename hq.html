@@ -572,6 +572,12 @@ html::-webkit-scrollbar-thumb:hover,.modal::-webkit-scrollbar-thumb:hover{backgr
 #staffTools .pill{display:inline-block;padding:2px 10px;border:1px solid var(--border2);border-radius:999px;font-size:12px;color:var(--text2);margin-right:6px}
 #staffTools .pill.gold{border-color:var(--gold);color:var(--gold2)}
 
+.pl-grip{cursor:grab;color:var(--text3);padding:0 .35rem;font-size:1rem;line-height:1;user-select:none}
+.pl-grip:hover{color:var(--gold,#c9a84c)}
+.pl-dragging{opacity:.4}
+.pl-ins-b{box-shadow:0 -3px 0 var(--gold,#c9a84c)}
+.pl-ins-a{box-shadow:0 3px 0 var(--gold,#c9a84c)}
+.pl-ins-in{outline:2px dashed var(--gold,#c9a84c);outline-offset:-2px}
 .pl-d{border:1px solid var(--border2,rgba(255,255,255,.12));border-radius:8px;margin-bottom:.5rem}
 .pl-d>summary{cursor:pointer;padding:.65rem .9rem;list-style:none;display:flex;align-items:center;gap:.5rem;font-size:.85rem}
 .pl-d>summary::-webkit-details-marker{display:none}
@@ -1579,20 +1585,8 @@ match /agent_config/{id}  { allow read, write: if isAdmin(); }</pre>
 </div>
 
 <div class="panel" id="panel-prompts">
-  <div class="section-header">
-    <div class="section-title"><span id="plHead">Prompts</span> <button class="btn-sm pl-ed" onclick="plInline('__head',this)" title="Edit the headline">&#9998;</button></div>
-    <div style="display:flex;gap:0.5rem;flex-wrap:wrap;"><button class="btn-sm btn-gold" onclick="plAddSection()">+ Add section</button></div>
-  </div>
-  <div style="font-size:0.74rem;color:var(--text3);line-height:1.55;margin-bottom:1rem;max-width:760px;"><span id="plIntro">Every prompt you use, in one place. Open a section, then a subsection if it has one, then the prompt. Everything starts closed.</span> <button class="btn-sm pl-ed" onclick="plInline('__intro',this)" title="Edit this line">&#9998;</button></div>
-  <div id="plRoot"></div>
-  <div class="section-header" style="margin-top:2rem;">
-    <div class="section-title"><span>Emails</span></div>
-    <div style="display:flex;gap:0.5rem;flex-wrap:wrap;"><button class="btn-sm btn-gold" onclick="plAddSection('em')">+ Add section</button></div>
-  </div>
-  <div style="font-size:0.74rem;color:var(--text3);line-height:1.55;margin-bottom:1rem;max-width:760px;">Your email templates, in one place. Open a section, then a subsection if it has one, then the email. Everything starts closed.</div>
-  <div id="plEmRoot"></div>
-  <div id="plPartsRoot"></div>
-  <div style="margin-top:2rem;"><button class="btn-sm btn-gold" onclick="plAddPart()">+ Add group</button></div>
+  <div style="display:flex;justify-content:space-between;align-items:center;gap:.5rem;flex-wrap:wrap;margin-bottom:.6rem;"><div style="font-size:.74rem;color:var(--text3);">Drag the &#10303; handle to move big sections, sections, subsections and prompts anywhere. Drop a prompt on a section or subsection to put it inside.</div><button class="btn-sm btn-gold" onclick="plAddPart()">+ Add big section</button></div>
+  <div id="plGroups"></div>
 </div>
 
 <div class="panel" id="panel-links">
@@ -2518,32 +2512,75 @@ function plFind(id){
   }
   return null;
 }
+function plGroups(){
+  promptLib.parts=promptLib.parts||[];promptLib.emailSections=promptLib.emailSections||[];promptLib.sections=promptLib.sections||[];
+  const ids=['__prompts','__emails'].concat(promptLib.parts.map(p=>p.id));
+  const o=(promptLib.order||[]).filter(x=>ids.indexOf(x)>=0);ids.forEach(x=>{if(o.indexOf(x)<0)o.push(x);});promptLib.order=o;
+  return o.map(id=>id==='__prompts'?{id,title:promptLib.head||'Prompts',list:promptLib.sections,W:'prompt',k:'',intro:true}:id==='__emails'?{id,title:promptLib.emHead||'Emails',list:promptLib.emailSections,W:'email',k:'em'}:(pt=>({id,title:pt.title||'Untitled',list:pt.sections=pt.sections||[],W:'item',k:'part:'+id,pt}))(promptLib.parts.find(x=>x.id===id)));
+}
 function plRender(){
-  promptLib.emailSections=promptLib.emailSections||[];
-  const root=document.getElementById('plRoot');if(!root)return;
-  const hd=document.getElementById('plHead'),it=document.getElementById('plIntro');
-  if(hd&&promptLib.head&&promptLib.head!=='Prompts')hd.textContent=promptLib.head;if(it&&promptLib.intro!==undefined)it.textContent=promptLib.intro;
-  const eroot=document.getElementById('plEmRoot');
-  if(!plLoaded){root.innerHTML='<div class="empty-state">Loading your prompts…</div>';if(eroot)eroot.innerHTML='';return;}
+  const root=document.getElementById('plGroups');if(!root)return;
+  if(!plLoaded){root.innerHTML='<div class="empty-state">Loading your prompts…</div>';return;}
+  const grip='<span class="pl-grip" title="Drag to move">&#10303;</span>';
   const btn=(l,f,id)=>`<button class="btn-sm" onclick="event.preventDefault();event.stopPropagation();${f}('${id}')">${l}</button>`;
   const build=(list,W)=>{
-  const prm=p=>`<details class="pl-d pl-prompt" data-k="${p.id}" ${plOpen[p.id]?'open':''}><summary><b class="pl-t" data-id="${p.id}">${plEsc(p.title||'Untitled')}</b><button class="btn-sm pl-ed" onclick="event.preventDefault();event.stopPropagation();plInline('${p.id}',this)" title="Edit the title">&#9998;</button></summary>
+  const prm=p=>`<details class="pl-d pl-prompt" data-t="prompt" data-k="${p.id}" ${plOpen[p.id]?'open':''}><summary>${grip}<b class="pl-t" data-id="${p.id}">${plEsc(p.title||'Untitled')}</b><button class="btn-sm pl-ed" onclick="event.preventDefault();event.stopPropagation();plInline('${p.id}',this)" title="Edit the title">&#9998;</button></summary>
     <div class="pl-body"><textarea class="form-textarea" style="min-height:200px" onchange="plSetText('${p.id}',this.value)">${plEsc(p.text||'')}</textarea>
     <div class="pl-places" style="margin:6px 0;font-size:0.74rem;color:var(--text3);display:flex;flex-wrap:wrap;gap:6px;align-items:center;"><span>Also found in:</span>${(p.places||[]).map((pl,i)=>`<span style="border:1px solid var(--border);border-radius:12px;padding:1px 4px 1px 9px;">${plEsc(pl)} <button class="btn-sm" style="padding:0 6px;" onclick="plDelPlace('${p.id}',${i})" title="Remove">&times;</button></span>`).join('')}<button class="btn-sm" onclick="plAddPlace('${p.id}')">+ Add place</button></div>
     <div class="pl-acts"><button class="btn-sm" onclick="plCopy('${p.id}',this)">Copy ${W}</button>${btn('Rename','plRename',p.id)}${btn('Delete','plDelete',p.id)}</div></div></details>`;
-  const sub=u=>`<details class="pl-d pl-sub" data-k="${u.id}" ${plOpen[u.id]?'open':''}><summary><b class="pl-t" data-id="${u.id}">${plEsc(u.title||'Untitled')}</b><button class="btn-sm pl-ed" onclick="event.preventDefault();event.stopPropagation();plInline('${u.id}',this)" title="Edit the title">&#9998;</button> <span class="pl-n">${(u.prompts||[]).length}</span></summary>
+  const sub=u=>`<details class="pl-d pl-sub" data-t="sub" data-k="${u.id}" ${plOpen[u.id]?'open':''}><summary>${grip}<b class="pl-t" data-id="${u.id}">${plEsc(u.title||'Untitled')}</b><button class="btn-sm pl-ed" onclick="event.preventDefault();event.stopPropagation();plInline('${u.id}',this)" title="Edit the title">&#9998;</button> <span class="pl-n">${(u.prompts||[]).length}</span></summary>
     <div class="pl-body">${(u.prompts||[]).map(prm).join('')||'<div class="pl-none">No '+W+'s here yet.</div>'}
     <div class="pl-acts">${btn('+ Add '+W,'plAddPrompt',u.id)}${btn('Rename','plRename',u.id)}${btn('Delete','plDelete',u.id)}</div></div></details>`;
-  return list.length?list.map(sec=>`<details class="pl-d pl-sec" data-k="${sec.id}" ${plOpen[sec.id]?'open':''}><summary><b class="pl-t" data-id="${sec.id}">${plEsc(sec.title||'Untitled')}</b><button class="btn-sm pl-ed" onclick="event.preventDefault();event.stopPropagation();plInline('${sec.id}',this)" title="Edit the title">&#9998;</button> <span class="pl-n">${(sec.prompts||[]).length+(sec.subs||[]).reduce((n,u)=>n+(u.prompts||[]).length,0)}</span></summary>
+  return list.length?list.map(sec=>`<details class="pl-d pl-sec" data-t="sec" data-k="${sec.id}" ${plOpen[sec.id]?'open':''}><summary>${grip}<b class="pl-t" data-id="${sec.id}">${plEsc(sec.title||'Untitled')}</b><button class="btn-sm pl-ed" onclick="event.preventDefault();event.stopPropagation();plInline('${sec.id}',this)" title="Edit the title">&#9998;</button> <span class="pl-n">${(sec.prompts||[]).length+(sec.subs||[]).reduce((n,u)=>n+(u.prompts||[]).length,0)}</span></summary>
     <div class="pl-body">${(sec.subs||[]).map(sub).join('')}${(sec.prompts||[]).map(prm).join('')}
     <div class="pl-acts">${btn('+ Add '+W,'plAddPrompt',sec.id)}${btn('+ Add subsection','plAddSub',sec.id)}${btn('Rename','plRename',sec.id)}${btn('Delete','plDelete',sec.id)}</div></div></details>`).join(''):'<div class="empty-state">No sections yet. Press Add section.</div>';
   };
-  root.innerHTML=build(promptLib.sections,'prompt');
-  if(eroot)eroot.innerHTML=build(promptLib.emailSections,'email');
-  promptLib.parts=promptLib.parts||[];
-  const proot=document.getElementById('plPartsRoot');
-  if(proot)proot.innerHTML=promptLib.parts.map(pt=>`<div class="section-header" style="margin-top:2rem;"><div class="section-title"><span>${plEsc(pt.title||'Untitled')}</span></div><div style="display:flex;gap:0.5rem;flex-wrap:wrap;"><button class="btn-sm" onclick="plRenamePart('${pt.id}')">Rename group</button><button class="btn-sm" onclick="plDeletePart('${pt.id}')">Delete group</button><button class="btn-sm btn-gold" onclick="plAddSection('part:${pt.id}')">+ Add section</button></div></div><div data-part="${pt.id}">${build(pt.sections=pt.sections||[],'item')}</div>`).join('');
-  [root,eroot,proot].forEach(r=>{if(r)r.querySelectorAll('details').forEach(d=>d.addEventListener('toggle',()=>{plOpen[d.dataset.k]=d.open;}));});
+  root.innerHTML=plGroups().map(g=>`<div class="pl-grp" data-t="grp" data-gid="${g.id}"><div class="section-header pl-gh" style="margin-top:2rem;"><div class="section-title"><span class="pl-grip" title="Drag to move this big section">&#10303;</span> <span ${g.intro?'id="plHead"':''}>${plEsc(g.title)}</span></div><div style="display:flex;gap:0.5rem;flex-wrap:wrap;"><button class="btn-sm" onclick="plRenamePart('${g.id}')">Rename</button>${g.pt?`<button class="btn-sm" onclick="plDeletePart('${g.id}')">Delete</button>`:''}<button class="btn-sm btn-gold" onclick="plAddSection('${g.k}')">+ Add section</button></div></div>
+    ${g.intro?`<div style="font-size:0.74rem;color:var(--text3);line-height:1.55;margin-bottom:1rem;max-width:760px;"><span id="plIntro">${plEsc(promptLib.intro!==undefined?promptLib.intro:'Every prompt you use, in one place. Open a section, then a subsection if it has one, then the prompt. Everything starts closed.')}</span> <button class="btn-sm pl-ed" onclick="plInline('__intro',this)" title="Edit this text">&#9998;</button></div>`:''}
+    <div class="pl-list" data-glist="${g.id}">${build(g.list,g.W)}</div></div>`).join('');
+  root.querySelectorAll('details').forEach(d=>d.addEventListener('toggle',()=>{plOpen[d.dataset.k]=d.open;}));
+  plDnd();
+}
+let plDrag=null;
+function plDnd(){
+  const r=document.getElementById('plGroups');if(!r||r._dnd)return;r._dnd=1;
+  const clear=()=>{r.querySelectorAll('.pl-ins-b,.pl-ins-a,.pl-ins-in,.pl-dragging').forEach(x=>x.classList.remove('pl-ins-b','pl-ins-a','pl-ins-in','pl-dragging'));r.querySelectorAll('[draggable=true]').forEach(x=>x.draggable=false);};
+  const ba=(el,e,sel)=>{const q=(sel&&el.querySelector(sel)||el).getBoundingClientRect();return e.clientY<q.top+q.height/2?'b':'a';};
+  const target=e=>{
+    if(!plDrag)return null;const t=e.target.closest?e.target:e.target.parentNode;
+    const t0=plDrag.t,self=plDrag.id;
+    const other=(sel)=>{const el=t.closest(sel);return el&&el.dataset.k!==self&&el.dataset.gid!==self?el:null;};
+    if(t0==='grp'){const el=other('.pl-grp');return el?{el,id:el.dataset.gid,mode:ba(el,e,'.pl-gh')}:null;}
+    if(t0==='sec'){let el=other('details.pl-sec');if(el)return {el,id:el.dataset.k,mode:ba(el,e,'summary')};
+      el=t.closest('.pl-grp');if(el&&!t.closest('details.pl-sec'))return {el:el.querySelector('.pl-gh'),gid:el.dataset.gid,mode:'in'};return null;}
+    if(t0==='sub'){let el=other('details.pl-sub');if(el)return {el,id:el.dataset.k,mode:ba(el,e,'summary')};
+      el=t.closest('details.pl-sec');return el?{el,id:el.dataset.k,mode:'in'}:null;}
+    let el=other('details.pl-prompt');if(el)return {el,id:el.dataset.k,mode:ba(el,e,'summary')};
+    el=t.closest('details.pl-sub');if(el)return {el,id:el.dataset.k,mode:'in'};
+    el=t.closest('details.pl-sec');return el?{el,id:el.dataset.k,mode:'in'}:null;
+  };
+  r.addEventListener('mousedown',e=>{const g=e.target.closest('.pl-grip');if(!g)return;const el=g.closest('details.pl-d')||g.closest('.pl-grp');if(el)el.draggable=true;});
+  r.addEventListener('click',e=>{if(e.target.closest('.pl-grip'))e.preventDefault();});
+  r.addEventListener('mouseup',()=>{if(!plDrag)r.querySelectorAll('[draggable=true]').forEach(x=>x.draggable=false);});
+  r.addEventListener('dragstart',e=>{const el=e.target;if(!el.dataset||!el.dataset.t)return;e.stopPropagation();plDrag={t:el.dataset.t,id:el.dataset.k||el.dataset.gid};try{e.dataTransfer.setData('text/plain',plDrag.id);e.dataTransfer.effectAllowed='move';}catch(x){}setTimeout(()=>el.classList.add('pl-dragging'),0);});
+  r.addEventListener('dragend',()=>{clear();plDrag=null;});
+  r.addEventListener('dragover',e=>{if(!plDrag)return;if(e.clientY<90)window.scrollBy(0,-18);else if(e.clientY>window.innerHeight-90)window.scrollBy(0,18);
+    const tg=target(e);r.querySelectorAll('.pl-ins-b,.pl-ins-a,.pl-ins-in').forEach(x=>x.classList.remove('pl-ins-b','pl-ins-a','pl-ins-in'));
+    if(!tg)return;e.preventDefault();e.dataTransfer.dropEffect='move';tg.el.classList.add(tg.mode==='b'?'pl-ins-b':tg.mode==='a'?'pl-ins-a':'pl-ins-in');});
+  r.addEventListener('drop',e=>{if(!plDrag)return;const tg=target(e);if(!tg)return;e.preventDefault();const d=plDrag;clear();plDrag=null;plMove(d,tg);});
+}
+function plMove(d,tg){
+  if(d.t==='grp'){const o=promptLib.order.filter(x=>x!==d.id);let i=o.indexOf(tg.id);if(i<0)return;if(tg.mode==='a')i++;o.splice(i,0,d.id);promptLib.order=o;plSave();plRender();return;}
+  const f=plFind(d.id);if(!f)return;
+  let dest,idx=-1;
+  if(tg.mode==='in'){
+    if(tg.gid){dest=(plGroups().find(g=>g.id===tg.gid)||{}).list;}
+    else{const t=plFind(tg.id);if(!t)return;dest=d.t==='sub'?(t.node.subs=t.node.subs||[]):(t.node.prompts=t.node.prompts||[]);plOpen[tg.id]=true;}
+  }else{const t=plFind(tg.id);if(!t)return;dest=t.list;}
+  if(!dest)return;
+  const si=f.list.indexOf(f.node);if(si>=0)f.list.splice(si,1);
+  if(tg.mode==='in')dest.push(f.node);else{const t=plFind(tg.id);idx=dest.indexOf(t.node);if(idx<0)idx=dest.length;if(tg.mode==='a')idx++;dest.splice(idx,0,f.node);}
+  plSave();plRender();
 }
 function plInline(id,btn){
   let el,cur,multi=false;
@@ -2566,7 +2603,7 @@ function plAddSection(k){const t=(window.prompt('Section name')||'').trim();if(!
 function plAddSub(secId){const f=plFind(secId);if(!f)return;const t=(window.prompt('Subsection name')||'').trim();if(!t)return;const id=plId();(f.node.subs=f.node.subs||[]).push({id,title:t,prompts:[]});plOpen[secId]=true;plOpen[id]=true;plSave();plRender();}
 function plAddPrompt(parentId){const f=plFind(parentId);if(!f)return;const t=(window.prompt('Title')||'').trim();if(!t)return;const id=plId();(f.node.prompts=f.node.prompts||[]).push({id,title:t,text:''});plOpen[parentId]=true;plOpen[id]=true;plSave();plRender();}
 function plAddPart(){const t=(window.prompt('Group name')||'').trim();if(!t)return;promptLib.parts=promptLib.parts||[];promptLib.parts.push({id:plId(),title:t,sections:[]});plSave();plRender();}
-function plRenamePart(id){const p=(promptLib.parts||[]).find(x=>x.id===id);if(!p)return;const t=(window.prompt('New group name',p.title||'')||'').trim();if(!t)return;p.title=t;plSave();plRender();}
+function plRenamePart(id){if(id==='__prompts'||id==='__emails'){const cur=id==='__prompts'?(promptLib.head||'Prompts'):(promptLib.emHead||'Emails');const t=(window.prompt('New name',cur)||'').trim();if(!t)return;if(id==='__prompts')promptLib.head=t;else promptLib.emHead=t;plSave();plRender();return;}const p=(promptLib.parts||[]).find(x=>x.id===id);if(!p)return;const t=(window.prompt('New big section name',p.title||'')||'').trim();if(!t)return;p.title=t;plSave();plRender();}
 function plDeletePart(id){const p=(promptLib.parts||[]).find(x=>x.id===id);if(!p)return;if(!confirm('Delete the group "'+(p.title||'')+'" and everything inside it?'))return;promptLib.parts=promptLib.parts.filter(x=>x!==p);plSave();plRender();}
 function plAddPlace(id){const f=plFind(id);if(!f)return;const t=(window.prompt('Where else is this found? (for example: The Vault)')||'').trim();if(!t)return;(f.node.places=f.node.places||[]).push(t);plOpen[id]=true;plSave();plRender();}
 function plDelPlace(id,i){const f=plFind(id);if(!f||!f.node.places)return;f.node.places.splice(i,1);plOpen[id]=true;plSave();plRender();}
