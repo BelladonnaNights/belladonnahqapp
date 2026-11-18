@@ -11314,6 +11314,7 @@ function ideaCard(x){
     ([].concat(x.uses||[]).length?'<div class="t2"><b>Uses what we have:</b> '+[].concat(x.uses).map(esc).join(', ')+'</div>':'')+
     (x.missing?'<div class="t2"><span class="tm-tag warn">only missing</span> '+esc(x.missing)+'</div>':'')+
     (x.when?'<div class="t2"><b>When:</b> '+esc(x.when)+'</div>':'')+
+    (ideaPitchBy(x)?'<div class="t2"><b>Pitch by:</b> '+(ideaPitchBy(x)<=Date.now()?'now':new Date(ideaPitchBy(x)).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}))+'</div>':'')+
     (x.sourceUrl&&safeUrl(x.sourceUrl)?'<div class="t2"><a href="'+esc(safeUrl(x.sourceUrl))+'" target="_blank" rel="noopener">source</a></div>':'')+
     (st==='pursuing'&&x.quill&&x.quill.status==='ready'?'<div class="t2" style="color:var(--text3)">Quill will draft the pitch to each venue Iris named on his next run.</div>':'')+
     (st==='pursuing'&&x.quill&&x.quill.status==='drafted'?'<div class="t2" style="color:var(--text3)">Quill drafted '+esc(x.quill.count||0)+' pitches. Review them on his desk.'+((x.quill.skipped||[]).length?' Skipped: '+esc([].concat(x.quill.skipped).join('; ')):'')+'</div>':'')+
@@ -11338,6 +11339,19 @@ function whenResult(w){
   const target=Math.min.apply(null,c);
   return {target:target,label:label.join(', '),hidden:target-70*DAY>now};
 }
+// When an idea needs to be pitched by: about 10 weeks before it happens
+function ideaTarget(x){
+  try{
+    if(x.saved&&x.saved.target)return +x.saved.target;
+    if(x.whenSel){const r=whenResult(x.whenSel);if(r)return r.target;}
+    const t=String(x.when||'').toLowerCase();if(!t)return 0;
+    const now=Date.now(),d0=new Date(),c=[];
+    MON.forEach((m,i)=>{if(t.indexOf(m.toLowerCase())>=0){let d=new Date(d0.getFullYear(),i,1,12);if(i===d0.getMonth())c.push(now);else{if(d.getTime()<now)d.setFullYear(d.getFullYear()+1);c.push(d.getTime());}}});
+    return c.length?Math.min.apply(null,c):0;
+  }catch(e){return 0;}
+}
+function ideaPitchBy(x){const t=ideaTarget(x);return t?t-70*DAY:0;}
+function ideaByDate(a,b){const x=ideaPitchBy(a),y=ideaPitchBy(b);if(x&&y)return x-y;if(x)return -1;if(y)return 1;return (b.createdAt||0)-(a.createdAt||0);}
 function whenSig(w){return (w.months||[]).join(',')+'|'+(w.date||'');}
 function ideaEditBox(x){
   const i=esc(x.id),vn=ideaVenues(x).map(v=>v.name).join(', ');
@@ -11397,16 +11411,25 @@ function ventHtml(){
   if(done.length)h+=det('ventdone','Answered ('+done.length+')',done.map(card).join(''),false);
   return h;
 }
+function ideaView(){return ((((S.cfg||{}).curator||{}).prefs||{}).ideaView)==='list'?'list':'grid';}
+function ideaRow(x){
+  const st=(x.status==='saved'&&x.resurfaced)?'new':(x.status||'new'),pb=ideaPitchBy(x);
+  return '<details data-pk="ir_'+esc(x.id)+'"'+(S.open['pr_ir_'+x.id]?' open':'')+' style="border:1px solid var(--border,#444);border-radius:10px;padding:.5rem .8rem;margin-bottom:.4rem"><summary style="cursor:pointer;display:flex;gap:.5rem;align-items:center;flex-wrap:wrap"><b style="flex:1;min-width:160px">'+esc(x.title||'Untitled')+'</b><span class="tm-tag">'+esc(x.kind||'Idea')+'</span><span class="tm-tag">'+esc(st)+'</span>'+(x.when?'<span style="font-size:.78rem;opacity:.75">'+esc(x.when)+'</span>':'')+(pb?'<span style="font-size:.78rem;opacity:.75">Pitch by '+(pb<=Date.now()?'now':new Date(pb).toLocaleDateString('en-US',{month:'short',day:'numeric'}))+'</span>':'')+'</summary>'+(x.pitch?'<div style="margin:.6rem 0 .2rem;font-size:.88rem;line-height:1.5;white-space:pre-wrap">'+esc(x.pitch)+'</div>':'')+ideaCard(x)+'</details>';
+}
+function ideaToggle(){
+  const v=ideaView(),b=(k,svg,t)=>'<button type="button" class="tm-b'+(v===k?' pri':'')+'" data-act="ideaview" data-v="'+k+'" title="'+t+'" style="padding:.35rem .6rem">'+svg+'</button>';
+  return '<div class="tm-row" style="gap:.4rem;margin:.4rem 0">'+b('grid','<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>','Card view')+b('list','<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="4" cy="6" r="1"/><circle cx="4" cy="12" r="1"/><circle cx="4" cy="18" r="1"/><path d="M9 6h12M9 12h12M9 18h12"/></svg>','List view')+'</div>';
+}
 function vIris(){
   const c=curatorState();
-  let h=ventHtml()+'<div class="tm-sec">Ideas ('+c.fresh.length+' new, '+c.ideas.length+' total)</div><div class="tm-hint">Themed nights, events and pitches Iris built from what we have, the venues, Sable\'s finds and the public domain. Pursue one and Quill drafts the pitch to each venue Iris named on his next run.</div>';
+  let h=ventHtml()+'<div class="tm-sec">Ideas ('+c.fresh.length+' new, '+c.ideas.length+' total)</div><div class="tm-hint">Themed nights, events and pitches Iris built from what we have, the venues, Sable\'s finds and the public domain. Pursue one and Quill drafts the pitch to each venue Iris named on his next run.</div>'+ideaToggle();
   if(!c.ideas.length)h+='<div class="tm-empty">No ideas yet. Fill in the venue details and catalog below, then run the Curator task.</div>';
   const away=x=>x.status==='skipped'||x.status==='brainstormed'||(x.status==='saved'&&!x.resurfaced);
-  c.ideas.filter(x=>!away(x)&&x.status!=='pursuing').forEach(x=>h+=ideaCard(x));
+  {const main=c.ideas.filter(x=>!away(x)&&x.status!=='pursuing'),liked=main.filter(x=>x.status==='liked').sort(ideaByDate),rest=main.filter(x=>x.status!=='liked').sort(ideaByDate);liked.concat(rest).forEach(x=>h+=(ideaView()==='list'?ideaRow(x):ideaCard(x)));}
   h+=det('ideaadd','Add an idea by hand','<div class="tm-fg"><div class="full"><label class="tm-lbl">Title</label><input class="tm-in" id="id-title"></div><div><label class="tm-lbl">Kind</label><select class="tm-sel" id="id-kind">'+CU_KIND.map(k=>'<option>'+k+'</option>').join('')+'</select></div><div class="full"><label class="tm-lbl">The idea</label><textarea class="tm-ta" id="id-pitch"></textarea></div><div class="full"><label class="tm-lbl">Best at (venues)</label><input class="tm-in" id="id-venues"></div>'+whenControl('iw-new',null)+'</div><div class="tm-row"><button class="tm-b pri" data-act="ideaadd">Add</button></div>',false);
-  const pu=c.ideas.filter(x=>x.status==='pursuing'&&!away(x));
+  const pu=c.ideas.filter(x=>x.status==='pursuing'&&!away(x)).sort(ideaByDate);
   h+='<div class="tm-sec">Pursuing ('+pu.length+')</div><div class="tm-hint">Ideas you are going after. Quill drafts the venue pitches for these.</div>';
-  h+=pu.length?pu.map(ideaCard).join(''):'<div class="tm-empty">Nothing yet. Press Pursue on an idea and it moves here.</div>';
+  h+=pu.length?pu.map(x=>ideaView()==='list'?ideaRow(x):ideaCard(x)).join(''):'<div class="tm-empty">Nothing yet. Press Pursue on an idea and it moves here.</div>';
   const sv=c.ideas.filter(x=>x.status==='saved'&&!x.resurfaced).sort((a,b)=>String((a.saved||{}).month||'').localeCompare(String((b.saved||{}).month||'')));
   if(sv.length)h+=det('ideasv','Saved for later ('+sv.length+')',sv.map(ideaCard).join(''),false);
   h+='<div class="tm-sec">Brainstorm list ('+c.seeds.length+')</div><div class="tm-hint">Seeds of ideas that you will flesh out yourself. Add your own notes, then promote one to a full idea when it is ready. Iris will not repeat anything on this list.</div>';
@@ -12183,6 +12206,7 @@ const A={
   async agrdel(t){if(!confirm('Remove this?'))return;await sgSave({['agreements.'+t.dataset.id]:null});},
   async addprospect(t){await addProspectDoc({name:t.dataset.name,city:t.dataset.city||'',evidence:t.dataset.why||'',pitch:t.dataset.pitch||''});},
   async dossidea(t){const d=researchState().done.find(x=>x.id===t.dataset.id);if(!d)return;const a=[].concat(d.ideas||[])[+t.dataset.i];if(!a)return;await cuSave({['ideas.i'+Date.now().toString(36)]:{title:d.name+': '+String(a).slice(0,60),kind:'Venue pitch',pitch:a,venues:[d.name],status:'new',source:'research',createdAt:Date.now()}});movedTo(t,'Sent to Iris: Ideas');toast('Saved to Iris\'s Ideas.');},
+  async ideaview(t){await cuNow({'prefs.ideaView':t.dataset.v});},
   async ideaset(t){const v=t.dataset.v,id=t.dataset.id,p={['ideas.'+id+'.status']:v,['ideas.'+id+'.updatedAt']:Date.now()};if(v==='pursuing'){const cur=curatorState().ideas.find(i=>i.id===id);if(!cur||!cur.quill||cur.quill.status!=='drafted')p['ideas.'+id+'.quill']={status:'ready',at:Date.now()};}if(v==='new'){p['ideas.'+id+'.saved']=null;}await cuNow(p);if(v==='pursuing'){movedTo(t,'Sent to Quill');toast('Sent to Quill. He drafts the venue pitches on his next run.');}},
   async gsaveopen(t){const b=document.getElementById('gsvbox-'+t.dataset.id);if(b)b.style.display=b.style.display==='none'?'block':'none';},
   async gideasave(t){const id=t.dataset.id,sel=document.getElementById('gsv-'+id);if(!sel)return;const m=sel.value,lab=sel.options[sel.selectedIndex].text;await cuNow({['ideas.'+id+'.status']:'saved',['ideas.'+id+'.saved']:{month:m,label:lab,at:Date.now()},['ideas.'+id+'.updatedAt']:Date.now()});toast('Saved for '+lab+'. It comes back about ten weeks before.');},
