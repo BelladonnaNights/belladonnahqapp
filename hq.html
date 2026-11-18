@@ -10295,6 +10295,18 @@ window.hqLogAdd=async function(ctx,rid,btn){
   }catch(e){toast('Could not save: '+(e&&e.message||e),true);}
 };
 
+window.hqProspectDelete=async function(pid,btn){
+  const v=(S.venues||[]).find(x=>x.id===pid);if(!v){toast('Could not find that prospect.',true);return;}
+  let ok=false;try{ok=await window.hqAlsoModal(v.name,'prospect','Delete '+v.name+' from Prospects? This cannot be undone.');}catch(e){ok=confirm('Delete '+v.name+' from Prospects? This cannot be undone.');}
+  if(!ok)return;
+  try{
+    if(btn){btn.disabled=true;btn.textContent='Deleting...';}
+    await db.collection('agent_venues').doc(pid).delete();
+    S.venues=(S.venues||[]).filter(x=>x.id!==pid);
+    try{renderProspects(1);}catch(e){}
+    toast('Deleted '+v.name+' from Prospects.');
+  }catch(e){if(btn){btn.disabled=false;btn.textContent='Delete';}toast('Could not delete: '+e.message,true);}
+};
 window.hqProspectToLead=async function(pid,btn){
   try{
     const v=(S.venues||[]).find(x=>x.id===pid);if(!v){toast('Could not find that prospect.',true);return;}
@@ -11266,7 +11278,7 @@ function renderProspects(force){
       '<div class="vm-grid" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr));margin:.3rem 0 .6rem">'+pfIn(v,'name','Name')+pfIn(v,'city','City')+pfIn(v,'address','Address')+pfIn(v,'bizType','Types (more than one is fine, comma between)')+'</div>'+pfTa(v,'hours','Hours of service')+pfCard(v,em)+pfTa(v,'foundFrom','Where we got them from')+pfTa(v,'evidence','Why them')+pfTa(v,'pitch','Pitch (format and night)')+'<div class="form-group" style="margin:.3rem 0 .6rem"><label class="form-label">Notes</label><textarea class="form-textarea" id="lg-pf-'+esc(v.id)+'-notes" style="min-height:3.4rem;resize:vertical" onchange="hqPfSave(\''+esc(v.id)+'\',\'notes\',this.value)">'+esc(v.notes||'')+'</textarea></div>'+(thrownInfo(v)?line('Thrown to Raven from '+thrownInfo(v).who,thrownInfo(v).title+(thrownInfo(v).at?' ('+fmtDay(thrownInfo(v).at)+')':'')):'')+line("Iris's idea to open with",baitFor(v.name))+line("Iris's best pitch",bestFitText(v.name))+(v.hours?'':line('Hours Iris found',(irisDossier(v.name)||{}).hours))+line('Already runs',(function(){const r=irisDossier(v.name);if(!r)return '';const a=[].concat(r.runsNow||[]).filter(Boolean);return a.length?a.join('; '):(r.checkedAt?'Nothing found running':'');})())+
       prDraftsHtml(v)+
       '<details data-pk="log_'+esc(v.id)+'"'+(S.open['pr_log_'+v.id]?' open':'')+' style="margin:.5rem 0;padding:.4rem .7rem;border:1px solid var(--border,#444);border-radius:8px"><summary style="cursor:pointer;font-size:.7rem;letter-spacing:.2em;text-transform:uppercase;opacity:.85">Outreach log and emails sent'+(T.length?' ('+T.length+')':'')+'</summary><div style="margin-top:.5rem">'+window.hqLogFormHtml('pr',v)+window.hqHistoryHtml(v,'venue')+'</div></details>'+
-      '<div class="og-box" data-ogname="'+esc(v.name)+'" style="margin:.6rem 0"></div>'+offersBlock(v.id,v.name,'pr')+'<div style="margin:.6rem 0;display:flex;gap:1rem;flex-wrap:wrap;align-items:center">'+((st==='target'||st==='followup')?'<label style="font-size:.85rem;display:inline-flex;gap:.4rem;align-items:center;cursor:'+(T.length?'default':'pointer')+'"'+(T.length?' title="Outreach has been logged, so this is in progress automatically"':'')+'><input type="checkbox"'+(st==='followup'?' checked':'')+(T.length?' disabled':'')+' onchange="hqPfProg(\''+esc(v.id)+'\',this.checked)" style="width:16px;height:16px"> In progress</label>':'')+'<label style="font-size:.85rem;display:inline-flex;gap:.4rem;align-items:center;cursor:pointer"><input type="checkbox"'+(v.goneCold?' checked':'')+' onchange="hqPfCold(\''+esc(v.id)+'\',this.checked)" style="width:16px;height:16px"> Gone cold</label>'+(st==='lead'?'<span class="tm-tag booked">Moved to Leads</span>':'<button type="button" class="btn-sm btn-gold" onclick="hqProspectToLead(\''+esc(v.id)+'\',this)">Move to Leads</button>')+'</div><div style="font-size:.75rem;opacity:.7">Work this one on Raven\'s desk in My Team.</div></div></details>';
+      '<div class="og-box" data-ogname="'+esc(v.name)+'" style="margin:.6rem 0"></div>'+offersBlock(v.id,v.name,'pr')+'<div style="margin:.6rem 0;display:flex;gap:1rem;flex-wrap:wrap;align-items:center">'+((st==='target'||st==='followup')?'<label style="font-size:.85rem;display:inline-flex;gap:.4rem;align-items:center;cursor:'+(T.length?'default':'pointer')+'"'+(T.length?' title="Outreach has been logged, so this is in progress automatically"':'')+'><input type="checkbox"'+(st==='followup'?' checked':'')+(T.length?' disabled':'')+' onchange="hqPfProg(\''+esc(v.id)+'\',this.checked)" style="width:16px;height:16px"> In progress</label>':'')+'<label style="font-size:.85rem;display:inline-flex;gap:.4rem;align-items:center;cursor:pointer"><input type="checkbox"'+(v.goneCold?' checked':'')+' onchange="hqPfCold(\''+esc(v.id)+'\',this.checked)" style="width:16px;height:16px"> Gone cold</label>'+(st==='lead'?'<span class="tm-tag booked">Moved to Leads</span>':'<button type="button" class="btn-sm btn-gold" onclick="hqProspectToLead(\''+esc(v.id)+'\',this)">Move to Leads</button><button type="button" class="btn-sm" style="color:#C0654F;border-color:rgba(192,101,79,.5)" onclick="hqProspectDelete(\''+esc(v.id)+'\',this)">Delete</button>')+'</div><div style="font-size:.75rem;opacity:.7">Work this one on Raven\'s desk in My Team.</div></div></details>';
   });
   el.innerHTML=h;
   try{if(window.ogRefresh)window.ogRefresh();}catch(e){}
