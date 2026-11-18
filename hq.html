@@ -11422,7 +11422,7 @@ function ideaToggle(){
 }
 function vIris(){
   const c=curatorState();
-  let h=ventHtml()+'<div class="tm-sec">Ideas ('+c.fresh.length+' new, '+c.ideas.length+' total)</div><div class="tm-hint">Themed nights, events and pitches Iris built from what we have, the venues, Sable\'s finds and the public domain. Pursue one and Quill drafts the pitch to each venue Iris named on his next run.</div>'+ideaToggle();
+  let h=ventHtml()+'<div class="tm-sec">Ideas ('+c.fresh.length+' new)</div><div class="tm-hint">Themed nights, events and pitches Iris built from what we have, the venues, Sable\'s finds and the public domain. Pursue one and Quill drafts the pitch to each venue Iris named on his next run.</div>'+ideaToggle();
   if(!c.ideas.length)h+='<div class="tm-empty">No ideas yet. Fill in the venue details and catalog below, then run the Curator task.</div>';
   const away=x=>x.status==='skipped'||x.status==='brainstormed'||(x.status==='saved'&&!x.resurfaced);
   {const main=c.ideas.filter(x=>!away(x)&&x.status!=='pursuing'),liked=main.filter(x=>x.status==='liked').sort(ideaByDate),rest=main.filter(x=>x.status!=='liked').sort(ideaByDate);liked.concat(rest).forEach(x=>h+=(ideaView()==='list'?ideaRow(x):ideaCard(x)));}
