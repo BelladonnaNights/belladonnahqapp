@@ -469,6 +469,9 @@ html::-webkit-scrollbar-thumb:hover,.modal::-webkit-scrollbar-thumb:hover{backgr
 .sched-legend-dot{width:9px;height:9px;border-radius:50%;}
 .sched-status-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
 .sched-status-label{font-size:0.6rem;letter-spacing:0.14em;text-transform:uppercase;padding:0.2rem 0.6rem;border-radius:6px;white-space:nowrap;}
+.cal-ev{font-size:0.62rem;padding:2px 6px;margin-bottom:2px;border-radius:6px;cursor:pointer;line-height:1.4;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;background:rgba(201,168,76,.18);border:1px dashed var(--gold);color:var(--gold);}
+.cal-addev{position:absolute;top:2px;right:4px;font-size:.55rem;letter-spacing:.06em;text-transform:uppercase;color:var(--gold);opacity:0;cursor:pointer;padding:1px 4px;border:1px solid var(--border-gold);border-radius:6px;background:var(--surface);}
+.cal-cell:hover .cal-addev{opacity:.85;}
 .gig-event{font-size:0.62rem;padding:2px 6px;margin-bottom:2px;border-radius:6px;cursor:pointer;line-height:1.4;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .bulk-add-row{display:flex;gap:0.5rem;align-items:center;margin-bottom:0.6rem;flex-wrap:wrap;}
 .bulk-add-row .bulk-input{flex:1;min-width:110px;}
@@ -1470,6 +1473,7 @@ html::-webkit-scrollbar-thumb:hover,.modal::-webkit-scrollbar-thumb:hover{backgr
   <div class="subpanel active" id="sub-schedule-cal">
     <div class="sched-toolbar">
       <button class="add-entry-btn" onclick="openGigModal()">+ Schedule Gig</button>
+      <button class="add-entry-btn" onclick="openCalEventModal()">+ Add Event</button>
       <button class="btn-sm" onclick="openBulkAddModal()">+ Bulk Add</button>
       <button class="btn-sm" onclick="syncAllGigsToPlanner()" title="Pushes every upcoming HQ gig into the Planner (trivia, karaoke, bingo)">↻ Sync to Planner</button>
       <select class="roster-filter-select" id="calFilterVenue" onchange="renderGigCalendar()"><option value="">All Venues</option></select>
@@ -1851,8 +1855,18 @@ match /agent_config/{id}  { allow read, write: if isAdmin(); }</pre>
     <div class="form-group"><label class="form-label">Last Name </label><input type="text" class="form-input" id="rmLastName"></div>
     <div class="form-group"><label class="form-label">Location</label><select class="form-input" id="rmLocation"></select></div>
     </div></div>
+    <div class="vm-sec"><div class="vm-sec-h"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.500-7 8-7s8 3 8 7"/></svg>About this host</div><div class="vm-grid vm-g3">
+    <div class="form-group"><label class="form-label">Contact Email</label><input type="text" class="form-input" id="rmEmail"><div class="vm-hint">their own email, separate from the one they sign in with</div></div>
+    <div class="form-group"><label class="form-label">Phone</label><input type="text" class="form-input" id="rmPhone"></div>
+    <div class="form-group"><label class="form-label">Dress</label><input type="text" class="form-input" id="rmDress"><div class="vm-hint">size, or what they wear to gigs</div></div>
+    <div class="form-group"><label class="form-label">Instagram</label><input type="text" class="form-input" id="rmInstagram"></div>
+    <div class="form-group"><label class="form-label">Facebook</label><input type="text" class="form-input" id="rmFacebook"></div>
+    <div class="form-group"><label class="form-label">TikTok</label><input type="text" class="form-input" id="rmTikTok"></div>
+    </div>
+    <div class="form-group"><label class="form-label">Notes</label><textarea class="form-input" id="rmNotes" style="min-height:70px;"></textarea></div>
+    </div>
     <div class="vm-sec"><div class="vm-sec-h"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M5 6h11l3 2.500-3 2.500H5zM19 14H8l-3 2.500L8 19h11z"/></svg>Belladonna account link</div><div class="vm-grid vm-g2">
-    <div class="form-group"><label class="form-label">Host ID </label><div style="display:flex;gap:0.4rem;align-items:center;"><input type="text" class="form-input" id="rmHostId" readonly style="color:var(--text3);" onblur="lockRmHostId()"><button type="button" class="hq-btn-ghost" style="padding:0.45rem 0.8rem;" onclick="unlockRmHostId()">Edit</button></div><div class="vm-hint">matched against the Host ID set on their Gateway account in Accounts — takes priority over the email below if both are set</div></div>
+    <div class="form-group"><label class="form-label">Host ID </label><div style="display:flex;gap:0.4rem;align-items:center;"><input type="text" class="form-input" id="rmHostId" readonly style="color:var(--text3);" onblur="lockRmHostId()"><button type="button" class="hq-btn-ghost" style="padding:0.45rem 0.8rem;" onclick="unlockRmHostId()">Edit</button><button type="button" class="hq-btn-ghost" id="rmHostIdNext" style="padding:0.45rem 0.8rem;white-space:nowrap;" onclick="assignRmNextHostId()">Assign next</button></div><div class="vm-hint">matched against the Host ID set on their Gateway account in Accounts — takes priority over the email below if both are set</div></div>
     <div class="form-group"><label class="form-label">Gateway Account Email </label><input type="text" class="form-input" id="rmGatewayEmail"><div class="vm-hint">fallback link to their Belladonna account if no Host ID is set on either side</div></div>
     </div>
     <div class="form-group" id="rmHostSetupWrap" style="display:none;">
@@ -1911,6 +1925,27 @@ match /agent_config/{id}  { allow read, write: if isAdmin(); }</pre>
 </div>
 
 <!-- GIG SCHEDULE MODAL -->
+<div class="modal-bg vmx" id="calEvModal">
+  <div class="modal vm-wide">
+    <div class="vm-top"><button type="button" class="vm-back" onclick="closeCalEventModal()">&larr; Schedule</button><div class="vm-ttl"><i></i><span id="calEvTitleHd">Add Event</span><i class="r"></i></div><span></span></div>
+    <div class="vm-sec"><div class="vm-grid vm-g2">
+      <div class="form-group"><label class="form-label">Event name</label><input type="text" class="form-input" id="ceName"></div>
+      <div class="form-group"><label class="form-label">Venue / place <span style="font-size:0.6rem;color:var(--text4);text-transform:none;letter-spacing:0;">(optional)</span></label><select class="form-input" id="ceVenue"></select></div>
+    </div>
+    <div class="vm-grid vm-g3">
+      <div class="form-group"><label class="form-label">Date</label><input type="date" class="form-input" id="ceDate"></div>
+      <div class="form-group"><label class="form-label">Last day <span style="font-size:0.6rem;color:var(--text4);text-transform:none;letter-spacing:0;">(only if it runs more than one day)</span></label><input type="date" class="form-input" id="ceEnd"></div>
+      <div class="form-group"><label class="form-label">Start time</label><input type="time" class="form-input" id="ceTime"></div>
+    </div>
+    <div class="form-group"><label class="form-label">Details</label><textarea class="form-input" id="ceNotes" style="min-height:90px;"></textarea></div>
+    </div>
+    <div style="display:flex;gap:0.5rem;justify-content:flex-end;padding:0 1.25rem 1.25rem;">
+      <button type="button" class="btn-sm" id="ceDelBtn" style="display:none;margin-right:auto;" onclick="deleteCalEvent()">Delete</button>
+      <button type="button" class="btn-sm" onclick="closeCalEventModal()">Cancel</button>
+      <button type="button" class="btn-sm btn-gold" onclick="saveCalEvent()">Save Event</button>
+    </div>
+  </div>
+</div>
 <div class="modal-bg vmx" id="gigModal">
   <div class="modal vm-wide">
     <div class="vm-top"><button type="button" class="vm-back" onclick="closeGigModal()">&larr; Schedule</button><div class="vm-ttl"><i></i><span id="gigModalTitle">Schedule Gig</span><i class="r"></i></div><span></span></div>
@@ -4545,11 +4580,53 @@ function renderGigCalendar(){
         const idx=scheduleExternalItemsFlat.length;scheduleExternalItemsFlat.push(it);
         entriesHtml+=`<div class="gig-event" style="background:${c}22;border:1px solid ${c};color:${c}" title="From ${esc(it.source||'the Planner')}" onclick="event.stopPropagation();showDashGigDetail(${idx},true)">${it.venueNote?'★ ':''}${it.kind}: ${it.venue}</div>`;
       });
-      html+=`<div class="cal-cell${otherMonth?' other-month':''}${isToday?' today':''}" onclick="openGigModalOnDate('${dateStr}')"><div class="cal-date-num">${day}</div><div class="cal-entries">${entriesHtml}</div></div>`;
+      if(!calType||calType==='Events')calEventsOn(dateStr).filter(e=>!calVenue||e.venue===calVenue).forEach(e=>{
+        entriesHtml+=`<div class="cal-ev" title="${escAttr((e.title||'')+(e.venue?' at '+e.venue:'')+(e.notes?': '+e.notes:''))}" onclick="event.stopPropagation();openCalEventModal('${e.id}')">${e.time?esc(e.time)+' ':''}${esc(e.title||'Event')}${e.venue?' · '+esc(e.venue):''}</div>`;
+      });
+      html+=`<div class="cal-cell${otherMonth?' other-month':''}${isToday?' today':''}" onclick="openGigModalOnDate('${dateStr}')"><span class="cal-addev" title="Add an event on this day" onclick="event.stopPropagation();openCalEventModal(null,'${dateStr}')">+ event</span><div class="cal-date-num">${day}</div><div class="cal-entries">${entriesHtml}</div></div>`;
     }
     html+=`</div></div>`;
   }
   scroll.innerHTML=html;
+}
+/* ── calendar events: things that are not gigs (festivals, meetings, parties, holidays). Saved to the cloud as hq_data/cal-events. ── */
+let calEvents=[],calEventsLoaded=false,editingCalEvId=null;
+PERSIST_GUARDS['cal-events']=()=>calEventsLoaded;
+function loadCalEvents(){
+  try{const r=LS.get('cal-events');if(r){const v=JSON.parse(r);if(Array.isArray(v))calEvents=v;}}catch(e){}
+  if(!db){calEventsLoaded=true;return;}
+  db.collection('hq_data').doc('cal-events').onSnapshot(snap=>{
+    if(snap.exists){try{const v=JSON.parse(snap.data().value);if(Array.isArray(v))calEvents=v;}catch(e){}}
+    calEventsLoaded=true;try{renderGigCalendar();}catch(e){}
+  },()=>{calEventsLoaded=true;});
+}
+function calEventsOn(dateStr){return calEvents.filter(e=>e&&e.date&&e.date<=dateStr&&dateStr<=(e.endDate&&e.endDate>=e.date?e.endDate:e.date));}
+function openCalEventModal(id,dateStr){
+  editingCalEvId=id||null;const e=id?calEvents.find(x=>x.id===id):null;
+  document.getElementById('calEvTitleHd').textContent=e?'Edit Event':'Add Event';
+  document.getElementById('ceName').value=e?e.title||'':'';
+  document.getElementById('ceDate').value=e?e.date||'':(dateStr||'');
+  document.getElementById('ceEnd').value=e?e.endDate||'':'';
+  document.getElementById('ceTime').value=e?e.time||'':'';
+  document.getElementById('ceNotes').value=e?e.notes||'':'';
+  document.getElementById('ceVenue').innerHTML=gigOpts(getVenueNames(),e?e.venue||'':'','No venue');
+  document.getElementById('ceDelBtn').style.display=e?'':'none';
+  document.getElementById('calEvModal').classList.add('open');
+}
+function closeCalEventModal(){document.getElementById('calEvModal').classList.remove('open');editingCalEvId=null;}
+function saveCalEvent(){
+  if(!calEventsLoaded){alert('Still loading the events from the cloud, give it a second and try Save again.');return;}
+  const title=document.getElementById('ceName').value.trim(),date=document.getElementById('ceDate').value;
+  if(!title){alert('Give the event a name.');return;}
+  if(!date){alert('Pick the date.');return;}
+  const endDate=document.getElementById('ceEnd').value,rec={title,date,endDate:endDate&&endDate>date?endDate:'',time:document.getElementById('ceTime').value,venue:document.getElementById('ceVenue').value,notes:document.getElementById('ceNotes').value.trim()};
+  if(editingCalEvId){const e=calEvents.find(x=>x.id===editingCalEvId);if(e)Object.assign(e,rec);}
+  else calEvents.push(Object.assign({id:'ev'+Date.now().toString(36)+Math.random().toString(36).slice(2,5)},rec));
+  persist('cal-events',calEvents);closeCalEventModal();renderGigCalendar();
+}
+function deleteCalEvent(){
+  if(!editingCalEvId||!confirm('Delete this event?'))return;
+  calEvents=calEvents.filter(x=>x.id!==editingCalEvId);persist('cal-events',calEvents);closeCalEventModal();renderGigCalendar();
 }
 function renderScheduleAll(){renderScheduleSpreadsheet();renderGigCalendar();}
 function gigOpts(list,cur,ph){
@@ -6514,6 +6591,21 @@ function hostDragEnd(){document.querySelectorAll('.roster-card').forEach(el=>{el
 function unlockVmVenueId(){const i=document.getElementById('vmVenueId');i.readOnly=false;i.style.color='';i.focus();i.select();}
 function lockVmVenueId(){setTimeout(()=>{const i=document.getElementById('vmVenueId');if(i){i.readOnly=true;i.style.color='var(--text3)';}},150);}
 function unlockRmHostId(){const i=document.getElementById('rmHostId');i.readOnly=false;i.style.color='';i.focus();i.select();}
+// Next free Host ID: looks at every Host ID already on the roster and on Gateway accounts (BD-005, BD-006 ...) and takes the next number in the same style.
+function nextHostIdValue(){
+  const ids=[];roster.forEach(h=>{if(h&&h.hostId)ids.push(String(h.hostId).trim());});(typeof accounts!=='undefined'?accounts:[]).forEach(a=>{if(a&&a.hostId)ids.push(String(a.hostId).trim());});
+  const by={};let best=null;
+  ids.forEach(id=>{const m=id.match(/^(.*?)(\d+)$/);if(!m)return;const k=m[1],n=parseInt(m[2],10),w=m[2].length;const o=by[k]||(by[k]={c:0,max:0,w:w});o.c++;if(n>o.max)o.max=n;if(w>o.w)o.w=w;});
+  Object.keys(by).forEach(k=>{if(!best||by[k].c>by[best].c)best=k;});
+  if(best===null)return 'BD-001';
+  const o=by[best];return best+String(o.max+1).padStart(o.w,'0');
+}
+function assignRmNextHostId(){
+  const inp=document.getElementById('rmHostId'),b=document.getElementById('rmHostIdNext');if(!inp)return;
+  if(inp.value.trim()){if(!confirm('This host already has the ID '+inp.value.trim()+'. Replace it with the next one?'))return;}
+  const id=nextHostIdValue();inp.value=id;inp.style.color='var(--text)';
+  if(b){b.textContent='Assigned '+id+' (press Save)';}
+}
 function lockRmHostId(){setTimeout(()=>{const i=document.getElementById('rmHostId');if(i){i.readOnly=true;i.style.color='var(--text3)';}},150);}
 function openRosterModal(id=null){
   editRosterId=id;const host=id?roster.find(h=>h.id===id):null;
@@ -6525,6 +6617,8 @@ function openRosterModal(id=null){
   // No Host ID on this roster entry yet but its Gateway account has one (matched by email)? Pre-fill it — it only saves when you press Save.
   if(host&&!host.hostId&&host.gatewayEmail){const m=matchGatewayAccount('',host.gatewayEmail);if(m&&m.hostId)document.getElementById('rmHostId').value=m.hostId;}
   document.getElementById('rmGatewayEmail').value=host?host.gatewayEmail||'':'';
+  [['rmEmail','email'],['rmPhone','phone'],['rmDress','dress'],['rmInstagram','instagram'],['rmFacebook','facebook'],['rmTikTok','tiktok'],['rmNotes','notes']].forEach(([i,k])=>{const el=document.getElementById(i);if(el)el.value=host?host[k]||'':'';});
+  {const nb=document.getElementById('rmHostIdNext');if(nb){nb.style.display=(host&&host.hostId)?'none':'';nb.textContent='Assign next';nb.disabled=false;}}
   renderRosterHostSetupStatus(host);
   renderHostRegularGigs(host);
   const locSel=document.getElementById('rmLocation');
@@ -6552,6 +6646,7 @@ function saveRoster(){
   const lastName=document.getElementById('rmLastName').value.trim();
   const hostId=document.getElementById('rmHostId').value.trim();
   const gatewayEmail=document.getElementById('rmGatewayEmail').value.trim().toLowerCase();
+  const prof={};[['rmEmail','email'],['rmPhone','phone'],['rmDress','dress'],['rmInstagram','instagram'],['rmFacebook','facebook'],['rmTikTok','tiktok'],['rmNotes','notes']].forEach(([i,k])=>{const el=document.getElementById(i);prof[k]=el?el.value.trim():'';});
   const locationId=document.getElementById('rmLocation').value;
   const skills=[...document.querySelectorAll('#skillChips .selected-skill')].map(el=>el.textContent);
   const vs=[...document.querySelectorAll('#venueChips .selected-venue')].map(el=>el.textContent);
@@ -6565,8 +6660,8 @@ function saveRoster(){
   let savedId=editRosterId;
   let _rc=null;try{const nn=x=>String(x||'').toLowerCase().replace(/[^a-z0-9]/g,'');_rc=(typeof recruits!=='undefined'?recruits:[]).find(r=>nn(r.name)===nn(name))||null;}catch(e){}
   const _ri=_rc?{phone:_rc.phone||'',email:_rc.email||'',notes:_rc.notes||'',milestones:_rc.milestones||{},createdAt:_rc.createdAt||''}:null;
-  if(editRosterId){const h=roster.find(x=>x.id===editRosterId);if(h){h.name=name;h.lastName=lastName;h.skills=skills;h.venues=vs;h.rankId=rankId;h.locationId=locationId;h.tip=tip;h.hostId=hostId;h.gatewayEmail=gatewayEmail;if(_rc&&!h.recruitId){h.recruitId=_rc.id;h.recruitInfo=_ri;}}}
-  else{savedId=Date.now().toString();roster.push(Object.assign({id:savedId,name,lastName,skills,venues:vs,rankId,locationId,tip,hostId,gatewayEmail},_rc?{recruitId:_rc.id,recruitInfo:_ri}:{}));}
+  if(editRosterId){const h=roster.find(x=>x.id===editRosterId);if(h){h.name=name;h.lastName=lastName;h.skills=skills;h.venues=vs;h.rankId=rankId;h.locationId=locationId;h.tip=tip;h.hostId=hostId;h.gatewayEmail=gatewayEmail;Object.assign(h,prof);if(_rc&&!h.recruitId){h.recruitId=_rc.id;h.recruitInfo=_ri;}}}
+  else{savedId=Date.now().toString();roster.push(Object.assign({id:savedId,name,lastName,skills,venues:vs,rankId,locationId,tip,hostId,gatewayEmail},prof,_rc?{recruitId:_rc.id,recruitInfo:_ri}:{}));}
   persist('host-roster',roster,'rosterSave');
   renderRoster();filterRoster();closeRosterModal();
   syncTipHosts([savedId]);
@@ -7708,6 +7803,7 @@ function clearBan(uid){
 function init(){
   loadStorage();
   loadRoster();
+  loadCalEvents();
   loadRanks();
   loadHostOrder();
   loadGigSchedule();
@@ -7919,7 +8015,7 @@ HARD RULES
 - Never invent prices, dates, availability or facts. If something is missing, say exactly what is missing.
 - Never log into a gig site or any account with a bot. Work only from emails, HQ data and public web pages.
 - Voice: gothic and regal but warm, confident, blunt, brief. No filler, no hedging.
-- LAST STEP OF EVERY RUN, even a quiet one or one that was blocked: write a run note. If you have a config doc, use setConfig with your doc and data {runNote:{body:"...",at:<ms>}} (Sable doc sable, Sigil doc sigil, Thorne doc warden, Jett doc coach, Vesper doc care, Iris doc curator, Sabine doc social, Ren doc ads). If you have no config doc (Raven, Quill, Mirror), addDraft {agent: your lowercase name, kind: the SAME kind you already use for your other drafts (Raven the kind of her cold emails, Quill "reply", Mirror "seo"), label:"Run note", body}. The door rejects any other kind or agent. Body line 1: one plain sentence of what you did or what blocked you. If you need something from Ahnna add "NEEDS YOU:" then one "- " line per ask saying exactly what to do and where. HQ shows it on your desk and on the Gazette.
+- LAST STEP OF EVERY RUN, even a quiet one or one that was blocked: write a run note. If you have a config doc, use setConfig with your doc and data {runNote:{body:"...",at:<ms>}} (Sable doc sable, Sigil doc sigil, Thorne doc warden, Jett doc coach, Vesper doc care, Iris doc curator, Sabine doc social, Ren doc ads). If you have no config doc (Raven, Quill, Mirror), addDraft {agent: your lowercase name, kind: the SAME kind you already use for your other drafts (Raven the kind of her cold emails, Quill "reply", Mirror "seo"), label:"Run note", body}. The door rejects any other kind or agent. Body line 1: one plain sentence of what you did or what blocked you. If you need something from Ahnna add "NEEDS YOU:" then one "- " line per ask saying exactly what to do and where. EVERY NEEDS YOU line must make sense on its own, because Ahnna reads it days later with none of your context. Write each one as: "- <the exact thing to do> | Who: <full name, role and business of every person involved, and who they are to us> | What it is: <the thing in plain words, for example a job offer, a reply, a request, a quote> | Found: <exactly where you found it: the email (sender, subject, date), the web address, the message or the Gazette item, plus the date you saw it> | What I already did: <what you checked or did, and why you did not handle it yourself, for example why it is not a lead> | First seen: <the date you first saw it, and say so if it is a repeat> | Why it needs you: <the reason, and any deadline>". Never write a line that only names a person, a job or a company with no context, and never assume she knows who someone is or what you are talking about. HQ shows it on your desk and on the Gazette.
 `;
 const INFO={
 raven:{
@@ -8920,7 +9016,15 @@ function briefData(){
   d.sg.dueSoon.forEach(x=>need.push({a:'sigil',text:x.name+(x.days<0?' is overdue':' is due in '+x.days+' days'),body:(x.due?'Due '+fmtEv(x.due)+'. ':'')+(x.price?'About '+sgFmt$(sgMoney(x.price)||0)+'. ':'')+(x.repeat?'Repeats '+((SG_REP.find(r=>r[0]===x.repeat)||[0,''])[1].toLowerCase())+'. ':'')+(x.fromEmail?'Pulled from email, so confirm the date. ':'')+'Sigil can draft the reminder.'}));
   add('sigil',d.sg.incomplete.length,plural(d.sg.incomplete.length,'person is','people are')+' missing paperwork',d.sg.incomplete.slice(0,5).map(p=>p.name+' needs '+p.miss.join(', ')).join('; ')+'.');
   add('sigil',d.sPending.length,plural(d.sPending.length,'paperwork reminder','paperwork reminders')+' to approve',d.sPending.map(x=>cut(x.label,60)).join('; ')+'.');
-  {const wn=(typeof webLeads!=='undefined'?webLeads:[]).filter(l=>(l.status||'new')==='new');if(wn.length)need.push({a:'raven',text:plural(wn.length,'new website request','new website requests'),body:wn.slice(0,5).map(l=>(l.venue||'?')+' ('+(l.interest||l.recommendedFormat||'?')+') - '+(l.name||'')+' '+(l.phone||'')).join('; ')+'. Open Leads, Website requests.'});}
+  {const wn=(typeof webLeads!=='undefined'?webLeads:[]).filter(l=>(l.status||'new')==='new');if(wn.length){
+    const one=l=>{const nt=Array.isArray(l.preferredNights)?l.preferredNights.join(', '):(l.preferredNights||'');const ph=l.phone?String(l.phone):'',em=l.email?String(l.email):'';
+      return [ 'Venue: '+(l.venue||'(no venue name given)')+(l.city?' ('+l.city+')':''),
+        'Who: '+(l.name||'(no name given)')+(ph?', phone '+ph:', no phone given')+(em?', email '+em:', no email given'),
+        'Wants: '+(l.interest||l.recommendedFormat||'(did not say)')+(l.recommendedFormat&&l.interest&&l.recommendedFormat!==l.interest?' (the quiz recommended '+l.recommendedFormat+')':''),
+        nt?'Nights that need help: '+nt:'',
+        'Sent: '+(wlWhen(l)||'date unknown')+' from '+(l.source||'the website')+(l.sourceDetail?' ('+l.sourceDetail+')':''),
+        l.notes?'Their note: '+l.notes:''].filter(Boolean).join('\n');};
+    need.push({a:'raven',text:plural(wn.length,'new website request','new website requests'),body:wn.slice(0,5).map(one).join('\n\n')+(wn.length>5?'\n\n...and '+(wn.length-5)+' more in the list.':''),foundBy:'A venue filled out the form on your website (the Venue Match Quiz or the Book Us page). The request lands in HQ by itself. Raven only counts it and tells you.',where:'HQ > Venues tab > Leads > "Website requests" box at the top of the list. Open the request there to call, text, change its status, or press Add to Leads.',go:'weblead'});}}
   {const pr=printRun();if(pr.unk.length)need.push({a:'warden',text:plural(pr.unk.length,'restock request needs','restock requests need')+' a category from the host',body:pr.unk.map(r=>(r.venue||'?')+(r.host?' ('+r.host+')':'')).join(', ')+'. Thorne can draft the question.'});if(pr.toPrint.length)need.push({a:'warden',text:'Print run ready: '+plural(pr.toPrint.length,'item','items'),body:pr.groups.map(g=>g.item+' '+g.cat).join('; ')+'.'});}
   {const ad=adsState();if(ad.settings.budgetReviewed!==ad.mon)need.push({a:'marquee',u:!ad.budget,text:'Recheck your monthly marketing budget',body:(ad.budget?'It is set to '+fmtMoney(ad.budget)+'. ':'It is not set yet. ')+'Open Ren to confirm or change it. It will ask again next month.'});if(ad.fresh.length)add('marquee',ad.fresh.length,plural(ad.fresh.length,'ad move is','ad moves are')+' waiting for you',ad.fresh.slice(0,3).map(p=>p.title+(p.when?' ('+p.when+')':'')).join('; ')+'.');ad.stale.forEach(p=>need.push({a:'marquee',text:'Check how "'+p.title+'" is doing',body:'It has been live a few days. Type in the numbers from Meta and Ren will say keep, change or stop.'}));if(ad.budget&&ad.total>=ad.budget*0.9)need.push({a:'marquee',u:true,text:'Marketing budget almost used up',body:fmtMoney(ad.total)+' of '+fmtMoney(ad.budget)+' spent this month.'});}
   {const cu=curatorState();if(cu.fresh.length)add('herald',cu.fresh.length,plural(cu.fresh.length,'new idea','new ideas')+' from Iris',cu.fresh.slice(0,4).map(x=>x.title).join('; ')+'.');}
@@ -8937,7 +9041,7 @@ function briefData(){
     add('mirror',rv.length,plural(rv.length,'review reply or request','review replies and requests')+' to approve',rv.map(x=>cut(x.label,60)).join('; ')+'.');}
   allNotes().filter(n=>n.status==='pending'&&/NEEDS YOU:/i.test(n.body||'')).forEach(n=>{
     const m=String(n.body).split(/NEEDS YOU:/i)[1]||'',ls=m.split('\n').map(x=>x.replace(/^\s*[-*\u2022]\s*/,'').trim()).filter(Boolean);
-    ls.forEach(l=>need.push({a:n.agent,text:l,body:agent(n.agent)?agent(n.agent).name+' left this in '+(n.agent==='warden'?'his':'her')+' run note '+ago(n.createdAt)+'.':'',note:n.id}));
+    ls.forEach(l=>{const pp=l.split(/\s+\|\s+/);need.push({a:n.agent,text:pp[0],body:(pp.length>1?pp.slice(1).join('\n')+'\n':'')+(agent(n.agent)?agent(n.agent).name+' left this in '+(n.agent==='warden'?'his':'her')+' run note '+ago(n.createdAt)+'.':''),note:n.id});});
   });
   {/* say each thing once: a due-soon item, a draft waiting to approve and a run-note line about the same thing collapse into one */
     const STOP=new Set(['that','this','with','your','from','they','them','there','their','sigil','today','before','about','have','will','needs','need']);
@@ -9318,7 +9422,7 @@ Ops:
 First read agent_config (voice, pricing, outreach) and follow it exactly. In the voice doc, the field email is the EMAIL VOICE: every email, DM, reply and message you write for Ahnna follows it exactly, including how to sign off (the other voice fields are for captions and general tone). Never invent prices, dates, or facts. Check agent_drafts first so you never write a draft that already exists.
 
 WEB ACCESS: open public web pages with your web fetch and web search tools. Do NOT use curl, wget or the shell for websites. The shell cannot reach them, and a result like 000 from curl only means the shell is blocked, not that the page is down. Try the fetch tool on every page first. Only if the fetch tool also fails, name the page and the error in your run note under "- Needs a look:". For pages with photos, open the page and describe what the photos show. If nothing needs doing, write nothing else.
-RUN NOTE (LAST STEP OF EVERY RUN, even a quiet one, even if something blocked you). If you have a config doc, use setConfig with your doc and data {runNote:{body:"<the note>",at:<ms>}} (Sable doc sable, Sigil doc sigil, Thorne doc warden, Jett doc coach, Vesper doc care, Iris doc curator, Sabine doc social, Ren doc ads). If you have no config doc (Raven, Quill, Mirror), addDraft {agent: your lowercase name, kind: the SAME kind you already use for your other drafts (Raven the kind of her cold emails, Quill "reply", Mirror "seo"), label:"Run note", body}. The door rejects any other kind or agent, so never try others. The note's first line is one plain sentence: what you did, what you wrote, and anything that blocked you. If you need something from Ahnna, add a line "NEEDS YOU:" and then one line per ask, each starting with "- ", saying exactly what to do and where. Do not repeat an identical note. HQ shows the note on your desk and puts every NEEDS YOU line on the Gazette.`;
+RUN NOTE (LAST STEP OF EVERY RUN, even a quiet one, even if something blocked you). If you have a config doc, use setConfig with your doc and data {runNote:{body:"<the note>",at:<ms>}} (Sable doc sable, Sigil doc sigil, Thorne doc warden, Jett doc coach, Vesper doc care, Iris doc curator, Sabine doc social, Ren doc ads). If you have no config doc (Raven, Quill, Mirror), addDraft {agent: your lowercase name, kind: the SAME kind you already use for your other drafts (Raven the kind of her cold emails, Quill "reply", Mirror "seo"), label:"Run note", body}. The door rejects any other kind or agent, so never try others. The note's first line is one plain sentence: what you did, what you wrote, and anything that blocked you. If you need something from Ahnna, add a line "NEEDS YOU:" and then one line per ask, each starting with "- ", saying exactly what to do and where. EVERY NEEDS YOU line must make sense on its own, because Ahnna reads it days later with none of your context. Write each one as: "- <the exact thing to do> | Who: <full name, role and business of every person involved, and who they are to us> | What it is: <the thing in plain words, for example a job offer, a reply, a request, a quote> | Found: <exactly where you found it: the email (sender, subject, date), the web address, the message or the Gazette item, plus the date you saw it> | What I already did: <what you checked or did, and why you did not handle it yourself, for example why it is not a lead> | First seen: <the date you first saw it, and say so if it is a repeat> | Why it needs you: <the reason, and any deadline>". Never write a line that only names a person, a job or a company with no context, and never assume she knows who someone is or what you are talking about. Do not repeat an identical note. HQ shows the note on your desk and puts every NEEDS YOU line on the Gazette.`;
 const TASKS=[
  {name:'Lead run',who:'Raven and Quill',when:'Weekdays, 7:00 am',plain:'Looks for people and venues asking for karaoke, trivia or bingo, scores them hot / warm / cold, drafts cold emails and day-5 follow-ups for venues you have not heard back from, and drafts replies to the good leads.',ids:['raven','quill'],lib:true,
   body:`TASK: Lead run.
@@ -11944,8 +12048,8 @@ const A={
     let h='<div style="font-size:1.1rem;font-weight:700;margin-bottom:.4rem">'+esc(n.text)+'</div>';
     h+=row('What it is',esc(n.body||'No more detail was written for this one.'));
     if(m){h+=row('To',esc(m.to||'(no address on file)'))+row('Subject',esc(m.subject||''))+row('Full message',esc(m.body||''));}
-    h+=row('Found by',esc(r.by)+(n.rem?' (your own reminder)':''));
-    h+=row('Where to find it',esc(ag.name)+'\'s desk &middot; <a href="#" data-bi="desk">open desk</a>'+(m?' &middot; <a href="'+esc(gmailHref(m))+'" target="_blank" rel="noopener">open email</a>':'')+(n.ig?' &middot; <a href="'+esc(n.ig)+'" target="_blank" rel="noopener">open Instagram</a>':''));
+    h+=row('Found by',esc(n.foundBy||r.by)+(n.rem?' (your own reminder)':''));
+    h+=row('Where to find it',(n.where?esc(n.where)+(n.go?' &middot; <a href="#" data-bi="go">take me there</a>':'')+'<br>':'')+esc(ag.name)+'\'s desk &middot; <a href="#" data-bi="desk">open desk</a>'+(m?' &middot; <a href="'+esc(gmailHref(m))+'" target="_blank" rel="noopener">open email</a>':'')+(n.ig?' &middot; <a href="'+esc(n.ig)+'" target="_blank" rel="noopener">open Instagram</a>':''));
     if(n.u)h+=row('Priority','Front page. This one is urgent.');
     const cb=document.querySelector('#tmBrief input[data-key="'+(window.CSS&&CSS.escape?CSS.escape(k):k)+'"]');
     const ov=document.createElement('div');ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:1rem';
@@ -11953,6 +12057,10 @@ const A={
     const close=()=>ov.remove();
     ov.addEventListener('click',e=>{const b=e.target.closest('[data-bi]');if(!b){if(e.target===ov)close();return;}
       if(b.dataset.bi==='desk'){e.preventDefault();close();A.open({dataset:{agent:n.a}});return;}
+      if(b.dataset.bi==='go'){e.preventDefault();close();if(n.go==='weblead'){try{const dr=document.getElementById('tmDr');if(dr&&A.closedrawer)A.closedrawer();}catch(_){}
+        const tb=[...document.querySelectorAll('.tab')].find(x=>/showTab\('venues'/.test(x.getAttribute('onclick')||''));if(tb)tb.click();
+        const lb=document.getElementById('leadsTabBtn');if(lb){lb.style.display='';lb.click();}
+        setTimeout(()=>{const bx=document.getElementById('webReqBox');if(bx){const d=document.getElementById('wlDet');if(d){d.open=true;_wlOpen.__all=true;}bx.scrollIntoView({behavior:'smooth',block:'start'});}},300);}return;}
       if(b.dataset.bi==='chk'){close();if(cb)cb.click();return;}
       if(b.dataset.bi==='x')close();});
     document.addEventListener('keydown',function esc2(e){if(e.key==='Escape'){close();document.removeEventListener('keydown',esc2);}});
