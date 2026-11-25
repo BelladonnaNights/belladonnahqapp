@@ -930,6 +930,7 @@ html::-webkit-scrollbar-thumb:hover,.modal::-webkit-scrollbar-thumb:hover{backgr
     <button class="tab" onclick="showTab('team',this)">My Team</button>
     <button class="tab" onclick="showTab('hosts',this)">Hosts</button>
     <button class="tab" onclick="showTab('venues',this)">Venues</button>
+    <button class="tab" onclick="showTab('events',this);evRenderAll()">Events<span id="evTabBadge" title="New event requests and guest feedback" style="display:none;margin-left:.4rem;background:var(--gold);color:#17120a;border-radius:999px;padding:0 .4rem;font-size:.6rem;font-weight:700"></span></button>
     <button class="tab" onclick="showTab('schedule',this)">Schedule</button>
     <button class="tab" onclick="showTab('campaigns',this)">Campaigns</button>
     <button class="tab" onclick="showTab('inventory',this);loadInventory()">Inventory</button>
@@ -1464,6 +1465,58 @@ html::-webkit-scrollbar-thumb:hover,.modal::-webkit-scrollbar-thumb:hover{backgr
 </div>
 
 <!-- SCHEDULE -->
+<div class="panel" id="panel-events">
+  <div class="section-header">
+    <div class="section-title">Events</div>
+    <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+      <a class="btn-sm btn-gold" href="https://belladonnanights.github.io/belladonnatrivia/event-book.html" target="_blank" rel="noopener" style="text-decoration:none;">Event booking form ↗</a>
+      <a class="btn-sm" href="https://belladonnanights.github.io/belladonnatrivia/feedback.html" target="_blank" rel="noopener" style="text-decoration:none;">Feedback form ↗</a>
+    </div>
+  </div>
+  <div class="subtabs">
+    <button class="subtab active" id="evSub_inbox" onclick="showSub('events','inbox',this)"><span id="evSubInbox">Inbox</span></button>
+    <button class="subtab" id="evSub_prospects" onclick="showSub('events','prospects',this)"><span id="evSubProspects">Prospects</span></button>
+    <button class="subtab" id="evSub_leads" onclick="showSub('events','leads',this)"><span id="evSubLeads">Event Leads</span></button>
+    <button class="subtab" id="evSub_booked" onclick="showSub('events','booked',this)"><span id="evSubBooked">Booked</span></button>
+    <button class="subtab" id="evSub_past" onclick="showSub('events','past',this)">Past &amp; Lost</button>
+    <button class="subtab" id="evSub_feedback" onclick="showSub('events','feedback',this)"><span id="evSubFeedback">Guest Feedback</span></button>
+  </div>
+  <div class="subpanel active" id="sub-events-inbox"><div id="evInbox"></div></div>
+  <div class="subpanel" id="sub-events-prospects"><div id="ev_prospects"></div></div>
+  <div class="subpanel" id="sub-events-leads"><div id="ev_leads"></div></div>
+  <div class="subpanel" id="sub-events-booked"><div id="ev_booked"></div></div>
+  <div class="subpanel" id="sub-events-past"><div id="ev_past"></div></div>
+  <div class="subpanel" id="sub-events-feedback"><div id="evFeedback"></div></div>
+</div>
+
+<div class="modal-bg vmx" id="evModal">
+  <div class="modal vm-wide">
+    <div class="vm-top"><button type="button" class="vm-back" onclick="closeEvModal()">&larr; Events</button><div class="vm-ttl"><i></i><span id="evmTitle">Add Event</span><i class="r"></i></div><span></span></div>
+    <div class="vm-sec"><div class="vm-grid vm-g2">
+      <div class="form-group"><label class="form-label">Event or client name</label><input type="text" class="form-input" id="evmName"></div>
+      <div class="form-group"><label class="form-label">Stage</label><select class="form-input" id="evmStage"></select></div>
+      <div class="form-group"><label class="form-label">Contact person</label><input type="text" class="form-input" id="evmContact"></div>
+      <div class="form-group"><label class="form-label">Phone</label><input type="text" class="form-input" id="evmPhone"></div>
+      <div class="form-group"><label class="form-label">Email</label><input type="text" class="form-input" id="evmEmail"></div>
+      <div class="form-group"><label class="form-label">Type of event</label><input type="text" class="form-input" id="evmType"></div>
+      <div class="form-group"><label class="form-label">Event date</label><input type="date" class="form-input" id="evmDate"></div>
+      <div class="form-group"><label class="form-label">Start time</label><input type="time" class="form-input" id="evmTime"></div>
+      <div class="form-group"><label class="form-label">Guests</label><input type="text" class="form-input" id="evmGuests"></div>
+      <div class="form-group"><label class="form-label">Where</label><input type="text" class="form-input" id="evmWhere"></div>
+      <div class="form-group"><label class="form-label">What they want <span style="font-size:0.6rem;color:var(--text4);text-transform:none;letter-spacing:0;">(separate with commas)</span></label><input type="text" class="form-input" id="evmServices"></div>
+      <div class="form-group"><label class="form-label">Budget / quote</label><input type="text" class="form-input" id="evmBudget"></div>
+      <div class="form-group"><label class="form-label">Next follow-up</label><input type="date" class="form-input" id="evmFollow"></div>
+      <div class="form-group"><label class="form-label">Came from</label><input type="text" class="form-input" id="evmSource"></div>
+    </div>
+    <div class="form-group"><label class="form-label">Notes</label><textarea class="form-input" id="evmNotes" style="min-height:90px;"></textarea></div>
+    </div>
+    <div style="display:flex;gap:0.5rem;justify-content:flex-end;padding:0 1.25rem 1.25rem;">
+      <button type="button" class="btn-sm" onclick="closeEvModal()">Cancel</button>
+      <button type="button" class="btn-sm btn-gold" onclick="saveEvModal()">Save</button>
+    </div>
+  </div>
+</div>
+
 <div class="panel" id="panel-schedule">
   <div class="subtabs">
     <button class="subtab active" onclick="showSub('schedule','cal',this)">Calendar</button>
@@ -4589,6 +4642,126 @@ function renderGigCalendar(){
   }
   scroll.innerHTML=html;
 }
+/* ── EVENTS tab: private parties, corporate and special events. Form fill-outs land in Inbox (eventRequests); Prospects / Leads / Booked / Past are one pipeline (eventPipeline, one list at a time, changing the stage moves it); guest feedback lands in guestFeedback. ── */
+const EV_STG=[['prospect','Prospect'],['lead','Lead'],['quoted','Quote sent'],['booked','Booked'],['done','Done'],['lost','Lost']];
+const EV_LISTS={prospects:['prospect'],leads:['lead','quoted'],booked:['booked'],past:['done','lost']};
+let evReq=[],evPipe=[],evFb=[],_evSent={},_evOpen={},_evUnsub=[],evErr={},evFbAll=false,evModalId=null,evModalStage='lead';
+const evTs=x=>{try{return x&&x.toMillis?x.toMillis():0;}catch(e){return 0;}};
+const evWhen=x=>{const m=evTs(x.createdAt);return m?new Date(m).toLocaleDateString('en-US',{month:'short',day:'numeric'}):'';};
+const evTel=x=>String(x||'').replace(/[^0-9+]/g,'');
+function evDay(d){try{return d?new Date(d+'T12:00:00').toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'}):'';}catch(e){return d||'';}}
+function evListen(){
+  if(!db||_evUnsub.length)return;
+  const sub=(name,set)=>{try{_evUnsub.push(db.collection(name).onSnapshot(sn=>{evErr[name]='';set(sn.docs.map(d=>Object.assign({id:d.id},d.data())).sort((a,b)=>evTs(b.createdAt)-evTs(a.createdAt)));evRenderAll();try{render();}catch(e){}},e=>{set([]);evErr[name]=(e&&e.message)||String(e);evRenderAll();}));}catch(e){}};
+  sub('eventRequests',v=>{evReq=v;});sub('eventPipeline',v=>{evPipe=v;});sub('guestFeedback',v=>{evFb=v;});
+}
+function evNew(){return evReq.filter(r=>(r.status||'new')==='new');}
+function evFbNew(){return evFb.filter(r=>(r.status||'new')==='new');}
+function evErrBox(name){return evErr[name]?'<div class="empty-state" style="font-size:.75rem">Could not load: '+esc(evErr[name])+'. The security rules need a block for '+esc(name)+'.</div>':'';}
+function evRenderAll(){
+  if(!document.getElementById('panel-events'))return;
+  const nn=evNew().length,fn=evFbNew().length;
+  const bd=document.getElementById('evTabBadge');if(bd){bd.textContent=(nn+fn)||'';bd.style.display=(nn+fn)?'':'none';}
+  const set=(id,t)=>{const el=document.getElementById(id);if(el)el.innerHTML=t;};
+  set('evSubInbox','Inbox'+(nn?' <span class="sg-tag gold">'+nn+' new</span>':''));
+  set('evSubProspects','Prospects <span class="pl-n">'+evPipe.filter(p=>p.stage==='prospect').length+'</span>');
+  set('evSubLeads','Event Leads <span class="pl-n">'+evPipe.filter(p=>EV_LISTS.leads.includes(p.stage||'lead')).length+'</span>');
+  set('evSubBooked','Booked <span class="pl-n">'+evPipe.filter(p=>p.stage==='booked').length+'</span>');
+  set('evSubFeedback','Guest Feedback'+(fn?' <span class="sg-tag gold">'+fn+' new</span>':''));
+  set('evInbox',evInboxHtml());
+  ['prospects','leads','booked','past'].forEach(k=>set('ev_'+k,evPipeHtml(k)));
+  set('evFeedback',evFbHtml());
+  document.querySelectorAll('#panel-events details[data-ev]').forEach(d=>d.addEventListener('toggle',()=>{_evOpen[d.dataset.ev]=d.open;}));
+}
+function evLine(l,v){return v?'<div><b>'+esc(l)+':</b> '+esc(v)+'</div>':'';}
+function evActs(o){const t=evTel(o.phone);return (t?'<a class="btn-sm btn-gold" style="text-decoration:none" href="tel:'+escAttr(t)+'">Call</a><a class="btn-sm btn-gold" style="text-decoration:none" href="sms:'+escAttr(t)+'">Text</a>':'')+(o.email?'<a class="btn-sm" style="text-decoration:none" href="mailto:'+escAttr(o.email)+'">Email</a>':'');}
+function evInboxHtml(){
+  let h='<div style="font-size:.7rem;color:var(--text3);margin-bottom:.7rem">Everyone who fills out the Book Us For Your Event form lands here, newest first. Add to Leads moves the request over with everything on it.</div>'+evErrBox('eventRequests');
+  if(!evReq.length)return h+'<div class="empty-state">No event requests yet.</div>';
+  evReq.forEach(r=>{
+    const isNew=(r.status||'new')==='new',sv=Array.isArray(r.services)?r.services.join(', '):(r.services||'');
+    h+='<details class="pl-d pl-sub" data-ev="'+escAttr(r.id)+'" '+(_evOpen[r.id]||isNew&&evReq.length<4?'open':'')+'><summary><b>'+esc(r.name||'(no name)')+'</b>'+(r.org?' · '+esc(r.org):'')+' <span style="color:var(--text3);font-size:.72rem">'+esc(r.eventType||'')+(r.eventDate?' · '+esc(evDay(r.eventDate)):'')+' · sent '+esc(evWhen(r))+'</span> '+(isNew?'<span class="sg-tag gold">new</span>':'<span class="sg-tag">seen</span>')+'</summary><div class="pl-body" style="font-size:.8rem;line-height:1.7">'+
+      evLine('Phone',r.phone)+evLine('Email',r.email)+evLine('Event',r.eventType)+evLine('Date',evDay(r.eventDate)+(r.dateFlexible?' (flexible)':''))+evLine('Start time',r.startTime)+evLine('Guests',r.guests)+evLine('Where',r.location)+evLine('Wants',sv)+evLine('Budget',r.budget)+(r.notes?'<div style="white-space:pre-wrap"><b>Their note:</b> '+esc(r.notes)+'</div>':'')+
+      '<div style="color:var(--text3)">Came from: '+esc(r.source||'the event form')+(r.sourceDetail?' ('+esc(r.sourceDetail)+')':'')+'</div>'+
+      '<div class="pl-acts" style="margin-top:.5rem">'+evActs(r)+'<button class="btn-sm btn-gold" onclick="evMoveReq(\''+r.id+'\',this)">'+esc(_evSent[r.id]||'Add to Leads')+'</button>'+(isNew?'<button class="btn-sm" onclick="evReqSeen(\''+r.id+'\')">Mark seen</button>':'')+'<button class="btn-sm" onclick="evReqDel(\''+r.id+'\')">Delete</button></div></div></details>';
+  });
+  return h;
+}
+function evPipeHtml(k){
+  const list=evPipe.filter(p=>EV_LISTS[k].includes(p.stage||'lead'));
+  const add={prospects:['+ Add Prospect','prospect'],leads:['+ Add Event Lead','lead'],booked:['+ Add Booked Event','booked'],past:null}[k];
+  const info={prospects:'People and groups we should contact but haven\'t yet.',leads:'Event inquiries we are talking to. Quote sent stays in this list.',booked:'Events that are locked in.',past:'Finished and lost events.'}[k];
+  let h='<div style="display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;margin-bottom:.7rem"><span style="font-size:.7rem;color:var(--text3);flex:1;min-width:200px">'+info+' Change the stage on a card to move it to the right list. Nothing is ever on two lists.</span>'+(add?'<button class="btn-sm btn-gold" onclick="openEvModal(null,\''+add[1]+'\')">'+add[0]+'</button>':'')+'</div>'+evErrBox('eventPipeline');
+  if(!list.length)return h+'<div class="empty-state">Nothing here yet.</div>';
+  if(k==='booked')list.sort((a,b)=>String(a.eventDate||'9999').localeCompare(String(b.eventDate||'9999')));
+  list.forEach(p=>{
+    const sv=Array.isArray(p.services)?p.services.join(', '):(p.services||''),st=(EV_STG.find(x=>x[0]===(p.stage||'lead'))||[0,p.stage])[1];
+    const due=p.nextFollowUp&&p.nextFollowUp<=new Date().toISOString().slice(0,10);
+    h+='<details class="pl-d pl-sub" data-ev="p'+escAttr(p.id)+'" '+(_evOpen['p'+p.id]?'open':'')+'><summary><b>'+esc(p.name||'(no name)')+'</b> <span style="color:var(--text3);font-size:.72rem">'+esc(p.eventType||'')+(p.eventDate?' · '+esc(evDay(p.eventDate)):'')+(p.guests?' · '+esc(p.guests)+' guests':'')+'</span> <span class="sg-tag">'+esc(st)+'</span>'+(due?' <span class="sg-tag gold">follow up</span>':'')+'</summary><div class="pl-body" style="font-size:.8rem;line-height:1.7">'+
+      evLine('Contact',p.contactName)+evLine('Phone',p.phone)+evLine('Email',p.email)+evLine('Event',p.eventType)+evLine('Date',evDay(p.eventDate))+evLine('Start time',p.startTime)+evLine('Guests',p.guests)+evLine('Where',p.location)+evLine('Wants',sv)+evLine('Budget / quote',p.budget)+evLine('Next follow-up',evDay(p.nextFollowUp))+evLine('Came from',p.source)+(p.notes?'<div style="white-space:pre-wrap"><b>Notes:</b> '+esc(p.notes)+'</div>':'')+
+      '<div class="pl-acts" style="margin-top:.5rem">'+evActs(p)+'<select class="form-input" style="width:auto;padding:.35rem .6rem" onchange="evSetStage(\''+p.id+'\',this.value)">'+EV_STG.map(x=>'<option value="'+x[0]+'"'+((p.stage||'lead')===x[0]?' selected':'')+'>'+x[1]+'</option>').join('')+'</select><button class="btn-sm" onclick="openEvModal(\''+p.id+'\')">Edit</button><button class="btn-sm" onclick="evPipeDel(\''+p.id+'\')">Delete</button></div></div></details>';
+  });
+  return h;
+}
+function evFbHtml(){
+  const list=evFbAll?evFb:evFbNew();
+  let h='<div style="display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;margin-bottom:.7rem"><span style="font-size:.7rem;color:var(--text3);flex:1;min-width:200px">Everything people send through the Tell Us How We Did form.</span><button class="btn-sm" onclick="evFbAll=!evFbAll;evRenderAll()">'+(evFbAll?'Show new only':'Show all ('+evFb.length+')')+'</button></div>'+evErrBox('guestFeedback');
+  if(!list.length)return h+'<div class="empty-state">'+(evFbAll?'No feedback yet.':'No new feedback.')+'</div>';
+  list.forEach(f=>{
+    const isNew=(f.status||'new')==='new',r=parseInt(f.rating,10)||0;
+    h+='<details class="pl-d pl-sub" data-ev="f'+escAttr(f.id)+'" '+(_evOpen['f'+f.id]?'open':'')+'><summary><b>'+'★'.repeat(r)+'☆'.repeat(Math.max(0,5-r))+'</b> <span style="color:var(--text3);font-size:.72rem">'+esc(f.venue||'(no venue)')+(f.kind?' · '+esc(f.kind):'')+' · sent '+esc(evWhen(f))+'</span> '+(isNew?'<span class="sg-tag gold">new</span>':'<span class="sg-tag">reviewed</span>')+'</summary><div class="pl-body" style="font-size:.8rem;line-height:1.7">'+
+      evLine('Venue',f.venue)+evLine('Night',f.kind)+evLine('About when',evDay(f.visitDate))+evLine('Host',f.host)+(f.good?'<div style="white-space:pre-wrap"><b>Loved:</b> '+esc(f.good)+'</div>':'')+(f.better?'<div style="white-space:pre-wrap"><b>Could be better:</b> '+esc(f.better)+'</div>':'')+evLine('From',[f.name,f.email].filter(Boolean).join(', ')||'anonymous')+(f.email?evLine('OK to contact',f.canContact?'yes':'no'):'')+
+      '<div class="pl-acts" style="margin-top:.5rem">'+(f.email?'<a class="btn-sm btn-gold" style="text-decoration:none" href="mailto:'+escAttr(f.email)+'">Email</a>':'')+(isNew?'<button class="btn-sm" onclick="evFbDone(\''+f.id+'\')">Mark reviewed</button>':'')+'<button class="btn-sm" onclick="evFbDel(\''+f.id+'\')">Delete</button></div></div></details>';
+  });
+  return h;
+}
+const evSv=firebase.firestore.FieldValue.serverTimestamp;
+function evReqSeen(id){db.collection('eventRequests').doc(id).update({status:'seen',updatedAt:evSv()}).catch(e=>hqToast('Failed: '+e.message,true));}
+function evReqDel(id){if(!confirm('Delete this request?'))return;db.collection('eventRequests').doc(id).delete().catch(e=>hqToast('Failed: '+e.message,true));}
+function evFbDone(id){db.collection('guestFeedback').doc(id).update({status:'reviewed',updatedAt:evSv()}).catch(e=>hqToast('Failed: '+e.message,true));}
+function evFbDel(id){if(!confirm('Delete this feedback?'))return;db.collection('guestFeedback').doc(id).delete().catch(e=>hqToast('Failed: '+e.message,true));}
+function evSetStage(id,v){db.collection('eventPipeline').doc(id).update({stage:v,updatedAt:evSv()}).then(()=>hqToast('Moved to '+((EV_STG.find(x=>x[0]===v)||[0,v])[1])+'.')).catch(e=>hqToast('Failed: '+e.message,true));}
+function evPipeDel(id){if(!confirm('Delete this event?'))return;db.collection('eventPipeline').doc(id).delete().catch(e=>hqToast('Failed: '+e.message,true));}
+async function evMoveReq(id,btn){
+  const r=evReq.find(x=>x.id===id);if(!r)return;
+  const nid=db.collection('eventPipeline').doc().id;
+  try{
+    await db.collection('eventPipeline').doc(nid).set({name:(r.org||(r.name?r.name+'\'s '+(r.eventType||'event'):'Event request')),contactName:r.name||'',phone:r.phone||'',email:r.email||'',eventType:r.eventType||'',eventDate:r.eventDate||'',startTime:r.startTime||'',guests:r.guests||'',location:r.location||'',services:Array.isArray(r.services)?r.services:(r.services?[r.services]:[]),budget:r.budget||'',notes:(r.dateFlexible?'Date is flexible.\n':'')+(r.notes||''),nextFollowUp:'',stage:'lead',source:'event form'+(r.sourceDetail&&r.sourceDetail!=='direct'?' ('+r.sourceDetail+')':''),webRequest:r,createdAt:evSv(),updatedAt:evSv()});
+    await db.collection('eventRequests').doc(id).delete();
+    _evSent[id]='Sent to Event Leads: '+(r.name||'new lead');hqToast('Added to Event Leads.');
+  }catch(e){hqToast('Failed: '+e.message,true);}
+}
+function openEvModal(id,stage){
+  evModalId=id||null;const p=id?evPipe.find(x=>x.id===id):null;
+  document.getElementById('evmTitle').textContent=p?'Edit Event':'Add Event';
+  const v=(i,k)=>{const el=document.getElementById(i);if(el)el.value=p?(Array.isArray(p[k])?p[k].join(', '):(p[k]||'')):'';};
+  [['evmName','name'],['evmContact','contactName'],['evmPhone','phone'],['evmEmail','email'],['evmType','eventType'],['evmDate','eventDate'],['evmTime','startTime'],['evmGuests','guests'],['evmWhere','location'],['evmServices','services'],['evmBudget','budget'],['evmFollow','nextFollowUp'],['evmSource','source'],['evmNotes','notes']].forEach(a=>v(a[0],a[1]));
+  const st=document.getElementById('evmStage');st.innerHTML=EV_STG.map(x=>'<option value="'+x[0]+'">'+x[1]+'</option>').join('');st.value=p?(p.stage||'lead'):(stage||'lead');
+  document.getElementById('evModal').classList.add('open');
+}
+function closeEvModal(){document.getElementById('evModal').classList.remove('open');evModalId=null;}
+async function saveEvModal(){
+  const g=i=>document.getElementById(i).value.trim();
+  if(!g('evmName')){alert('Give the event or client a name.');return;}
+  const rec={name:g('evmName'),contactName:g('evmContact'),phone:g('evmPhone'),email:g('evmEmail'),eventType:g('evmType'),eventDate:g('evmDate'),startTime:g('evmTime'),guests:g('evmGuests'),location:g('evmWhere'),services:g('evmServices').split(',').map(x=>x.trim()).filter(Boolean),budget:g('evmBudget'),nextFollowUp:g('evmFollow'),source:g('evmSource'),notes:g('evmNotes'),stage:g('evmStage'),updatedAt:evSv()};
+  try{
+    if(evModalId)await db.collection('eventPipeline').doc(evModalId).update(rec);
+    else await db.collection('eventPipeline').add(Object.assign(rec,{createdAt:evSv()}));
+    closeEvModal();hqToast('Saved.');
+  }catch(e){hqToast('Failed: '+e.message,true);}
+}
+function evGo(sub){
+  const tb=[...document.querySelectorAll('.tab')].find(x=>/showTab\('events'/.test(x.getAttribute('onclick')||''));if(tb)tb.click();
+  const sb=document.getElementById('evSub_'+sub);if(sb)sb.click();
+  setTimeout(()=>{const p=document.getElementById('sub-events-'+sub);if(p)p.scrollIntoView({behavior:'smooth',block:'start'});},250);
+}
+function evReqLines(r){const sv=Array.isArray(r.services)?r.services.join(', '):(r.services||'');
+  return ['Who: '+(r.name||'(no name given)')+(r.org?' ('+r.org+')':'')+(r.phone?', phone '+r.phone:', no phone given')+(r.email?', email '+r.email:', no email given'),
+    'Event: '+(r.eventType||'(type not given)')+(r.eventDate?' on '+evDay(r.eventDate)+(r.dateFlexible?' (date is flexible)':''):', no date given')+(r.startTime?' at '+r.startTime:'')+(r.guests?', about '+r.guests+' guests':''),
+    r.location?'Where: '+r.location:'',sv?'Wants: '+sv:'',r.budget?'Budget: '+r.budget:'',r.notes?'Their note: '+r.notes:'',
+    'Sent: '+(evWhen(r)||'date unknown')+' through the Book Us For Your Event form'+(r.sourceDetail&&r.sourceDetail!=='direct'?' (link: '+r.sourceDetail+')':'')].filter(Boolean).join('\n');}
+function evFbLines(f){return ['Rating: '+(f.rating||'?')+' out of 5',f.venue?'Venue: '+f.venue+(f.kind?' ('+f.kind+')':''):(f.kind?'Night: '+f.kind:''),f.visitDate?'About when: '+evDay(f.visitDate):'',f.host?'Host: '+f.host:'',f.good?'Loved: '+f.good:'',f.better?'Could be better: '+f.better:'','From: '+([f.name,f.email].filter(Boolean).join(', ')||'anonymous')+(f.email?(f.canContact?' (OK to contact)':' (did not say to contact them)'):''),'Sent: '+(evWhen(f)||'date unknown')+' through the Tell Us How We Did form'].filter(Boolean).join('\n');}
+
 /* ── calendar events: things that are not gigs (festivals, meetings, parties, holidays). Saved to the cloud as hq_data/cal-events. ── */
 let calEvents=[],calEventsLoaded=false,editingCalEvId=null;
 PERSIST_GUARDS['cal-events']=()=>calEventsLoaded;
@@ -7804,6 +7977,7 @@ function init(){
   loadStorage();
   loadRoster();
   loadCalEvents();
+  evListen();
   loadRanks();
   loadHostOrder();
   loadGigSchedule();
@@ -9016,6 +9190,8 @@ function briefData(){
   d.sg.dueSoon.forEach(x=>need.push({a:'sigil',text:x.name+(x.days<0?' is overdue':' is due in '+x.days+' days'),body:(x.due?'Due '+fmtEv(x.due)+'. ':'')+(x.price?'About '+sgFmt$(sgMoney(x.price)||0)+'. ':'')+(x.repeat?'Repeats '+((SG_REP.find(r=>r[0]===x.repeat)||[0,''])[1].toLowerCase())+'. ':'')+(x.fromEmail?'Pulled from email, so confirm the date. ':'')+'Sigil can draft the reminder.'}));
   add('sigil',d.sg.incomplete.length,plural(d.sg.incomplete.length,'person is','people are')+' missing paperwork',d.sg.incomplete.slice(0,5).map(p=>p.name+' needs '+p.miss.join(', ')).join('; ')+'.');
   add('sigil',d.sPending.length,plural(d.sPending.length,'paperwork reminder','paperwork reminders')+' to approve',d.sPending.map(x=>cut(x.label,60)).join('; ')+'.');
+  {const rn=(typeof evReq!=='undefined'?evReq:[]).filter(r=>(r.status||'new')==='new');if(rn.length)need.push({a:'raven',text:plural(rn.length,'new event request','new event requests'),body:rn.slice(0,5).map(evReqLines).join('\n\n')+(rn.length>5?'\n\n...and '+(rn.length-5)+' more in the Inbox.':''),foundBy:'Someone filled out the Book Us For Your Event form on your website. It lands in HQ by itself. Raven only counts it and tells you.',where:'HQ > Events tab > Inbox. Open the request there to call, text, email, or press Add to Leads.',go:'evinbox'});}
+  {const fn=(typeof evFb!=='undefined'?evFb:[]).filter(r=>(r.status||'new')==='new');if(fn.length)need.push({a:'vesper',text:plural(fn.length,'new guest feedback','new guest feedback'),body:fn.slice(0,5).map(evFbLines).join('\n\n')+(fn.length>5?'\n\n...and '+(fn.length-5)+' more.':''),foundBy:'A guest filled out the Tell Us How We Did form on your website. It lands in HQ by itself. Vesper only counts it and tells you.',where:'HQ > Events tab > Guest Feedback. Mark it reviewed there when you have read it.',go:'fbinbox'});}
   {const wn=(typeof webLeads!=='undefined'?webLeads:[]).filter(l=>(l.status||'new')==='new');if(wn.length){
     const one=l=>{const nt=Array.isArray(l.preferredNights)?l.preferredNights.join(', '):(l.preferredNights||'');const ph=l.phone?String(l.phone):'',em=l.email?String(l.email):'';
       return [ 'Venue: '+(l.venue||'(no venue name given)')+(l.city?' ('+l.city+')':''),
@@ -12057,7 +12233,7 @@ const A={
     const close=()=>ov.remove();
     ov.addEventListener('click',e=>{const b=e.target.closest('[data-bi]');if(!b){if(e.target===ov)close();return;}
       if(b.dataset.bi==='desk'){e.preventDefault();close();A.open({dataset:{agent:n.a}});return;}
-      if(b.dataset.bi==='go'){e.preventDefault();close();if(n.go==='weblead'){try{const dr=document.getElementById('tmDr');if(dr&&A.closedrawer)A.closedrawer();}catch(_){}
+      if(b.dataset.bi==='go'){e.preventDefault();close();if(n.go==='evinbox'){evGo('inbox');return;}if(n.go==='fbinbox'){evGo('feedback');return;}if(n.go==='weblead'){try{const dr=document.getElementById('tmDr');if(dr&&A.closedrawer)A.closedrawer();}catch(_){}
         const tb=[...document.querySelectorAll('.tab')].find(x=>/showTab\('venues'/.test(x.getAttribute('onclick')||''));if(tb)tb.click();
         const lb=document.getElementById('leadsTabBtn');if(lb){lb.style.display='';lb.click();}
         setTimeout(()=>{const bx=document.getElementById('webReqBox');if(bx){const d=document.getElementById('wlDet');if(d){d.open=true;_wlOpen.__all=true;}bx.scrollIntoView({behavior:'smooth',block:'start'});}},300);}return;}
